@@ -1,0 +1,11 @@
+[Unit]
+Description=Typikon Web
+
+[Service]
+ExecStart=npm start --prefix /home/admin/typikon-web -- -p 80
+Restart=on-failure
+User=admin
+WorkingDirectory=/home/admin/typikon-web
+
+[Install]
+WantedBy=multi-user.target

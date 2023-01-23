@@ -108,7 +108,7 @@ const AdminEditor = ({ value }: any) => {
                 >Добавить</span>
             </label>
             {subnames.map((sName: string, index: number) => (
-                <div>
+                <div key={sName}>
                     <input
                         className="border-2"
                         value={sName}
