@@ -7,9 +7,7 @@ module.exports = {
     extend: {
       fontFamily: {
         serif: [
-          'ui-serif',
-          'Georgia',
-          'OldStandard',
+          'var(--font-old-standard)',
         ],
       }
     },

@@ -3,7 +3,7 @@ import clientPromise from "@/lib/mongodb";
 export const getItems = async () => {
     try {
         const client = await clientPromise;
-        const db = client.db("typikon1");
+        const db = client.db("typikon");
 
         const weeks = await db
             .collection("weeks")
@@ -57,7 +57,6 @@ export const getItems = async () => {
                 },
             ])
             .toArray();
-        console.log(weeks[0]);
         return [weeks, null];
     } catch (e) {
         console.error(e);

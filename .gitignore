@@ -13,6 +13,12 @@ NOTES.md
 # testing
 /coverage
 
+*.crt
+*.key
+
+/db/
+db.*
+
 # idea
 /.idea/
 

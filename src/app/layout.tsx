@@ -10,29 +10,29 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body>
-          <nav className="border-b-2">
+          <nav className="border-b-2 w-full overflow-scroll">
               <div className="container mx-auto px-4 flex flex-row items-baseline">
-                  <Link href="/" className="text-lg mr-3 font-bold">
+                  <Link href="/" className="text-lg mr-3 font-bold min-w-fit">
                       Уставные чтения
                   </Link>
                   <div className="flex flex-row space-x-4">
-                      <Link href="/penticostarion" className="cursor-pointer">
+                      <Link href="/penticostarion" className="cursor-pointer min-w-fit">
                           Цветная триодь
                       </Link>
-                      <Link href="/triodion" className="cursor-pointer">
+                      <Link href="/triodion" className="cursor-pointer min-w-fit">
                           Постная триодь
                       </Link>
-                      <Link href="/rest-readings" className="cursor-pointer">
+                      <Link href="/rest-readings" className="cursor-pointer min-w-fit">
                           Вне триодного цикла
                       </Link>
-                      <Link href="/reading-calculator" className="cursor-pointer">
+                      <Link href="/reading-calculator" className="cursor-pointer min-w-fit">
                           Чтения на конкретный день
                       </Link>
-                      <Link href="/library" className="cursor-pointer">
+                      <Link href="/library" className="cursor-pointer min-w-fit">
                           Библиотека
                       </Link>
                       {process.env.SHOW_ADMIN && (
-                          <Link href="/admin" className="cursor-pointer">
+                          <Link href="/admin" className="cursor-pointer min-w-fit">
                               Админка
                           </Link>
                       )}

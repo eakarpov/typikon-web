@@ -23,9 +23,14 @@ const AdminEditor = ({ value }: any) => {
     const setTextCite = (itemName: TextType, index: number, value: string) => {
         switch (itemName) {
             case TextType.SONG_3:
-                const newValue = {...song3};
-                newValue.items[index].cite = value;
-                setSong3(newValue);
+                const newSong3 = {...song3};
+                newSong3.items[index].cite = value;
+                setSong3(newSong3);
+                return;
+            case TextType.SONG_6:
+                const newSong6 = {...song6};
+                newSong6.items[index].cite = value;
+                setSong6(newSong6);
                 return;
             default:
                 return;
@@ -35,9 +40,14 @@ const AdminEditor = ({ value }: any) => {
     const setTextId = (itemName: TextType, index: number, value: string) => {
         switch (itemName) {
             case TextType.SONG_3:
-                const newValue = {...song3};
-                newValue.items[index].textId = value;
-                setSong3(newValue);
+                const newSong3 = {...song3};
+                newSong3.items[index].textId = value;
+                setSong3(newSong3);
+                return;
+            case TextType.SONG_6:
+                const newSong6 = {...song6};
+                newSong6.items[index].textId = value;
+                setSong6(newSong6);
                 return;
             default:
                 return;

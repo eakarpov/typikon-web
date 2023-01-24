@@ -1,4 +1,4 @@
-import {TextType, valueTitle} from "@/utils/texts";
+import {printTextKind, TextType, valueTitle} from "@/utils/texts";
 import TextPart from "@/app/components/TextPart";
 
 export interface IReadDayPart {
@@ -10,22 +10,41 @@ const DayPart = ({
     value,
     valueName,
 }: IReadDayPart) => {
+    const title = valueTitle(valueName);
     return value && (
             <section className="space-y-2">
-                <h1 className="text-2xl font-bold">
-                    {valueTitle(valueName)}
+                <h1 className="text-1xl font-bold" id={title}>
+                    {title}
                 </h1>
                 {value.items?.map((item: any) => item.text && (
                     <div key={item.text._id.toString()}>
                         <p>
                             Типикон говорит: {item.cite}
                         </p>
+                        {item.text.description && (
+                            <p>
+                                {item.text.description}
+                            </p>
+                        )}
+                        {item.text.start && (
+                            <p>
+                                Начало: {item.text.start}
+                            </p>
+                        )}
                         <p>
-                            Автор: {item.text.book?.author}
+                            Тип: {printTextKind(item.text.type)}
                         </p>
-                        <div className="space-y-1">
+                        {item.text.book?.author && (
+                            <p>
+                                Автор: {item.text.book?.author}
+                            </p>
+                        )}
+                        <div className="space-y-1 mt-2">
                             {item.text.content?.split("\n\n").map((paragraph: string, j: number) => (
-                                <p key={paragraph} className="text-justify font-serif first-letter:text-red-600">
+                                <p
+                                    key={paragraph}
+                                    className="whitespace-pre-wrap text-justify text-lg font-serif first-letter:text-red-600"
+                                >
                                     {paragraph.split(/{k\|/).map((value: any, index: number) => {
                                         if (!index) return (
                                             // @ts-ignore

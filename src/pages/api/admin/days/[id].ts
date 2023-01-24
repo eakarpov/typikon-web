@@ -15,6 +15,10 @@ const mapToDbObject = (value: any) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (!process.env.SHOW_ADMIN) {
+        res.status(404).end();
+        return;
+    }
     if (req.method === 'POST') {
         const data = req.body;
         const id = req.query.id as string;

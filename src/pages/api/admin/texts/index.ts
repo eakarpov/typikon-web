@@ -8,42 +8,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        const {weekId} = req.body;
-        if (!weekId) {
+        const {bookId} = req.body;
+        if (!bookId) {
             res.status(400).end();
         }
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
             const data = await db
-                .collection("days")
+                .collection("texts")
                 .insertOne({
                     name: "",
-                    vigil: null,
-                    kathisma1: null,
-                    kathisma2: null,
-                    kathisma3: null,
-                    ipakoi: null,
-                    song3: null,
-                    song6: null,
-                    before1h: null,
-                    polyeleos: null,
-                    panagia: null,
+                    content: "",
+                    description: "",
+                    start: "",
                     fileId: null,
-                    subnames: [],
-                    triodic: true,
-                    weekId: new ObjectId(weekId),
-                    weekIndex: 0,
+                    link: null,
+                    ruLink: null,
+                    bookId: new ObjectId(bookId),
+                    footnotes: [],
                 });
-            await db.collection("weeks")
+            await db.collection("books")
                 .updateOne(
-                    { _id : new ObjectId(weekId) },
+                    { _id : new ObjectId(bookId) },
                     {
                         $addToSet: {
-                            days: data.insertedId,
+                            texts: data.insertedId,
                         },
                     },
                 );
+
             res.status(200).end();
         } catch (e) {
             console.log("mongodb error");

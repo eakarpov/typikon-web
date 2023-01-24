@@ -13,10 +13,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
           </div>
         );
     }
-    console.log(item);
 
     return (
-        <div className="flex flex-row pt-2">
+        <div className="flex flex-col pt-2 md:flex-row">
             <div className="w-1/4">
                 <ul className="space-y-2">
                     <DayTitle value={item.vigil} valueName={TextType.VIGIL} />

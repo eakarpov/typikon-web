@@ -1,5 +1,25 @@
 import {Nullable} from "mongodb/src/mongo_types";
 
+export enum TextKind {
+    TEACHIND= "Teaching",
+    PRAISING= "Praising",
+    HISTORIC= "Historic",
+    INTERPRETATION= "Interpretation",
+}
+
+export const printTextKind = (kind: TextKind) => {
+  switch (kind) {
+      case TextKind.HISTORIC:
+          return "Житийное";
+      case TextKind.INTERPRETATION:
+          return "Толкование";
+      case TextKind.PRAISING:
+          return "Похвальное";
+      case TextKind.TEACHIND:
+          return "Учительное";
+  }  
+};
+
 export enum TextType {
     VIGIL= "vigil",
     KATHISMA_1= "kathisma1",
@@ -14,7 +34,9 @@ export enum TextType {
 }
 
 export const footNotesToArray = (footNotesText: string): Nullable<string>[] =>
-  footNotesText.split("\n").map(footNotesRow => footNotesRow.split(" ")[1]);
+    footNotesText
+        ? footNotesText.split("\n").map(footNotesRow => footNotesRow.split(" ")[1])
+        : [];
 
 export const valueTitle = (valueName: TextType) => {
   switch (valueName) {
