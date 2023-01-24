@@ -12,8 +12,8 @@ const DayPart = ({
 }: IReadDayPart) => {
     const title = valueTitle(valueName);
     return value && (
-            <section className="space-y-2">
-                <h1 className="text-1xl font-bold" id={title}>
+            <section className="space-y-2" id={valueName}>
+                <h1 className="text-1xl font-bold">
                     {title}
                 </h1>
                 {value.items?.map((item: any) => item.text && (
