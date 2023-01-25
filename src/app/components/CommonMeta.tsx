@@ -8,6 +8,8 @@ const CommonMeta = () => {
         <Script id="ga-local" strategy="lazyOnload">
             {analyticsConnector}
         </Script>
+        <meta property="og:image" content="https://www.typikon.ru/logo.png"/>
+        <meta name="keywords" content="уставные чтения, устав, типикон, богослужебные указания, триодь, минея, пролог, златоуст, торжественник, учительное евангелие, толковый апостол" />
         <link rel="icon" href="/favicon.ico" />
     </>
   );

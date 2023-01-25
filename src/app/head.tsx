@@ -11,7 +11,6 @@ export default function Head() {
         <meta property="og:title" content="Уставные чтения" />
         <meta property="og:url" content="//www.typikon.su/" />
         <meta property="og:description" content="Последование уставных чтений по Типикону для корпуса церковнославянских текстов." />
-        <meta name="keywords" content="уставные чтения, устав, типикон, богослужебные" />
     </>
   )
 }
