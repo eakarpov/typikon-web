@@ -22,11 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
         const data = req.body;
         const id = req.query.id as string;
-        console.log(11, data, id);
+        console.log(data);
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
-            console.log(mapToDbObject(data.vigil));
             await db
                 .collection("days")
                 .updateOne(
@@ -35,6 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         $set: {
                             name: data.name,
                             weekIndex: data.weekIndex,
+                            vespersProkimenon: mapToDbObject(data.vespersProkimenon),
                             vigil: mapToDbObject(data.vigil),
                             kathisma1: mapToDbObject(data.kathisma1),
                             kathisma2: mapToDbObject(data.kathisma2),
@@ -43,7 +43,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             polyeleos: mapToDbObject(data.polyeleos),
                             song3: mapToDbObject(data.song3),
                             song6: mapToDbObject(data.song6),
+                            apolutikaTroparia: mapToDbObject(data.apolutikaTroparia),
                             before1h: mapToDbObject(data.before1h),
+                            h1: mapToDbObject(data.h1),
+                            h3: mapToDbObject(data.h3),
+                            h6: mapToDbObject(data.h6),
+                            h9: mapToDbObject(data.h9),
                             panagia: mapToDbObject(data.panagia),
                         },
                     },

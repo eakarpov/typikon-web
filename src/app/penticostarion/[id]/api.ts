@@ -99,6 +99,7 @@ export const getItem = async (id: string) => {
                     },
                 },
                 // Для каждого типа поля нужна такая структура
+                getAggregationAddField(TextType.VESPERS_PROKIMENON),
                 getAggregationAddField(TextType.VIGIL),
                 getAggregationAddField(TextType.KATHISMA_1),
                 getAggregationAddField(TextType.KATHISMA_2),
@@ -107,8 +108,13 @@ export const getItem = async (id: string) => {
                 getAggregationAddField(TextType.POLYELEOS),
                 getAggregationAddField(TextType.SONG_3),
                 getAggregationAddField(TextType.SONG_6),
+                getAggregationAddField(TextType.APOLUTIKA_TROPARIA),
                 getAggregationAddField(TextType.BEFORE_1h),
                 getAggregationAddField(TextType.PANAGIA),
+                getAggregationAddField(TextType.H1),
+                getAggregationAddField(TextType.H3),
+                getAggregationAddField(TextType.H6),
+                getAggregationAddField(TextType.H9),
                 {
                   $addFields: {
                       id: { $toString: "$_id" },

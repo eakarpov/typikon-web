@@ -4,22 +4,28 @@ const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
   return (
-      <div className="flex flex-row pt-2">
+      <div className="flex flex-col pt-2 md:flex-row">
           <div className="w-1/4">
               <ul className="space-y-2">
                   <li>
-                      Цель и обоснование проекта
+                      <a href="#goal">
+                          Цель и обоснование проекта
+                      </a>
                   </li>
                   <li>
-                      Что такое уставные чтения?
+                      <a href="#subject">
+                          Что такое уставные чтения?
+                      </a>
                   </li>
                   <li>
-                      О предмете уставных чтений
+                      <a href="#about">
+                          О предмете уставных чтений
+                      </a>
                   </li>
               </ul>
           </div>
           <div className="flex flex-col flex-1 space-y-4">
-              <section className="space-y-2">
+              <section className="space-y-2" id="goal">
                   <h1 className="text-3xl font-bold">
                       Цель и обоснование проекта
                   </h1>
@@ -30,7 +36,7 @@ export default function Home() {
                       Большая часть текстов отекстована в русском переводе и доступна для поиска. Тем не менее, даже в русскоязычном варианте не дается представления о том, что предлагает Типикон для чтения верующих в тот или иной день церковного года. В рамках данного проекта производится работа по отекстовке корпуса уставных чтений, соотнесение их с чтением в определенный день церковного года и сопоставление с корпусом русских текстов уставных чтений.
                   </p>
               </section>
-              <section className="space-y-2">
+              <section className="space-y-2" id="subject">
                   <h2 className="text-3xl font-bold">
                       Что такое уставные чтения?
                   </h2>
@@ -38,7 +44,7 @@ export default function Home() {
                       Уставные чтения — сборники нравоучительно-повествовательного характера, состоящие в основном из произведений дидактического и тор жественного красноречия, агиографических сочинений, а также полемических слов, толкований, кратких нравоучительных сентенций.
                   </p>
               </section>
-              <section className="space-y-2">
+              <section className="space-y-2" id="about">
                   <h2 className="text-3xl font-bold">
                       О предмете уставных чтений
                   </h2>

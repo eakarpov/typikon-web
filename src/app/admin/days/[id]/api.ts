@@ -1,5 +1,39 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {TextType} from "@/utils/texts";
+
+const getAggregationAddField = (name: TextType) => {
+    const varName = `$${name}`;
+    return {
+        $addFields: {
+            [name]: {
+                $cond: {
+                    if: { $ne: [varName, null]},
+                    else: null,
+                    then: {
+                        $mergeObjects: [
+                            varName,
+                            {
+                                items: {
+                                    $map: {
+                                        input: `${varName}.items`,
+                                        as: "i",
+                                        in: {
+                                            $mergeObjects: [
+                                                '$$i',
+                                                {textId: {$toString: "$$i.textId"}},
+                                            ],
+                                        },
+                                    },
+                                }
+                            },
+                        ],
+                    }
+                },
+            }
+        },
+    };
+}
 
 export const getItem = async (id: string) => {
     try {
@@ -25,83 +59,28 @@ export const getItem = async (id: string) => {
                 },
                 {
                     $addFields: {
-                        "week.id": { $toString: "week._id" }
+                        "week.id": { $toString: "$weekId" }
                     }
                 },
-                {
-                    $addFields: {
-                        // "song3.items": {
-                        //     $map: {
-                        //         input: "$song3.items",
-                        //         as: "i",
-                        //         in: {
-                        //             $mergeObjects: [
-                        //                 '$$i',
-                        //                 {textId: {$toString: "$$i.textId"}},
-                        //             ],
-                        //         },
-                        //     },
-                        // },
-                        song3: {
-                            $cond: {
-                                if: { $ne: ["$song3", null]},
-                                else: null,
-                                then: {
-                                    $mergeObjects: [
-                                        '$song3',
-                                        {
-                                            items: {
-                                                $map: {
-                                                    input: "$song3.items",
-                                                    as: "i",
-                                                    in: {
-                                                        $mergeObjects: [
-                                                            '$$i',
-                                                            {textId: {$toString: "$$i.textId"}},
-                                                        ],
-                                                    },
-                                                },
-                                            }
-                                        },
-                                    ],
-                                }
-                            },
-                        }
-                    },
-                },
-                {
-                    $addFields: {
-                        vigil: {
-                            $cond: {
-                                if: { $ne: ["$vigil", null]},
-                                else: null,
-                                then: {
-                                    $mergeObjects: [
-                                        '$vigil',
-                                        {
-                                            items: {
-                                                $map: {
-                                                    input: "$vigil.items",
-                                                    as: "i",
-                                                    in: {
-                                                        $mergeObjects: [
-                                                            '$$i',
-                                                            {textId: {$toString: "$$i.textId"}},
-                                                        ],
-                                                    },
-                                                },
-                                            }
-                                        },
-                                    ],
-                                }
-                            },
-                        },
-                    },
-                },
+                getAggregationAddField(TextType.VESPERS_PROKIMENON),
+                getAggregationAddField(TextType.VIGIL),
+                getAggregationAddField(TextType.KATHISMA_1),
+                getAggregationAddField(TextType.KATHISMA_2),
+                getAggregationAddField(TextType.KATHISMA_3),
+                getAggregationAddField(TextType.IPAKOI),
+                getAggregationAddField(TextType.POLYELEOS),
+                getAggregationAddField(TextType.SONG_3),
+                getAggregationAddField(TextType.SONG_6),
+                getAggregationAddField(TextType.APOLUTIKA_TROPARIA),
+                getAggregationAddField(TextType.BEFORE_1h),
+                getAggregationAddField(TextType.H1),
+                getAggregationAddField(TextType.H3),
+                getAggregationAddField(TextType.H6),
+                getAggregationAddField(TextType.H9),
+                getAggregationAddField(TextType.PANAGIA),
                 { $project: { "weekId": false, "week.days": false, "_id": false, "week._id": false }}
             ])
             .toArray();
-        console.log(days)
         return days[0];
     } catch (e) {
         console.error(e);

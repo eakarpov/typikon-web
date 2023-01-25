@@ -1,6 +1,6 @@
 "use client";
 
-import {footNotesToArray, TextKind} from "@/utils/texts";
+import {footNotesToArray, printTextKind, TextKind} from "@/utils/texts";
 import {useEffect, useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
@@ -70,7 +70,7 @@ const AdminEditor = ({ value }: any) => {
                         key={val}
                         value={val}
                     >
-                        {val}
+                        {printTextKind(val)}
                     </option>
                 ))}
             </select>

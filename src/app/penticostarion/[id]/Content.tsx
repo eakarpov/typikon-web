@@ -26,6 +26,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayTitle value={item.polyeleos} valueName={TextType.POLYELEOS} />
                     <DayTitle value={item.song3} valueName={TextType.SONG_3} />
                     <DayTitle value={item.song6} valueName={TextType.SONG_6} />
+                    <DayTitle value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
                     <DayTitle value={item.before1h} valueName={TextType.BEFORE_1h} />
                     <DayTitle value={item.panagia} valueName={TextType.PANAGIA} />
                 </ul>
@@ -40,6 +41,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                 <DayPart value={item.song3} valueName={TextType.SONG_3} />
                 <DayPart value={item.song6} valueName={TextType.SONG_6} />
                 <DayPart value={item.before1h} valueName={TextType.BEFORE_1h} />
+                <DayPart value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
                 <DayPart value={item.panagia} valueName={TextType.PANAGIA} />
             </div>
         </div>

@@ -1,4 +1,4 @@
-import {printTextKind, TextType, valueTitle} from "@/utils/texts";
+import {fullTitle, isFootnoteBook, TextType} from "@/utils/texts";
 import TextPart from "@/app/components/TextPart";
 
 export interface IReadDayPart {
@@ -10,33 +10,21 @@ const DayPart = ({
     value,
     valueName,
 }: IReadDayPart) => {
-    const title = valueTitle(valueName);
     return value && (
             <section className="space-y-2" id={valueName}>
-                <h1 className="text-1xl font-bold">
-                    {title}
-                </h1>
                 {value.items?.map((item: any) => item.text && (
                     <div key={item.text._id.toString()}>
-                        <p>
-                            Типикон говорит: {item.cite}
+                        <p className="text-1xl font-bold">
+                            {fullTitle(valueName, item.text.type, item.text.book?.author, item.text.start)}
                         </p>
+                        {item.cite && (
+                            <p>
+                                <strong>Типикон говорит:</strong> {item.cite}
+                            </p>
+                        )}
                         {item.text.description && (
                             <p>
                                 {item.text.description}
-                            </p>
-                        )}
-                        {item.text.start && (
-                            <p>
-                                Начало: {item.text.start}
-                            </p>
-                        )}
-                        <p>
-                            Тип: {printTextKind(item.text.type)}
-                        </p>
-                        {item.text.book?.author && (
-                            <p>
-                                Автор: {item.text.book?.author}
                             </p>
                         )}
                         <div className="space-y-1 mt-2">
@@ -76,6 +64,21 @@ const DayPart = ({
                                 </p>
                             ))}
                         </div>
+                        {item.text.footnotes?.length > 0 && (
+                            <div className="font-serif">
+                                <p>
+                                    <strong>Сноски:</strong>
+                                </p>
+                                {item.text.footnotes?.map((footnote: string, index: number) => {
+                                    const { isBook } = isFootnoteBook(footnote);
+                                    return isBook ? null : (
+                                        <p key={footnote} id={`footnotes-${index + 1}`}>
+                                            {index + 1} {footnote}
+                                        </p>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 ))}
             </section>

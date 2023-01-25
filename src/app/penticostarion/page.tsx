@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Content from "@/app/penticostarion/Content";
 import {getItems} from "@/app/penticostarion/api";
+import {myFont} from "@/utils/font";
 
 const Penticostarion = async () => {
     const itemsData = getItems();
@@ -13,10 +14,12 @@ const Penticostarion = async () => {
             <p>
                 В данном разделе будет информация об уставных чтений с Пасхи до недели всех святых.
             </p>
-            <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
-                <Content itemsPromise={itemsData} />
-            </Suspense>
+            <div className={myFont.variable}>
+                <Suspense fallback={<div>Loading...</div>}>
+                    {/* @ts-expect-error Async Server Component */}
+                    <Content itemsPromise={itemsData} />
+                </Suspense>
+            </div>
         </div>
     );
 };

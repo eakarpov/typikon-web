@@ -7,8 +7,7 @@ export interface IDayPart {
     valueName: TextType;
     setter: any;
     triodic: boolean;
-    setTextCite: any;
-    setTextId: any;
+    setTextField: (itemName: TextType, index: number, field: "textId"|"cite", value: string) => void;
 }
 
 export const DayPart = ({
@@ -16,8 +15,7 @@ export const DayPart = ({
                             valueName,
                             setter,
                             triodic,
-                            setTextCite,
-                            setTextId,
+                            setTextField,
 }: IDayPart) => {
     return (
         <>
@@ -51,7 +49,7 @@ export const DayPart = ({
                             <input
                                 className="border-2"
                                 value={item.cite}
-                                onChange={e => setTextCite(valueName, index, e.target.value)}
+                                onChange={e => setTextField(valueName, index, "cite", e.target.value)}
                             />
                             <label>
                                 Идентификатор текста
@@ -59,7 +57,7 @@ export const DayPart = ({
                             <input
                                 className="border-2"
                                 value={item.textId}
-                                onChange={e => setTextId(valueName, index, e.target.value)}
+                                onChange={e => setTextField(valueName, index, "textId", e.target.value)}
                             />
                         </div>
                     ))}

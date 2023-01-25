@@ -1,13 +1,7 @@
 import {getItem} from "@/app/penticostarion/[id]/api";
 import Content from "@/app/penticostarion/[id]/Content";
 import {Suspense} from "react";
-import localFont from '@next/font/local';
-
-const myFont = localFont({
-    src: "../../../../public/fonts/OldStandard-Regular.otf",
-    variable: '--font-old-standard',
-    display: "swap",
-});
+import {myFont} from "@/utils/font";
 
 const PenticostarionItem = ({ params: { id }}: { params: {id: string}}) => {
 
@@ -15,9 +9,6 @@ const PenticostarionItem = ({ params: { id }}: { params: {id: string}}) => {
 
     return (
       <div className={myFont.variable}>
-          <p>
-              Это страница элемента
-          </p>
           <Suspense fallback={<div>Loading...</div>}>
               {/* @ts-expect-error Async Server Component */}
               <Content itemPromise={itemPromise} />
