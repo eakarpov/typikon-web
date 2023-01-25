@@ -6,6 +6,7 @@ import localFont from '@next/font/local';
 const myFont = localFont({
     src: "../../../../public/fonts/OldStandard-Regular.otf",
     variable: '--font-old-standard',
+    display: "swap",
 });
 
 const PenticostarionItem = ({ params: { id }}: { params: {id: string}}) => {
