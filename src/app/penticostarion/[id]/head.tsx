@@ -1,6 +1,5 @@
 import {getItem} from "@/app/penticostarion/[id]/api";
-import { analyticsConnector } from "@/utils/google";
-import Script from "next/script";
+import CommonMeta from "@/app/components/CommonMeta";
 
 interface IHead {
     params: { id: string };
@@ -10,14 +9,14 @@ export default async function Head({ params: { id }}: IHead) {
     const item = await getItem(id);
     return (
         <>
-            <Script id="gtag" async src="https://www.googletagmanager.com/gtag/js?id=G-5PZYF60JJ0" />
-            <Script id="ga-local" strategy="lazyOnload">
-                {analyticsConnector}
-            </Script>
+            <CommonMeta />
             <title>{item.name}</title>
             <meta content="width=device-width, initial-scale=1" name="viewport" />
-            <meta name="description" content={`Чтения на день: ${item.name}. ${item.subnames?.join(',')}`} />
-            <link rel="icon" href="/favicon.ico" />
+            <meta name="description" content={`Уставные чтения на день: ${item.name}. ${item.subnames?.join(',')}`} />
+            <meta property="og:type" content="website" />
+            <meta property="og:title" content={item.name} />
+            <meta property="og:url" content={`//www.typikon.su/penticostarion/${id}`} />
+            <meta property="og:description" content={`Уставные чтения на день: ${item.name}. ${item.subnames?.join(',')}`} />
         </>
     )
 }

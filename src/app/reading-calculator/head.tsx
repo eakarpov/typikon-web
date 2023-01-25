@@ -1,17 +1,16 @@
-import { analyticsConnector } from "@/utils/google";
-import Script from "next/script";
+import CommonMeta from "@/app/components/CommonMeta";
 
 export default function Head() {
     return (
         <>
-            <Script id="gtag" async src="https://www.googletagmanager.com/gtag/js?id=G-5PZYF60JJ0" />
-            <Script id="ga-local" strategy="lazyOnload">
-                {analyticsConnector}
-            </Script>
+            <CommonMeta />
             <title>Чтения на день</title>
             <meta content="width=device-width, initial-scale=1" name="viewport" />
             <meta name="description" content="Уставные чтения на выбранный день годового и триодного круга." />
-            <link rel="icon" href="/favicon.ico" />
+            <meta property="og:type" content="website" />
+            <meta property="og:title" content="Уставные чтения на день" />
+            <meta property="og:url" content="//www.typikon.su/reading-calculator/" />
+            <meta property="og:description" content="Уставные чтения на выбранный день годового и триодного круга." />
         </>
     )
 }
