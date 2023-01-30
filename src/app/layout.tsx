@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 import Link from "next/link";
+import {InformationCircleIcon} from "@heroicons/react/20/solid";
 
 export default function RootLayout({
   children,
@@ -10,6 +11,11 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body>
+          <noscript>
+              <div>
+                  <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
+              </div>
+          </noscript>
           <nav className="border-b-2 w-full overflow-scroll">
               <div className="container mx-auto px-4 flex flex-row items-baseline">
                   <Link href="/" className="text-lg mr-3 font-bold min-w-fit">
@@ -36,6 +42,12 @@ export default function RootLayout({
                               Админка
                           </Link>
                       )}
+                      <Link
+                          href="/about"
+                          className="cursor-pointer min-w-fit flex items-center"
+                      >
+                          <InformationCircleIcon className="w-4 h-4" />
+                      </Link>
                   </div>
               </div>
           </nav>

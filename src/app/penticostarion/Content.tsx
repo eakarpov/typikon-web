@@ -24,6 +24,7 @@ const Content = async ({ itemsPromise }: IContent) => {
 
     return (
         <div className="mt-2">
+            <h1>Уставные чтения Цветной Триоди</h1>
             {items.map((week: any) => (
                 <div key={week.id} className="flex flex-row mb-4">
                     <p className="text-slate-400 w-36">
