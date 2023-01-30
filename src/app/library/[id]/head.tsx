@@ -12,11 +12,11 @@ export default async function Head({ params: { id }}: IHead) {
             <CommonMeta />
             <title>Библиотека текстов</title>
             <meta content="width=device-width, initial-scale=1" name="viewport" />
-            <meta name="description" content={`Уставные чтения. ${item.author ? `Автор: (${item.author})` : ""}. Название: ${item.name}`} />
+            <meta name="description" content={`Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`} />
             <meta property="og:type" content="website" />
-            <meta property="og:title" content={`${item.name} ${item.author ? `(${item.author})` : ""}`} />
-            <meta property="og:url" content={`//www.typikon.su/library/${item.id}`} />
-            <meta property="og:description" content={`Уставные чтения. ${item.author ? `Автор: (${item.author})` : ""}. Название: ${item.name}`} />
+            <meta property="og:title" content={`${item?.name} ${item?.author ? `(${item?.author})` : ""}`} />
+            <meta property="og:url" content={`//www.typikon.su/library/${item?.id}`} />
+            <meta property="og:description" content={`Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`} />
         </>
     )
 }

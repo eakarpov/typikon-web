@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import Link from "next/link";
 import {InformationCircleIcon} from "@heroicons/react/20/solid";
+import Image from "next/image";
 
 export default function RootLayout({
   children,
@@ -13,7 +14,7 @@ export default function RootLayout({
       <body>
           <noscript>
               <div>
-                  <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
+                  <Image src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
               </div>
           </noscript>
           <nav className="border-b-2 w-full overflow-scroll">
