@@ -10,13 +10,13 @@ export default async function Head({ params: { id }}: IHead) {
     return (
         <>
             <CommonMeta />
-            <title>{item.name}</title>
+            <title>{item?.name}</title>
             <meta content="width=device-width, initial-scale=1" name="viewport" />
-            <meta name="description" content={`Уставные чтения на день: ${item.name}. ${item.subnames?.join(',')}`} />
+            <meta name="description" content={`Уставные чтения на день: ${item?.name}. ${item?.subnames?.join(',')}`} />
             <meta property="og:type" content="website" />
-            <meta property="og:title" content={item.name} />
+            <meta property="og:title" content={item?.name} />
             <meta property="og:url" content={`//www.typikon.su/penticostarion/${id}`} />
-            <meta property="og:description" content={`Уставные чтения на день: ${item.name}. ${item.subnames?.join(',')}`} />
+            <meta property="og:description" content={`Уставные чтения на день: ${item?.name}. ${item?.subnames?.join(',')}`} />
         </>
     )
 }
