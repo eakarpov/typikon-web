@@ -20,6 +20,16 @@ export const getItem = async (id: string): Promise<[any, any]> => {
                 },
                 {
                     $addFields: {
+                        "texts": {
+                            $sortArray: {
+                                input: "$texts",
+                                sortBy: { bookIndex: 1 }
+                            },
+                        },
+                    },
+                },
+                {
+                    $addFields: {
                         id: { $toString: "$_id" },
                     },
                 },

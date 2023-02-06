@@ -34,10 +34,10 @@ const Content = async ({ itemsPromise }: IContent) => {
                         {week.days.map((day: any) => (
                             <Link
                                 key={day.id}
-                                href={`/penticostarion/${day.id}`}
+                                href={`/penticostarion/${day.alias || day.id}`}
                                 className="cursor-pointer"
                             >
-                                {day.name || day.id}
+                                {day.name || day.alias || day.id}
                             </Link>
                         ))}
                     </div>

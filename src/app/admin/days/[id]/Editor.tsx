@@ -25,8 +25,11 @@ const AdminEditor = ({ value }: any) => {
     const [h3, setH3] = useState(value.h3);
     const [h6, setH6] = useState(value.h6);
     const [h9, setH9] = useState(value.h9);
+    const [alias, setAlias] = useState(value.alias || "");
 
     const [weekIndex, setWeekIndex] = useState(value.weekIndex || 0);
+
+    const [saved, setIsSaved] = useState(false);
 
     const setTextField = (itemName: TextType, index: number, field: "textId"|"cite", value: string) => {
         switch (itemName) {
@@ -116,6 +119,7 @@ const AdminEditor = ({ value }: any) => {
     };
 
     const onSubmit = () => {
+        setIsSaved(false);
         fetch(`/api/admin/days/${value.id}`, {
             method: "POST",
             headers: {
@@ -141,13 +145,16 @@ const AdminEditor = ({ value }: any) => {
                 h9,
                 panagia,
                 weekIndex,
+                alias,
             }),
+        }).then(() => {
+            setIsSaved(true);
         });
     };
     return (
         <div className="flex flex-col space-y-1">
             <button onClick={onSubmit}>
-                Готово
+                {saved ? "Сохранено!" : "Сохранить"}
             </button>
             <label>
                 Триодный круг <span
@@ -174,6 +181,16 @@ const AdminEditor = ({ value }: any) => {
                     className="border-2"
                     value={weekIndex}
                     onChange={e => setWeekIndex(parseInt(e.target.value, 10))}
+                />
+            </div>
+            <div className="flex flex-row space-x-1">
+                <label>
+                    Алиас записи
+                </label>
+                <input
+                    className="border-2"
+                    value={alias}
+                    onChange={e => setAlias(e.target.value)}
                 />
             </div>
             <label>

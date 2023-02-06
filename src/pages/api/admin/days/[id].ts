@@ -34,6 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         $set: {
                             name: data.name,
                             weekIndex: data.weekIndex,
+                            alias: data.alias,
                             vespersProkimenon: mapToDbObject(data.vespersProkimenon),
                             vigil: mapToDbObject(data.vigil),
                             kathisma1: mapToDbObject(data.kathisma1),

@@ -1,7 +1,6 @@
 import '../styles/globals.css';
 import Link from "next/link";
-import {InformationCircleIcon} from "@heroicons/react/20/solid";
-import Image from "next/image";
+import {InformationCircleIcon, EnvelopeIcon} from "@heroicons/react/20/solid";
 
 export default function RootLayout({
   children,
@@ -14,7 +13,7 @@ export default function RootLayout({
       <body>
           <noscript>
               <div>
-                  <Image src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
+                  <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
               </div>
           </noscript>
           <nav className="border-b-2 w-full overflow-scroll">
@@ -32,6 +31,9 @@ export default function RootLayout({
                       <Link href="/rest-readings" className="cursor-pointer min-w-fit">
                           Вне триодного цикла
                       </Link>
+                      <Link href="/calendar" className="cursor-pointer min-w-fit">
+                          Календарные чтения
+                      </Link>
                       <Link href="/reading-calculator" className="cursor-pointer min-w-fit">
                           Чтения на конкретный день
                       </Link>
@@ -43,6 +45,12 @@ export default function RootLayout({
                               Админка
                           </Link>
                       )}
+                      <Link
+                          href="/contact"
+                          className="cursor-pointer min-w-fit flex items-center"
+                      >
+                          <EnvelopeIcon className="w-4 h-4" />
+                      </Link>
                       <Link
                           href="/about"
                           className="cursor-pointer min-w-fit flex items-center"

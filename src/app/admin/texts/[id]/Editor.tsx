@@ -9,10 +9,15 @@ const AdminEditor = ({ value }: any) => {
     );
     const [name, setName] = useState(value.name || "");
     const [start, setStart] = useState(value.start || "");
+    const [bookIndex, setBookIndex] = useState(value.bookIndex || 0);
     const [description, setDescription] = useState(value.description || "");
     const [type, setType] = useState(value.type || "");
     const [content, setContent] = useState(value.content || "");
+
+    const [saved, setIsSaved] = useState(false);
+
     const onSubmit = () => {
+        setIsSaved(false);
         const fNotes = footNotesToArray(footnotes);
         if (fNotes.includes(undefined)) {
             alert("Error with footnotes");
@@ -28,14 +33,17 @@ const AdminEditor = ({ value }: any) => {
                 start,
                 description,
                 content,
+                bookIndex,
                 footnotes: fNotes,
             }),
+        }).then(() => {
+            setIsSaved(true);
         });
     };
     return (
         <div className="flex flex-col">
             <button onClick={onSubmit}>
-                Готово
+                {saved ? "Сохранено!" : "Сохранить"}
             </button>
             <label>
                 Название
@@ -60,6 +68,14 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
+            />
+            <label>
+                Порядковый номер
+            </label>
+            <input
+                className="border-2"
+                value={bookIndex}
+                onChange={e => setBookIndex(e.target.value)}
             />
             <label>
                 Тип

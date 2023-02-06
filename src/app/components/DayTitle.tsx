@@ -9,7 +9,7 @@ const DayTitle = ({
     value,
     valueName,
 }: IDayTitle) => {
-    return value && (
+    return value?.items && (
         <li>
             <a href={`#${valueName}`}>
                 {valueTitle(valueName)}

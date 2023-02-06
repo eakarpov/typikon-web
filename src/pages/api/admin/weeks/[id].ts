@@ -8,29 +8,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        const data = req.body;
         const id = req.query.id as string;
+        const data = req.body;
+        if (!id) {
+            res.status(400).end();
+        }
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
-            console.log(data, id);
             await db
-                .collection("texts")
+                .collection("weeks")
                 .updateOne(
-                    { "_id" : new ObjectId(id) },
+                    { _id : new ObjectId(id) },
                     {
                         $set: {
-                            name: data.name,
-                            footnotes: data.footnotes,
-                            start: data.start,
-                            description: data.description,
-                            type: data.type,
-                            bookIndex: data.bookIndex,
-                            content: data.content,
+                            alias: data.alias,
                         },
                     },
                 );
-
             res.status(200).end();
         } catch (e) {
             console.log("mongodb error");

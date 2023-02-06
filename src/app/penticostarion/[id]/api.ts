@@ -49,11 +49,12 @@ export const getItem = async (id: string) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
+        const matcher = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { alias: id };
 
         const days = await db
             .collection("days")
             .aggregate([
-                { $match: { _id: new ObjectId(id) }},
+                { $match: matcher },
                 {
                     $lookup: {
                         from: "texts",

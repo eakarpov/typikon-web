@@ -21,9 +21,18 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     return (
         <div className="flex flex-col pt-2">
-            <p>
-                <strong>{item.name}</strong>
-            </p>
+            <h1 className="font-bold">{item.name}</h1>
+            {item.author && (
+                <p>
+                    <strong>Автор: </strong>{item.author}
+                </p>
+            )}
+            {item.translator && (
+                <p>
+                    <strong>Переводчик: </strong>{item.translator}
+                </p>
+            )}
+            <h2>Содержание:</h2>
             <div className="pt-2">
                 {item.texts.map((text: any) => (
                     <p key={text._id.toString()}>

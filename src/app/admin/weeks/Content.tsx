@@ -16,7 +16,7 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<any[]> }) => {
                             href={`/admin/weeks/${week._id.toString()}`}
                             className="cursor-pointer"
                         >
-                            {week._id.toString()}
+                            {week._id.toString()} {week.alias && `(${week.alias})`}
                         </Link>
                     </div>
                 </div>

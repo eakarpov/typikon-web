@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import {useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
-    const onSubmit = () => {
+    const [alias, setAlias] = useState(value.alias || "");
+    const onSubmitAdd = () => {
         fetch('/api/admin/days', {
             method: "POST",
             headers: {
@@ -12,12 +14,35 @@ const AdminEditor = ({ value }: any) => {
             body: JSON.stringify({ weekId: value.id }),
         });
     };
+    const onSubmitSave = () => {
+        console.log(alias);
+        fetch(`/api/admin/weeks/${value.id}`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                alias,
+            }),
+        });
+    };
     return (
         <div className="flex flex-col">
             <p>
                 Неделя {value.value} по {value.type === 'Pascha' ? "Пасхе" : "Пятидесятнице"}
             </p>
-            <p onClick={onSubmit} className="cursor-pointer">
+            <button onClick={onSubmitSave}>
+                Готово
+            </button>
+            <label>
+                Алиас
+            </label>
+            <input
+                className="border-2"
+                value={alias}
+                onChange={e => setAlias(e.target.value)}
+            />
+            <p onClick={onSubmitAdd} className="cursor-pointer">
                 Добавить день
             </p>
             {value.days.map((day: any) => (
@@ -30,7 +55,7 @@ const AdminEditor = ({ value }: any) => {
                             href={`/admin/days/${day.id}`}
                             className="cursor-pointer"
                         >
-                            {day.id}
+                            {day.id} {day.alias && `(${day.alias})`}
                         </Link>
                     </div>
                     <p>
