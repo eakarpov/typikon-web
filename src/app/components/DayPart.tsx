@@ -1,21 +1,76 @@
-import {fullTitle, isFootnoteBook, TextType} from "@/utils/texts";
+import {
+    fullTitle,
+    isFootnoteBook,
+    printTextReadiness,
+    TextReadiness,
+    textReadinessClassname,
+    TextType, valueTitle
+} from "@/utils/texts";
 import TextPart from "@/app/components/TextPart";
 
 export interface IReadDayPart {
     value: any;
     valueName: TextType;
+    triodic?: boolean;
 }
+
+const ReadinessButton = ({ value }: { value: TextReadiness }) => {
+    switch (value) {
+        case TextReadiness.READY:
+            return (
+                <span className="bg-green-600 text-white p-1 rounded-sm">
+                    {printTextReadiness(value)}
+                </span>
+            );
+        case TextReadiness.CORRECTION:
+            return (
+                <span className="bg-blue-600 text-white p-1 rounded-sm">
+                    {printTextReadiness(value)}
+                </span>
+            );
+        case TextReadiness.TEXTING:
+            return (
+                <span className="bg-yellow-600 text-white p-1 rounded-sm">
+                    {printTextReadiness(value)}
+                </span>
+            );
+        case TextReadiness.PRESENCE:
+            return (
+                <span className="bg-grey-600 text-white p-1 rounded-sm">
+                    {printTextReadiness(value)}
+                </span>
+            );
+        case TextReadiness.ABSENCE:
+            return (
+                <span className="bg-red-600 text-white p-1 rounded-sm">
+                    {printTextReadiness(value)}
+                </span>
+            );
+        default:
+            return (
+                <span className="bg-red-600 text-white p-1 rounded-sm">
+                    {printTextReadiness(value)}
+                </span>
+            );
+    }
+};
 
 const DayPart = ({
     value,
     valueName,
+    triodic,
 }: IReadDayPart) => {
     return value && (
             <section className="space-y-2" id={valueName}>
-                {value.items?.map((item: any) => item.text && (
+                <p className="text-1xl font-bold">
+                    {valueTitle(valueName)}
+                </p>
+                {value.items?.map((item: any) => item.text ? (
                     <div key={item.text._id.toString()}>
                         <p className="text-1xl font-bold">
-                            {fullTitle(valueName, item.text.type, item.text.book?.author, item.text.start)}
+                            <span className="w-fit text-xs">
+                                <ReadinessButton value={item.text.readiness} />
+                            </span> {fullTitle(item.text.type, item.text.book?.author, item.text.start)}
                         </p>
                         {item.cite && (
                             <p>
@@ -79,6 +134,10 @@ const DayPart = ({
                                 })}
                             </div>
                         )}
+                    </div>
+                ) : triodic && !item.triodic && (
+                    <div>
+                        <strong>{valueTitle(valueName)} календарное чтение (Пролог, похвальное слово святому)</strong> - смотри соответствующий день в календарных чтениях
                     </div>
                 ))}
             </section>

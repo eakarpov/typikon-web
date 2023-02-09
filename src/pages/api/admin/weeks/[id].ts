@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     {
                         $set: {
                             alias: data.alias,
+                            updatedAt: new Date(),
                         },
                     },
                 );

@@ -4,67 +4,62 @@ import Link from "next/link";
 import {useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
-    const [name, setName] = useState(value.name || "");
-
-    const [saved, setIsSaved] = useState(false);
-
+    const [alias, setAlias] = useState(value.alias || "");
     const onSubmitAdd = () => {
-        fetch('/api/admin/texts', {
+        fetch('/api/admin/days', {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ bookId: value.id }),
+            body: JSON.stringify({ monthId: value.id }),
         });
     };
     const onSubmitSave = () => {
-        setIsSaved(false);
-        fetch(`/api/admin/books/${value.id}`, {
+        console.log(alias);
+        fetch(`/api/admin/months/${value.id}`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                name,
+                alias,
             }),
-        }).then(() => {
-            setIsSaved(true);
         });
     };
     return (
         <div className="flex flex-col">
             <p>
-                Книга {value.name}
+                Месяц {value.value}
             </p>
             <button onClick={onSubmitSave}>
-                {saved ? "Сохранено!" : "Сохранить"}
+                Готово
             </button>
             <label>
-                Название
+                Алиас
             </label>
             <input
                 className="border-2"
-                value={name}
-                onChange={e => setName(e.target.value)}
+                value={alias}
+                onChange={e => setAlias(e.target.value)}
             />
             <p onClick={onSubmitAdd} className="cursor-pointer">
-                Добавить текст
+                Добавить день
             </p>
-            {value.texts.map((text: any) => (
-                <div className="flex flex-row mb-4" key={text.id}>
+            {value.days.map((day: any) => (
+                <div className="flex flex-row mb-4" key={day.id}>
                     <p className="text-slate-400 w-36">
-                        {text.name || "Нет названия"}
+                        {day.name || "Нет названия"}
                     </p>
                     <div className="flex flex-col space-y-1 w-60">
                         <Link
-                            href={`/admin/texts/${text.id}`}
+                            href={`/admin/days/${day.id}?type=month`}
                             className="cursor-pointer"
                         >
-                            {text.id}
+                            {day.id} {day.alias && `(${day.alias})`}
                         </Link>
                     </div>
                     <p>
-                        Удалить текст (пока не работает - опасно!)
+                        Удалить день (пока не работает - опасно!)
                     </p>
                 </div>
             ))}

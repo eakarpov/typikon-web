@@ -32,8 +32,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     { _id : new ObjectId(id) },
                     {
                         $set: {
+                            triodic: data.triodic,
                             name: data.name,
                             weekIndex: data.weekIndex,
+                            monthIndex: data.monthIndex,
                             alias: data.alias,
                             vespersProkimenon: mapToDbObject(data.vespersProkimenon),
                             vigil: mapToDbObject(data.vigil),
@@ -51,6 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             h6: mapToDbObject(data.h6),
                             h9: mapToDbObject(data.h9),
                             panagia: mapToDbObject(data.panagia),
+                            updatedAt: new Date(),
                         },
                     },
                 );

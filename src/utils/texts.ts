@@ -1,5 +1,45 @@
 import {Nullable} from "mongodb/src/mongo_types";
 
+export enum TextReadiness {
+    READY= "ready",
+    CORRECTION= "correcting",
+    TEXTING= "texted",
+    PRESENCE= "presence",
+    ABSENCE= "absence",
+}
+
+export const printTextReadiness = (readiness: TextReadiness) => {
+    switch (readiness) {
+        case TextReadiness.READY:
+            return "Готово";
+        case TextReadiness.CORRECTION:
+            return "Коррекция";
+        case TextReadiness.TEXTING:
+            return "Отекстовано";
+        case TextReadiness.PRESENCE:
+            return "В наличии";
+        case TextReadiness.ABSENCE:
+            return "Пока отсутствует";
+        default:
+            return "Информация не добавлена";
+    }
+}
+
+export const textReadinessClassname = (readiness: TextReadiness) => {
+    switch (readiness) {
+        case TextReadiness.READY:
+            return "bg-green-500 text-white";
+        case TextReadiness.CORRECTION:
+            return "blue";
+        case TextReadiness.TEXTING:
+            return "yellow";
+        case TextReadiness.PRESENCE:
+            return "grey";
+        case TextReadiness.ABSENCE:
+            return "black";
+    }
+}
+
 export enum TextKind {
     TEACHIND= "Teaching",
     PRAISING= "Praising",
@@ -67,10 +107,22 @@ export const footNotesToArray = (footNotesText: string): Nullable<string>[] =>
         ? footNotesText.split("\n").map(footNotesRow => footNotesRow.split(" ")[1])
         : [];
 
-export const fullTitle = (valueName: TextType, valueKind: TextKind, author: string, startString: string) => {
-    const typeTitle = valueTitle(valueName);
+export const fullTitle = (valueKind: TextKind, author: string, startString: string) => {
     const kind = fullTextKind(valueKind, author);
-    return `${typeTitle} ${kind}, егоже начало сице: ${startString}`;
+    switch (valueKind) {
+        case TextKind.TEACHIND:
+        case TextKind.PRAISING:
+        case TextKind.INTERPRETATION:
+            return `${kind}, егоже начало сице: ${startString}`;
+        case TextKind.SYNAXARION:
+            return `${kind}, егоже начало сице: ${startString}`;
+        case TextKind.HISTORIC:
+            return "Пролог";
+        case TextKind.CATECHISTIC:
+            return kind;
+        default:
+            return "";
+    }
 }
 
 export const valueTitle = (valueName: TextType) => {

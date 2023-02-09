@@ -17,12 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const client = await clientPromise;
             const db = client.db("typikon");
             await db
-                .collection("books")
+                .collection("months")
                 .updateOne(
                     { _id : new ObjectId(id) },
                     {
                         $set: {
-                            name: data.name,
+                            alias: data.alias,
                             updatedAt: new Date(),
                         },
                     },

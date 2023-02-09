@@ -35,10 +35,46 @@ const getAggregationAddField = (name: TextType) => {
     };
 }
 
-export const getItem = async (id: string) => {
+export const getItem = async (id: string, inWeek: boolean) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
+
+        const parentFilter = inWeek ? [
+            {
+                $lookup: {
+                    from: "weeks",
+                    localField: "weekId",
+                    foreignField: "_id",
+                    as: "week"
+                },
+            },
+            {
+                $addFields: {
+                    "week.id": { $toString: "$weekId" }
+                }
+            },
+        ] : [
+            {
+                $lookup: {
+                    from: "months",
+                    localField: "monthId",
+                    foreignField: "_id",
+                    as: "month"
+                },
+            },
+            {
+                $addFields: {
+                    "month.id": { $toString: "$monthId" }
+                }
+            },
+        ];
+
+        const parentProject = inWeek ? [
+            { $project: { "weekId": false, "week.days": false, "_id": false, "week._id": false }},
+        ] : [
+            { $project: { "monthId": false, "month.days": false, "_id": false, "month._id": false }}
+        ]
 
         const days = await db
             .collection("days")
@@ -49,19 +85,7 @@ export const getItem = async (id: string) => {
                         id: { $toString: "$_id" }
                     }
                 },
-                {
-                    $lookup: {
-                        from: "weeks",
-                        localField: "weekId",
-                        foreignField: "_id",
-                        as: "week"
-                    },
-                },
-                {
-                    $addFields: {
-                        "week.id": { $toString: "$weekId" }
-                    }
-                },
+                ...parentFilter,
                 getAggregationAddField(TextType.VESPERS_PROKIMENON),
                 getAggregationAddField(TextType.VIGIL),
                 getAggregationAddField(TextType.KATHISMA_1),
@@ -78,7 +102,7 @@ export const getItem = async (id: string) => {
                 getAggregationAddField(TextType.H6),
                 getAggregationAddField(TextType.H9),
                 getAggregationAddField(TextType.PANAGIA),
-                { $project: { "weekId": false, "week.days": false, "_id": false, "week._id": false }}
+                ...parentProject,
             ])
             .toArray();
         return days[0];

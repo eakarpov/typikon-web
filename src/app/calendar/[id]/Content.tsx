@@ -4,13 +4,13 @@ import DayTitle from "@/app/components/DayTitle";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
-    const item = await itemPromise;
+    const [item, error] = await itemPromise;
 
-    if (!item) {
+    if (!item || error) {
         return (
-          <div>
-              Ничего не нашлось
-          </div>
+            <div>
+                Ничего не нашлось
+            </div>
         );
     }
 
@@ -32,17 +32,17 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                 </ul>
             </div>
             <div className="flex flex-col flex-1 space-y-4">
-                <DayPart value={item.vigil} valueName={TextType.VIGIL} triodic />
-                <DayPart value={item.kathisma1} valueName={TextType.KATHISMA_1} triodic />
-                <DayPart value={item.kathisma2} valueName={TextType.KATHISMA_2} triodic />
-                <DayPart value={item.kathisma3} valueName={TextType.KATHISMA_3} triodic />
-                <DayPart value={item.ipakoi} valueName={TextType.IPAKOI} triodic />
-                <DayPart value={item.polyeleos} valueName={TextType.POLYELEOS} triodic />
-                <DayPart value={item.song3} valueName={TextType.SONG_3} triodic />
-                <DayPart value={item.song6} valueName={TextType.SONG_6} triodic />
-                <DayPart value={item.before1h} valueName={TextType.BEFORE_1h} triodic />
-                <DayPart value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} triodic />
-                <DayPart value={item.panagia} valueName={TextType.PANAGIA} triodic />
+                <DayPart value={item.vigil} valueName={TextType.VIGIL} />
+                <DayPart value={item.kathisma1} valueName={TextType.KATHISMA_1} />
+                <DayPart value={item.kathisma2} valueName={TextType.KATHISMA_2} />
+                <DayPart value={item.kathisma3} valueName={TextType.KATHISMA_3} />
+                <DayPart value={item.ipakoi} valueName={TextType.IPAKOI} />
+                <DayPart value={item.polyeleos} valueName={TextType.POLYELEOS} />
+                <DayPart value={item.song3} valueName={TextType.SONG_3} />
+                <DayPart value={item.song6} valueName={TextType.SONG_6} />
+                <DayPart value={item.before1h} valueName={TextType.BEFORE_1h} />
+                <DayPart value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
+                <DayPart value={item.panagia} valueName={TextType.PANAGIA} />
             </div>
         </div>
     );

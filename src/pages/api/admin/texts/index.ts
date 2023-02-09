@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     ruLink: null,
                     bookId: new ObjectId(bookId),
                     footnotes: [],
+                    createdAt: new Date(),
                 });
             await db.collection("books")
                 .updateOne(

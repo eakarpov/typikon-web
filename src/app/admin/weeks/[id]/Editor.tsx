@@ -52,7 +52,7 @@ const AdminEditor = ({ value }: any) => {
                     </p>
                     <div className="flex flex-col space-y-1 w-60">
                         <Link
-                            href={`/admin/days/${day.id}`}
+                            href={`/admin/days/${day.id}?type=week`}
                             className="cursor-pointer"
                         >
                             {day.id} {day.alias && `(${day.alias})`}

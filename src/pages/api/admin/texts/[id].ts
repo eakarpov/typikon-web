@@ -26,7 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             description: data.description,
                             type: data.type,
                             bookIndex: data.bookIndex,
+                            readiness: data.readiness,
                             content: data.content,
+                            updatedAt: new Date(),
                         },
                     },
                 );

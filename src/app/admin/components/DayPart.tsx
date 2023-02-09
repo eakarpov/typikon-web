@@ -7,7 +7,7 @@ export interface IDayPart {
     valueName: TextType;
     setter: any;
     triodic: boolean;
-    setTextField: (itemName: TextType, index: number, field: "textId"|"cite", value: string) => void;
+    setTextField: (itemName: TextType, index: number, field: "textId"|"cite"|"triodic", value: string|boolean) => void;
 }
 
 export const DayPart = ({
@@ -20,21 +20,15 @@ export const DayPart = ({
     return (
         <>
             <label>
-                <span className="font-bold">{valueTitle(valueName)}</span> {!value ? (
+                <span className="font-bold">{valueTitle(valueName)}</span>
                 <span
                     className="cursor-pointer text-slate-300"
                     onClick={() => {
-                        setter({ items: [ { cite: "", textId: "", triodic } ]});
+                        setter({ items: [ ...(value.items || []), { cite: "", textId: "", triodic } ]});
                     }}
-                >Добавить</span>
-            ) : (
-                <span
-                    className="cursor-pointer text-slate-300"
-                    onClick={() => setter(null)}
                 >
-                    Удалить
+                    Добавить
                 </span>
-            )}
             </label>
             {value && (
                 <div>
@@ -43,6 +37,16 @@ export const DayPart = ({
                     </label>
                     {value.items?.map((item: any, index: number) => (
                         <div key={item.textId} className="flex flex-col">
+                            <span
+                                className="cursor-pointer text-slate-300"
+                                onClick={() => setter(
+                                    value.items?.length > 1
+                                        ? { items: [ value.items.filter((e: any, i: number) => i !== index)]}
+                                        : null
+                                )}
+                            >
+                                Удалить
+                            </span>
                             <label>
                                 Цитата из Типикона
                             </label>
@@ -51,14 +55,21 @@ export const DayPart = ({
                                 value={item.cite}
                                 onChange={e => setTextField(valueName, index, "cite", e.target.value)}
                             />
-                            <label>
-                                Идентификатор текста
-                            </label>
-                            <input
-                                className="border-2"
-                                value={item.textId}
-                                onChange={e => setTextField(valueName, index, "textId", e.target.value)}
-                            />
+                            <div onClick={() => setTextField(valueName, index, "triodic", !item.triodic)}>
+                                {item.triodic ? "Триодный цикл" : "Календарный цикл"}
+                            </div>
+                            {item.triodic === triodic && (
+                                <>
+                                    <label>
+                                        Идентификатор текста
+                                    </label>
+                                    <input
+                                        className="border-2"
+                                        value={item.textId}
+                                        onChange={e => setTextField(valueName, index, "textId", e.target.value)}
+                                    />
+                                </>
+                            )}
                         </div>
                     ))}
                 </div>

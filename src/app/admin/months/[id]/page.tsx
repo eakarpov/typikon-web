@@ -1,12 +1,12 @@
-import {getItem} from "@/app/admin/days/[id]/api";
+import {getItem} from "@/app/admin/months/[id]/api";
 import {Suspense} from "react";
-import AdminEditorManager from "@/app/admin/days/[id]/EditorManager";
+import AdminEditorManager from "@/app/admin/months/[id]/EditorManager";
 
-const AdminTextId = async ({ params: { id }, searchParams: { type }}: { params: { id: string }, searchParams: { type: string } }) => {
+const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
     if (!process.env.SHOW_ADMIN) {
         return null;
     }
-    const itemPromise = getItem(id, type !== "month");
+    const itemPromise = getItem(id);
     return (
         <div>
             <p>

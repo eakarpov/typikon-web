@@ -8,8 +8,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        const {weekId} = req.body;
-        if (!weekId) {
+        const {weekId, monthId} = req.body;
+        if (!weekId && !monthId) {
             res.status(400).end();
         }
         try {
@@ -38,18 +38,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     fileId: null,
                     subnames: [],
                     triodic: true,
-                    weekId: new ObjectId(weekId),
+                    weekId: weekId ? new ObjectId(weekId) : null,
+                    monthId: monthId ? new ObjectId(monthId) : null,
                     weekIndex: 0,
+                    createdAt: new Date(),
                 });
-            await db.collection("weeks")
-                .updateOne(
-                    { _id : new ObjectId(weekId) },
-                    {
-                        $addToSet: {
-                            days: data.insertedId,
+            if (weekId) {
+                await db.collection("weeks")
+                    .updateOne(
+                        { _id : new ObjectId(weekId) },
+                        {
+                            $addToSet: {
+                                days: data.insertedId,
+                                updatedAt: new Date(),
+                            },
                         },
-                    },
-                );
+                    );
+            }
+            if (monthId) {
+                await db.collection("months")
+                    .updateOne(
+                        { _id : new ObjectId(monthId) },
+                        {
+                            $addToSet: {
+                                days: data.insertedId,
+                                updatedAt: new Date(),
+                            },
+                        },
+                    );
+            }
             res.status(200).end();
         } catch (e) {
             console.log("mongodb error");

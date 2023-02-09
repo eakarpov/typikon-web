@@ -34,7 +34,7 @@ export default function RootLayout({
                       <Link href="/calendar" className="cursor-pointer min-w-fit">
                           Календарные чтения
                       </Link>
-                      <Link href="/reading-calculator" className="cursor-pointer min-w-fit">
+                      <Link href="/calculator" className="cursor-pointer min-w-fit">
                           Чтения на конкретный день
                       </Link>
                       <Link href="/library" className="cursor-pointer min-w-fit">

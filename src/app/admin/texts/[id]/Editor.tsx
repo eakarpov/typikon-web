@@ -1,6 +1,6 @@
 "use client";
 
-import {footNotesToArray, printTextKind, TextKind} from "@/utils/texts";
+import {footNotesToArray, printTextKind, printTextReadiness, TextKind, TextReadiness} from "@/utils/texts";
 import {useEffect, useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
@@ -12,6 +12,7 @@ const AdminEditor = ({ value }: any) => {
     const [bookIndex, setBookIndex] = useState(value.bookIndex || 0);
     const [description, setDescription] = useState(value.description || "");
     const [type, setType] = useState(value.type || "");
+    const [readiness, setReadiness] = useState(value.readiness || "");
     const [content, setContent] = useState(value.content || "");
 
     const [saved, setIsSaved] = useState(false);
@@ -34,6 +35,7 @@ const AdminEditor = ({ value }: any) => {
                 description,
                 content,
                 bookIndex,
+                readiness,
                 footnotes: fNotes,
             }),
         }).then(() => {
@@ -53,6 +55,23 @@ const AdminEditor = ({ value }: any) => {
                 value={name}
                 onChange={e => setName(e.target.value)}
             />
+            <label>
+                Готовность
+            </label>
+            <select
+                className="border-2"
+                value={readiness}
+                onChange={(event) => setReadiness(event.target.value)}
+            >
+                {Object.values(TextReadiness).map(val => (
+                    <option
+                        key={val}
+                        value={val}
+                    >
+                        {printTextReadiness(val)}
+                    </option>
+                ))}
+            </select>
             <label>
                 Начало
             </label>

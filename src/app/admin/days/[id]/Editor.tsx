@@ -10,7 +10,7 @@ const AdminEditor = ({ value }: any) => {
 
     const [vespersProkimenon, setVespersProkimenon] = useState(value.vespersProkimenon);
     const [vigil, setVigil] = useState(value.vigil);
-    const [triodic, setTriodic] = useState(value.triodic || true);
+    const [triodic, setTriodic] = useState(value.triodic === undefined ? true : value.triodic);
     const [kathisma1, setKathisma1] = useState(value.kathisma1);
     const [kathisma2, setKathisma2] = useState(value.kathisma2);
     const [kathisma3, setKathisma3] = useState(value.kathisma3);
@@ -27,11 +27,11 @@ const AdminEditor = ({ value }: any) => {
     const [h9, setH9] = useState(value.h9);
     const [alias, setAlias] = useState(value.alias || "");
 
-    const [weekIndex, setWeekIndex] = useState(value.weekIndex || 0);
+    const [index, setIndex] = useState(value.triodic ? (value.weekIndex || 0) : (value.monthIndex || 0));
 
     const [saved, setIsSaved] = useState(false);
 
-    const setTextField = (itemName: TextType, index: number, field: "textId"|"cite", value: string) => {
+    const setTextField = (itemName: TextType, index: number, field: "textId"|"cite"|"triodic", value: string|boolean) => {
         switch (itemName) {
             case TextType.VESPERS_PROKIMENON:
                 const newVespersProkimenon = {...vespersProkimenon};
@@ -120,33 +120,39 @@ const AdminEditor = ({ value }: any) => {
 
     const onSubmit = () => {
         setIsSaved(false);
+        const body: any = {
+            triodic,
+            name,
+            subnames,
+            vespersProkimenon,
+            vigil,
+            kathisma1,
+            kathisma2,
+            kathisma3,
+            ipakoi,
+            polyeleos,
+            song3,
+            song6,
+            apolutikaTroparia,
+            before1h,
+            h1,
+            h3,
+            h6,
+            h9,
+            panagia,
+            alias,
+        };
+        if (triodic) {
+            body.weekIndex = index;
+        } else {
+            body.monthIndex = index;
+        }
         fetch(`/api/admin/days/${value.id}`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                name,
-                subnames,
-                vespersProkimenon,
-                vigil,
-                kathisma1,
-                kathisma2,
-                kathisma3,
-                ipakoi,
-                polyeleos,
-                song3,
-                song6,
-                apolutikaTroparia,
-                before1h,
-                h1,
-                h3,
-                h6,
-                h9,
-                panagia,
-                weekIndex,
-                alias,
-            }),
+            body: JSON.stringify(body),
         }).then(() => {
             setIsSaved(true);
         });
@@ -174,13 +180,13 @@ const AdminEditor = ({ value }: any) => {
             />
             <div className="flex flex-row space-x-1">
                 <label>
-                    Индекс в недели
+                    Индекс в {triodic ? 'неделе' : 'месяце'}
                 </label>
                 <input
                     type="number"
                     className="border-2"
-                    value={weekIndex}
-                    onChange={e => setWeekIndex(parseInt(e.target.value, 10))}
+                    value={index}
+                    onChange={e => setIndex(parseInt(e.target.value, 10))}
                 />
             </div>
             <div className="flex flex-row space-x-1">
