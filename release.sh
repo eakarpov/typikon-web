@@ -1,12 +1,12 @@
 export $(grep -v '^#' .env.release | xargs)
 
-scp .env.production $USERNAME:$PASSWORD@$HOST:~/typikon-web/.env.production
+sshpass -f <(printf '%s\n' $PASSWORD) scp .env.production $USERNAME@$HOST:~/typikon-web/.env.production
 
 rm -rf db
 mongodump -d typikon -o db
 zip -rX db.zip db
-scp db.zip $USERNAME:$PASSWORD@$HOST:~/db.zip
+sshpass -f <(printf '%s\n' $PASSWORD) scp db.zip $USERNAME@$HOST:~/db.zip
 
-ssh $USERNAME:$PASSWORD@$HOST 'bash -s' < db-remote.sh
+sshpass -f <(printf '%s\n' $PASSWORD) ssh $USERNAME@$HOST 'bash -s' < db-remote.sh
 
-ssh $USERNAME:$PASSWORD@$HOST 'bash -s' < rebuild-remote.sh
+sshpass -f <(printf '%s\n' $PASSWORD) ssh $USERNAME@$HOST 'bash -s' < rebuild-remote.sh
