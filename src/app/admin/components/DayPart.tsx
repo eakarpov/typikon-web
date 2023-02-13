@@ -24,7 +24,7 @@ export const DayPart = ({
                 <span
                     className="cursor-pointer text-slate-300"
                     onClick={() => {
-                        setter({ items: [ ...(value.items || []), { cite: "", textId: "", triodic } ]});
+                        setter({ items: [ ...(value?.items || []), { cite: "", textId: "", triodic } ]});
                     }}
                 >
                     Добавить

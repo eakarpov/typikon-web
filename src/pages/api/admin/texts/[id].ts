@@ -29,6 +29,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             readiness: data.readiness,
                             content: data.content,
                             updatedAt: new Date(),
+                            ruLink: data.ruLink,
+                            link: data.link,
                         },
                     },
                 );

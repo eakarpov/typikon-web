@@ -3,10 +3,10 @@ import {
     isFootnoteBook,
     printTextReadiness,
     TextReadiness,
-    textReadinessClassname,
     TextType, valueTitle
 } from "@/utils/texts";
 import TextPart from "@/app/components/TextPart";
+import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 
 export interface IReadDayPart {
     value: any;
@@ -68,9 +68,25 @@ const DayPart = ({
                 {value.items?.map((item: any) => item.text ? (
                     <div key={item.text._id.toString()}>
                         <p className="text-1xl font-bold">
-                            <span className="w-fit text-xs">
-                                <ReadinessButton value={item.text.readiness} />
-                            </span> {fullTitle(item.text.type, item.text.book?.author, item.text.start)}
+                            <span className="flex flex-row items-center">
+                                {item.text.ruLink && (
+                                    <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
+                                        <a href={item.text.ruLink} target="_blank">
+                                            Русский текст&nbsp;
+                                        </a>
+                                        <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                                    </span>
+                                )}
+                                <span className="w-fit text-xs pr-2">
+                                    <ReadinessButton value={item.text.readiness} />
+                                </span>
+                                <span className="font-normal">
+                                    Дата последнего обновления: {item.text.updatedAt
+                                        ? new Date(item.text.updatedAt).toLocaleDateString("ru-RU")
+                                        : "Не задано"}
+                                </span>
+                            </span>
+                            {fullTitle(item.text.type, item.text.book?.author, item.text.start)}
                         </p>
                         {item.cite && (
                             <p>

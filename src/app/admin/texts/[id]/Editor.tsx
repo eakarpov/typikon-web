@@ -14,6 +14,8 @@ const AdminEditor = ({ value }: any) => {
     const [type, setType] = useState(value.type || "");
     const [readiness, setReadiness] = useState(value.readiness || "");
     const [content, setContent] = useState(value.content || "");
+    const [link, setLink] = useState(value.link || "");
+    const [ruLink, setRuLink] = useState(value.ruLink || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -37,6 +39,8 @@ const AdminEditor = ({ value }: any) => {
                 bookIndex,
                 readiness,
                 footnotes: fNotes,
+                ruLink,
+                link,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -95,6 +99,22 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={bookIndex}
                 onChange={e => setBookIndex(e.target.value)}
+            />
+            <label>
+                Ссылка на русский текст
+            </label>
+            <input
+                className="border-2"
+                value={ruLink}
+                onChange={e => setRuLink(e.target.value)}
+            />
+            <label>
+                Ссылка на церковнославянский текст/скан
+            </label>
+            <input
+                className="border-2"
+                value={link}
+                onChange={e => setLink(e.target.value)}
             />
             <label>
                 Тип

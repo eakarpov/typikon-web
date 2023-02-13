@@ -21,7 +21,7 @@ export const printTextReadiness = (readiness: TextReadiness) => {
         case TextReadiness.ABSENCE:
             return "Пока отсутствует";
         default:
-            return "Информация не добавлена";
+            return "Информация о готовности не добавлена";
     }
 }
 
