@@ -71,7 +71,7 @@ const DayPart = ({
                             <span className="flex flex-row items-center">
                                 {item.text.ruLink && (
                                     <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
-                                        <a href={item.text.ruLink} target="_blank">
+                                        <a href={item.text.ruLink} target="_blank" rel="noreferrer">
                                             Русский текст&nbsp;
                                         </a>
                                         <ArrowTopRightOnSquareIcon className="w-4 h-4" />
