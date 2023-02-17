@@ -9,7 +9,7 @@ export default function Head() {
             <meta name="description" content="Уставные чтения на выбранный день годового и триодного круга." />
             <meta property="og:type" content="website" />
             <meta property="og:title" content="Уставные чтения на день" />
-            <meta property="og:url" content="//www.typikon.su/reading-calculator/" />
+            <meta property="og:url" content="//www.typikon.su/calculator/" />
             <meta property="og:description" content="Уставные чтения на выбранный день годового и триодного круга." />
         </>
     )
