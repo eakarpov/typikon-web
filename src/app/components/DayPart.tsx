@@ -11,7 +11,7 @@ import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 export interface IReadDayPart {
     value: any;
     valueName: TextType;
-    triodic?: boolean;
+    paschal?: boolean;
 }
 
 const ReadinessButton = ({ value }: { value: TextReadiness }) => {
@@ -58,9 +58,9 @@ const ReadinessButton = ({ value }: { value: TextReadiness }) => {
 const DayPart = ({
     value,
     valueName,
-    triodic,
+    paschal,
 }: IReadDayPart) => {
-    return value && (
+    return value?.items && (
             <section className="space-y-2" id={valueName}>
                 <p className="text-1xl font-bold">
                     {valueTitle(valueName)}
@@ -151,7 +151,7 @@ const DayPart = ({
                             </div>
                         )}
                     </div>
-                ) : triodic && !item.triodic && (
+                ) : paschal && !item.paschal && (
                     <div>
                         <strong>{valueTitle(valueName)} календарное чтение (Пролог, похвальное слово святому)</strong> - смотри соответствующий день в календарных чтениях
                     </div>

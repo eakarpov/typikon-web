@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     { _id : new ObjectId(id) },
                     {
                         $set: {
-                            triodic: data.triodic,
+                            paschal: data.paschal,
                             name: data.name,
                             weekIndex: data.weekIndex,
                             monthIndex: data.monthIndex,

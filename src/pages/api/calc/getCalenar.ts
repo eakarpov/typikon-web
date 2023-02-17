@@ -1,34 +1,26 @@
 import clientPromise from "@/lib/mongodb";
-import {ObjectId} from "mongodb";
+import {aggregationTextWithBook, getAggregationAddField} from "@/utils/database";
 import {TextType} from "@/utils/texts";
-import {getAggregationAddField} from "@/utils/database";
 
-export const getItem = async (id: string, inWeek: boolean) => {
+export const getCalendarItem = async (date: Date) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
 
-        const parentFilter = inWeek ? [
-            {
-                $lookup: {
-                    from: "weeks",
-                    localField: "weekId",
-                    foreignField: "_id",
-                    as: "week"
-                },
-            },
-            {
-                $addFields: {
-                    "week.id": { $toString: "$weekId" }
-                }
-            },
-        ] : [
+        const parentFilter = [
             {
                 $lookup: {
                     from: "months",
                     localField: "monthId",
                     foreignField: "_id",
-                    as: "month"
+                    as: "month",
+                    pipeline: [
+                        {
+                            $match: {
+                                order: date.getMonth() + 1,
+                            },
+                        },
+                    ],
                 },
             },
             {
@@ -37,23 +29,22 @@ export const getItem = async (id: string, inWeek: boolean) => {
                 }
             },
         ];
-
-        const parentProject = inWeek ? [
-            { $project: { "weekId": false, "week.days": false, "_id": false, "week._id": false }},
-        ] : [
+        const parentProject = [
             { $project: { "monthId": false, "month.days": false, "_id": false, "month._id": false }}
-        ]
+        ];
 
         const days = await db
             .collection("days")
             .aggregate([
-                { $match: { _id : new ObjectId(id) } },
+                { $match: { monthIndex: date.getDate() } },
                 {
                     $addFields: {
                         id: { $toString: "$_id" }
                     }
                 },
                 ...parentFilter,
+                {$match: {month: {$ne: []}}},
+                ...aggregationTextWithBook,
                 getAggregationAddField(TextType.VESPERS_PROKIMENON),
                 getAggregationAddField(TextType.VIGIL),
                 getAggregationAddField(TextType.KATHISMA_1),

@@ -1,20 +1,27 @@
 import clientPromise from "@/lib/mongodb";
-import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
-import {getAggregationAddField} from "@/utils/database";
+import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
 
-export const getItem = async (id: string, inWeek: boolean) => {
+export const getTriodicItem = async (searchTriodion: any) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
 
-        const parentFilter = inWeek ? [
+        const parentFilter = [
             {
                 $lookup: {
                     from: "weeks",
                     localField: "weekId",
                     foreignField: "_id",
-                    as: "week"
+                    as: "week",
+                    pipeline: [
+                        {
+                            $match: {
+                                value: searchTriodion.week,
+                                type: searchTriodion.type,
+                            },
+                        },
+                    ],
                 },
             },
             {
@@ -22,38 +29,23 @@ export const getItem = async (id: string, inWeek: boolean) => {
                     "week.id": { $toString: "$weekId" }
                 }
             },
-        ] : [
-            {
-                $lookup: {
-                    from: "months",
-                    localField: "monthId",
-                    foreignField: "_id",
-                    as: "month"
-                },
-            },
-            {
-                $addFields: {
-                    "month.id": { $toString: "$monthId" }
-                }
-            },
         ];
-
-        const parentProject = inWeek ? [
+        const parentProject = [
             { $project: { "weekId": false, "week.days": false, "_id": false, "week._id": false }},
-        ] : [
-            { $project: { "monthId": false, "month.days": false, "_id": false, "month._id": false }}
-        ]
+        ];
 
         const days = await db
             .collection("days")
             .aggregate([
-                { $match: { _id : new ObjectId(id) } },
+                { $match: { weekIndex: searchTriodion.day } },
                 {
                     $addFields: {
                         id: { $toString: "$_id" }
                     }
                 },
                 ...parentFilter,
+                {$match: {week: {$ne: []}}},
+                ...aggregationTextWithBook,
                 getAggregationAddField(TextType.VESPERS_PROKIMENON),
                 getAggregationAddField(TextType.VIGIL),
                 getAggregationAddField(TextType.KATHISMA_1),

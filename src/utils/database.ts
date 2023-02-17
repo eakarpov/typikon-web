@@ -18,7 +18,7 @@ export const getAggregationAddField = (name: TextType) => {
                                         as: "i",
                                         in: {
                                             cite: "$$i.cite",
-                                            triodic: "$$i.triodic",
+                                            paschal: "$$i.paschal",
                                             text: {
                                                 $first: {
                                                     $filter: {
@@ -42,3 +42,50 @@ export const getAggregationAddField = (name: TextType) => {
         },
     };
 };
+
+export const aggregationTextWithBook = [
+    {
+        $lookup: {
+            from: "texts",
+            pipeline: [],
+            as: "texts"
+        },
+    },
+    {
+        $lookup: {
+            from: "books",
+            pipeline: [],
+            as: "books"
+        },
+    },
+    // Может быть какая оптимизация возможно по ключу сначала смаппить книги и тексты, а потом уже в запрос кидать
+    {
+        $addFields: {
+            "texts": {
+                $map: {
+                    input: "$texts",
+                    as: "t",
+                    in: {
+                        $mergeObjects: [
+                            "$$t",
+                            {
+                                book: {
+                                    $first: {
+                                        $filter: {
+                                            input: "$books",
+                                            cond: {
+                                                $eq: ["$$b._id", "$$t.bookId"],
+                                            },
+                                            as: "b",
+                                            limit: 1,
+                                        }
+                                    },
+                                },
+                            }
+                        ],
+                    },
+                },
+            },
+        },
+    },
+];

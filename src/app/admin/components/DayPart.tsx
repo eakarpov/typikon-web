@@ -6,15 +6,15 @@ export interface IDayPart {
     value: any;
     valueName: TextType;
     setter: any;
-    triodic: boolean;
-    setTextField: (itemName: TextType, index: number, field: "textId"|"cite"|"triodic", value: string|boolean) => void;
+    paschal: boolean;
+    setTextField: (itemName: TextType, index: number, field: "textId"|"cite"|"paschal", value: string|boolean) => void;
 }
 
 export const DayPart = ({
                             value,
                             valueName,
                             setter,
-                            triodic,
+                            paschal,
                             setTextField,
 }: IDayPart) => {
     return (
@@ -24,7 +24,7 @@ export const DayPart = ({
                 <span
                     className="cursor-pointer text-slate-300"
                     onClick={() => {
-                        setter({ items: [ ...(value?.items || []), { cite: "", textId: "", triodic } ]});
+                        setter({ items: [ ...(value?.items || []), { cite: "", textId: "", paschal } ]});
                     }}
                 >
                     Добавить
@@ -55,10 +55,10 @@ export const DayPart = ({
                                 value={item.cite}
                                 onChange={e => setTextField(valueName, index, "cite", e.target.value)}
                             />
-                            <div onClick={() => setTextField(valueName, index, "triodic", !item.triodic)}>
-                                {item.triodic ? "Триодный цикл" : "Календарный цикл"}
+                            <div onClick={() => setTextField(valueName, index, "paschal", !item.paschal)}>
+                                {item.paschal ? "Триодный цикл" : "Календарный цикл"}
                             </div>
-                            {item.triodic === triodic && (
+                            {item.paschal === paschal && (
                                 <>
                                     <label>
                                         Идентификатор текста

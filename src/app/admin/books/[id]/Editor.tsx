@@ -5,6 +5,7 @@ import {useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
     const [name, setName] = useState(value.name || "");
+    const [translator, setTranslator] = useState(value.translator || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -26,6 +27,7 @@ const AdminEditor = ({ value }: any) => {
             },
             body: JSON.stringify({
                 name,
+                translator,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -46,6 +48,14 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={name}
                 onChange={e => setName(e.target.value)}
+            />
+            <label>
+                Переводчик(и)
+            </label>
+            <input
+                className="border-2"
+                value={translator}
+                onChange={e => setTranslator(e.target.value)}
             />
             <p onClick={onSubmitAdd} className="cursor-pointer">
                 Добавить текст

@@ -1,7 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
-import {getAggregationAddField} from "@/utils/days";
+import {getAggregationAddField} from "@/utils/database";
 
 export const getItem = async (id: string) => {
     try {

@@ -1,49 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
-
-const getAggregationAddField = (name: TextType) => {
-    const varName = `$${name}`;
-    return {
-      $addFields: {
-          [name]: {
-              $cond: {
-                  if: { $ne: [varName, null]},
-                  else: null,
-                  then: {
-                      $mergeObjects: [
-                          varName,
-                          {
-                              items: {
-                                  $map: {
-                                      input: `${varName}.items`,
-                                      as: "i",
-                                      in: {
-                                          cite: "$$i.cite",
-                                          triodic: "$$i.triodic",
-                                          text: {
-                                              $first: {
-                                                  $filter: {
-                                                      input: "$texts",
-                                                      cond: {
-                                                          $eq: ["$$t._id", "$$i.textId"],
-                                                      },
-                                                      as: "t",
-                                                      limit: 1,
-                                                  }
-                                              },
-                                          },
-                                      },
-                                  },
-                              }
-                          },
-                      ],
-                  }
-              },
-          }
-      },
-  };
-};
+import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
 
 export const getItem = async (id: string) => {
     try {
@@ -55,50 +13,7 @@ export const getItem = async (id: string) => {
             .collection("days")
             .aggregate([
                 { $match: matcher },
-                {
-                    $lookup: {
-                        from: "texts",
-                        pipeline: [],
-                        as: "texts"
-                    },
-                },
-                {
-                    $lookup: {
-                        from: "books",
-                        pipeline: [],
-                        as: "books"
-                    },
-                },
-                // Может быть какая оптимизация возможно по ключу сначала смаппить книги и тексты, а потом уже в запрос кидать
-                {
-                    $addFields: {
-                        "texts": {
-                            $map: {
-                                input: "$texts",
-                                as: "t",
-                                in: {
-                                    $mergeObjects: [
-                                        "$$t",
-                                        {
-                                            book: {
-                                                $first: {
-                                                    $filter: {
-                                                        input: "$books",
-                                                        cond: {
-                                                            $eq: ["$$b._id", "$$t.bookId"],
-                                                        },
-                                                        as: "b",
-                                                        limit: 1,
-                                                    }
-                                                },
-                                            },
-                                        }
-                                    ],
-                                },
-                            },
-                        },
-                    },
-                },
+                ...aggregationTextWithBook,
                 // Для каждого типа поля нужна такая структура
                 getAggregationAddField(TextType.VESPERS_PROKIMENON),
                 getAggregationAddField(TextType.VIGIL),

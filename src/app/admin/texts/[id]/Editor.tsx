@@ -141,7 +141,7 @@ const AdminEditor = ({ value }: any) => {
                 Содержимое
             </label>
             <textarea
-                className="border-2"
+                className="border-2 h-24"
                 value={content}
                 onChange={e => setContent(e.target.value)}
             />

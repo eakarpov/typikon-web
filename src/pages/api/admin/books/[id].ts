@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     {
                         $set: {
                             name: data.name,
+                            translator: data.translator,
                             updatedAt: new Date(),
                         },
                     },

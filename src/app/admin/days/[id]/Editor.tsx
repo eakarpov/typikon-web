@@ -10,7 +10,7 @@ const AdminEditor = ({ value }: any) => {
 
     const [vespersProkimenon, setVespersProkimenon] = useState(value.vespersProkimenon);
     const [vigil, setVigil] = useState(value.vigil);
-    const [triodic, setTriodic] = useState(value.triodic === undefined ? true : value.triodic);
+    const [paschal, setPaschal] = useState(value.paschal === undefined ? true : value.paschal);
     const [kathisma1, setKathisma1] = useState(value.kathisma1);
     const [kathisma2, setKathisma2] = useState(value.kathisma2);
     const [kathisma3, setKathisma3] = useState(value.kathisma3);
@@ -27,11 +27,11 @@ const AdminEditor = ({ value }: any) => {
     const [h9, setH9] = useState(value.h9);
     const [alias, setAlias] = useState(value.alias || "");
 
-    const [index, setIndex] = useState(value.triodic ? (value.weekIndex || 0) : (value.monthIndex || 0));
+    const [index, setIndex] = useState(value.paschal ? (value.weekIndex || 0) : (value.monthIndex || 0));
 
     const [saved, setIsSaved] = useState(false);
 
-    const setTextField = (itemName: TextType, index: number, field: "textId"|"cite"|"triodic", value: string|boolean) => {
+    const setTextField = (itemName: TextType, index: number, field: "textId"|"cite"|"paschal", value: string|boolean) => {
         switch (itemName) {
             case TextType.VESPERS_PROKIMENON:
                 const newVespersProkimenon = {...vespersProkimenon};
@@ -121,7 +121,7 @@ const AdminEditor = ({ value }: any) => {
     const onSubmit = () => {
         setIsSaved(false);
         const body: any = {
-            triodic,
+            paschal,
             name,
             subnames,
             vespersProkimenon,
@@ -142,7 +142,7 @@ const AdminEditor = ({ value }: any) => {
             panagia,
             alias,
         };
-        if (triodic) {
+        if (paschal) {
             body.weekIndex = index;
         } else {
             body.monthIndex = index;
@@ -165,9 +165,9 @@ const AdminEditor = ({ value }: any) => {
             <label>
                 Триодный круг <span
                 className="cursor-pointer font-bold"
-                onClick={() => setTriodic(!triodic)}
+                onClick={() => setPaschal(!paschal)}
             >
-                {triodic ? "Да" : "Нет"}
+                {paschal ? "Да" : "Нет"}
             </span>
             </label>
             <label>
@@ -180,7 +180,7 @@ const AdminEditor = ({ value }: any) => {
             />
             <div className="flex flex-row space-x-1">
                 <label>
-                    Индекс в {triodic ? 'неделе' : 'месяце'}
+                    Индекс в {paschal ? 'неделе' : 'месяце'}
                 </label>
                 <input
                     type="number"
@@ -234,77 +234,77 @@ const AdminEditor = ({ value }: any) => {
                 setter={setVigil}
                 valueName={TextType.VIGIL}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={kathisma1}
                 setter={setKathisma1}
                 valueName={TextType.KATHISMA_1}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={kathisma2}
                 setter={setKathisma2}
                 valueName={TextType.KATHISMA_2}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={kathisma3}
                 setter={setKathisma3}
                 valueName={TextType.KATHISMA_3}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={ipakoi}
                 setter={setIpakoi}
                 valueName={TextType.IPAKOI}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={polyeleos}
                 setter={setPolyeleos}
                 valueName={TextType.POLYELEOS}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={song3}
                 setter={setSong3}
                 valueName={TextType.SONG_3}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={song6}
                 setter={setSong6}
                 valueName={TextType.SONG_6}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={apolutikaTroparia}
                 setter={setApolutikaTroparia}
                 valueName={TextType.APOLUTIKA_TROPARIA}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={before1h}
                 setter={setBefore1h}
                 valueName={TextType.BEFORE_1h}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
             <DayPart
                 value={panagia}
                 setter={setPanagia}
                 valueName={TextType.PANAGIA}
                 setTextField={setTextField}
-                triodic={triodic}
+                paschal={paschal}
             />
         </div>
     );

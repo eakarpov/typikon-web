@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     panagia: null,
                     fileId: null,
                     subnames: [],
-                    triodic: true,
+                    paschal: true,
                     weekId: weekId ? new ObjectId(weekId) : null,
                     monthId: monthId ? new ObjectId(monthId) : null,
                     weekIndex: 0,
