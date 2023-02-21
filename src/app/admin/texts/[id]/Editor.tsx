@@ -16,6 +16,8 @@ const AdminEditor = ({ value }: any) => {
     const [content, setContent] = useState(value.content || "");
     const [link, setLink] = useState(value.link || "");
     const [ruLink, setRuLink] = useState(value.ruLink || "");
+    const [author, setAuthor] = useState(value.author || "");
+    const [translator, setTranslator] = useState(value.translator || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -38,6 +40,8 @@ const AdminEditor = ({ value }: any) => {
                 content,
                 bookIndex,
                 readiness,
+                author,
+                translator,
                 footnotes: fNotes,
                 ruLink,
                 link,
@@ -91,6 +95,22 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
+            />
+            <label>
+                Отдельный автор
+            </label>
+            <input
+                className="border-2"
+                value={author}
+                onChange={e => setAuthor(e.target.value)}
+            />
+            <label>
+                Отдельный переводчик
+            </label>
+            <input
+                className="border-2"
+                value={translator}
+                onChange={e => setTranslator(e.target.value)}
             />
             <label>
                 Порядковый номер

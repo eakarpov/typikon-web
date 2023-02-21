@@ -11,6 +11,9 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<any[]> }) => {
                     <p className="text-slate-400 w-36">
                         Книга {book.name}
                     </p>
+                    <p className="text-slate-400 w-36">
+                        {book.description}
+                    </p>
                     <div className="flex flex-col space-y-1">
                         <Link
                             href={`/admin/books/${book._id.toString()}`}

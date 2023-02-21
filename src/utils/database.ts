@@ -1,6 +1,6 @@
 import {TextType} from "@/utils/texts";
 
-export const getAggregationAddField = (name: TextType) => {
+export const getAggregationAddField = (name: TextType, withText: boolean = true) => {
     const varName = `$${name}`;
     return {
         $addFields: {
@@ -16,9 +16,10 @@ export const getAggregationAddField = (name: TextType) => {
                                     $map: {
                                         input: `${varName}.items`,
                                         as: "i",
-                                        in: {
+                                        in: withText ? {
                                             cite: "$$i.cite",
                                             paschal: "$$i.paschal",
+                                            description: "$$i.description",
                                             text: {
                                                 $first: {
                                                     $filter: {
@@ -31,6 +32,11 @@ export const getAggregationAddField = (name: TextType) => {
                                                     }
                                                 },
                                             },
+                                        } : {
+                                            $mergeObjects: [
+                                                '$$i',
+                                                {textId: {$toString: "$$i.textId"}},
+                                            ],
                                         },
                                     },
                                 }

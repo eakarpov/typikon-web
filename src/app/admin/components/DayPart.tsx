@@ -7,7 +7,7 @@ export interface IDayPart {
     valueName: TextType;
     setter: any;
     paschal: boolean;
-    setTextField: (itemName: TextType, index: number, field: "textId"|"cite"|"paschal", value: string|boolean) => void;
+    setTextField: (itemName: TextType, index: number, field: "textId"|"cite"|"paschal"|"description", value: string|boolean) => void;
 }
 
 export const DayPart = ({
@@ -41,12 +41,20 @@ export const DayPart = ({
                                 className="cursor-pointer text-slate-300"
                                 onClick={() => setter(
                                     value.items?.length > 1
-                                        ? { items: [ value.items.filter((e: any, i: number) => i !== index)]}
+                                        ? { items: [ ...value.items.filter((e: any, i: number) => i !== index)]}
                                         : null
                                 )}
                             >
                                 Удалить
                             </span>
+                            <label>
+                                Описание
+                            </label>
+                            <input
+                                className="border-2"
+                                value={item.description}
+                                onChange={e => setTextField(valueName, index, "description", e.target.value)}
+                            />
                             <label>
                                 Цитата из Типикона
                             </label>

@@ -5,6 +5,8 @@ import {useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
     const [name, setName] = useState(value.name || "");
+    const [description, setDescription] = useState(value.description || "");
+    const [author, setAuthor] = useState(value.author || "");
     const [translator, setTranslator] = useState(value.translator || "");
 
     const [saved, setIsSaved] = useState(false);
@@ -27,6 +29,7 @@ const AdminEditor = ({ value }: any) => {
             },
             body: JSON.stringify({
                 name,
+                description,
                 translator,
             }),
         }).then(() => {
@@ -50,6 +53,22 @@ const AdminEditor = ({ value }: any) => {
                 onChange={e => setName(e.target.value)}
             />
             <label>
+                Описание
+            </label>
+            <input
+                className="border-2"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+            />
+            <label>
+                Автор(ы)
+            </label>
+            <input
+                className="border-2"
+                value={author}
+                onChange={e => setAuthor(e.target.value)}
+            />
+            <label>
                 Переводчик(и)
             </label>
             <input
@@ -64,6 +83,9 @@ const AdminEditor = ({ value }: any) => {
                 <div className="flex flex-row mb-4" key={text.id}>
                     <p className="text-slate-400 w-36">
                         {text.name || "Нет названия"}
+                    </p>
+                    <p className="text-slate-400 w-36">
+                        {text.description}
                     </p>
                     <div className="flex flex-col space-y-1 w-60">
                         <Link

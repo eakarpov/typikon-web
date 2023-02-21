@@ -39,9 +39,9 @@ export const getItem = async (id: string, inWeek: boolean) => {
         ];
 
         const parentProject = inWeek ? [
-            { $project: { "weekId": false, "week.days": false, "_id": false, "week._id": false }},
+            { $project: { updatedAt: false, createdAt: false, "weekId": false, "week.days": false, "_id": false, "week._id": false }},
         ] : [
-            { $project: { "monthId": false, "month.days": false, "_id": false, "month._id": false }}
+            { $project: { updatedAt: false, createdAt: false, "monthId": false, "month.days": false, "_id": false, "month._id": false }}
         ]
 
         const days = await db
@@ -54,22 +54,22 @@ export const getItem = async (id: string, inWeek: boolean) => {
                     }
                 },
                 ...parentFilter,
-                getAggregationAddField(TextType.VESPERS_PROKIMENON),
-                getAggregationAddField(TextType.VIGIL),
-                getAggregationAddField(TextType.KATHISMA_1),
-                getAggregationAddField(TextType.KATHISMA_2),
-                getAggregationAddField(TextType.KATHISMA_3),
-                getAggregationAddField(TextType.IPAKOI),
-                getAggregationAddField(TextType.POLYELEOS),
-                getAggregationAddField(TextType.SONG_3),
-                getAggregationAddField(TextType.SONG_6),
-                getAggregationAddField(TextType.APOLUTIKA_TROPARIA),
-                getAggregationAddField(TextType.BEFORE_1h),
-                getAggregationAddField(TextType.H1),
-                getAggregationAddField(TextType.H3),
-                getAggregationAddField(TextType.H6),
-                getAggregationAddField(TextType.H9),
-                getAggregationAddField(TextType.PANAGIA),
+                getAggregationAddField(TextType.VESPERS_PROKIMENON, false),
+                getAggregationAddField(TextType.VIGIL, false),
+                getAggregationAddField(TextType.KATHISMA_1, false),
+                getAggregationAddField(TextType.KATHISMA_2, false),
+                getAggregationAddField(TextType.KATHISMA_3, false),
+                getAggregationAddField(TextType.IPAKOI, false),
+                getAggregationAddField(TextType.POLYELEOS, false),
+                getAggregationAddField(TextType.SONG_3, false),
+                getAggregationAddField(TextType.SONG_6, false),
+                getAggregationAddField(TextType.APOLUTIKA_TROPARIA, false),
+                getAggregationAddField(TextType.BEFORE_1h, false),
+                getAggregationAddField(TextType.H1, false),
+                getAggregationAddField(TextType.H3, false),
+                getAggregationAddField(TextType.H6, false),
+                getAggregationAddField(TextType.H9, false),
+                getAggregationAddField(TextType.PANAGIA, false),
                 ...parentProject,
             ])
             .toArray();

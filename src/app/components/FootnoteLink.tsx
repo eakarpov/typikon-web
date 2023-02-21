@@ -6,28 +6,36 @@ export interface IFootnoteLink {
 }
 
 const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
-    const footnote = footnotes[parseInt(value, 10) - 1];
+    const [letter, ...rest] = value.split("");
+    const note = rest.join("");
+    const footnote = footnotes[parseInt(note, 10) - 1];
     const {
         isBook,
         book,
         probablePlace
     } = isFootnoteBook(footnote);
     return isBook ? (
-        <a
-            href={`https://azbyka.ru/biblia/?${book}.${probablePlace}&c`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs text-stone-900 cursor-pointer pl-1"
-        >
-            {footnote}
-        </a>
+        <span>
+            {letter}
+            <a
+                href={`https://azbyka.ru/biblia/?${book}.${probablePlace}&c`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-stone-900 cursor-pointer pl-1"
+            >
+                {footnote}
+            </a>
+        </span>
     ) : (
-        <a
-            href={`#footnotes-${value}`}
-            className="text-xs text-stone-500 cursor-pointer"
-        >
-            {value}
-        </a>
+        <span>
+            {letter}
+            <a
+                href={`#footnotes-${note}`}
+                className="text-xs text-stone-500 cursor-pointer"
+            >
+                {note}
+            </a>
+        </span>
     );
 };
 

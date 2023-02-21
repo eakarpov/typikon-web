@@ -43,7 +43,17 @@ export const getItem = async (id: string) => {
                         },
                     },
                 },
-                { $project: { "_id": false, "texts._id": false, "texts.bookId": false }}
+                {
+                    $addFields: {
+                        "texts": {
+                            $sortArray: {
+                                input: "$texts",
+                                sortBy: { bookIndex: 1 }
+                            },
+                        },
+                    },
+                },
+                { $project: { createdAt: false, updatedAt: false, "_id": false, "texts._id": false, "texts.bookId": false, "texts.updatedAt": false, "texts.createdAt": false }}
             ])
             .toArray();
         return [books[0], null];

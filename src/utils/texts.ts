@@ -142,9 +142,9 @@ export const valueTitle = (valueName: TextType) => {
       case TextType.POLYELEOS:
           return "По полиелее";
       case TextType.SONG_3:
-          return "По третьей песне";
+          return "По третьей песни";
       case TextType.SONG_6:
-          return "По шестой песне";
+          return "По шестой песни";
       case TextType.APOLUTIKA_TROPARIA:
           return "По отпустительным тропарям утрени";
       case TextType.BEFORE_1h:

@@ -9,7 +9,7 @@ interface ITextPart {
 const TextPart = ({ value, footnotes }: ITextPart) => {
     return reactStringReplace(
         value,
-        /(\d+)/g,
+        /(\S\d+)/g,
         (footnote) => <FootnoteLink footnotes={footnotes} value={footnote} />,
     );
 };

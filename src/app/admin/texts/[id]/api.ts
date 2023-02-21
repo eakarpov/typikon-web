@@ -29,7 +29,7 @@ export const getItem = async (id: string) => {
                         "book.id": { "$toString": "$book._id" }
                     }
                 },
-                { $project: { "bookId": false, "book.texts": false, "_id": false, "book._id": false }}
+                { $project: { createdAt: false, updatedAt: false, "bookId": false, "book.texts": false, "_id": false, "book._id": false }}
             ])
             .toArray();
         console.log(texts)
