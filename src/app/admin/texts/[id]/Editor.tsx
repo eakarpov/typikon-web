@@ -18,6 +18,7 @@ const AdminEditor = ({ value }: any) => {
     const [ruLink, setRuLink] = useState(value.ruLink || "");
     const [author, setAuthor] = useState(value.author || "");
     const [translator, setTranslator] = useState(value.translator || "");
+    const [alias, setAlias] = useState(value.alias || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -45,6 +46,7 @@ const AdminEditor = ({ value }: any) => {
                 footnotes: fNotes,
                 ruLink,
                 link,
+                alias,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -80,6 +82,14 @@ const AdminEditor = ({ value }: any) => {
                     </option>
                 ))}
             </select>
+            <label>
+                Алиас записи
+            </label>
+            <input
+                className="border-2"
+                value={alias}
+                onChange={e => setAlias(e.target.value)}
+            />
             <label>
                 Начало
             </label>

@@ -33,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             link: data.link,
                             translator: data.translator,
                             author: data.author,
+                            alias: data.alias,
                         },
                     },
                 );
