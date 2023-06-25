@@ -8,7 +8,7 @@ export interface IReadDayPart {
     paschal?: boolean;
 }
 
-const ReadinessButton = ({ value }: { value: TextReadiness }) => {
+export const ReadinessButton = ({ value }: { value: TextReadiness }) => {
     switch (value) {
         case TextReadiness.READY:
             return (

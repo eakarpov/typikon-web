@@ -1,5 +1,7 @@
+import { ReadinessButton } from "@/app/components/DayPart";
 import TextPart from "@/app/components/TextPart";
-import {isFootnoteBook} from "@/utils/texts";
+import {fullTitle, isFootnoteBook} from "@/utils/texts";
+import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -15,6 +17,29 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     return (
         <div className="flex flex-col pt-2">
+            <p className="text-1xl font-bold">
+                <span className="flex flex-row items-center">
+                    <span className="pr-2">
+                        {item.name}
+                    </span>
+                    {item.ruLink && (
+                        <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
+                            <a href={item.ruLink} target="_blank" rel="noreferrer">
+                                Русский текст&nbsp;
+                            </a>
+                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                        </span>
+                    )}
+                    <span className="w-fit text-xs pr-2">
+                        <ReadinessButton value={item.readiness} />
+                    </span>
+                    <span className="font-normal">
+                        Дата последнего обновления: {item.updatedAt
+                        ? new Date(item.updatedAt).toLocaleDateString("ru-RU")
+                        : "Не задано"}
+                    </span>
+                </span>
+            </p>
             <div className="space-y-1 mt-2">
                 {item.content?.split("\n\n").map((paragraph: string) => (
                     <p
