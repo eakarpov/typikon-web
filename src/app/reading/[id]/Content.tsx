@@ -18,10 +18,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     return (
         <div className="flex flex-col pt-2">
             <p className="text-1xl font-bold">
-                <span className="flex flex-row items-center">
-                    <span className="pr-2">
-                        {item.name}
-                    </span>
+                <div className="flex flex-row items-center">
                     {item.ruLink && (
                         <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
                             <a href={item.ruLink} target="_blank" rel="noreferrer">
@@ -38,7 +35,12 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         ? new Date(item.updatedAt).toLocaleDateString("ru-RU")
                         : "Не задано"}
                     </span>
-                </span>
+                </div>
+                <div className="flex flex-row items-center">
+                    <span className="pr-2 font-serif">
+                        {item.name}
+                    </span>
+                </div>
             </p>
             <div className="space-y-1 mt-2">
                 {item.content?.split("\n\n").map((paragraph: string) => (
