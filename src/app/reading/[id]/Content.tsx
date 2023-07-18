@@ -27,6 +27,14 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                             <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                         </span>
                     )}
+                    {item.link && (
+                        <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
+                            <a href={item.link} target="_blank" rel="noreferrer">
+                                Скан текста&nbsp;
+                            </a>
+                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                        </span>
+                    )}
                     <span className="w-fit text-xs pr-2">
                         <ReadinessButton value={item.readiness} />
                     </span>
