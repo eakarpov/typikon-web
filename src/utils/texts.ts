@@ -104,7 +104,7 @@ export enum TextType {
 
 export const footNotesToArray = (footNotesText: string): Nullable<string>[] =>
     footNotesText
-        ? footNotesText.split("\n").map(footNotesRow => footNotesRow.split(" ")[1])
+        ? footNotesText.split("\n").map(footNotesRow => footNotesRow.substring(footNotesRow.indexOf(' ') + 1))
         : [];
 
 export const fullTitle = (valueKind: TextKind, author: string, startString: string) => {
