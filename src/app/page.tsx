@@ -1,4 +1,5 @@
 import { Inter } from '@next/font/google'
+import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/solid";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,6 +21,15 @@ export default function Home() {
                   <li>
                       <a href="#about">
                           О предмете уставных чтений
+                      </a>
+                  </li>
+                  <li>
+                      <a className="flex flex-row items-center cursor-pointer" href="/app/app.apk">
+                          <ArrowSmallRightIcon className="w-4 h-4" />
+                          <span className="font-bold">
+                              Скачать приложение на android
+                          </span>
+                          <DevicePhoneMobileIcon className="w-4 h-4" />
                       </a>
                   </li>
               </ul>
