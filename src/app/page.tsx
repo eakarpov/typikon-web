@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
   return (
       <div className="flex flex-col pt-2 md:flex-row">
-          <div className="w-1/4">
+          <div className="md:w-1/4">
               <ul className="space-y-2">
                   <li>
                       <a href="#goal">
