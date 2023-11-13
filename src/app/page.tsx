@@ -1,9 +1,15 @@
 import { Inter } from '@next/font/google'
 import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/solid";
+import {getLastItems} from "@/app/api";
+import Content from "@/app/Content";
+import {Suspense} from "react";
+import {myFont} from "@/utils/font";
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+    const itemsData = getLastItems();
+
   return (
       <div className="flex flex-col pt-2 md:flex-row">
           <div className="md:w-1/4">
@@ -32,9 +38,20 @@ export default function Home() {
                           <DevicePhoneMobileIcon className="w-4 h-4" />
                       </a>
                   </li>
+                  <li>
+                      <a className="flex flex-row items-center cursor-pointer" href="https://t.me/blagoslovie">
+                         Telegram
+                      </a>
+                  </li>
               </ul>
           </div>
           <div className="flex flex-col flex-1 space-y-4">
+              <div className={myFont.variable}>
+                  <Suspense fallback={<div>Loading...</div>}>
+                      {/* @ts-expect-error Async Server Component */}
+                      <Content itemsPromise={itemsData} />
+                  </Suspense>
+              </div>
               <section className="space-y-2" id="goal">
                   <h1 className="text-3xl font-bold">
                       Цель и обоснование проекта

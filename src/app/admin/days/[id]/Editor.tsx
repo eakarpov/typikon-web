@@ -4,7 +4,12 @@ import {useState} from "react";
 import DayPart from "@/app/admin/components/DayPart";
 import {TextType} from "@/utils/texts";
 
-const AdminEditor = ({ value }: any) => {
+interface IAdminEditor {
+    value: any;
+    id: string;
+}
+
+const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [subnames, setSubnames] = useState<string[]>(value.subnames || []);
     const [name, setName] = useState(value.name || "");
 

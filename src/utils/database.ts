@@ -95,3 +95,30 @@ export const aggregationTextWithBook = [
         },
     },
 ];
+
+export const aggregationDayWithMonth = [
+    {
+        $lookup: {
+            from: "months",
+            pipeline: [],
+            as: "months"
+        },
+    },
+    // Может быть какая оптимизация возможно по ключу сначала смаппить книги и тексты, а потом уже в запрос кидать
+    {
+        $addFields: {
+            month: {
+                $first: {
+                    $filter: {
+                        input: "$months",
+                        cond: {
+                            $eq: ["$$b._id", "$monthId"],
+                        },
+                        as: "b",
+                        limit: 1,
+                    }
+                },
+            },
+        },
+    },
+];

@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (dateObj.getTime() - easterDate.getTime() > 1000 * 3600 * 24 * 56) { // only pentacostarion, check penticostarion
             res.status(400).end();
-            return;
+            // return;
         }
 
         // check triodion
@@ -45,6 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const churchDate = new Date(dateObj.getTime() - 13 * 24 * 3600 * 1000);
         const calendarPromise = getCalendarItem(churchDate);
+        console.log(churchDate);
 
         Promise.all<any>([triodicPromise, calendarPromise]).then<any, any>(([
             triodicDay,

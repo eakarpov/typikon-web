@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
         const data = req.body;
         const id = req.query.id as string;
-        console.log(data);
+        console.log(data, data?.song6?.items);
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
@@ -59,7 +59,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 );
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error");
+            console.log("mongodb error", e);
+            res.status(500).end();
         }
     } else {
         res.status(404).end();
