@@ -11,14 +11,15 @@ const AdminEditor = ({ value }: any) => {
     const [start, setStart] = useState(value.start || "");
     const [bookIndex, setBookIndex] = useState(value.bookIndex || 0);
     const [description, setDescription] = useState(value.description || "");
-    const [type, setType] = useState(value.type || "");
-    const [readiness, setReadiness] = useState(value.readiness || "");
+    const [type, setType] = useState(value.type || TextKind.TEACHIND);
+    const [readiness, setReadiness] = useState(value.readiness || TextReadiness.READY);
     const [content, setContent] = useState(value.content || "");
     const [link, setLink] = useState(value.link || "");
     const [ruLink, setRuLink] = useState(value.ruLink || "");
     const [author, setAuthor] = useState(value.author || "");
     const [translator, setTranslator] = useState(value.translator || "");
     const [alias, setAlias] = useState(value.alias || "");
+    const [poems, setPoems] = useState(value.poems || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -47,6 +48,7 @@ const AdminEditor = ({ value }: any) => {
                 ruLink,
                 link,
                 alias,
+                poems,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -160,6 +162,14 @@ const AdminEditor = ({ value }: any) => {
                 ))}
             </select>
             <label>
+                Стихи
+            </label>
+            <textarea
+                className="border-2"
+                value={poems}
+                onChange={e => setPoems(e.target.value)}
+            />
+            <label>
                 Сноски
             </label>
             <textarea
@@ -171,7 +181,7 @@ const AdminEditor = ({ value }: any) => {
                 Содержимое
             </label>
             <textarea
-                className="border-2 h-24"
+                className="border-2 h-48"
                 value={content}
                 onChange={e => setContent(e.target.value)}
             />
