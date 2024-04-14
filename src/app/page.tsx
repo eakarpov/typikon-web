@@ -1,14 +1,25 @@
 import { Inter } from '@next/font/google'
+import { headers } from 'next/headers';
 import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/solid";
 import {getLastItems} from "@/app/api";
 import Content from "@/app/Content";
 import {Suspense} from "react";
 import {myFont} from "@/utils/font";
+import {getMeta} from "@/app/meta/api";
+import ContentMeta from "@/app/ContentMeta";
+import {setMeta} from "@/lib/meta";
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
     const itemsData = getLastItems();
+    const metaData = getMeta();
+    setMeta();
+    const headersList = headers();
+    const domain = headersList.get('host') || "";
+    const fullUrl = headersList.get('referer') || "";
+    console.log(domain, fullUrl, `${process.env.NODE_ENV === "development" ? `http` : `https`}://${domain}/api/meta/log?source=${fullUrl}`);
+    fetch(`${process.env.NODE_ENV === "development" ? `http` : `https`}://${domain}/api/meta/log?source=${fullUrl}`);
 
   return (
       <div className="flex flex-col pt-2 md:flex-row">
@@ -40,20 +51,28 @@ export default function Home() {
                   </li>
                   <li>
                       <a
-                          className="flex flex-row items-center cursor-pointer"
+                          className="flex flex-row items-center cursor-pointer font-bold"
                           href="https://t.me/blagoslovie"
                           target="_blank"
+                          rel="noreferrer"
                       >
                          Telegram
                       </a>
 
                       <a
-                          className="flex flex-row items-center cursor-pointer"
+                          className="flex flex-row items-center cursor-pointer font-bold"
                           href="https://dzen.ru/typikon"
                           target="_blank"
+                          rel="noreferrer"
                       >
                           Dzen
                       </a>
+                  </li>
+                  <li>
+                      <Suspense fallback={<div>Loading...</div>}>
+                          {/* @ts-expect-error Async Server Component */}
+                          <ContentMeta itemsPromise={metaData} />
+                      </Suspense>
                   </li>
               </ul>
           </div>

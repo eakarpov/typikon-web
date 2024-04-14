@@ -20,6 +20,9 @@ NOTES.md
 /db/
 db.*
 
+/meta-db/
+meta-db.*
+
 # idea
 /.idea/
 

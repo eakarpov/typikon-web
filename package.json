@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "release": "bash release.sh"
+    "release": "bash release.sh",
+    "release-meta": "bash meta-db-release.sh"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

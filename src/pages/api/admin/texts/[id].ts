@@ -13,7 +13,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
-            console.log(data, id);
             await db
                 .collection("texts")
                 .updateOne(

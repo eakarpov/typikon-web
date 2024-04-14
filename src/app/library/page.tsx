@@ -1,9 +1,11 @@
 import Content from "@/app/library/Content";
 import {Suspense} from "react";
 import {getItems} from "@/app/library/api";
+import {setMeta} from "@/lib/meta";
 
 const Library = async () => {
     const itemsData = getItems();
+    setMeta();
 
     return (
         <div className="pt-2">

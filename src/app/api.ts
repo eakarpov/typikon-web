@@ -25,3 +25,57 @@ export const getLastItems = async (): Promise<[any, any]> => {
         return [null, e];
     }
 };
+
+export const writeMetaData = async (obj: any): Promise<any> => {
+    console.log("write");
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon-meta");
+
+        const log = await db
+            .collection("logs")
+            .aggregate([
+                {
+                    $match: {
+                        ip: obj.ip,
+                        url: obj.url,
+                    },
+                }
+            ]).limit(1).toArray();
+
+        console.log(log);
+
+        if (log && log[0]) {
+            await db
+                .collection("logs")
+                .updateOne( { "_id" : log[0]._id },
+                    {
+                        $set: {
+                            ip: obj.ip,
+                            url: obj.url,
+                            count: log[0].count + 1,
+                            wasAt: [
+                                ...log[0].wasAt,
+                                new Date(),
+                            ],
+                        }
+                    });
+            return;
+        } else {
+            await db
+                .collection("logs")
+                .insertOne({
+                    ip: obj.ip,
+                    url: obj.url,
+                    count: 1,
+                    wasAt: [new Date()],
+                });
+            return;
+        }
+    } catch (e) {
+        console.error(e);
+      return e;
+    }
+};
+
+

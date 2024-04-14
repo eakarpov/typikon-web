@@ -1,4 +1,8 @@
+import {setMeta} from "@/lib/meta";
+
 const RestReadings = () => {
+    setMeta();
+
     return (
         <div className="pt-2">
             <p>

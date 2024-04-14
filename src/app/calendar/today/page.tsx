@@ -2,8 +2,11 @@ import {getItem} from "@/app/calendar/today/api";
 import {Suspense} from "react";
 import Content from "@/app/calendar/today/Content";
 import {myFont} from "@/utils/font";
+import {setMeta} from "@/lib/meta";
 
 const AdminTextId = async () => {
+    setMeta();
+
     const itemPromise = getItem();
     const d = new Date(+new Date() - 1000 * 60 * 60 * 24 * 13);
     const day = d.getDate();

@@ -1,4 +1,8 @@
+import {setMeta} from "@/lib/meta";
+
 const Triodion = () => {
+    setMeta();
+
     return (
         <div className="pt-2">
             <p>

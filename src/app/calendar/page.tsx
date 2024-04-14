@@ -1,9 +1,11 @@
 import {getItems} from "@/app/calendar/api";
 import {Suspense} from "react";
 import Content from "@/app/calendar/Content";
+import {setMeta} from "@/lib/meta";
 
 const Calendar = () => {
     const itemsData = getItems();
+    setMeta();
 
     return (
         <div className="pt-2">

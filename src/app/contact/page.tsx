@@ -1,6 +1,8 @@
 import Content from "@/app/contact/Content";
+import {setMeta} from "@/lib/meta";
 
 const Library = async () => {
+    setMeta();
 
     return (
         <div className="pt-2">
