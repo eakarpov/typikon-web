@@ -1,6 +1,6 @@
 import { ReadinessButton } from "@/app/components/DayPart";
 import TextPart from "@/app/components/TextPart";
-import {fullTitle, isFootnoteBook} from "@/utils/texts";
+import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {

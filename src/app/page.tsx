@@ -39,8 +39,20 @@ export default function Home() {
                       </a>
                   </li>
                   <li>
-                      <a className="flex flex-row items-center cursor-pointer" href="https://t.me/blagoslovie">
+                      <a
+                          className="flex flex-row items-center cursor-pointer"
+                          href="https://t.me/blagoslovie"
+                          target="_blank"
+                      >
                          Telegram
+                      </a>
+
+                      <a
+                          className="flex flex-row items-center cursor-pointer"
+                          href="https://dzen.ru/typikon"
+                          target="_blank"
+                      >
+                          Dzen
                       </a>
                   </li>
               </ul>

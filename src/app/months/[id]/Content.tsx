@@ -1,5 +1,36 @@
 import Link from "next/link";
 
+const getMonth = (value: number) => {
+  switch (value) {
+      case 0:
+          return "Январь";
+      case 1:
+          return "Февраль";
+      case 2:
+          return "Март";
+      case 3:
+          return "Апрель";
+      case 4:
+          return "Май";
+      case 5:
+          return "Июнь";
+      case 6:
+          return "Июль";
+      case 7:
+          return "Август";
+      case 8:
+          return "Сентябрь";
+      case 9:
+          return "Октябрь";
+      case 10:
+          return "Ноябрь";
+      case 11:
+          return "Декабрь";
+      default:
+          return "";
+  }
+};
+
 const Month = async ({ itemPromise }: any) => {
     const [item, error] = await itemPromise;
 
@@ -15,21 +46,25 @@ const Month = async ({ itemPromise }: any) => {
 
     return (
         <div className="flex flex-col">
+            <p className="font-bold">
+                Месяц: {getMonth(item.value - 1)}
+            </p>
             <p>
-                Месяц {item.value}
+                Все даты заданы по старому стилю.
             </p>
             {item.days.map((day: any) => (
                 <div className="flex flex-row mb-4" key={day.id}>
-                    <p className="text-slate-400 w-36">
+                    <Link
+                        href={`/calendar/${day.alias || day.id}`}
+                        className="cursor-pointer w-36"
+                    >
                         {day.name || "Нет названия"}
-                    </p>
+                    </Link>
+
                     <div className="flex flex-col space-y-1 w-60">
-                        <Link
-                            href={`/calendar/${day.alias || day.id}`}
-                            className="cursor-pointer"
-                        >
+                        <p className="text-slate-400">
                             {day.alias || day.id}
-                        </Link>
+                        </p>
                     </div>
                 </div>
             ))}

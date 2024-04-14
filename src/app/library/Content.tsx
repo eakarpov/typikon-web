@@ -28,7 +28,7 @@ const Content = async ({ itemsPromise }: IContent) => {
                 <div key={book._id.toString()} className="flex flex-row mb-4">
                     <p>
                         <Link
-                            className="cursor-pointer"
+                            className="cursor-pointer font-bold"
                             href={`/library/${book._id.toString()}`}>
                             {book.name} {book.author ? `(${book.author})` : ""}
                         </Link>

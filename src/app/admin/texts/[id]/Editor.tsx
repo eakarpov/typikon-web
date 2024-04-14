@@ -1,7 +1,7 @@
 "use client";
 
 import {footNotesToArray, printTextKind, printTextReadiness, TextKind, TextReadiness} from "@/utils/texts";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
     const [footnotes, setFootnotes] = useState(
@@ -22,6 +22,10 @@ const AdminEditor = ({ value }: any) => {
     const [poems, setPoems] = useState(value.poems || "");
 
     const [saved, setIsSaved] = useState(false);
+
+    const onBufferClick = useCallback(() => {
+        navigator.clipboard.writeText(`https://typikon.su/reading/${alias}`);
+    }, [alias]);
 
     const onSubmit = () => {
         setIsSaved(false);
@@ -92,6 +96,12 @@ const AdminEditor = ({ value }: any) => {
                 value={alias}
                 onChange={e => setAlias(e.target.value)}
             />
+            <div
+                className="cursor-pointer"
+                onClick={onBufferClick}
+            >
+                Скопировать в буфер полный адрес
+            </div>
             <label>
                 Начало
             </label>
