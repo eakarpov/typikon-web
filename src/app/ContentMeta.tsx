@@ -11,6 +11,8 @@ const ContentMeta = async ({ itemsPromise }: IContentMeta) => {
 
     const [meta, error] = await itemsPromise;
 
+    console.log(meta, error);
+
     if (error) return null;
 
     return (

@@ -5,6 +5,8 @@ export const getMeta = async (): Promise<[any, any]> => {
         const client = await clientPromise;
         const db = client.db("typikon-meta");
 
+        console.log('get meta');
+
         const logs = await db
             .collection("logs")
             .aggregate([
@@ -12,7 +14,11 @@ export const getMeta = async (): Promise<[any, any]> => {
             ])
             .toArray();
 
+        console.log("logs");
+
         const totalCount = logs.reduce((p, c) => p + c.count, 0);
+
+        console.log("total", totalCount);
 
         const totalUsersObj = logs.reduce((p, c) => ({
             ...p,
@@ -20,6 +26,8 @@ export const getMeta = async (): Promise<[any, any]> => {
         }), {});
 
         const totalUsers = Object.values(totalUsersObj).length;
+
+        console.log("total users", totalUsers);
 
         return [{
             totalCount,
