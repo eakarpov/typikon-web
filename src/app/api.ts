@@ -27,7 +27,6 @@ export const getLastItems = async (): Promise<[any, any]> => {
 };
 
 export const writeMetaData = async (obj: any): Promise<any> => {
-    console.log("write");
     try {
         const client = await clientPromise;
         const db = client.db("typikon-meta");
@@ -43,7 +42,7 @@ export const writeMetaData = async (obj: any): Promise<any> => {
                 }
             ]).limit(1).toArray();
 
-        console.log(log);
+        const time = new Date();
 
         if (log && log[0]) {
             await db
@@ -56,7 +55,7 @@ export const writeMetaData = async (obj: any): Promise<any> => {
                             count: log[0].count + 1,
                             wasAt: [
                                 ...log[0].wasAt,
-                                new Date(),
+                                time,
                             ],
                         }
                     });

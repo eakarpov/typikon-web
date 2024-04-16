@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CountMeta from "@/app/meta/CountMeta";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -21,6 +22,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     return (
         <div className="flex flex-col pt-2">
+            <CountMeta />
             <h1 className="font-bold">{item.name}</h1>
             {item.author && (
                 <p>

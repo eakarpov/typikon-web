@@ -1,6 +1,7 @@
 import DayPart from "@/app/components/DayPart";
 import {TextType} from "@/utils/texts";
 import DayTitle from "@/app/components/DayTitle";
+import CountMeta from "@/app/meta/CountMeta";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -16,6 +17,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     return (
         <div className="flex flex-col">
+            <CountMeta />
             <h1 className="font-bold">
                 {item.name}
             </h1>

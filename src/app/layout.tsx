@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import Link from "next/link";
 import {InformationCircleIcon, EnvelopeIcon} from "@heroicons/react/20/solid";
+import CountMeta from "@/app/meta/CountMeta";
 
 export default function RootLayout({
   children,
@@ -16,6 +17,7 @@ export default function RootLayout({
                   <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
               </div>
           </noscript>
+          <CountMeta />
           <nav className="border-b-2 w-full overflow-scroll">
               <div className="container mx-auto px-4 flex flex-row items-baseline">
                   <Link href="/" className="text-lg mr-3 font-bold min-w-fit">
