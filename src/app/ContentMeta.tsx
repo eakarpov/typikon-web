@@ -1,3 +1,5 @@
+import ContentMetaClient from "@/app/triodion/ContentMetaClient";
+
 interface IError {
     error: string;
 }
@@ -6,6 +8,7 @@ interface IContentMeta {
     itemsPromise: Promise<[any, IError?]>
 }
 
+const serverCount = process.env.SERVER_COUNT || false; // after rebuild;
 
 const ContentMeta = async ({ itemsPromise }: IContentMeta) => {
 
@@ -13,7 +16,7 @@ const ContentMeta = async ({ itemsPromise }: IContentMeta) => {
 
     if (error) return null;
 
-    return (
+    return serverCount ? (
         <div
             className="flex flex-col"
         >
@@ -27,6 +30,8 @@ const ContentMeta = async ({ itemsPromise }: IContentMeta) => {
               Количество посетителей: {meta.totalUsers}
             </span>
         </div>
+    ) : (
+        <ContentMetaClient />
     );
 };
 

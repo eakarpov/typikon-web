@@ -6,7 +6,9 @@ const CountMeta = () => {
     const pathname = usePathname();
 
     useEffect(() => {
-        fetch(`${window.location.protocol}//${window.location.host}/api/meta/log?source=${window.location.href}`);
+        fetch(`${window.location.protocol}//${window.location.host}/api/meta/log?source=${window.location.href}`, {
+            method: 'POST',
+        });
     }, [pathname]);
 
     return null;
