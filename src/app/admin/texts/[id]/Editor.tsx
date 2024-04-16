@@ -20,6 +20,7 @@ const AdminEditor = ({ value }: any) => {
     const [translator, setTranslator] = useState(value.translator || "");
     const [alias, setAlias] = useState(value.alias || "");
     const [poems, setPoems] = useState(value.poems || "");
+    const [imageLink, setImageLink] = useState(value.images && value.images[0] || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -53,6 +54,7 @@ const AdminEditor = ({ value }: any) => {
                 link,
                 alias,
                 poems,
+                images: [imageLink],
             }),
         }).then(() => {
             setIsSaved(true);
@@ -117,6 +119,14 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
+            />
+            <label>
+                Икона (картина)
+            </label>
+            <input
+                className="border-2"
+                value={imageLink}
+                onChange={e => setImageLink(e.target.value)}
             />
             <label>
                 Отдельный автор

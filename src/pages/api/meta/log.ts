@@ -9,13 +9,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }).catch(() => {
             res.status(400);
         });
+        return res.end();
     } else {
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-        writeMetaData({
+        return writeMetaData({
             ip,
             url: req.query?.source,
         }).then(() => {
-            res.end();
+            return res.end();
         });
     }
 };

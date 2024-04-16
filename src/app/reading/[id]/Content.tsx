@@ -2,6 +2,7 @@ import { ReadinessButton } from "@/app/components/DayPart";
 import TextPart from "@/app/components/TextPart";
 import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
+import TextImages from "@/pages/api/admin/texts/TextImages";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -16,7 +17,8 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     }
 
     return (
-        <div className="flex flex-col pt-2">
+        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col pt-2 flex-1">
             <p className="text-1xl font-bold">
                 <div className="flex flex-row items-center">
                     {item.ruLink && (
@@ -119,6 +121,10 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     })}
                 </div>
             )}
+        </div>
+        {!!item.images?.length && (
+            <TextImages images={item.images} />
+        )}
         </div>
     );
 };
