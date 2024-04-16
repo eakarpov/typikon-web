@@ -27,7 +27,7 @@ export default function RootLayout({
                       <Link href="/penticostarion" className="cursor-pointer min-w-fit">
                           Цветная триодь
                       </Link>
-                      <Link href="/triodion" className="cursor-pointer min-w-fit text-stone-400">
+                      <Link href="/triodion" className="cursor-pointer min-w-fit">
                           Постная триодь
                       </Link>
                       <Link href="/rest-readings" className="cursor-pointer min-w-fit text-stone-400">

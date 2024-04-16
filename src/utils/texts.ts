@@ -49,6 +49,11 @@ export enum TextKind {
     SYNAXARION= "Synaxarion",
 }
 
+export enum DneslovKind {
+    MEMORY= "MEMORY",
+    EVENT= "EVENT"
+}
+
 export const printTextKind = (kind: TextKind) => {
   switch (kind) {
       case TextKind.HISTORIC:
@@ -65,6 +70,15 @@ export const printTextKind = (kind: TextKind) => {
           return "Синаксарь";
   }  
 };
+
+export const printDneslovKind = (kind: DneslovKind) => {
+    switch (kind) {
+        case DneslovKind.EVENT:
+            return "Событие";
+        case DneslovKind.MEMORY:
+            return "Память";
+    }
+}
 
 export const fullTextKind = (kind: TextKind, author: string) => {
     switch (kind) {

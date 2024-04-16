@@ -35,6 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             alias: data.alias,
                             poems: data.poems,
                             images: data.images,
+                            dneslovId: data.dneslovId,
+                            dneslovType: data.dneslovType,
                         },
                     },
                 );

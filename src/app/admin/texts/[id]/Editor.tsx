@@ -1,6 +1,14 @@
 "use client";
 
-import {footNotesToArray, printTextKind, printTextReadiness, TextKind, TextReadiness} from "@/utils/texts";
+import {
+    DneslovKind,
+    footNotesToArray,
+    printDneslovKind,
+    printTextKind,
+    printTextReadiness,
+    TextKind,
+    TextReadiness
+} from "@/utils/texts";
 import {useCallback, useEffect, useState} from "react";
 
 const AdminEditor = ({ value }: any) => {
@@ -21,6 +29,8 @@ const AdminEditor = ({ value }: any) => {
     const [alias, setAlias] = useState(value.alias || "");
     const [poems, setPoems] = useState(value.poems || "");
     const [imageLink, setImageLink] = useState(value.images && value.images[0] || "");
+    const [dneslovId, setDneslovId] = useState(value.dneslovId || "");
+    const [dneslovType, setDneslovType] = useState(value.dneslovType || DneslovKind.MEMORY);
 
     const [saved, setIsSaved] = useState(false);
 
@@ -55,6 +65,7 @@ const AdminEditor = ({ value }: any) => {
                 alias,
                 poems,
                 images: [imageLink],
+                dneslovId,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -73,23 +84,71 @@ const AdminEditor = ({ value }: any) => {
                 value={name}
                 onChange={e => setName(e.target.value)}
             />
-            <label>
-                Готовность
-            </label>
-            <select
-                className="border-2"
-                value={readiness}
-                onChange={(event) => setReadiness(event.target.value)}
-            >
-                {Object.values(TextReadiness).map(val => (
-                    <option
-                        key={val}
-                        value={val}
+            <div className="flex flex-row">
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Готовность
+                    </label>
+                    <select
+                        className="border-2"
+                        value={readiness}
+                        onChange={(event) => setReadiness(event.target.value)}
                     >
-                        {printTextReadiness(val)}
-                    </option>
-                ))}
-            </select>
+                        {Object.values(TextReadiness).map(val => (
+                            <option
+                                key={val}
+                                value={val}
+                            >
+                                {printTextReadiness(val)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Тип
+                    </label>
+                    <select className="border-2" value={type} onChange={(event) => setType(event.target.value)}>
+                        {Object.values(TextKind).map(val => (
+                            <option
+                                key={val}
+                                value={val}
+                            >
+                                {printTextKind(val)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Тип Днеслова
+                    </label>
+                    <select
+                        className="border-2"
+                        value={dneslovType}
+                        onChange={(event) => setDneslovType(event.target.value)}
+                    >
+                        {Object.values(DneslovKind).map(val => (
+                            <option
+                                key={val}
+                                value={val}
+                            >
+                                {printDneslovKind(val)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Идентификатор Днеслова
+                    </label>
+                    <input
+                        className="border-2"
+                        value={dneslovId}
+                        onChange={e => setDneslovId(e.target.value)}
+                    />
+                </div>
+            </div>
             <label>
                 Алиас записи
             </label>
@@ -168,19 +227,6 @@ const AdminEditor = ({ value }: any) => {
                 value={link}
                 onChange={e => setLink(e.target.value)}
             />
-            <label>
-                Тип
-            </label>
-            <select className="border-2" value={type} onChange={(event) => setType(event.target.value)}>
-                {Object.values(TextKind).map(val => (
-                    <option
-                        key={val}
-                        value={val}
-                    >
-                        {printTextKind(val)}
-                    </option>
-                ))}
-            </select>
             <label>
                 Стихи
             </label>

@@ -2,11 +2,9 @@ import { Suspense } from "react";
 import Content from "@/app/penticostarion/Content";
 import {getItems} from "@/app/penticostarion/api";
 import {myFont} from "@/utils/font";
-import {setMeta} from "@/lib/meta";
 
 const Penticostarion = async () => {
     const itemsData = getItems();
-    setMeta();
 
     return (
         <div className="pt-2">
