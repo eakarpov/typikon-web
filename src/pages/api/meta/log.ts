@@ -8,8 +8,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.json(data);
         }).catch(() => {
             res.status(400);
+        }).finally(() => {
+            return res.end();
         });
-        return res.end();
     } else {
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         return writeMetaData({
