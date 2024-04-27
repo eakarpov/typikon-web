@@ -2,7 +2,8 @@ import { ReadinessButton } from "@/app/components/DayPart";
 import TextPart from "@/app/components/TextPart";
 import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
-import TextImages from "@/pages/api/admin/texts/TextImages";
+import TextImages from "@/app/reading/TextImages";
+import DneslovImages from "@/app/reading/DneslovImages";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -124,6 +125,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
         </div>
         {!!item.images?.length && (
             <TextImages images={item.images} />
+        )}
+        {item.dneslovId && (
+            <DneslovImages dneslovId={item.dneslovId} />
         )}
         </div>
     );

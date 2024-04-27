@@ -3,6 +3,8 @@
 import {memo} from "react";
 
 const TextImages = ({ images }: { images: string[] }) => {
+    if (!images.reduce((p, c) => p || !!c, false)) return;
+
     return (
         <div className="flex flex-col pt-2" style={{ paddingLeft: '12px' }}>
             {images.map((image: string) => (
