@@ -31,6 +31,8 @@ const AdminEditor = ({ value }: any) => {
     const [imageLink, setImageLink] = useState(value.images && value.images[0] || "");
     const [dneslovId, setDneslovId] = useState(value.dneslovId || "");
     const [dneslovType, setDneslovType] = useState(value.dneslovType || DneslovKind.MEMORY);
+    const [startPhrase, setStartPhrase] = useState(value.startPhrase);
+    const [initialPriestExclamation, setInitialPriestExclamation] = useState(value.initialPriestExclamation);
 
     const [saved, setIsSaved] = useState(false);
 
@@ -66,6 +68,8 @@ const AdminEditor = ({ value }: any) => {
                 poems,
                 images: [imageLink],
                 dneslovId,
+                startPhrase,
+                initialPriestExclamation,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -226,6 +230,22 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={link}
                 onChange={e => setLink(e.target.value)}
+            />
+            <label>
+                Начальная фраза
+            </label>
+            <input
+                className="border-2"
+                value={startPhrase}
+                onChange={e => setStartPhrase(e.target.value)}
+            />
+            <label>
+                Ответный возглас иерея
+            </label>
+            <input
+                className="border-2"
+                value={initialPriestExclamation}
+                onChange={e => setInitialPriestExclamation(e.target.value)}
             />
             <label>
                 Стихи

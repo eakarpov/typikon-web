@@ -4,8 +4,8 @@ import {useMemo, useState} from "react";
 import {orthodoxEaster} from "date-easter";
 import DayTitle from "@/app/components/DayTitle";
 import {TextType} from "@/utils/texts";
-import DayPart from "@/app/components/DayPart";
 import {myFont} from "@/utils/font";
+import DayPartReading from "@/app/components/DayPartReading";
 
 const now = new Date();
 const currMonthStr = now.getMonth() + 1 > 9 ? now.getMonth() + 1 :  `0${now.getMonth() + 1}`;
@@ -100,17 +100,17 @@ const Editor = () => {
                             </ul>
                         </div>
                         <div className="flex flex-col flex-1 space-y-4">
-                            <DayPart value={data.day?.vigil} valueName={TextType.VIGIL} paschal />
-                            <DayPart value={data.day?.kathisma1} valueName={TextType.KATHISMA_1} paschal />
-                            <DayPart value={data.day?.kathisma2} valueName={TextType.KATHISMA_2} paschal />
-                            <DayPart value={data.day?.kathisma3} valueName={TextType.KATHISMA_3} paschal />
-                            <DayPart value={data.day?.ipakoi} valueName={TextType.IPAKOI} paschal />
-                            <DayPart value={data.day?.polyeleos} valueName={TextType.POLYELEOS} paschal />
-                            <DayPart value={data.day?.song3} valueName={TextType.SONG_3} paschal />
-                            <DayPart value={data.day?.song6} valueName={TextType.SONG_6} paschal />
-                            <DayPart value={data.day?.before1h} valueName={TextType.BEFORE_1h} paschal />
-                            <DayPart value={data.day?.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
-                            <DayPart value={data.day?.panagia} valueName={TextType.PANAGIA} paschal />
+                            <DayPartReading value={data.day?.vigil} valueName={TextType.VIGIL} paschal />
+                            <DayPartReading value={data.day?.kathisma1} valueName={TextType.KATHISMA_1} paschal />
+                            <DayPartReading value={data.day?.kathisma2} valueName={TextType.KATHISMA_2} paschal />
+                            <DayPartReading value={data.day?.kathisma3} valueName={TextType.KATHISMA_3} paschal />
+                            <DayPartReading value={data.day?.ipakoi} valueName={TextType.IPAKOI} paschal />
+                            <DayPartReading value={data.day?.polyeleos} valueName={TextType.POLYELEOS} paschal />
+                            <DayPartReading value={data.day?.song3} valueName={TextType.SONG_3} paschal />
+                            <DayPartReading value={data.day?.song6} valueName={TextType.SONG_6} paschal />
+                            <DayPartReading value={data.day?.before1h} valueName={TextType.BEFORE_1h} paschal />
+                            <DayPartReading value={data.day?.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
+                            <DayPartReading value={data.day?.panagia} valueName={TextType.PANAGIA} paschal />
                         </div>
                     </div>
                 </div>

@@ -42,7 +42,6 @@ export const getItem = async (date: Date) => {
                 { $project: { texts: 0, books: 0, months: 0, "month._id": 0, "month.days": 0, weekId: 0, _id: 0 }}
             ])
             .toArray();
-        console.log(days);
         return [days[0], null];
     } catch (e) {
         console.error(e);

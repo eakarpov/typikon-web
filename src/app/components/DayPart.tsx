@@ -141,6 +141,8 @@ const EndPart = ({ part }: { part: TextType }) => {
     return null;
 };
 
+
+// TODO: Устаревший компонент
 const DayPart = ({
     value,
     valueName,

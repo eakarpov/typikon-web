@@ -1,7 +1,7 @@
-import DayPart from "@/app/components/DayPart";
 import {TextType} from "@/utils/texts";
 import DayTitle from "@/app/components/DayTitle";
 import CountMeta from "@/app/meta/CountMeta";
+import DayPartReading from "@/app/components/DayPartReading";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -41,17 +41,17 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     </ul>
                 </div>
                 <div className="flex flex-col flex-1 space-y-4">
-                    <DayPart value={item.vigil} valueName={TextType.VIGIL} paschal />
-                    <DayPart value={item.kathisma1} valueName={TextType.KATHISMA_1} paschal />
-                    <DayPart value={item.kathisma2} valueName={TextType.KATHISMA_2} paschal />
-                    <DayPart value={item.kathisma3} valueName={TextType.KATHISMA_3} paschal />
-                    <DayPart value={item.ipakoi} valueName={TextType.IPAKOI} paschal />
-                    <DayPart value={item.polyeleos} valueName={TextType.POLYELEOS} paschal />
-                    <DayPart value={item.song3} valueName={TextType.SONG_3} paschal />
-                    <DayPart value={item.song6} valueName={TextType.SONG_6} paschal />
-                    <DayPart value={item.before1h} valueName={TextType.BEFORE_1h} paschal />
-                    <DayPart value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
-                    <DayPart value={item.panagia} valueName={TextType.PANAGIA} paschal />
+                    <DayPartReading value={item.vigil} valueName={TextType.VIGIL} paschal />
+                    <DayPartReading value={item.kathisma1} valueName={TextType.KATHISMA_1} paschal />
+                    <DayPartReading value={item.kathisma2} valueName={TextType.KATHISMA_2} paschal />
+                    <DayPartReading value={item.kathisma3} valueName={TextType.KATHISMA_3} paschal />
+                    <DayPartReading value={item.ipakoi} valueName={TextType.IPAKOI} paschal />
+                    <DayPartReading value={item.polyeleos} valueName={TextType.POLYELEOS} paschal />
+                    <DayPartReading value={item.song3} valueName={TextType.SONG_3} paschal />
+                    <DayPartReading value={item.song6} valueName={TextType.SONG_6} paschal />
+                    <DayPartReading value={item.before1h} valueName={TextType.BEFORE_1h} paschal />
+                    <DayPartReading value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
+                    <DayPartReading value={item.panagia} valueName={TextType.PANAGIA} paschal />
                 </div>
             </div>
         </div>

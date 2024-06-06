@@ -37,6 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             images: data.images,
                             dneslovId: data.dneslovId,
                             dneslovType: data.dneslovType,
+                            initialPriestExclamation: data.initialPriestExclamation,
+                            startPhrase: data.startPhrase,
                         },
                     },
                 );

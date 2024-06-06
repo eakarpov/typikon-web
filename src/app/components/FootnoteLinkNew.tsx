@@ -5,11 +5,8 @@ export interface IFootnoteLink {
     footnotes: string[];
 }
 
-// TODO: Устаревший компонент
 const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
-    const [letter, ...rest] = value.split("");
-    const note = rest.join("");
-    const footnote = footnotes[parseInt(note, 10) - 1];
+    const footnote = footnotes[parseInt(value, 10) - 1];
     const {
         isBook,
         book,
@@ -17,7 +14,6 @@ const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
     } = isFootnoteBook(footnote);
     return isBook ? (
         <span>
-            {letter}
             <a
                 href={`https://azbyka.ru/biblia/?${book}.${probablePlace}&c`}
                 target="_blank"
@@ -29,12 +25,11 @@ const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
         </span>
     ) : (
         <span>
-            {letter}
             <a
-                href={`#footnotes-${note}`}
+                href={`#footnotes-${value}`}
                 className="text-xs text-stone-500 cursor-pointer"
             >
-                {note}
+                [{value}]
             </a>
         </span>
     );
