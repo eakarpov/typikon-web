@@ -4,6 +4,8 @@ import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 import TextImages from "@/app/reading/TextImages";
 import DneslovImages from "@/app/reading/DneslovImages";
+import reactStringReplace from "react-string-replace";
+import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -76,34 +78,20 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         key={paragraph}
                         className="whitespace-pre-wrap text-justify text-lg font-serif first-letter:text-red-600"
                     >
-                        {paragraph.split(/{k\|/).map((value: any, index: number) => {
-                            if (!index) return (
-                                // @ts-ignore
-                                <TextPart
-                                    key={value}
-                                    footnotes={item.footnotes}
-                                    value={value}
-                                />
-                            );
-                            return value.split(/}/)
-                                .map((splitItem: string, i: number) =>
-                                    !i ? (
-                                        <span key={splitItem} className="text-red-600">
-                                                         {/*@ts-ignore*/}
-                                            <TextPart
-                                                footnotes={item.footnotes}
-                                                value={splitItem}
-                                            />
-                                                    </span>
-                                    ) : (
-                                        // @ts-ignore
-                                        <TextPart
-                                            key={splitItem}
-                                            footnotes={item.footnotes}
-                                            value={splitItem}
-                                        />
-                                    ));
-                        })}
+
+                        {reactStringReplace(
+                            reactStringReplace(
+                                paragraph,
+                                /\{(\d+)}/g,
+                                (footnote) => <FootnoteLinkNew footnotes={item.footnotes} value={footnote} />,
+                            ),
+                            /\{k\|(.+)}/,
+                            (red) => (
+                                <span className="text-red-600">
+                                        {red}
+                                    </span>
+                            )
+                        )}
                     </p>
                 ))}
             </div>

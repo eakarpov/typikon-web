@@ -229,20 +229,6 @@ const DayPartReading = ({
                                             </span>
                                         )
                                     )}
-                                    {/*    .split(/{k\|/).map((value: any, index: number) => {*/}
-                                    {/*    if (!index) return (*/}
-                                    {/*        value*/}
-                                    {/*    );*/}
-                                    {/*    return value.split(/}/)*/}
-                                    {/*        .map((splitItem: string, i: number) =>*/}
-                                    {/*            !i ? (*/}
-                                    {/*                <span key={splitItem} className="text-red-600">*/}
-                                    {/*                    {splitItem}*/}
-                                    {/*                </span>*/}
-                                    {/*            ) : (*/}
-                                    {/*                splitItem*/}
-                                    {/*            ));*/}
-                                    {/*})}*/}
                                 </p>
                             ))}
                         </div>

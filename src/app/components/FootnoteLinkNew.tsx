@@ -18,7 +18,7 @@ const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
                 href={`https://azbyka.ru/biblia/?${book}.${probablePlace}&c`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-stone-900 cursor-pointer pl-1"
+                className="text-xs text-red-900 cursor-pointer pl-1"
             >
                 {footnote}
             </a>
@@ -27,7 +27,7 @@ const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
         <span>
             <a
                 href={`#footnotes-${value}`}
-                className="text-xs text-stone-500 cursor-pointer"
+                className="text-xs text-red-900 cursor-pointer"
             >
                 [{value}]
             </a>
