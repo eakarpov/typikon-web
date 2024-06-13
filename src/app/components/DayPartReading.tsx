@@ -210,6 +210,23 @@ const DayPartReading = ({
                                 {item.text?.startPhrase || item.text?.name}
                             </p>
                         )}
+                        {item.text?.poems && (
+                            <div className="space-y-1 mt-2">
+                                <p className="font-serif">
+                                    <b>Стихи́:</b>
+                                </p>
+                                {item.text.poems.split("\n").map((verse: string) => (
+                                    <p
+                                        key={verse}
+                                        className="whitespace-pre-wrap font-serif first-letter:text-red-600"
+                                    >
+                                        <i>
+                                            {verse}
+                                        </i>
+                                    </p>
+                                ))}
+                            </div>
+                        )}
                         <div className="space-y-1 mt-2">
                             {item.text.content?.split("\n\n").map((paragraph: string, j: number) => (
                                 <p
