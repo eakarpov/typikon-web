@@ -1,23 +1,20 @@
+'use client';
 import {BookOpenIcon, DocumentTextIcon} from "@heroicons/react/24/outline";
 import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
+import {useEffect, useState} from "react";
 
-interface IError {
-    error: string;
-}
+const ContentRandom = () => {
+    const [item, setItem] = useState<any|null>(null);
 
-interface IContent {
-    itemsPromise: Promise<[any, IError?]>
-}
+    useEffect(() => {
+        fetch("/api/v1/library/random").then((res) => res.json()).then((res) => {
+            setItem(res);
+        })
+    }, []);
 
-const ContentRandom = async ({ itemsPromise }: IContent) => {
-
-    const [item, error] = await itemsPromise;
-
-    console.log(item);
-
-    if (error) return null;
+    if (!item) return null;
 
     return (
         <div className="flex flex-col">

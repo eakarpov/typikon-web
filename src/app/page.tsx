@@ -14,7 +14,6 @@ const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
     const itemsData = getLastItems();
-    const textData = getRandomProlog();
     const metaData = getMeta();
     setMeta();
 
@@ -81,10 +80,7 @@ export default function Home() {
                   </Suspense>
               </div>
               <div className={myFont.variable}>
-                  <Suspense fallback={<div>Loading...</div>}>
-                      {/* @ts-expect-error Async Server Component */}
-                      <ContentRandom itemsPromise={textData} />
-                  </Suspense>
+                  <ContentRandom />
               </div>
               <section className="space-y-2" id="goal">
                   <h1 className="text-3xl font-bold">
