@@ -1,5 +1,29 @@
 import clientPromise from "@/lib/mongodb";
 
+export const getRandomProlog = async () => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon");
+
+        const texts = await db
+            .collection("texts")
+            .aggregate([
+                { $sample: { size: 1 } },
+                {
+                    $addFields: {
+                        id: { $toString: "$_id" },
+                    },
+                },
+                { $project: { _id: 0 }}
+            ])
+            .toArray();
+        return [texts[0], null];
+    } catch (e) {
+        console.error(e);
+        return [null, e];
+    }
+}
+
 export const getLastItems = async (): Promise<[any, any]> => {
     try {
         const client = await clientPromise;

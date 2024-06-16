@@ -1,18 +1,20 @@
 import { Inter } from '@next/font/google'
 import { headers } from 'next/headers';
 import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/solid";
-import {getLastItems} from "@/app/api";
+import {getLastItems, getRandomProlog} from "@/app/api";
 import Content from "@/app/Content";
 import {Suspense} from "react";
 import {myFont} from "@/utils/font";
 import {getMeta} from "@/app/meta/api";
 import ContentMeta from "@/app/ContentMeta";
 import {setMeta} from "@/lib/meta";
+import ContentRandom from "@/app/ContentRandom";
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
     const itemsData = getLastItems();
+    const textData = getRandomProlog();
     const metaData = getMeta();
     setMeta();
 
@@ -76,6 +78,12 @@ export default function Home() {
                   <Suspense fallback={<div>Loading...</div>}>
                       {/* @ts-expect-error Async Server Component */}
                       <Content itemsPromise={itemsData} />
+                  </Suspense>
+              </div>
+              <div className={myFont.variable}>
+                  <Suspense fallback={<div>Loading...</div>}>
+                      {/* @ts-expect-error Async Server Component */}
+                      <ContentRandom itemsPromise={textData} />
                   </Suspense>
               </div>
               <section className="space-y-2" id="goal">
