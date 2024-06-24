@@ -32,6 +32,7 @@ export const getTriodicItem = async (searchTriodion: any) => {
         ];
         const parentProject = [
             { $project: { "weekId": false, "week.days": false, "_id": false, "week._id": false }},
+            { $project: { books: 0, texts: 0, week: 0 }},
         ];
 
         const days = await db

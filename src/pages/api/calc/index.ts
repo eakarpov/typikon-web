@@ -45,13 +45,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const churchDate = new Date(dateObj.getTime() - 13 * 24 * 3600 * 1000);
         const calendarPromise = getCalendarItem(churchDate);
-        console.log(churchDate);
+        // console.log(churchDate);
 
         Promise.all<any>([triodicPromise, calendarPromise]).then<any, any>(([
             triodicDay,
             calendarDay,
         ]) => {
-            console.log(triodicDay, calendarDay);
+            // console.log(triodicDay, calendarDay);
             if (!triodicDay && !calendarDay) {
                 res.status(404).end();
                 return;
@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             Object.values(TextType).map((tType) => {
                 if (tType === TextType.SONG_6) {
                     // after 6-th song Prologue is read, that's it can be added to triodic readings or not
-                    console.log(day.song6);
+                    // console.log(day.song6);
                     if (day.song6) {
                         day.song6.items = day.song6.items?.flatMap((el: any) => {
                            if (!el.paschal && calendarDay.song6) {
@@ -90,10 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                            }
                            return el;
                         });
-                        console.log(day.song6);
+                        // console.log(day.song6);
                     } else if (calendarDay.song6) {
                         day.song6 = {...calendarDay.song6};
-                        console.log(day.song6);
+                        // console.log(day.song6);
                     }
                 } else {
                     // if polyeleos - 3-d song and polyeleos readings are replaced by readings of saint
@@ -104,6 +104,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     }
                 }
             });
+
+            // console.log(churchDate, searchTriodion, day)
 
             // merge days here, send only { day: ..., date: ..., search: ... }
             res.status(200).json({

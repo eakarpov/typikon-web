@@ -17,7 +17,7 @@ export const getCalendarItem = async (date: Date) => {
                     pipeline: [
                         {
                             $match: {
-                                order: date.getMonth() + 1,
+                                value: date.getMonth() + 1,
                             },
                         },
                     ],
@@ -30,7 +30,8 @@ export const getCalendarItem = async (date: Date) => {
             },
         ];
         const parentProject = [
-            { $project: { "monthId": false, "month.days": false, "_id": false, "month._id": false }}
+            { $project: { "monthId": false, "month.days": false, "_id": false, "month._id": false }},
+            { $project: { books: 0, month: 0, texts: 0 }},
         ];
 
         const days = await db
