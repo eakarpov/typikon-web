@@ -1,21 +1,22 @@
-'use client';
-import React, {ChangeEventHandler, useCallback, useState} from "react";
+import React from "react";
+import SettingsPage from "@/app/settings/SettingsPage";
 
-const SettingsContent = () => {
-    const [value, setValue] = useState(localStorage.getItem("typikon-background-color") || "#fcfaf2");
+const SettingsContent = async ({ itemsPromise }: {itemsPromise: any}) => {
+    const data = await itemsPromise;
 
-    const onColorChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
-        setValue(e.target.value);
-        localStorage.setItem("typikon-background-color", e.target.value);
-        document.body.style.background = e.target.value;
-    }, []);
+    if (!data) {
+        return (
+            <div>
+                <p>
+                    Данные не получены. Редактирование недоступно.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div>
-            <h2>Настройки пользователя</h2>
-            <div>
-                Цвет фона: <input type="color" value={value} onChange={onColorChange} />
-            </div>
+            <SettingsPage data={data} />
         </div>
     )
 };

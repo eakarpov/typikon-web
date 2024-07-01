@@ -1,9 +1,17 @@
-import SettingsContent from "@/app/settings/Content";
+// import SettingsContent from "@/app/settings/Content";
+import React, {Suspense} from "react";
+import {getMeta} from "@/app/meta/api";
 
-const SettingsPage = () => {
+const Settings = () => {
+    const metaData = getMeta();
+
     return (
-        <SettingsContent />
+        <Suspense fallback={<div>Loading...</div>}>
+            {/* @ts-expect-error Async Server Component */}
+            {/*<SettingsContent itemsPromise={metaData} />*/}
+        </Suspense>
+
     );
 };
 
-export default SettingsPage;
+export default Settings;
