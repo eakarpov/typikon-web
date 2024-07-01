@@ -1,8 +1,10 @@
 'use client';
-import React, {ChangeEventHandler, useCallback, useState} from "react";
+import React, {ChangeEventHandler, useCallback, useEffect, useState} from "react";
 
-const SettingsPage = (data: any) => {
-    const [value, setValue] = useState(localStorage.getItem("typikon-background-color") || "#fcfaf2");
+const ChoosePicker = () => {
+    const [value, setValue] = useState(
+        "#fcfaf2"
+    );
 
     const onColorChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
         setValue(e.target.value);
@@ -10,9 +12,12 @@ const SettingsPage = (data: any) => {
         document.body.style.background = e.target.value;
     }, []);
 
+    useEffect(() => {
+        setValue(old => localStorage.getItem("typikon-background-color") || old);
+    }, []);
+
     return (
         <div>
-            <h2>Настройки пользователя</h2>
             <div>
                 Цвет фона: <input type="color" value={value} onChange={onColorChange} />
             </div>
@@ -20,4 +25,4 @@ const SettingsPage = (data: any) => {
     )
 };
 
-export default SettingsPage;
+export default ChoosePicker;

@@ -1,24 +1,12 @@
 import React from "react";
-import SettingsPage from "@/app/settings/SettingsPage";
+import ChoosePicker from "@/app/settings/ChoosePicker";
 
-const SettingsContent = async ({ itemsPromise }: {itemsPromise: any}) => {
-    const data = await itemsPromise;
-
-    if (!data) {
-        return (
-            <div>
-                <p>
-                    Данные не получены. Редактирование недоступно.
-                </p>
-            </div>
-        );
-    }
-
+const SettingsContent = () => {
     return (
         <div>
-            <SettingsPage data={data} />
+            <ChoosePicker />
         </div>
-    )
+    );
 };
 
 export default SettingsContent;

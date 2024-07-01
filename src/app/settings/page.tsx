@@ -1,16 +1,12 @@
-// import SettingsContent from "@/app/settings/Content";
-import React, {Suspense} from "react";
-import {getMeta} from "@/app/meta/api";
+import SettingsContent from "@/app/settings/Content";
+import React from "react";
 
 const Settings = () => {
-    const metaData = getMeta();
-
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            {/* @ts-expect-error Async Server Component */}
-            {/*<SettingsContent itemsPromise={metaData} />*/}
-        </Suspense>
-
+        <div>
+            <h2>Настройки пользователя</h2>
+            <SettingsContent />
+        </div>
     );
 };
 

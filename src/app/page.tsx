@@ -9,7 +9,6 @@ import ContentMeta from "@/app/ContentMeta";
 import {setMeta} from "@/lib/meta";
 import ContentRandom from "@/app/ContentRandom";
 import SearchForm from "@/app/components/search/Form";
-import "./global.scss";
 
 const inter = Inter({ subsets: ['latin'] })
 
