@@ -1,7 +1,8 @@
 import '../styles/globals.css';
 import Link from "next/link";
-import {InformationCircleIcon, EnvelopeIcon} from "@heroicons/react/20/solid";
+import {InformationCircleIcon, EnvelopeIcon, MagnifyingGlassIcon, Cog6ToothIcon} from "@heroicons/react/20/solid";
 import CountMeta from "@/app/meta/CountMeta";
+import InitiateUserSettings from './components/settings/InitiateUserSettings';
 
 export default function RootLayout({
   children,
@@ -18,6 +19,7 @@ export default function RootLayout({
               </div>
           </noscript>
           <CountMeta />
+          <InitiateUserSettings />
           <nav className="border-b-2 w-full overflow-scroll">
               <div className="container mx-auto px-4 flex flex-row items-baseline">
                   <Link href="/" className="text-lg mr-3 font-bold min-w-fit">
@@ -48,6 +50,12 @@ export default function RootLayout({
                           </Link>
                       )}
                       <Link
+                          href="/search"
+                          className="cursor-pointer min-w-fit flex items-center"
+                      >
+                          <MagnifyingGlassIcon className="w-4 h-4" />
+                      </Link>
+                      <Link
                           href="/contact"
                           className="cursor-pointer min-w-fit flex items-center"
                       >
@@ -58,6 +66,12 @@ export default function RootLayout({
                           className="cursor-pointer min-w-fit flex items-center"
                       >
                           <InformationCircleIcon className="w-4 h-4" />
+                      </Link>
+                      <Link
+                          href="/settings"
+                          className="cursor-pointer min-w-fit flex items-center"
+                      >
+                          <Cog6ToothIcon className="w-4 h-4" />
                       </Link>
                   </div>
               </div>

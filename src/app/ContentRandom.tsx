@@ -21,7 +21,7 @@ const ContentRandom = () => {
             <h3 className="text-xl font-bold">Случайно выбранный текст</h3>
             <div className="flex flex-col pt-2 flex-1">
                 <p className="text-1xl font-bold">
-                    <div className="flex flex-row items-center">
+                    <span className="flex flex-row items-center">
                         <Link
                             href={`/library/${item.bookId.toString()}`}
                         >
@@ -33,7 +33,7 @@ const ContentRandom = () => {
                         <span className="pr-2 font-serif">
                             {item.name}
                         </span>
-                    </div>
+                    </span>
                 </p>
                 {item.poems && (
                     <div className="space-y-1 mt-2">
@@ -67,7 +67,7 @@ const ContentRandom = () => {
                                 ),
                                 /\{k\|(.+)}/,
                                 (red) => (
-                                    <span className="text-red-600">
+                                    <span key={red} className="text-red-600">
                                         {red}
                                     </span>
                                 )

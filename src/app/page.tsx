@@ -1,5 +1,4 @@
 import { Inter } from '@next/font/google'
-import { headers } from 'next/headers';
 import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/solid";
 import {getLastItems, getRandomProlog} from "@/app/api";
 import Content from "@/app/Content";
@@ -9,6 +8,8 @@ import {getMeta} from "@/app/meta/api";
 import ContentMeta from "@/app/ContentMeta";
 import {setMeta} from "@/lib/meta";
 import ContentRandom from "@/app/ContentRandom";
+import SearchForm from "@/app/components/search/Form";
+import "./global.scss";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -63,6 +64,9 @@ export default function Home() {
                       >
                           Dzen
                       </a>
+                  </li>
+                  <li>
+                      <SearchForm />
                   </li>
                   <li>
                       <Suspense fallback={<div>Loading...</div>}>
