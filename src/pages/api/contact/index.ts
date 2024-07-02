@@ -3,6 +3,9 @@ import * as nodemailer from "nodemailer";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
+        res.status(400).end();
+        return;
+
         const {email, theme, value} = req.body;
         if (!email || !value) {
             res.status(400).end();
