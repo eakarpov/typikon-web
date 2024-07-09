@@ -18,14 +18,7 @@ const Content = async ({ itemsPromise }: IContent) => {
     return (
         <div>
             Поиск по названию текста.<br/>
-            <SearchForm />
-            {items.map(item => (
-                <div key={item.id}>
-                    <Link href={`/reading/${item.id}`}>
-                        {item.name}
-                    </Link>
-                </div>
-            ))}
+            <SearchForm initial={items} />
         </div>
     );
 };
