@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SearchForm from "@/app/components/search/Form";
+import React from "react";
 
 interface IError {
     error: string;
@@ -17,7 +18,10 @@ const Content = async ({ itemsPromise }: IContent) => {
 
     return (
         <div>
-            Поиск по названию текста.<br/>
+            <span>
+                Поиск по названию текста.<br/>
+                Для поиска используйте только кириллические буквы А-Я/а-я<br/>
+            </span>
             <SearchForm initial={items} />
         </div>
     );
