@@ -1,14 +1,17 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 const Content = () => {
     const [email, setEmail] = useState("");
     const [theme, setTheme] = useState("");
     const [value, setValue] = useState("");
+    const [captcha, setCaptcha] = useState("");
 
     const [sent, setIsSent] = useState(false);
     const [error, setError] = useState(false);
+    const [img, setImg] = useState<string|null>(null);
+    const [force, setForce] = useState(false);
 
     const onSend = () => {
         setIsSent(false);
@@ -22,15 +25,30 @@ const Content = () => {
                 email,
                 theme,
                 value,
+                captcha,
             }),
         }).then(res => {
             if (res.status === 200) {
                 setIsSent(true);
+                setForce(old => !old);
+                setCaptcha("");
             } else {
                 setError(true);
+                setForce(old => !old);
+                setCaptcha("");
             }
         });
     };
+
+    useEffect(() => {
+        fetch('/api/captcha', {
+            method: 'POST',
+        }).then((res) => res.blob()).then(res => {
+            const urlImg = URL.createObjectURL(new Blob([res], { type: 'image/png' }));
+            setImg(urlImg);
+        });
+    }, [force]);
+
     return (
         <div className="flex flex-col">
             <label>
@@ -59,6 +77,16 @@ const Content = () => {
                 value={value}
                 onChange={e => setValue(e.target.value)}
             />
+
+            <label>
+                CAPTCHA
+            </label>
+            <input
+                className="border-2"
+                value={captcha}
+                onChange={e => setCaptcha(e.target.value)}
+            />
+            <img style={{ width: 300 }} src={img} />
 
             <div className="flex items-start">
                 <button onClick={onSend}>Отправить</button>
