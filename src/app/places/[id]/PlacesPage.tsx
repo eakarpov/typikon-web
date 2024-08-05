@@ -63,8 +63,8 @@ const PlacesPage = ({ item }: {item: any}) => {
                 {item.links && (
                     <span>
                         Ссылки: {item.links.map(link => (
-                            <span>
-                                <a href={link.url} target="_blank">{link.text}</a>
+                            <span key={link.url}>
+                                <a href={link.url} target="_blank" rel="noreferrer">{link.text}</a>
                             </span>
                         ))}
                     </span>
