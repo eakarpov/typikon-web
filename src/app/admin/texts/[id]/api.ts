@@ -32,7 +32,6 @@ export const getItem = async (id: string) => {
                 { $project: { createdAt: false, updatedAt: false, "bookId": false, "book.texts": false, "_id": false, "book._id": false }}
             ])
             .toArray();
-        console.log(texts)
         return texts[0];
     } catch (e) {
         console.error(e);

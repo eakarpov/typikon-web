@@ -6,6 +6,7 @@ import TextImages from "@/app/reading/TextImages";
 import DneslovImages from "@/app/reading/DneslovImages";
 import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
+import Link from "next/link";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -81,7 +82,16 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
                         {reactStringReplace(
                             reactStringReplace(
-                                paragraph,
+                                reactStringReplace(
+                                    paragraph,
+                                    /\{pl\|(.+)}/g,
+                                    (results) => <Link
+                                        href={`places/${results.split('|')[0]}`}
+                                        className="text-blue-800"
+                                    >
+                                        {results.split('|')[1]}
+                                    </Link>,
+                                ),
                                 /\{(\d+)}/g,
                                 (footnote) => <FootnoteLinkNew footnotes={item.footnotes} value={footnote} />,
                             ),

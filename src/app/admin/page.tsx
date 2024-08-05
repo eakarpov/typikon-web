@@ -30,6 +30,9 @@ const Admin = () => {
                 <Link href="/admin/days">
                     Редактирование дней
                 </Link>
+                <Link href="/admin/places">
+                    Редактирование мест
+                </Link>
             </div>
         </div>
     );
