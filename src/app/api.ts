@@ -50,6 +50,23 @@ export const getLastItems = async (): Promise<[any, any]> => {
     }
 };
 
+export const getCount = async (): Promise<[any, any]> => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon");
+
+        const texts = await db
+            .collection("texts")
+            .aggregate([
+                { $count: "Total" }
+            ]).toArray();
+        return [texts[0]?.Total, null];
+    } catch (e) {
+        console.error(e);
+        return [null, e];
+    }
+};
+
 export const writeMetaData = async (obj: any): Promise<any> => {
     try {
         const client = await clientPromise;
