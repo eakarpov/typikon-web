@@ -5,12 +5,11 @@ export const getItems = async () => {
         const client = await clientPromise;
         const db = client.db("typikon");
 
-        const weeks = await db
+        const books = await db
             .collection("books")
             .find({})
             .toArray();
-        console.log(weeks)
-        return weeks;
+        return books;
     } catch (e) {
         console.error(e);
     }

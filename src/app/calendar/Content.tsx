@@ -13,7 +13,7 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<any[]> }) => {
                             href={`/months/${month.alias || month._id.toString()}`}
                             className="cursor-pointer"
                         >
-                            Месяц {month.value}
+                            Месяц {month.label.toLowerCase()}
                         </Link>
                     </p>
                 </div>

@@ -7,7 +7,9 @@ export const getItems = async () => {
 
         const months = await db
             .collection("months")
-            .find({})
+            .aggregate([
+                { $sort: { value: 1 } },
+            ])
             .toArray();
         return months;
     } catch (e) {

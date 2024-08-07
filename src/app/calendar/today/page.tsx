@@ -14,7 +14,7 @@ const AdminTextId = async () => {
     return (
         <div>
             <h1 className="font-bold">
-                Календарные тексты для чтения на сегодня ({day}.{month} по старому стилю)
+                Календарные тексты для чтения на сегодня ({day}.{month >= 10 ? month : `0${month}`} по старому стилю)
             </h1>
             <div className={myFont.variable}>
                 <Suspense fallback={<div>Loading...</div>}>
