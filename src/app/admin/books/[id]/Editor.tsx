@@ -76,18 +76,18 @@ const AdminEditor = ({ value }: any) => {
                 value={translator}
                 onChange={e => setTranslator(e.target.value)}
             />
-            <p onClick={onSubmitAdd} className="cursor-pointer">
-                Добавить текст
+            <p onClick={onSubmitAdd} className="cursor-pointer mb-2">
+                <b>Добавить текст</b>
             </p>
             {value.texts.map((text: any) => (
                 <div className="flex flex-row mb-4" key={text.id}>
-                    <p className="text-slate-400 w-36">
+                    <p className="w-[40%]">
                         {text.name || "Нет названия"}
                     </p>
-                    <p className="text-slate-400 w-36">
+                    <p className="text-slate-400 w-[30%]">
                         {text.description}
                     </p>
-                    <div className="flex flex-col space-y-1 w-60">
+                    <div className="flex flex-col text-slate-400 space-y-1 w-[20%]">
                         <Link
                             href={`/admin/texts/${text.id}`}
                             className="cursor-pointer"
@@ -95,8 +95,8 @@ const AdminEditor = ({ value }: any) => {
                             {text.id}
                         </Link>
                     </div>
-                    <p>
-                        Удалить текст (пока не работает - опасно!)
+                    <p className="text-slate-400 w-[10%]">
+                        Удалить текст (?)
                     </p>
                 </div>
             ))}
