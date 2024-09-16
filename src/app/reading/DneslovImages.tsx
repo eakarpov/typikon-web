@@ -13,7 +13,7 @@ const DneslovImages = ({ dneslovId }: IDneslovImages) => {
             fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}`)
                 .then((res) => res.json())
                 .then((res) => {
-                    setImages(res.map(e => e.url));
+                    setImages(res.map(e => e.thumb_url));
                 });
         }
     }, [dneslovId]);
