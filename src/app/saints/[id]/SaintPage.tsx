@@ -71,7 +71,7 @@ const SaintPage = ({ item, items, mentions }: {item: any, items: any[], mentions
             </div>
             <div className="mt-4">
                 {collection.map((item) => (
-                    <div className="font-serif">
+                    <div className="font-serif" key={item._id}>
                         {item.name}
                     </div>
                 ))}
