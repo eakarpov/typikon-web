@@ -41,6 +41,13 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                             <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                         </span>
                     )}
+                    {item.dneslovId && (
+                        <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
+                            <Link href={`/saints/${item.dneslovId}`}>
+                                Страница святого
+                            </Link>
+                        </span>
+                    )}
                     <span className="w-fit text-xs pr-2">
                         <ReadinessButton value={item.readiness} />
                     </span>
@@ -83,7 +90,16 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         {reactStringReplace(
                             reactStringReplace(
                                 reactStringReplace(
-                                    paragraph,
+                                    reactStringReplace(
+                                        paragraph,
+                                        /\{st\|(.+)}/g,
+                                        (results) => <Link
+                                            href={`saints/${results.split('|')[0]}`}
+                                            className="text-blue-800"
+                                        >
+                                            {results.split('|')[1]}
+                                        </Link>,
+                                    ),
                                     /\{pl\|(.+)}/g,
                                     (results) => <Link
                                         href={`places/${results.split('|')[0]}`}

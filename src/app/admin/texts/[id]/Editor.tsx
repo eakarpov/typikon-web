@@ -11,6 +11,15 @@ import {
 } from "@/utils/texts";
 import {useCallback, useEffect, useState} from "react";
 
+const getMentionIds = (content: string) => {
+  const matcher = content.matchAll(/\{st\|(.+)}/g);
+  if (matcher) {
+      return [...matcher].map((item) => item[1].split('|')[0]).filter(el => el);
+  }
+
+  return null;
+};
+
 const AdminEditor = ({ value }: any) => {
     const [footnotes, setFootnotes] = useState(
         value.footnotes?.map((e: string, i: number) => `${i + 1} ${e}`).join('\n') || ""
@@ -67,6 +76,7 @@ const AdminEditor = ({ value }: any) => {
                 alias,
                 poems,
                 images: [imageLink],
+                mentionIds: getMentionIds(content),
                 dneslovId,
                 startPhrase,
                 initialPriestExclamation,
@@ -113,7 +123,7 @@ const AdminEditor = ({ value }: any) => {
                         Тип
                     </label>
                     <select className="border-2" value={type} onChange={(event) => setType(event.target.value)}>
-                        {Object.values(TextKind).map(val => (
+                        {Object.values(TextKind).map((val) => (
                             <option
                                 key={val}
                                 value={val}
@@ -132,7 +142,7 @@ const AdminEditor = ({ value }: any) => {
                         value={dneslovType}
                         onChange={(event) => setDneslovType(event.target.value)}
                     >
-                        {Object.values(DneslovKind).map(val => (
+                        {Object.values(DneslovKind).map((val) => (
                             <option
                                 key={val}
                                 value={val}

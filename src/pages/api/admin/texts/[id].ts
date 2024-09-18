@@ -39,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             dneslovType: data.dneslovType,
                             initialPriestExclamation: data.initialPriestExclamation,
                             startPhrase: data.startPhrase,
+                            mentionIds: data.mentionIds,
                         },
                     },
                 );

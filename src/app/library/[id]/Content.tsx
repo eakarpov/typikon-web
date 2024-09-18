@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CountMeta from "@/app/meta/CountMeta";
+import DneslovRoundImage from "@/lib/common/DneslovRoundImage";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -37,14 +38,19 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
             <h2>Содержание:</h2>
             <div className="pt-2">
                 {item.texts.map((text: any) => (
-                    <p key={text._id.toString()}>
+                    <div className="flex flex-row" key={text._id.toString()}>
+                        {false && (
+                            <div style={{ width: "42px"}}>
+                                <DneslovRoundImage id={text.dneslovId} />
+                            </div>
+                        )}
                         <Link
                             href={`/reading/${text._id.toString()}`}
-                            className="cursor-pointer"
+                            className="cursor-pointer font-serif"
                         >
                             {text.name || text._id.toString()}
                         </Link>
-                    </p>
+                    </div>
                 ))}
             </div>
         </div>

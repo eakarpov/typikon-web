@@ -51,7 +51,8 @@ export enum TextKind {
 
 export enum DneslovKind {
     MEMORY= "MEMORY",
-    EVENT= "EVENT"
+    // EVENT= "EVENT",
+    AUTHOR= "AUTHOR",
 }
 
 export const printTextKind = (kind: TextKind) => {
@@ -73,10 +74,14 @@ export const printTextKind = (kind: TextKind) => {
 
 export const printDneslovKind = (kind: DneslovKind) => {
     switch (kind) {
-        case DneslovKind.EVENT:
-            return "Событие";
+        // case DneslovKind.EVENT:
+        //     return "Событие";
         case DneslovKind.MEMORY:
             return "Память";
+        case DneslovKind.AUTHOR:
+            return "Автор";
+        default:
+            return "";
     }
 }
 
