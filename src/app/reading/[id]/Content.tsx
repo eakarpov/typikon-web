@@ -48,6 +48,8 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                             </Link>
                         </span>
                     )}
+                </div>
+                <div className="flex flex-row items-center">
                     <span className="w-fit text-xs pr-2">
                         <ReadinessButton value={item.readiness} />
                     </span>

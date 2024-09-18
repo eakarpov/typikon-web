@@ -1,15 +1,7 @@
 'use client';
-import React, {useCallback, useEffect, useMemo, useState} from "react";
-import OSM from "ol/source/OSM";
-import TileLayer from "ol/layer/Tile";
-import Map from "ol/Map";
-import View from "ol/View";
-import {fromLonLat} from "ol/proj";
-import Vector from "ol/source/Vector";
-import {Point} from "ol/geom";
-import Feature from "ol/Feature";
-import {Heatmap} from "ol/layer";
+import React, {useCallback, useMemo, useState} from "react";
 import {DneslovKind} from "@/utils/texts";
+import Link from "next/link";
 
 enum COLLECTION_TYPE {
     BOOK,
@@ -72,7 +64,9 @@ const SaintPage = ({ item, items, mentions }: {item: any, items: any[], mentions
             <div className="mt-4">
                 {collection.map((item) => (
                     <div className="font-serif" key={item._id}>
-                        {item.name}
+                        <Link href={`/reading/${item._id}`}>
+                            {item.name}
+                        </Link>
                     </div>
                 ))}
             </div>
