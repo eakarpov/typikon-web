@@ -11,6 +11,7 @@ export default function Head() {
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Уставные чтения" />
         <meta property="og:url" content="//www.typikon.su/" />
+        <meta name="yandex-verification" content="5cd66667ff47394e" />
         <meta property="og:description" content="Последование уставных чтений по Типикону для корпуса церковнославянских текстов." />
     </>
   )
