@@ -3,6 +3,24 @@ import Link from "next/link";
 import {InformationCircleIcon, EnvelopeIcon, MagnifyingGlassIcon, Cog6ToothIcon} from "@heroicons/react/20/solid";
 import CountMeta from "@/app/meta/CountMeta";
 import InitiateUserSettings from './components/settings/InitiateUserSettings';
+import {Metadata, Viewport} from "next";
+import CommonMeta from "@/app/components/CommonMeta";
+
+export const viewport: Viewport = {
+    initialScale: 1,
+    width: 'device-width'
+}
+
+export const metadata: Metadata = {
+    title: "Уставные чтения",
+    description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',
+    keywords: "уставные чтения, устав, типикон, богослужебные указания, триодь, минея, пролог, златоуст, торжественник, учительное евангелие, толковый апостол",
+    openGraph: {
+        title: 'Уставные чтения',
+        description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',
+        image: "https://www.typikon.ru/logo.png"
+    },
+}
 
 export default function RootLayout({
   children,
@@ -11,8 +29,8 @@ export default function RootLayout({
 }) {
     return (
     <html lang="en">
-      <head />
       <body>
+          <CommonMeta />
           <noscript>
               <div>
                   <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />

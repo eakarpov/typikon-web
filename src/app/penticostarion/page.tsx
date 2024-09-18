@@ -2,6 +2,18 @@ import { Suspense } from "react";
 import Content from "@/app/penticostarion/Content";
 import {getItems} from "@/app/penticostarion/api";
 import {myFont} from "@/utils/font";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: "Цветная Триодь",
+    description: "Уставные чтения на святую Пятидесятницу и неделю всех святых.",
+    openGraph: {
+        title: "Цветная Триодь",
+        description: "Уставные чтения на святую Пятидесятницу и неделю всех святых.",
+        url: "//www.typikon.su/penticostarion/",
+        type: "website",
+    },
+};
 
 const Penticostarion = async () => {
     const itemsData = getItems();

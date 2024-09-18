@@ -1,5 +1,16 @@
 import Content from "@/app/contact/Content";
 import {setMeta} from "@/lib/meta";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: "Обратная связь",
+    description: 'Уставные чтения, обратная связь с пользователями.',
+    openGraph: {
+        title: 'Обратная связь',
+        description: 'Уставные чтения, обратная связь с пользователями.',
+        url: "//www.typikon.su/contact/"
+    },
+}
 
 const Library = async () => {
     setMeta();

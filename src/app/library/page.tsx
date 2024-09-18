@@ -2,6 +2,17 @@ import Content from "@/app/library/Content";
 import {Suspense} from "react";
 import {getItems} from "@/app/library/api";
 import {setMeta} from "@/lib/meta";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: "Библиотека текстов",
+    description: 'Уставные чтения, объединенные в книги для полного прочтения.',
+    openGraph: {
+        title: 'Библиотека текстов',
+        description: 'Уставные чтения, объединенные в книги для полного прочтения.',
+        url: "//www.typikon.su/library/"
+    },
+}
 
 const Library = async () => {
     const itemsData = getItems();

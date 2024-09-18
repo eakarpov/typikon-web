@@ -2,6 +2,17 @@ import {getItems} from "@/app/calendar/api";
 import {Suspense} from "react";
 import Content from "@/app/calendar/Content";
 import {setMeta} from "@/lib/meta";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: "Чтения на календарный день",
+    description: 'Уставные чтения на выбранный календарный день.',
+    openGraph: {
+        title: 'Чтения на календарный день',
+        description: 'Уставные чтения на выбранный календарный день.',
+        url: "//www.typikon.su/calendar/"
+    },
+}
 
 const Calendar = () => {
     const itemsData = getItems();
