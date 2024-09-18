@@ -12,6 +12,7 @@ export default async function Head({ params: { id }}: IHead) {
             <CommonMeta />
             <title>{item?.name}</title>
             <meta content="width=device-width, initial-scale=1" name="viewport" />
+            <meta name="title" content={item?.name} />
             <meta name="description" content={`Уставные чтения на день: ${item?.name}`} />
             <meta property="og:type" content="website" />
             <meta property="og:title" content={item?.name} />
