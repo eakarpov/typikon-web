@@ -174,10 +174,10 @@ const DayPartReading = ({
                 </p>
                 <StartPart part={valueName} firstText={value.items[0]} />
                 {value.items?.map((item: any, index: number) => item.text ? (
-                    <div key={item.text._id.toString()}>
+                    <div key={item.text._id}>
                         <div className="flex flex-row">
                             <Link
-                                href={`/reading/${item.text._id.toString()}`}
+                                href={`/reading/${item.text._id}`}
                                 onMouseLeave={onHideTitle}
                                 onMouseEnter={onShowTitle}
                             >

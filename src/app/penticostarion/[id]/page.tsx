@@ -15,7 +15,7 @@ export async function generateMetadata(
     const id = params.id
 
     // fetch data
-    const [item] = await getItem(id);
+    const item = await getItem(id);
 
     return {
         title: item?.name,
