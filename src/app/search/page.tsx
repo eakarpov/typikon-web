@@ -9,7 +9,9 @@ const Search = (req: { searchParams: { query?: string; }}) => {
             <div>
                 Вы не задали никакого запроса. Поиск по названию текста.
                 <div>
-                    <SearchForm />
+                    <Suspense>
+                        <SearchForm />
+                    </Suspense>
                 </div>
             </div>
         );

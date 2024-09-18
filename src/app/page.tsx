@@ -73,7 +73,9 @@ export default function Home() {
                       </Suspense>
                   </li>
                   <li>
-                      <SearchForm />
+                      <Suspense>
+                          <SearchForm />
+                      </Suspense>
                   </li>
                   <li>
                       <Suspense fallback={<div>Loading...</div>}>
