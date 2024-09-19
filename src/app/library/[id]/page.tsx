@@ -18,14 +18,20 @@ export async function generateMetadata(
     // fetch data
     const [item] = await getItem(id);
 
+    if (!item) {
+        return {};
+    }
+
     return {
-        title: `${item?.name} ${item?.author ? `(${item?.author})` : ""}`,
-        description: `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`,
+        title: item.name,
+        description: item.description ||
+            `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`,
         openGraph: {
-            title: `${item?.name} ${item?.author ? `(${item?.author})` : ""}`,
+            title: item.name,
             type: "website",
             url: `//www.typikon.su/library/${id}`,
-            description: `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`
+            description: item.description ||
+                `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`
         },
     }
 }

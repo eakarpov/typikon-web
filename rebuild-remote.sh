@@ -1,5 +1,5 @@
 cd typikon-web
-git checkout next14
+git checkout master
 git pull
 npm i
 npm run build
