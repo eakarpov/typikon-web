@@ -23,7 +23,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     return (
         <div className="flex flex-col md:flex-row">
         <div className="flex flex-col pt-2 flex-1">
-            <p className="text-1xl font-bold">
+            <div className="text-1xl font-bold">
                 <div className="flex flex-row items-center">
                     {item.ruLink && (
                         <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
@@ -64,7 +64,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         {item.name}
                     </span>
                 </div>
-            </p>
+            </div>
             {item.poems && (
                 <div className="space-y-1 mt-2">
                     <p className="font-serif">

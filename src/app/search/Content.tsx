@@ -1,6 +1,5 @@
-import Link from "next/link";
 import SearchForm from "@/app/components/search/Form";
-import React from "react";
+import React, { Suspense } from "react";
 
 interface IError {
     error: string;
@@ -22,7 +21,9 @@ const Content = async ({ itemsPromise }: IContent) => {
                 Поиск по названию текста.<br/>
                 Для поиска используйте только кириллические буквы А-Я/а-я<br/>
             </span>
-            <SearchForm initial={items} />
+            <Suspense>
+                <SearchForm initial={items} />
+            </Suspense>
         </div>
     );
 };

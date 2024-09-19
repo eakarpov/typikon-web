@@ -21,16 +21,23 @@ export const getAggregationAddField = (name: TextType, withText: boolean = true)
                                             paschal: "$$i.paschal",
                                             description: "$$i.description",
                                             text: {
-                                                $first: {
-                                                    $filter: {
-                                                        input: "$texts",
-                                                        cond: {
-                                                            $eq: ["$$t._id", "$$i.textId"],
+                                                $mergeObjects: [
+                                                    {
+                                                        $first: {
+                                                            $filter: {
+                                                                input: "$texts",
+                                                                cond: {
+                                                                    $eq: ["$$t._id", "$$i.textId"],
+                                                                },
+                                                                as: "t",
+                                                                limit: 1,
+                                                            }
                                                         },
-                                                        as: "t",
-                                                        limit: 1,
+                                                    },
+                                                    {
+                                                        _id: { $toString: '$$i.textId' }
                                                     }
-                                                },
+                                                ]
                                             },
                                         } : {
                                             $mergeObjects: [

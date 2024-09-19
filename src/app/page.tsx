@@ -1,4 +1,4 @@
-import { Inter } from '@next/font/google'
+import { Inter } from 'next/font/google';
 import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/solid";
 import {getCount, getLastItems} from "@/app/api";
 import Content from "@/app/Content";
@@ -73,7 +73,9 @@ export default function Home() {
                       </Suspense>
                   </li>
                   <li>
-                      <SearchForm />
+                      <Suspense>
+                          <SearchForm />
+                      </Suspense>
                   </li>
                   <li>
                       <Suspense fallback={<div>Loading...</div>}>

@@ -3,7 +3,7 @@ import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
 
-export const getItem = async (id: string) => {
+export const getItem = async (id: string): any => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
