@@ -96,7 +96,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                                         paragraph,
                                         /\{st\|(.+)}/g,
                                         (results) => <Link
-                                            href={`saints/${results.split('|')[0]}`}
+                                            href={`/saints/${results.split('|')[0]}`}
                                             className="text-blue-800"
                                         >
                                             {results.split('|')[1]}
@@ -104,7 +104,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                                     ),
                                     /\{pl\|(.+)}/g,
                                     (results) => <Link
-                                        href={`places/${results.split('|')[0]}`}
+                                        href={`/places/${results.split('|')[0]}`}
                                         className="text-blue-800"
                                     >
                                         {results.split('|')[1]}

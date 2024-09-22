@@ -63,8 +63,8 @@ const SaintPage = ({ item, items, mentions }: {item: any, items: any[], mentions
             </div>
             <div className="mt-4">
                 {collection.map((item) => (
-                    <div className="font-serif" key={item._id}>
-                        <Link href={`/reading/${item._id}`}>
+                    <div className="font-serif" key={item.id}>
+                        <Link href={`/reading/${item.id}`}>
                             {item.name}
                         </Link>
                     </div>
