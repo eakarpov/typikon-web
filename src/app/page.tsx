@@ -4,7 +4,6 @@ import {getCount, getLastItems} from "@/app/api";
 import Content from "@/app/Content";
 import {Suspense} from "react";
 import {myFont} from "@/utils/font";
-import {getMeta} from "@/app/meta/api";
 import ContentMeta from "@/app/ContentMeta";
 import {setMeta} from "@/lib/meta";
 import ContentRandom from "@/app/ContentRandom";
@@ -15,7 +14,6 @@ const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
     const itemsData = getLastItems();
-    const metaData = getMeta();
     const textCount = getCount();
     setMeta();
 
@@ -78,10 +76,7 @@ export default function Home() {
                       </Suspense>
                   </li>
                   <li>
-                      <Suspense fallback={<div>Loading...</div>}>
-                          {/* @ts-expect-error Async Server Component */}
-                          <ContentMeta itemsPromise={metaData} />
-                      </Suspense>
+                      <ContentMeta />
                   </li>
               </ul>
           </div>
