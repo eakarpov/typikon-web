@@ -18,7 +18,8 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Уставные чтения',
         description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',
-        image: "https://www.typikon.ru/logo.png"
+        image: "https://www.typikon.ru/logo.png",
+        site_name: "Уставные чтения Типикона РПЦ"
     },
 }
 
