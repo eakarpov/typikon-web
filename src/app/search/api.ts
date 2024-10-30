@@ -4,8 +4,9 @@ export const searchData = async (query: string) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
+        const queryStr = decodeURI(query);
 
-        if (query.length < 3) {
+        if (queryStr.length < 3) {
             return [null, "Увеличьте строку хотя бы до 3 символов."]
         }
 
@@ -18,7 +19,7 @@ export const searchData = async (query: string) => {
                             $gt: [{
                                 $indexOfCP: [
                                     { $replaceAll: {input: '$name', find: `́`, replacement: ""}, },
-                                    query
+                                    queryStr
                                 ],
                             }, -1]
                         },
@@ -36,6 +37,7 @@ export const searchData = async (query: string) => {
                 },
             ])
             .toArray();
+        console.log(queryStr, texts)
         return [texts, null];
     } catch (e) {
         console.error(e);

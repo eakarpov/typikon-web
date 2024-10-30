@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface IError {
     error: string;
 }
@@ -18,9 +20,9 @@ const Content = async ({ itemsPromise }: IContent) => {
             {items.map((item, index) => (
                 <div key={item.id} className="font-serif flex flex-row">
                     <span>{index + 1}.&nbsp;</span>
-                    <a href={`/reading/${item.alias || item.id}`} className="text-red-600">
+                    <Link href={`/reading/${item.alias || item.id}`} className="text-red-600">
                         {item.name}
-                    </a>
+                    </Link>
                     <span className="font-normal">
                         &nbsp;(Обновлено {item.updatedAt.toLocaleDateString()})
                     </span>
