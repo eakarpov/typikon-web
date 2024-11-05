@@ -22,7 +22,7 @@ const ContentMetaClient = () => {
 
     useEffect(() => {
         let signal = controller.signal;
-        fetch(`${window.location.protocol}//${window.location.host}/api/meta/log`, {
+        fetch(`${window.location.protocol}//${window.location.host}/meta`, { // typikon-web-meta
             signal,
         })
             .then((res) => res.json())
