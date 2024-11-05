@@ -1,36 +1,37 @@
 'use client';
 import {memo, useEffect, useState} from "react";
-import {usePathname} from "next/navigation";
 
 interface IMeta {
     totalCount: number;
     totalUsers: number;
 }
 
-let controller = new AbortController();
+let controller;
 
 const ContentMetaClient = () => {
-    const pathname = usePathname();
     const [meta, setMeta] = useState<IMeta|null>(null);
 
     const abortFunction = () => {
-        controller.abort();
+        if (controller) {
+            controller.abort();
+        }
     };
 
     useEffect(() => {
-        let signal = controller.signal;
+        console.log('effecr');
+        controller = new AbortController();
         fetch(`${window.location.protocol}//${window.location.host}/meta`, { // typikon-web-meta
-            signal,
+            signal: controller.signal,
         })
             .then((res) => res.json())
             .then((data) => {
                 setMeta(data);
             });
-    }, [pathname]);
+    }, []);
 
     useEffect(() => () => {
         abortFunction();
-    }, [pathname]);
+    }, []);
 
     if (!meta) return null;
 
