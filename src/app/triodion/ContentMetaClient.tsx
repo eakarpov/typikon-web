@@ -16,8 +16,6 @@ const ContentMetaClient = () => {
 
     const router = useRouter();
 
-    console.log(router);
-
     const abortFunction = () => {
         controller.abort();
     };
