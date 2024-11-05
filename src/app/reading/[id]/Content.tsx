@@ -1,13 +1,13 @@
 import { ReadinessButton } from "@/app/components/DayPart";
-import TextPart from "@/app/components/TextPart";
 import {isFootnoteBook} from "@/utils/texts";
-import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
+import {ArrowTopRightOnSquareIcon, BookOpenIcon, UserCircleIcon} from "@heroicons/react/24/outline";
 import TextImages from "@/app/reading/TextImages";
 import DneslovImages from "@/app/reading/DneslovImages";
 import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
 import {redirect} from "next/navigation";
+import TextToDate from "@/app/reading/[id]/TextToDate";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -31,7 +31,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
             <div className="text-1xl font-bold">
                 <div className="flex flex-row items-center">
                     {item.ruLink && (
-                        <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
+                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
                             <a href={item.ruLink} target="_blank" rel="noreferrer">
                                 Русский текст&nbsp;
                             </a>
@@ -39,18 +39,28 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         </span>
                     )}
                     {item.link && (
-                        <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
+                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
                             <a href={item.link} target="_blank" rel="noreferrer">
                                 Скан текста&nbsp;
                             </a>
                             <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                         </span>
                     )}
-                    {item.dneslovId && (
-                        <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
-                            <Link href={`/saints/${item.dneslovId}`}>
-                                Страница святого
+                    {item.bookId && (
+                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
+                            <Link href={`/library/${item.bookId}`}>
+                                Книга&nbsp;
                             </Link>
+                            <BookOpenIcon className="w-4 h-4" />
+                        </span>
+                    )}
+                    <TextToDate id={item.id} />
+                    {item.dneslovId && (
+                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
+                            <Link href={`/saints/${item.dneslovId}`}>
+                                Страница святого&nbsp;
+                            </Link>
+                            <UserCircleIcon className="w-4 h-4" />
                         </span>
                     )}
                 </div>

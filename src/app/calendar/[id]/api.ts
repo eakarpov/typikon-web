@@ -37,10 +37,46 @@ export const getItem = async (id: string) => {
                         id: { $toString: "$_id" },
                     },
                 },
-                { $project: { texts: 0, books: 0, months: 0, "month._id": 0, "month.days": 0, weekId: 0, _id: 0 }}
+                { $project: {
+                    texts: 0,
+                    books: 0,
+                    months: 0,
+                    "month._id": 0,
+                    "month.days": 0,
+                    weekId: 0,
+                    _id: 0,
+                    "vigil.items.text.book.texts": 0,
+                    "kathisma1.items.text.book.texts": 0,
+                    "kathisma2.items.text.book.texts": 0,
+                    "kathisma3.items.text.book.texts": 0,
+                    "polyeleos.items.text.book.texts": 0,
+                    "ipakoi.items.text.book.texts": 0,
+                    "song3.items.text.book.texts": 0,
+                    "song6.items.text.book.texts": 0,
+                    "before1.items.text.book.texts": 0,
+                    "h1.items.text.book.texts": 0,
+                    "h3.items.text.book.texts": 0,
+                    "h6.items.text.book.texts": 0,
+                    "h9.items.text.book.texts": 0,
+                    "panagia.items.text.book.texts": 0,
+
+                    "vigil.items.text.bookId": 0,
+                    "kathisma1.items.text.bookId": 0,
+                    "kathisma2.items.text.bookId": 0,
+                    "kathisma3.items.text.bookId": 0,
+                    "polyeleos.items.text.bookId": 0,
+                    "ipakoi.items.text.bookId": 0,
+                    "song3.items.text.bookId": 0,
+                    "song6.items.text.bookId": 0,
+                    "before1.items.text.bookId": 0,
+                    "h1.items.text.bookId": 0,
+                    "h3.items.text.bookId": 0,
+                    "h6.items.text.bookId": 0,
+                    "h9.items.text.bookId": 0,
+                    "panagia.items.text.bookId": 0,
+                    }}
             ])
             .toArray();
-        console.log(days);
         return [days[0], null];
     } catch (e) {
         console.error(e);

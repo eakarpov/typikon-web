@@ -1,4 +1,5 @@
 import {TextType} from "@/utils/texts";
+import {ObjectId} from "mongodb";
 
 export const getAggregationAddField = (name: TextType, withText: boolean = true) => {
     const varName = `$${name}`;
@@ -129,3 +130,18 @@ export const aggregationDayWithMonth = [
         },
     },
 ];
+
+export const getAggregationFindIdInField = (id: string, field: string) => ({
+    $in: [new ObjectId(id), {
+        $map: {
+            input: {
+                $getField: {
+                    field: "items",
+                    input: {$ifNull: [field, {items: []}]}
+                }
+            },
+            as: "item",
+            in: "$$item.textId"
+        }
+    }]
+});
