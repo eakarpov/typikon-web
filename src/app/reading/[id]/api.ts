@@ -1,10 +1,12 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 
-export const getItem = async (id: string): Promise<[any, any]> => {
+export const getItem = async (id: string): Promise<[any, any, boolean]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
+
+        const shouldRedirect = ObjectId.isValid(id);
         const matcher = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { alias: id };
 
         const texts = await db
@@ -19,9 +21,10 @@ export const getItem = async (id: string): Promise<[any, any]> => {
                 { $project: { _id: 0 }}
             ])
             .toArray();
-        return [texts[0], null];
+        const res = texts[0];
+        return [res, null, shouldRedirect && res?.alias];
     } catch (e) {
         console.error(e);
-        return [null, e];
+        return [null, e, false];
     }
 };

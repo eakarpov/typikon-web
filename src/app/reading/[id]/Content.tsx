@@ -7,10 +7,11 @@ import DneslovImages from "@/app/reading/DneslovImages";
 import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
+import {redirect} from "next/navigation";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
-    const [item] = await itemPromise;
+    const [item, err, shouldRedirect] = await itemPromise;
 
     if (!item) {
         return (
@@ -18,6 +19,10 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
               Ничего не нашлось
           </div>
         );
+    }
+
+    if (shouldRedirect) {
+        redirect(`/reading/${item.alias}`);
     }
 
     return (
