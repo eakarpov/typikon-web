@@ -18,7 +18,6 @@ const ContentMetaClient = () => {
     };
 
     useEffect(() => {
-        console.log('effecr');
         controller = new AbortController();
         fetch(`${window.location.protocol}//${window.location.host}/meta`, { // typikon-web-meta
             signal: controller.signal,
@@ -26,6 +25,10 @@ const ContentMetaClient = () => {
             .then((res) => res.json())
             .then((data) => {
                 setMeta(data);
+            }).catch((error: Error) => {
+                if (!(error instanceof DOMException && error.name === "AbortError")) {
+                    console.log(error.message);
+                }
             });
     }, []);
 
