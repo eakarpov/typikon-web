@@ -1,5 +1,6 @@
 'use client';
 import {memo, useEffect, useState} from "react";
+import {usePathname} from "next/navigation";
 
 interface IMeta {
     totalCount: number;
@@ -9,6 +10,7 @@ interface IMeta {
 let controller = new AbortController();
 
 const ContentMetaClient = () => {
+    const pathname = usePathname();
     const [meta, setMeta] = useState<IMeta|null>(null);
 
     const abortFunction = () => {
@@ -24,11 +26,11 @@ const ContentMetaClient = () => {
             .then((data) => {
                 setMeta(data);
             });
-    }, []);
+    }, [pathname]);
 
     useEffect(() => () => {
         abortFunction();
-    }, []);
+    }, [pathname]);
 
     if (!meta) return null;
 
