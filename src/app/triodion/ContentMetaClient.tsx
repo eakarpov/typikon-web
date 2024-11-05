@@ -1,8 +1,5 @@
 'use client';
-
 import {memo, useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
-import { Router } from "next/router";
 
 interface IMeta {
     totalCount: number;
@@ -13,8 +10,6 @@ let controller = new AbortController();
 
 const ContentMetaClient = () => {
     const [meta, setMeta] = useState<IMeta|null>(null);
-
-    const router = useRouter();
 
     const abortFunction = () => {
         controller.abort();
@@ -27,18 +22,13 @@ const ContentMetaClient = () => {
         })
             .then((res) => res.json())
             .then((data) => {
-                if (data && data[0]) {
-                    setMeta(data[0])
-                }
+                setMeta(data);
             });
     }, []);
 
-    useEffect(() => {
-        Router.events.on("routeChangeStart", abortFunction);
-        return () => {
-            Router.events.off('routeChangeComplete', abortFunction);
-        }
-    }, [router]);
+    useEffect(() => () => {
+        abortFunction();
+    }, []);
 
     if (!meta) return null;
 
@@ -47,7 +37,7 @@ const ContentMetaClient = () => {
             className="flex flex-col"
         >
             <span>
-              Счетчик посещений (beta):
+              Счетчик посещений:
             </span>
             <span>
               Количество посещений: {meta.totalCount}
