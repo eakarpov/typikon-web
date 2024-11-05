@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const getMonth = (value: number) => {
+export const getMonth = (value: number) => {
   switch (value) {
       case 0:
           return "Январь";
