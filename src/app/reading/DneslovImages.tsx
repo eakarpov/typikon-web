@@ -23,20 +23,11 @@ const DneslovImages = ({ dneslovId }: IDneslovImages) => {
     if (!images.length) return null;
 
     return (
-        <div className="flex flex-col pt-2" style={{ paddingLeft: '12px' }}>
+        <div className="flex flex-col pt-2" style={{ paddingLeft: '12px', maxWidth: "50%" }}>
             <ImageGallery
                 items={images}
                 lazyLoad
-
             />
-            {/*{images.map((image: string) => (*/}
-            {/*    <img*/}
-            {/*        key={image}*/}
-            {/*        src={image}*/}
-            {/*        style={{ width: `300px`, height: 'auto' }}*/}
-            {/*        alt={"Икона или картина, связанная с текстом"}*/}
-            {/*    />*/}
-            {/*))}*/}
         </div>
     );
 };
