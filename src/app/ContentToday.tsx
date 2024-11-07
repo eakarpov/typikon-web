@@ -35,7 +35,7 @@ const RenderItem = ({ data, type }: { data: null|WithTextItems, type: TextType})
                 {valueTitle(type)}:
             </span>
             {data.items?.map((item) => (
-                <span>
+                <span key={item.text._id}>
                     <Link href={`/reading/${item.text?._id}`}>
                         {item.text?.name}
                     </Link>
