@@ -9,6 +9,7 @@ import {setMeta} from "@/lib/meta";
 import ContentRandom from "@/app/ContentRandom";
 import SearchForm from "@/app/components/search/Form";
 import ContentMoreThan from "@/app/ContentMoreThan";
+import ContentToday from "@/app/ContentToday";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -86,6 +87,9 @@ export default function Home() {
                       {/* @ts-expect-error Async Server Component */}
                       <Content itemsPromise={itemsData} />
                   </Suspense>
+              </div>
+              <div className={myFont.variable}>
+                  <ContentToday />
               </div>
               <div className={myFont.variable}>
                   <ContentRandom />

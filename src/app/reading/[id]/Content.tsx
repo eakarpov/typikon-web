@@ -29,7 +29,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
         <div className="flex flex-col md:flex-row">
         <div className="flex flex-col pt-2 flex-1">
             <div className="text-1xl font-bold">
-                <div className="flex flex-row items-center">
+                <div className="flex flex-row items-center overflow-scroll">
                     {item.ruLink && (
                         <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
                             <a href={item.ruLink} target="_blank" rel="noreferrer">

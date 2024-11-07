@@ -15,7 +15,7 @@ const DneslovImages = ({ dneslovId }: IDneslovImages) => {
             fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}`)
                 .then((res) => res.json())
                 .then((res) => {
-                    setImages(res.map(e => ({ thumbnail: e.thumb_url, original: e.url})));
+                    setImages(res.map(e => ({ thumbnail: e.thumb_url, original: e.url })));
                 });
         }
     }, [dneslovId]);
@@ -23,7 +23,7 @@ const DneslovImages = ({ dneslovId }: IDneslovImages) => {
     if (!images.length) return null;
 
     return (
-        <div className="flex flex-col pt-2" style={{ paddingLeft: '12px', maxWidth: "50%" }}>
+        <div className="flex flex-col pt-2 w-full md:w-1/2" style={{ paddingLeft: '12px' }}>
             <ImageGallery
                 items={images}
                 lazyLoad
