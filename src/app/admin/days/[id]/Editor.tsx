@@ -37,6 +37,7 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [saved, setIsSaved] = useState(false);
 
     const setTextField = (itemName: TextType, index: number, field: "textId"|"cite"|"paschal"|"description", value: string|boolean) => {
+        console.log(itemName, index, field, value);
         switch (itemName) {
             case TextType.VESPERS_PROKIMENON:
                 const newVespersProkimenon = {...vespersProkimenon};
