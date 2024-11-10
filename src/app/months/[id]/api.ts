@@ -19,9 +19,14 @@ export const getItem = async (id: string) => {
                 {
                     $lookup: {
                         from: "days",
-                        localField: "days",
-                        foreignField: "_id",
-                        as: "days"
+                        as: "days",
+                        let: {
+                            dayId: '$days',
+                        },
+                        pipeline: [
+                            { $match: { $expr: { $in: ['$_id', '$$dayId'] } } },
+                            { $sort: { monthIndex: 1 }},
+                        ],
                     },
                 },
                 {

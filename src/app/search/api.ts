@@ -37,7 +37,6 @@ export const searchData = async (query: string) => {
                 },
             ])
             .toArray();
-        console.log(queryStr, texts)
         return [texts, null];
     } catch (e) {
         console.error(e);
