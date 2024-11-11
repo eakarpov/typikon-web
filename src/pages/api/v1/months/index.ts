@@ -3,11 +3,7 @@ import {getItems} from "@/app/calendar/api";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'GET') {
-        const [months, error] = await getItems();
-        if (error) {
-            res.status(400);
-            return;
-        }
+        const months = await getItems();
         res.status(200).json(months);
     }
 }
