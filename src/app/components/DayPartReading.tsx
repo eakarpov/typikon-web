@@ -235,7 +235,25 @@ const DayPartReading = ({
                                 >
                                     {reactStringReplace(
                                         reactStringReplace(
-                                            paragraph,
+                                            reactStringReplace(
+                                                reactStringReplace(
+                                                    paragraph,
+                                                    /\{st\|(.+)}/g,
+                                                    (results) => <Link
+                                                        href={`/saints/${results.split('|')[0]}`}
+                                                        className="text-blue-800"
+                                                    >
+                                                        {results.split('|')[1]}
+                                                    </Link>,
+                                                ),
+                                                /\{pl\|(.+)}/g,
+                                                (results) => <Link
+                                                    href={`/places/${results.split('|')[0]}`}
+                                                    className="text-blue-800"
+                                                >
+                                                    {results.split('|')[1]}
+                                                </Link>,
+                                            ),
                                             /\{(\d+)}/g,
                                             (footnote) => <FootnoteLinkNew footnotes={item.text.footnotes} value={footnote} />,
                                         ),
