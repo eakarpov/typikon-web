@@ -53,6 +53,7 @@ export default function Home() {
                           className="cursor-pointer"
                           href="https://www.rustore.ru/catalog/app/su.typikon.typikon"
                           target="_blank"
+                          rel="noreferrer"
                       >
                           <svg xmlns="http://www.w3.org/2000/svg" width="164" height="58" viewBox="0 0 164 58" fill="none">
                               <path d="M4 10.4286C4 6.32588 6.94078 3 10.5684 3H153.432C157.059 3 160 6.32589 160 10.4286V47.5714C160 51.6741 157.059 55 153.432 55H10.5684C6.94078 55 4 51.6741 4 47.5714V10.4286Z" fill="white"/>
