@@ -10,6 +10,7 @@ import ContentRandom from "@/app/ContentRandom";
 import SearchForm from "@/app/components/search/Form";
 import ContentMoreThan from "@/app/ContentMoreThan";
 import ContentToday from "@/app/ContentToday";
+import Image from "next/image";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -110,6 +111,25 @@ export default function Home() {
                       <Suspense>
                           <SearchForm />
                       </Suspense>
+                  </li>
+                  <li>
+                      <div className="flex flex-col">
+                          <Image
+                              width={100}
+                              height={100}
+                              src="/images/cloudtips.png"
+                              alt="Помочь проекту"
+                          />
+                          <span>
+                              Помочь проекту по QR-коду выше<br/>
+                              или по <a
+                                  className="cursor-pointer font-bold"
+                                  href="https://pay.cloudtips.ru/p/59144dcc"
+                                  target="_blank"
+                                  rel="noreferrer"
+                              >этой ссылке</a>
+                          </span>
+                      </div>
                   </li>
                   <li>
                       <ContentMeta />
