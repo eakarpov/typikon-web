@@ -17,9 +17,9 @@ const ContentRandom = () => {
     if (!item) return null;
 
     return (
-        <div className="flex flex-col">
-            <h3 className="text-xl font-bold">Случайно выбранный текст</h3>
-            <div className="flex flex-col pt-2 flex-1">
+        <div className="flex flex-col border border-slate-300 rounded p-1">
+            <h3 className="text-xl text-center font-bold font-serif">Случайно выбранный текст</h3>
+            <div className="flex flex-col pt-2 flex-1 border-t border-slate-300">
                 <p className="text-1xl font-bold">
                     <span className="flex flex-row items-center">
                         <Link

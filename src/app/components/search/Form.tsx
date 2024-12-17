@@ -4,13 +4,13 @@ import "./styles.scss";
 import {usePathname, useRouter, useSearchParams} from 'next/navigation'
 import Link from "next/link";
 
-const SearchForm = ({ initial = []}: {initial: any[]}) => {
+const SearchForm = ({ initial = []}: {initial?: any[]}) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const [items, setItems] = useState(initial)
 
-    const [value, setValue] = useState(searchParams.get("query") || "");
+    const [value, setValue] = useState(searchParams?.get("query") || "");
 
     const onChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
         setValue(e.target.value);

@@ -16,7 +16,7 @@ const Content = async ({ itemsPromise }: IContent) => {
 
     return (
         <div className="flex flex-col">
-            <h3 className="text-xl font-bold">Последние добавленные материалы</h3>
+            <h3 className="text-xl font-bold font-serif">Последние добавленные материалы</h3>
             {items.map((item, index) => (
                 <div key={item.id} className="font-serif flex flex-row">
                     <span>{index + 1}.&nbsp;</span>

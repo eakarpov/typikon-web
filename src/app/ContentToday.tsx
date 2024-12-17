@@ -1,8 +1,9 @@
-import {Suspense} from "react";
+'use client';
+import {Suspense, useEffect, useState} from "react";
 import {ArrowLongRightIcon, ArrowLongLeftIcon} from "@heroicons/react/20/solid";
-import {getItem} from "@/app/calendar/today/api";
 import {TextType, valueTitle} from "@/utils/texts";
 import Link from "next/link";
+import {getTodayDate, getZeroedNumber} from "@/utils/dates";
 
 export interface IPartItemWithText {
     cite: string;
@@ -23,7 +24,7 @@ interface IError {
 }
 
 interface IContentMeta {
-    itemsPromise: Promise<[any, IError?]>
+    item: any;
 }
 
 const RenderItem = ({ data, type }: { data: null|WithTextItems, type: TextType}) => {
@@ -76,17 +77,13 @@ export const getMonth = (month: number) => {
     }
 };
 
-const ContentTodayResult = async ({ itemsPromise }: IContentMeta) => {
+const ContentTodayResult = ({ item: textsToday }: IContentMeta) => {
 
-    const [textsToday, error] = await itemsPromise;
+    const today = getTodayDate();
+    const month = today.getMonth() + 1;
 
-    const d = new Date(+new Date() - 1000 * 60 * 60 * 24 * 13);
-    const month = d.getMonth() + 1;
-
-    const yesterday = new Date(+d - 1000 * 60 * 60 * 24);
-    const today = new Date(+d + 1000 * 60 * 60 * 24);
-
-    if (error) return null;
+    const yesterday = new Date(+today - 1000 * 60 * 60 * 24);
+    const tomorrow = new Date(+today + 1000 * 60 * 60 * 24);
 
     return (
         <div
@@ -96,19 +93,21 @@ const ContentTodayResult = async ({ itemsPromise }: IContentMeta) => {
                 className="flex flex-row font-serif border-b border-slate-300"
             >
                 <div>
-                    <Link href={`/calendar/${getMonth(yesterday.getMonth() + 1)}-${yesterday.getDate()}`}>
+                    <Link href={`/calendar/${getMonth(yesterday.getMonth() + 1)}-${getZeroedNumber(yesterday.getDate())}`}>
                         <span className="flex flex-row items-center">
                             <ArrowLongLeftIcon className="w-4 h-4" />&nbsp;<b>Вчера</b>
                         </span>
                     </Link>
                 </div>
                 <div className="flex flex-1">
-                    <span className="flex flex-row flex-1 items-center justify-center">
-                        <b>Сегодня, {d.getDate()}.{month >= 10 ? month : `0${month}`}</b>
-                    </span>
+                        <span className="flex flex-row flex-1 items-center justify-center">
+                             <Link href={`/calendar/today`}>
+                                <b>Сегодня, {getZeroedNumber(today.getDate())}.{getZeroedNumber(month)}</b>
+                              </Link>
+                        </span>
                 </div>
                 <div>
-                    <Link href={`/calendar/${getMonth(today.getMonth() + 1)}-${today.getDate()}`}>
+                    <Link href={`/calendar/${getMonth(tomorrow.getMonth() + 1)}-${getZeroedNumber(tomorrow.getDate())}`}>
                         <span className="flex flex-row items-center">
                             <b>Завтра</b>&nbsp;<ArrowLongRightIcon className="w-4 h-4" />
                         </span>
@@ -131,12 +130,19 @@ const ContentTodayResult = async ({ itemsPromise }: IContentMeta) => {
 };
 
 const ContentToday = () => {
-  const itemsData = getItem();
+  const [item, setItem] = useState<any|null>(null);
+
+  useEffect(() => {
+    fetch("/api/v1/days/today").then((res) => res.json()).then((res) => {
+        setItem(res);
+    })
+  }, []);
+
+  if (!item) return null;
 
   return (
       <Suspense fallback={<div>Loading...</div>}>
-          {/* @ts-expect-error Async Server Component */}
-          <ContentTodayResult itemsPromise={itemsData} />
+          <ContentTodayResult item={item} />
       </Suspense>
   )
 };
