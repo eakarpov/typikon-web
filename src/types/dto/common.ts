@@ -18,7 +18,7 @@ export interface WithParts {
     polyeleos: WithItems|null;
     song3: WithItems|null;
     song6: WithItems|null;
-    before1: WithItems|null;
+    before1h: WithItems|null;
     panagia: WithItems|null;
     h1: WithItems|null;
     h3: WithItems|null;

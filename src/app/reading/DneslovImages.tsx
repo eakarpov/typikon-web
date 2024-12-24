@@ -15,7 +15,7 @@ const DneslovImages = ({ dneslovId }: IDneslovImages) => {
             fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}`)
                 .then((res) => res.json())
                 .then((res) => {
-                    setImages(res.map(e => ({ thumbnail: e.thumb_url, original: e.url })));
+                    setImages(res.map((e: { url: string; thumb_url: string; }) => ({ thumbnail: e.thumb_url, original: e.url })));
                 });
         }
     }, [dneslovId]);

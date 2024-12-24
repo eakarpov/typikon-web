@@ -3,7 +3,7 @@ import Link from "next/link";
 import {getDayByText} from "@/app/reading/[id]/api";
 import {CalendarIcon} from "@heroicons/react/24/outline";
 
-const TextToDateContent = async ({ itemPromise }) => {
+const TextToDateContent = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     const [day] = await itemPromise;
 
     if (!day) return null;

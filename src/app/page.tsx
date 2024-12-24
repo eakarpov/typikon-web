@@ -23,32 +23,33 @@ export default function Home() {
       <div>
           <div className="flex flex-col pt-2 md:flex-row">
               <div className="md:w-1/4">
+                <div className={myFont.variable}>
                   <ul className="space-y-2 border border-slate-300 rounded p-1 mb-4 md:mr-5">
                       <li>
-                          <a href="#goal">
+                          <a href="#goal" className="underline underline-offset-4 font-serif">
                               Цель и обоснование проекта
                           </a>
                       </li>
                       <li>
-                          <a href="#subject">
+                          <a href="#subject" className="underline underline-offset-4 font-serif">
                               Что такое уставные чтения?
                           </a>
                       </li>
                       <li>
-                          <a href="#about">
+                          <a href="#about" className="underline underline-offset-4 font-serif">
                               О предмете уставных чтений
                           </a>
                       </li>
                       <li
                           className="border-t border-slate-300 pt-4"
                       >
-                          <span>
+                          <span className="font-serif">
                               Уставные чтения на платформах:
                           </span>
                       </li>
                       <li>
                           <a
-                              className="flex flex-row items-center cursor-pointer font-bold"
+                              className="flex flex-row items-center cursor-pointer font-bold font-serif"
                               href="https://t.me/blagoslovie"
                               target="_blank"
                               rel="noreferrer"
@@ -58,7 +59,7 @@ export default function Home() {
                           </a>
 
                           <a
-                              className="flex flex-row items-center cursor-pointer font-bold"
+                              className="flex flex-row items-center cursor-pointer font-bold font-serif"
                               href="https://dzen.ru/typikon"
                               target="_blank"
                               rel="noreferrer"
@@ -68,7 +69,7 @@ export default function Home() {
                           </a>
                       </li>
                       <li>
-                          <a className="flex flex-row items-center cursor-pointer" href="/app/app.apk">
+                          <a className="flex flex-row items-center cursor-pointer font-serif" href="/app/app.apk">
                               <ArrowSmallRightIcon className="w-4 h-4" />
                               <span className="font-bold">
                               Приложение на android
@@ -77,7 +78,7 @@ export default function Home() {
                           </a>
                       </li>
                       <li>
-                      <span className="flex flex-row items-center">
+                      <span className="flex flex-row items-center font-serif">
                           Или
                       <a
                           className="cursor-pointer"
@@ -132,10 +133,10 @@ export default function Home() {
                                   src="/images/cloudtips.png"
                                   alt="Помочь проекту"
                               />
-                              <span>
+                              <span className="font-serif">
                               Помочь проекту по QR-коду выше<br/>
                               или по <a
-                                  className="cursor-pointer font-bold"
+                                  className="cursor-pointer font-bold underline underline-offset-4"
                                   href="https://pay.cloudtips.ru/p/59144dcc"
                                   target="_blank"
                                   rel="noreferrer"
@@ -147,6 +148,7 @@ export default function Home() {
                           <ContentMeta />
                       </li>
                   </ul>
+                </div>
               </div>
               <div className="flex flex-col flex-1 space-y-4">
                   <div className={myFont.variable}>
@@ -223,9 +225,11 @@ export default function Home() {
               </div>
           </div>
           <div className="border-t w-full border-slate-300 mt-4 p-2">
-              <span className="text-right">
-                  (с) 2023-2024, Уставные чтения
-              </span>
+              <div className={myFont.variable}>
+                  <span className="text-right font-serif">
+                      (с) 2023-2024, Уставные чтения
+                  </span>
+              </div>
           </div>
       </div>
   );

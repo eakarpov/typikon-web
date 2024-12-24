@@ -4,6 +4,17 @@ import Content from "@/app/calendar/today/Content";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {getTodayDate, getZeroedNumber} from "@/utils/dates";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: "Чтения на сегодняшний календарный день",
+    description: 'Уставные чтения на сегодняшний календарный день.',
+    openGraph: {
+        title: 'Чтения на сегодняшний календарный день',
+        description: 'Уставные чтения на сегодняшний календарный день.',
+        url: "//www.typikon.su/calendar/today"
+    },
+}
 
 const AdminTextId = async () => {
     setMeta();

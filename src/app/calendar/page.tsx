@@ -3,6 +3,7 @@ import {Suspense} from "react";
 import Content from "@/app/calendar/Content";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
+import {myFont} from "@/utils/font";
 
 export const metadata: Metadata = {
     title: "Чтения на календарный день",
@@ -20,16 +21,20 @@ const Calendar = () => {
 
     return (
         <div className="pt-2">
-            <h1>
-                Уставные чтения на календарный день по выбранному числу. В чтения входят Пролог и похвальные слова на памяти святым или неподвижным праздникам.
-            </h1>
-            <div className="border-1 rounded-sm">
-                <a href="/calendar/today" className="font-bold">Чтения на сегодня</a>
+            <div className={myFont.variable}>
+                <h1 className="font-serif">
+                    Уставные чтения на календарный день по выбранному числу. В чтения входят Пролог и похвальные слова на памяти святым или неподвижным праздникам.
+                </h1>
+                <div className="border-1 rounded-sm">
+                    <a href="/calendar/today" className="font-bold font-serif">Чтения на сегодня</a>
+                </div>
             </div>
-            <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
-                <Content itemsPromise={itemsData} />
-            </Suspense>
+            <div className={myFont.variable}>
+                <Suspense fallback={<div>Loading...</div>}>
+                    {/* @ts-expect-error Async Server Component */}
+                    <Content itemsPromise={itemsData} />
+                </Suspense>
+            </div>
         </div>
     );
 };

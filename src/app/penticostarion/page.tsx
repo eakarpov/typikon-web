@@ -20,12 +20,11 @@ const Penticostarion = async () => {
 
     return (
         <div className="pt-2">
-            <p>
-                Данный раздел на сегодня в разработке. Готово 100% текстов. Будет выкладываться постепенно.
-            </p>
-            <p>
-                В данном разделе будет информация об уставных чтений с Пасхи до недели всех святых.
-            </p>
+            <div className={myFont.variable}>
+                <p className="font-serif">
+                    В данном разделе вы можете найти информацию по уставным чтениям в период с Пасхи до недели всех святых.
+                </p>
+            </div>
             <div className={myFont.variable}>
                 <Suspense fallback={<div>Loading...</div>}>
                     {/* @ts-expect-error Async Server Component */}

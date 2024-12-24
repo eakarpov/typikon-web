@@ -1,5 +1,6 @@
 import SearchForm from "@/app/components/search/Form";
 import React, { Suspense } from "react";
+import {myFont} from "@/utils/font";
 
 interface IError {
     error: string;
@@ -17,7 +18,7 @@ const Content = async ({ itemsPromise }: IContent) => {
 
     return (
         <div>
-            <span>
+            <span className="font-serif">
                 Поиск по названию текста.<br/>
                 Для поиска используйте только кириллические буквы А-Я/а-я<br/>
             </span>

@@ -24,10 +24,10 @@ const Content = async ({ itemsPromise }: IContent) => {
 
     return (
         <div className="mt-2">
-            <h1>Уставные чтения Цветной Триоди</h1>
+            <h1 className="font-serif font-bold">Уставные чтения Цветной Триоди</h1>
             {items.map((week: any) => (
                 <div key={week.id} className="flex flex-row mb-4">
-                    <p className="text-slate-400 w-36">
+                    <p className="text-slate-400 w-36 font-serif">
                         Неделя {week.value} по {week.type === "Pascha" ? "Пасхе" : "Пятидесятнице"}
                     </p>
                     <div className="flex flex-col space-y-1">
@@ -35,7 +35,7 @@ const Content = async ({ itemsPromise }: IContent) => {
                             <Link
                                 key={day.id}
                                 href={`/penticostarion/${day.alias || day.id}`}
-                                className="cursor-pointer"
+                                className="cursor-pointer font-serif"
                             >
                                 {day.name || day.alias || day.id}
                             </Link>

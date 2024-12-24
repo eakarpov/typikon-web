@@ -11,7 +11,7 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<any[]> }) => {
                     <p className="text-slate-400 w-36">
                         <Link
                             href={`/months/${month.alias || month._id.toString()}`}
-                            className="cursor-pointer"
+                            className="cursor-pointer font-serif"
                         >
                             Месяц {month.label.toLowerCase()}
                         </Link>

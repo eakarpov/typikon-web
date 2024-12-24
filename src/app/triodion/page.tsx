@@ -20,12 +20,14 @@ const Triodion = () => {
 
     return (
         <div className="pt-2">
-            <p>
-                Данный раздел на сегодня в разработке.
-            </p>
-            <p>
-                В данном разделе будет информация о чтениях триодного цикла с недели о мытаре и фарисее и до пасхальной заутрени (полунощницы).
-            </p>
+            <div className={myFont.variable}>
+                <p className="font-serif">
+                    Данный раздел на сегодня в разработке.
+                </p>
+                <p className="font-serif">
+                    В данном разделе будет информация о чтениях триодного цикла с недели о мытаре и фарисее и до пасхальной заутрени (полунощницы).
+                </p>
+            </div>
             <div className={myFont.variable}>
                 <Suspense fallback={<div>Loading...</div>}>
                     {/* @ts-expect-error Async Server Component */}

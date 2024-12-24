@@ -17,7 +17,7 @@ const ContentMeta = async ({ itemsPromise }: IContentMeta) => {
         <div
             className="flex flex-col"
         >
-            <span>
+            <span className="font-serif">
                 Портал содержит более <b>{Math.floor(textCount / 10) * 10}</b> текстов и постоянно пополняется.
             </span>
         </div>

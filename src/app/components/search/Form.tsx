@@ -32,7 +32,7 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
 
     return (
         <>
-            <label>
+            <label className="font-serif">
                 Поиск:
             </label>
             <input
@@ -43,7 +43,7 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
             />
             {items.map(item => (
                 <div key={item.id}>
-                    <Link href={`/reading/${item.id}`}>
+                    <Link href={`/reading/${item.id}`} className="font-serif">
                         {item.name}
                     </Link>
                 </div>

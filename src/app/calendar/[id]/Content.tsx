@@ -4,7 +4,7 @@ import DayPartReading from "@/app/components/DayPartReading";
 import {DayDTO} from "@/types/dto/days";
 import {getMonth} from "@/app/months/[id]/Content";
 
-const Content = async ({ itemPromise }: { itemPromise: Promise<DayDTO> }) => {
+const Content = async ({ itemPromise }: { itemPromise: Promise<[DayDTO, string]> }) => {
 
     const [item, error] = await itemPromise;
 
@@ -18,7 +18,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<DayDTO> }) => {
 
     return (
         <div className="flex flex-col">
-            <p>
+            <p className="font-serif">
                 <b>Чтение на день: {getMonth(item.month.value - 1)}, {item.monthIndex} число (старый стиль)</b>
             </p>
             <div className="flex flex-col pt-2 md:flex-row">

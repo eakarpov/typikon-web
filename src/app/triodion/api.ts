@@ -57,7 +57,6 @@ export const getItems = async () => {
                 },
             ])
             .toArray();
-        console.log(weeks);
         return [weeks, null];
     } catch (e) {
         console.error(e);

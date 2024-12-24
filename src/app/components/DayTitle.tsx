@@ -11,7 +11,7 @@ const DayTitle = ({
 }: IDayTitle) => {
     return value?.items && (
         <li>
-            <a href={`#${valueName}`}>
+            <a href={`#${valueName}`} className="font-serif">
                 {valueTitle(valueName)}
             </a>
         </li>
