@@ -1,5 +1,5 @@
 'use client';
-import React, {ChangeEventHandler, KeyboardEventHandler, memo, useCallback, useState} from "react";
+import React, {ChangeEventHandler, KeyboardEventHandler, memo, useCallback, useEffect, useState} from "react";
 import "./styles.scss";
 import {usePathname, useRouter, useSearchParams} from 'next/navigation'
 import Link from "next/link";
@@ -21,6 +21,7 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
             if (pathname === "/") {
                 router.push(`/search?query=${value}`);
             } else {
+                router.replace(`/search?query=${value}`);
                 fetch(`/api/v1/search?query=${value}`).then((res) => res.json()).then((newItems) => {
                     if (Array.isArray(newItems)) {
                         setItems(newItems);
@@ -29,6 +30,15 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
             }
         }
     }, [value]);
+
+    useEffect(() => {
+        const val = searchParams?.get("query");
+        fetch(`/api/v1/search?query=${val}`).then((res) => res.json()).then((newItems) => {
+            if (Array.isArray(newItems)) {
+                setItems(newItems);
+            }
+        });
+    }, []);
 
     return (
         <>

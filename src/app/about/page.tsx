@@ -5,8 +5,16 @@ const About = () => {
                 <strong>Информация о портале</strong>
             </h1>
             <h2>
-                2.3.1
+                2.4
             </h2>
+            <ul>
+                <li>
+                    - Починен поиск case insensitive
+                </li>
+            </ul>
+            <h3>
+                2.3.1
+            </h3>
             <ul>
                 <li>
                     - Исправлены title и description, совпадающие на разных страницах

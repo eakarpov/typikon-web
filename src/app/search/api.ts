@@ -12,30 +12,17 @@ export const searchData = async (query: string) => {
 
         const texts = await db
             .collection("texts")
-            .aggregate([
-                {
-                    $match: {
-                        $expr: {
-                            $gt: [{
-                                $indexOfCP: [
-                                    { $replaceAll: {input: '$name', find: `́`, replacement: ""}, },
-                                    queryStr
-                                ],
-                            }, -1]
-                        },
-                    },
+            .find({
+                $text: {
+                    $search: queryStr,
+                    $language: "russian"
                 },
-                {
-                    $addFields: {
-                        id: { $toString: "$_id" },
-                    },
-                },
-                {
-                    $project: {
-                        _id: 0,
-                    },
-                },
-            ])
+            }).collation({ locale: "ru"})
+            .map(e => ({
+                ...e,
+                bookId: e.bookId.toString(),
+                _id: e._id.toString(),
+            }))
             .toArray();
         return [texts, null];
     } catch (e) {
