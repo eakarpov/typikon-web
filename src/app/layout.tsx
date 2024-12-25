@@ -41,7 +41,7 @@ export default function RootLayout({
           <InitiateUserSettings />
           <nav className="border-b-2 w-full overflow-scroll">
               <div className={myFont.variable}>
-                <NavMenu />
+                <NavMenu showAdmin={process.env.SHOW_ADMIN} />
               </div>
           </nav>
           <div className="container mx-auto px-4">

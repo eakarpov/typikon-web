@@ -3,7 +3,7 @@ import Link from "next/link";
 import {Cog6ToothIcon, EnvelopeIcon, InformationCircleIcon, MagnifyingGlassIcon} from "@heroicons/react/20/solid";
 import {usePathname} from "next/navigation";
 
-const NavMenu = () => {
+const NavMenu = ({ showAdmin }: { showAdmin: boolean }) => {
     const pathname = usePathname();
     return (
         <div className="container mx-auto px-4 flex flex-row items-baseline">
@@ -47,7 +47,7 @@ const NavMenu = () => {
                 >
                     Библиотека
                 </Link>
-                {process.env.SHOW_ADMIN && (
+                {showAdmin && (
                     <Link
                         href="/admin"
                           className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/admin`) && `text-red-600`}`}

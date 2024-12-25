@@ -3,6 +3,7 @@ import {Suspense} from "react";
 import {getItems} from "@/app/library/api";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
+import {myFont} from "@/utils/font";
 
 export const metadata: Metadata = {
     title: "Библиотека текстов",
@@ -20,16 +21,15 @@ const Library = async () => {
 
     return (
         <div className="pt-2">
-            <p>
-                Данный раздел на сегодня в разработке.
-            </p>
-            <p>
-                В данном разделе будет организован доступ к отекстованным книгам в целом по содержанию без привязки к дате.
-            </p>
-            <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
-                <Content itemsPromise={itemsData} />
-            </Suspense>
+            <div className={myFont.variable}>
+                <p className="font-serif">
+                    В данном разделе будет организован доступ к отекстованным книгам в целом по содержанию без привязки к дате.
+                </p>
+                <Suspense fallback={<div>Loading...</div>}>
+                    {/* @ts-expect-error Async Server Component */}
+                    <Content itemsPromise={itemsData} />
+                </Suspense>
+            </div>
         </div>
     );
 };

@@ -24,15 +24,20 @@ const Content = async ({ itemsPromise }: IContent) => {
 
     return (
         <div className="mt-2">
-            {items.map((book: any) => (
-                <div key={book._id.toString()} className="flex flex-row mb-4">
+            {items.map((book: any, index: number) => (
+                <div key={book._id.toString()} className="flex flex-col mb-4">
                     <p>
                         <Link
-                            className="cursor-pointer font-bold"
+                            className="cursor-pointer font-bold font-serif"
                             href={`/library/${book._id.toString()}`}>
-                            {book.name} {book.author ? `(${book.author})` : ""}
+                            {index + 1}. {book.name} {book.author ? `(${book.author})` : ""}
                         </Link>
                     </p>
+                    {book.description && (
+                        <p className="font-serif text-stone-600">
+                            {book.description}
+                        </p>
+                    )}
                 </div>
             ))}
         </div>
