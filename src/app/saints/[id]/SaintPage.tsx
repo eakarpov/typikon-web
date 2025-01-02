@@ -2,6 +2,7 @@
 import React, {useCallback, useMemo, useState} from "react";
 import {DneslovKind} from "@/utils/texts";
 import Link from "next/link";
+import Markdown from "react-markdown";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 
 const getHostName = (url: string) => {
@@ -56,9 +57,11 @@ const SaintPage = ({ item, items, mentions }: {item: any, items: any[], mentions
                 </p>
                 {lastMemo && (
                     <div className="font-serif">
-                        <p className="max-h-80 overflow-auto">
-                            {lastMemo?.description}
-                        </p>
+                        <div className="max-h-80 overflow-auto">
+                            <Markdown>
+                                {lastMemo?.description}
+                            </Markdown>
+                        </div>
                     </div>
                 )}
                 <p className="font-serif font-bold">

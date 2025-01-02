@@ -5,3 +5,8 @@
 body {
     background: #fcfaf2;
 }
+
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
