@@ -5,6 +5,8 @@ interface IDneslovImages {
     id: string;
 }
 
+const cdnDneslovUrl = "https://cdn.dneslov.org";
+
 const DneslovRoundImage = ({ id }: IDneslovImages) => {
     const [images, setImages] = useState<Array<{ url: string; roundelable_name: string; }>>([]);
 
@@ -23,8 +25,8 @@ const DneslovRoundImage = ({ id }: IDneslovImages) => {
     return (
         <div className="flex flex-col" style={{ paddingRight: '10px' }}>
             <img
-                src={images[0].url}
-                style={{ width: `30px`, height: '30px' }}
+                src={images[0].url.includes("https") ? images[0].url : `${cdnDneslovUrl}${images[0].url}`}
+                style={{ width: `30px`, height: '30px', maxWidth: 'auto' }}
                 alt={images[0].roundelable_name}
             />
         </div>
