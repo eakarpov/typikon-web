@@ -26,9 +26,9 @@ const DneslovRoundImage = ({ id, textType }: IDneslovImages) => {
     if (!images.length) return (
         <div className="flex flex-col" style={{ paddingRight: '10px' }}>
             {textType === TextKind.HISTORIC ? (
-                <UserCircleIcon className="w-8 h-8 text-stone-400" />
+                <UserCircleIcon className="text-stone-400" style={{ width: "32px", height: "32px"}} />
             ) : (
-                <InformationCircleIcon className="w-8 h-8 text-stone-400" />
+                <InformationCircleIcon className="text-stone-400" style={{ width: "32px", height: "32px"}} />
             )}
         </div>
     );
