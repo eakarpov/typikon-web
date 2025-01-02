@@ -50,7 +50,10 @@ export const getMentions = async (id: string): Promise<[any, any]> => {
 
 export const getDneslovObject = async (id: string): Promise<any> => {
     try {
-        return fetch(`http://dneslov.org/${id}.json`, {cache: "no-cache"}).then((res => res.json()));
+        return fetch(`${process.env.NODE_ENV ? `http` : `https`}://dneslov.org/api/v0/memories/${id}.json`)
+            .then(res => res.json()).then((data) => {
+            return fetch(`http://dneslov.org/${data.slug}.json`).then((res => res.json()));
+        });
     } catch (e) {
         console.error(e);
         return null;

@@ -4,9 +4,6 @@ import Content from "@/app/saints/[id]/Content";
 import {Suspense} from "react";
 import {myFont} from "@/utils/font";
 import {Metadata} from "next";
-import {getItem} from "@/app/months/[id]/api";
-import {getMonth} from "@/app/months/[id]/Content";
-
 
 type Props = {
     params: { id: string }
@@ -15,20 +12,22 @@ type Props = {
 export async function generateMetadata(
     { params }: Props,
 ): Promise<Metadata> {
-    // read route params
     const id = params.id
 
-    // fetch data // TODO: Ждем днеслова который вернет здесь имя святого
-    // const [itemPromise] = await Promise.allSettled([getItems(id), getDneslovObject(id), getMentions(id)]);
+    const [itemPromise] = await Promise.allSettled([getDneslovObject(id)]);
+
+    const item = itemPromise.status === "fulfilled" && itemPromise.value;
+
+    const lastMemo = Array.isArray(item?.memoes) && item.memoes[0];
 
     return {
-        title: `Страница святого - ${id}`,
-        description: `Уставные чтения с упоминанием или авторством святого - ${id}`,
+        title: `Страница святого - ${lastMemo?.title || id}`,
+        description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || id}`,
         openGraph: {
             type: "website",
             url: `//www.typikon.su/saints/${id}`,
-            title: `Страница святого - ${id}`,
-            description: `Уставные чтения с упоминанием или авторством святого - ${id}`,
+            title: `Страница святого - ${lastMemo?.title || id}`,
+            description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || id}`,
         },
     }
 }

@@ -7,6 +7,8 @@ interface IDneslovImages {
     dneslovId: string;
 }
 
+const cdnDneslovUrl = "https://cdn.dneslov.org";
+
 const DneslovImages = ({ dneslovId }: IDneslovImages) => {
     const [images, setImages] = useState<ReactImageGalleryItem[]>([]);
 
@@ -15,7 +17,10 @@ const DneslovImages = ({ dneslovId }: IDneslovImages) => {
             fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}`)
                 .then((res) => res.json())
                 .then((res) => {
-                    setImages(res.map((e: { url: string; thumb_url: string; }) => ({ thumbnail: e.thumb_url, original: e.url })));
+                    setImages(res.map((e: { url: string; thumb_url: string; }) =>
+                        ({
+                            thumbnail: e.thumb_url.includes("https") ? e.thumb_url : `${cdnDneslovUrl}${e.thumb_url}`,
+                            original: e.url.includes("https") ? e.url : `${cdnDneslovUrl}${e.url}`,})));
                 });
         }
     }, [dneslovId]);
