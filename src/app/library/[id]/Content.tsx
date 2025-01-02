@@ -38,9 +38,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
             <h2 className="font-serif">Содержание:</h2>
             <div className="pt-2">
                 {item.texts.map((text: any) => (
-                    <div className="flex flex-row" key={text._id.toString()}>
+                    <div className="flex flex-row items-center" key={text._id.toString()}>
                         {text.dneslovId ? (
-                            <div style={{ width: "42px", height: "42px", }}>
+                            <div style={{ width: "42px", height: "42px", display: 'flex', alignItems: 'center' }}>
                                 <DneslovRoundImage id={text.dneslovId} />
                             </div>
                         ) : (
