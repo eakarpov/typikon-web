@@ -1,6 +1,7 @@
 import Link from "next/link";
 import CountMeta from "@/app/meta/CountMeta";
 import DneslovRoundImage from "@/lib/common/DneslovRoundImage";
+import {UserCircleIcon} from "@heroicons/react/24/outline";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -39,13 +40,12 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
             <div className="pt-2">
                 {item.texts.map((text: any) => (
                     <div className="flex flex-row items-center" key={text._id.toString()}>
-                        {text.dneslovId ? (
-                            <div style={{ width: "42px", height: "42px", display: 'flex', alignItems: 'center' }}>
-                                <DneslovRoundImage id={text.dneslovId} />
-                            </div>
-                        ) : (
-                            <div style={{ width: "42px"}} />
-                        )}
+                        <div style={{ width: "42px", height: "42px", display: 'flex', alignItems: 'center' }}>
+                            <DneslovRoundImage
+                                textType={text.type}
+                                id={text.dneslovId}
+                            />
+                        </div>
                         <Link
                             href={`/reading/${text._id.toString()}`}
                             className="cursor-pointer font-serif"

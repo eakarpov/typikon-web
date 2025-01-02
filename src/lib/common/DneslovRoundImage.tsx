@@ -1,13 +1,16 @@
 'use client';
 import {memo, useEffect, useState} from "react";
+import {UserCircleIcon, InformationCircleIcon} from "@heroicons/react/24/outline";
+import {TextKind} from "@/utils/texts";
 
 interface IDneslovImages {
     id: string;
+    textType: TextKind;
 }
 
 const cdnDneslovUrl = "https://cdn.dneslov.org";
 
-const DneslovRoundImage = ({ id }: IDneslovImages) => {
+const DneslovRoundImage = ({ id, textType }: IDneslovImages) => {
     const [images, setImages] = useState<Array<{ url: string; roundelable_name: string; }>>([]);
 
     useEffect(() => {
@@ -20,7 +23,15 @@ const DneslovRoundImage = ({ id }: IDneslovImages) => {
         }
     }, [id]);
 
-    if (!images.length) return null;
+    if (!images.length) return (
+        <div className="flex flex-col" style={{ paddingRight: '10px' }}>
+            {textType === TextKind.HISTORIC ? (
+                <UserCircleIcon className="w-8 h-8 text-stone-400" />
+            ) : (
+                <InformationCircleIcon className="w-8 h-8 text-stone-400" />
+            )}
+        </div>
+    );
 
     return (
         <div className="flex flex-col" style={{ paddingRight: '10px' }}>

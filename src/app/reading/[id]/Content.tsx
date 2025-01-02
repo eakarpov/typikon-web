@@ -28,7 +28,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     return (
         <div className="flex flex-col md:flex-row">
         <div className="flex flex-col pt-2 flex-1">
-            <div className="text-1xl font-bold">
+            <div className="text-1xl font-bold font-serif">
                 <div className="flex flex-row items-center overflow-scroll">
                     {item.ruLink && (
                         <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
