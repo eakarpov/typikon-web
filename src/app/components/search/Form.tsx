@@ -33,11 +33,13 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
 
     useEffect(() => {
         const val = searchParams?.get("query");
-        fetch(`/api/v1/search?query=${val}`).then((res) => res.json()).then((newItems) => {
-            if (Array.isArray(newItems)) {
-                setItems(newItems);
-            }
-        });
+        if (val) {
+            fetch(`/api/v1/search?query=${val}`).then((res) => res.json()).then((newItems) => {
+                if (Array.isArray(newItems)) {
+                    setItems(newItems);
+                }
+            });
+        }
     }, []);
 
     return (

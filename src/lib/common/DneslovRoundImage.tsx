@@ -6,7 +6,7 @@ interface IDneslovImages {
 }
 
 const DneslovRoundImage = ({ id }: IDneslovImages) => {
-    const [images, setImages] = useState([]);
+    const [images, setImages] = useState<Array<{ url: string; roundelable_name: string; }>>([]);
 
     useEffect(() => {
         if (id) {
