@@ -26,4 +26,33 @@ const getItem = async (id: string): Promise<[any, any]> => {
     }
 };
 
+export const getBatchItems = async (ids: string[]) => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon");
+        const matcher = ids.map(el => ({ _id: new ObjectId(el) }));
+
+        const texts = await db
+            .collection("texts")
+            .aggregate([
+                {
+                    $match: {
+                        $or: matcher
+                    }
+                },
+                {
+                    $addFields: {
+                        id: { $toString: "$_id" },
+                    },
+                },
+                { $project: { _id: 0 }}
+            ])
+            .toArray();
+        return [texts, null];
+    } catch (e) {
+        console.error(e);
+        return [null, e];
+    }
+};
+
 export default getItem;
