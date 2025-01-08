@@ -46,6 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         transporter.sendMail(mailOption, (err, data) => {
             if (err) {
                 res.status(500).end();
+                console.log(err, process.env.EMAIL, process.env.EMAIL_PASSWORD);
             } else {
                 res.status(200).end();
             }
