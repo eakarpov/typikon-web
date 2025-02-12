@@ -4,6 +4,7 @@ import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
 import {useAppSelector} from "@/lib/hooks";
 import {redirect} from "next/navigation";
+import {loginRedirect} from "@/lib/authorize/redirect";
 
 const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }) => {
     const buttonRef = useRef(null);
@@ -38,17 +39,16 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
         }
     }, [vkApp]);
 
-    const vkidOnSuccess = (data: Omit<TokenResult, "id_token">) => {
-        fetch("/api/login", {
+    const vkidOnSuccess = async (data: Omit<TokenResult, "id_token">) => {
+        await fetch("/api/login", {
             method: "POST",
             body: JSON.stringify({
                 type: "VK",
                 data,
                 timestamp: Date.now(),
             }),
-        }).then(() => {
-            redirect("/");
-        });
+        })
+        await loginRedirect();
     }
 
     const vkidOnError = (error: any) => {

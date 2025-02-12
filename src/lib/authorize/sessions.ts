@@ -1,3 +1,4 @@
+'use server';
 import "server-only";
 import clientPromise from "@/lib/mongodb";
 import { SignJWT, jwtVerify } from 'jose';
@@ -47,15 +48,7 @@ export const createNewSession = async (id: string, state: any, ip: string, times
     // 2. Encrypt the session ID
     const session = await encrypt({ sessionId, expiresAt, userId: id, });
 
-    // 3. Store the session in cookies for optimistic auth checks
-    const cookieStore = await cookies()
-    cookieStore.set('session', session, {
-        httpOnly: true,
-        secure: true,
-        expires: expiresAt,
-        sameSite: 'lax',
-        path: '/',
-    });
+    return { session, expiresAt };
 };
 
 export async function deleteSession() {
