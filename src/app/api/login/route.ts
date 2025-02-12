@@ -5,7 +5,7 @@ import {NextResponse} from "next/server";
 
 export async function POST(req: NextApiRequest) {
     const body = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     console.log(body, body.type);
     if (body.type === "VK") {
@@ -17,7 +17,7 @@ export async function POST(req: NextApiRequest) {
         }
         console.log(user);
         // 3. Store the session in cookies for optimistic auth checks
-        await createNewSession(user!.id, body.data, ip as string, body.timestamp);
+        await createNewSession(user!.id, body.data, "" as string, body.timestamp);
         return new NextResponse(null, {
             status: 200,
         });
