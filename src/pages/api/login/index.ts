@@ -6,9 +6,9 @@ import {cookies} from "next/headers";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
         const body = req.body;
-        // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-        console.log(body);
+        console.log(body, body.type);
         if (body.type === "VK") {
             let user = await getUserByVKId(body.user_id);
             if (!user) {
@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 const new_id = await registerNewUserWithVK(body);
                 user =  await getUserByVKId(new_id!);
             }
-            const { session, expiresAt } = await createNewSession(user!.id, body.data, "" as string, body.timestamp);
+            const { session, expiresAt } = await createNewSession(user!.id, body.data, ip as string, body.timestamp);
             // 3. Store the session in cookies for optimistic auth checks
             const cookieStore = await cookies()
             console.log(session, expiresAt);
@@ -27,9 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 sameSite: 'lax',
                 path: '/',
             });
-            res.status(200).end();;
+            res.status(200).end();
         } else {
-            res.status(400).end();;
+            res.status(400).end();
         }
     }
 };

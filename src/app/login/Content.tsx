@@ -3,11 +3,11 @@ import React, {memo, useEffect, useRef} from "react";
 import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
 import {useAppSelector} from "@/lib/hooks";
-import {redirect} from "next/navigation";
-import {loginRedirect} from "@/lib/authorize/redirect";
+import {useRouter} from "next/navigation";
 
 const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }) => {
     const buttonRef = useRef(null);
+    const router = useRouter();
 
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
 
@@ -47,8 +47,11 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
                 data,
                 timestamp: Date.now(),
             }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
         })
-        await loginRedirect();
+        router.push("/");
     }
 
     const vkidOnError = (error: any) => {
@@ -57,7 +60,7 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
 
     useEffect(() => {
         if (isAuthorized) {
-            loginRedirect();
+            router.push("/");
         }
     }, [isAuthorized]);
 
