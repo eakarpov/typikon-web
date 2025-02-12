@@ -25,6 +25,7 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
     const [isOpenDescription, setIsOpenDescription] = useState(false);
     const [isOpenCite, setIsOpenCite] = useState(false);
     const [val, setVal] = useState<string>(item.textId);
+    const [text, setText] = useState<any>(null);
 
     const onSaveText = useCallback(() => {
         setTextField(valueName, index, "textId", val);
@@ -41,6 +42,12 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
     useEffect(() => {
         setVal(item.textId);
     }, [item.textId]);
+
+    useEffect(() => {
+        fetch(`/api/v1/texts/${item.textId}`).then((res) => res.json()).then((res) => {
+            setText(res);
+        });
+    }, []);
 
   return (
       <div className="flex flex-col mt-4">
@@ -93,6 +100,13 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
               >
                   <TrashIcon className="w-4 h-4" />
               </div>
+              {text && (
+                  <div
+                      className="border ml-4"
+                  >
+                      {text.name}
+                  </div>
+              )}
           </div>
           {isOpenDescription && (
               <>

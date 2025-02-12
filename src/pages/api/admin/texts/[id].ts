@@ -40,6 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             initialPriestExclamation: data.initialPriestExclamation,
                             startPhrase: data.startPhrase,
                             mentionIds: data.mentionIds,
+                            newUi: data.newUi,
                         },
                     },
                 );

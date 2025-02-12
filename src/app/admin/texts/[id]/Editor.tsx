@@ -9,7 +9,8 @@ import {
     TextKind,
     TextReadiness
 } from "@/utils/texts";
-import {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
+import Markdown from "react-markdown";
 
 const getMentionIds = (content: string) => {
   const matcher = content.matchAll(/\{st\|(.+)}/g);
@@ -42,8 +43,11 @@ const AdminEditor = ({ value }: any) => {
     const [dneslovType, setDneslovType] = useState(value.dneslovType || DneslovKind.MEMORY);
     const [startPhrase, setStartPhrase] = useState(value.startPhrase);
     const [initialPriestExclamation, setInitialPriestExclamation] = useState(value.initialPriestExclamation);
+    const [newUi, setNewUi] = useState(value.newUi || false);
 
     const [saved, setIsSaved] = useState(false);
+
+    const [viewUi, setViewUi] = useState(false);
 
     const onBufferClick = useCallback(() => {
         navigator.clipboard.writeText(`https://typikon.su/reading/${alias}`);
@@ -80,6 +84,7 @@ const AdminEditor = ({ value }: any) => {
                 dneslovId,
                 startPhrase,
                 initialPriestExclamation,
+                newUi,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -98,7 +103,7 @@ const AdminEditor = ({ value }: any) => {
                 value={name}
                 onChange={e => setName(e.target.value)}
             />
-            <div className="flex flex-row">
+            <div className="flex flex-row flex-wrap">
                 <div className="flex flex-col pr-4">
                     <label>
                         Готовность
@@ -162,29 +167,65 @@ const AdminEditor = ({ value }: any) => {
                         onChange={e => setDneslovId(e.target.value)}
                     />
                 </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Порядковый номер
+                    </label>
+                    <input
+                        className="border-2"
+                        value={bookIndex}
+                        onChange={e => setBookIndex(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Отдельный автор
+                    </label>
+                    <input
+                        className="border-2"
+                        value={author}
+                        onChange={e => setAuthor(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Отдельный переводчик
+                    </label>
+                    <input
+                        className="border-2"
+                        value={translator}
+                        onChange={e => setTranslator(e.target.value)}
+                    />
+                </div>
             </div>
-            <label>
-                Алиас записи
-            </label>
-            <input
-                className="border-2"
-                value={alias}
-                onChange={e => setAlias(e.target.value)}
-            />
-            <div
-                className="cursor-pointer"
-                onClick={onBufferClick}
-            >
-                Скопировать в буфер полный адрес
+            <div className="flex flex-row">
+                <div className="flex flex-col pr-4 w-1/2">
+                    <label>
+                        Алиас записи
+                    </label>
+                    <input
+                        className="border-2"
+                        value={alias}
+                        onChange={e => setAlias(e.target.value)}
+                    />
+                    <div
+                        className="cursor-pointer"
+                        onClick={onBufferClick}
+                    >
+                        Скопировать в буфер полный адрес
+                    </div>
+                </div>
+                <div className="flex flex-col w-1/2">
+                    <label>
+                        Начало
+                    </label>
+                    <input
+                        className="border-2"
+                        value={start}
+                        onChange={e => setStart(e.target.value)}
+                    />
+                </div>
             </div>
-            <label>
-                Начало
-            </label>
-            <input
-                className="border-2"
-                value={start}
-                onChange={e => setStart(e.target.value)}
-            />
             <label>
                 Описание
             </label>
@@ -192,38 +233,6 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-            />
-            <label>
-                Икона (картина)
-            </label>
-            <input
-                className="border-2"
-                value={imageLink}
-                onChange={e => setImageLink(e.target.value)}
-            />
-            <label>
-                Отдельный автор
-            </label>
-            <input
-                className="border-2"
-                value={author}
-                onChange={e => setAuthor(e.target.value)}
-            />
-            <label>
-                Отдельный переводчик
-            </label>
-            <input
-                className="border-2"
-                value={translator}
-                onChange={e => setTranslator(e.target.value)}
-            />
-            <label>
-                Порядковый номер
-            </label>
-            <input
-                className="border-2"
-                value={bookIndex}
-                onChange={e => setBookIndex(e.target.value)}
             />
             <label>
                 Ссылка на русский текст
@@ -257,30 +266,91 @@ const AdminEditor = ({ value }: any) => {
                 value={initialPriestExclamation}
                 onChange={e => setInitialPriestExclamation(e.target.value)}
             />
-            <label>
-                Стихи
-            </label>
-            <textarea
-                className="border-2"
-                value={poems}
-                onChange={e => setPoems(e.target.value)}
-            />
-            <label>
-                Сноски
-            </label>
-            <textarea
-                className="border-2"
-                value={footnotes}
-                onChange={e => setFootnotes(e.target.value)}
-            />
-            <label>
-                Содержимое
-            </label>
-            <textarea
-                className="border-2 h-48"
-                value={content}
-                onChange={e => setContent(e.target.value)}
-            />
+            <div className="flex flex-row">
+                <div className="flex flex-col pr-4 w-1/3">
+                    <label>
+                        Стихи
+                    </label>
+                    <textarea
+                        className="border-2"
+                        value={poems}
+                        onChange={e => setPoems(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col pr-4 w-1/3">
+                    <label>
+                        Сноски
+                    </label>
+                    <textarea
+                        className="border-2"
+                        value={footnotes}
+                        onChange={e => setFootnotes(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col w-1/3">
+                    <label>
+                        Икона (картина)
+                    </label>
+                    <input
+                        className="border-2"
+                        value={imageLink}
+                        onChange={e => setImageLink(e.target.value)}
+                    />
+                </div>
+            </div>
+            <div className="flex flex-row">
+                <div className="flex flex-row pr-4">
+                    <label>
+                        Новый UI (Markdown)
+                    </label>
+                    <input type="checkbox" value={newUi} onChange={e => setNewUi(!newUi)} />
+                </div>
+                {newUi && (
+                    <>
+                        <div
+                            className={`flex flex-col border pr-4 ${viewUi && `font-bold`}`}
+                            onClick={() => setViewUi(true)}
+                        >
+                            View
+                        </div>
+                        <div
+                            className={`flex flex-col border pr-4 ${!viewUi && `font-bold`}`}
+                            onClick={() => setViewUi(false)}
+                        >
+                            Code
+                        </div>
+                    </>
+                )}
+            </div>
+            {newUi ? (
+                <>
+                    <label><b>Содержимое</b></label>
+                    {viewUi ? (
+                        <div>
+                            <Markdown>
+                                {content}
+                            </Markdown>
+                        </div>
+                    ) : (
+                        <textarea
+                            className="border-2 h-48"
+                            value={content}
+                            onChange={e => setContent(e.target.value)}
+                        />
+                    )}
+                </>
+            ) : (
+                <>
+                    <label>
+                        Содержимое
+                    </label>
+                    <textarea
+                        className="border-2 h-48"
+                        value={content}
+                        onChange={e => setContent(e.target.value)}
+                    />
+                </>
+            )}
         </div>
     );
 };

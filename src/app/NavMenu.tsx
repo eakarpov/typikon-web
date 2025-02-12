@@ -1,10 +1,31 @@
 'use client';
 import Link from "next/link";
-import {Cog6ToothIcon, EnvelopeIcon, InformationCircleIcon, MagnifyingGlassIcon} from "@heroicons/react/20/solid";
+import {
+    Cog6ToothIcon,
+    EnvelopeIcon,
+    InformationCircleIcon,
+    MagnifyingGlassIcon,
+    ArrowLeftOnRectangleIcon,
+    ArrowRightOnRectangleIcon,
+    UserCircleIcon,
+} from "@heroicons/react/20/solid";
 import {usePathname} from "next/navigation";
+import {useCallback, useEffect} from "react";
+import {useAppDispatch} from "@/lib/hooks";
+import {AuthSlice} from "@/lib/store/auth";
 
-const NavMenu = ({ showAdmin }: { showAdmin: boolean }) => {
+const NavMenu = ({ showButton, showAdmin, session }: { showAdmin?: string; session: any|null; showButton?: string; }) => {
     const pathname = usePathname();
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        dispatch(AuthSlice.actions.SetAuthorized(session));
+    }, [session]);
+
+    const onLogout = useCallback(() => {
+        // log out;
+    }, []);
+
     return (
         <div className="container mx-auto px-4 flex flex-row items-baseline">
             <Link href="/" className={`text-lg mr-3 font-bold min-w-fit font-serif ${pathname === `/` && `text-red-900`}`}>
@@ -47,7 +68,7 @@ const NavMenu = ({ showAdmin }: { showAdmin: boolean }) => {
                 >
                     Библиотека
                 </Link>
-                {showAdmin && (
+                {showAdmin === Boolean(true).toString() && (
                     <Link
                         href="/admin"
                           className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/admin`) && `text-red-600`}`}
@@ -79,6 +100,30 @@ const NavMenu = ({ showAdmin }: { showAdmin: boolean }) => {
                 >
                     <Cog6ToothIcon className="w-4 h-4" />
                 </Link>
+                {session.isAuth && (
+                    <Link
+                        href="/profile"
+                        className={`cursor-pointer min-w-fit flex items-center ${pathname === `/profile` && `text-red-600`}`}
+                    >
+                        <UserCircleIcon className="w-4 h-4" />
+                    </Link>
+                )}
+                {showButton === Boolean(true).toString() && (!session.isAuth ? (
+                    <Link
+                        href="/login"
+                        className={`cursor-pointer min-w-fit flex items-center ${pathname === `/login` && `text-red-600`}`}
+                    >
+                        <ArrowLeftOnRectangleIcon className="w-4 h-4" />
+                    </Link>
+                ) : (
+                    <Link
+                        href={"#"}
+                        onClick={onLogout}
+                        className={`cursor-pointer min-w-fit flex items-center ${pathname === `/login` && `text-red-600`}`}
+                    >
+                        <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                    </Link>
+                ))}
             </div>
         </div>
     )

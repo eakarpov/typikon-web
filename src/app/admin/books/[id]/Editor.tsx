@@ -8,6 +8,7 @@ const AdminEditor = ({ value }: any) => {
     const [description, setDescription] = useState(value.description || "");
     const [author, setAuthor] = useState(value.author || "");
     const [translator, setTranslator] = useState(value.translator || "");
+    const [order, setOrder] = useState(value.order || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -31,6 +32,7 @@ const AdminEditor = ({ value }: any) => {
                 name,
                 description,
                 translator,
+                order: parseInt(order),
             }),
         }).then(() => {
             setIsSaved(true);
@@ -75,6 +77,14 @@ const AdminEditor = ({ value }: any) => {
                 className="border-2"
                 value={translator}
                 onChange={e => setTranslator(e.target.value)}
+            />
+            <label>
+                Порядок
+            </label>
+            <input
+                className="border-2"
+                value={order}
+                onChange={e => setOrder(e.target.value)}
             />
             <p onClick={onSubmitAdd} className="cursor-pointer mb-2">
                 <b>Добавить текст</b>

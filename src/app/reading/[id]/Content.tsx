@@ -8,6 +8,8 @@ import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import TextToDate from "@/app/reading/[id]/TextToDate";
+import TextSave from "@/app/components/save/TextSave";
+import ReadingContent from "@/app/reading/[id]/ReadingContent";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -63,6 +65,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                             <UserCircleIcon className="w-4 h-4" />
                         </span>
                     )}
+                    <TextSave text={item} canDownloadPdf={process.env.CAN_DOWNLOAD_PDF} />
                 </div>
                 <div className="flex flex-row items-center">
                     <span className="w-fit text-xs pr-2">
@@ -97,47 +100,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     ))}
                 </div>
             )}
-            <div className="space-y-1 mt-2">
-                {item.content?.split("\n\n").map((paragraph: string) => (
-                    <p
-                        key={paragraph}
-                        className="whitespace-pre-wrap text-justify text-lg font-serif first-letter:text-red-600"
-                    >
-
-                        {reactStringReplace(
-                            reactStringReplace(
-                                reactStringReplace(
-                                    reactStringReplace(
-                                        paragraph,
-                                        /\{st\|(.+)}/g,
-                                        (results) => <Link
-                                            href={`/saints/${results.split('|')[0]}`}
-                                            className="text-blue-800"
-                                        >
-                                            {results.split('|')[1]}
-                                        </Link>,
-                                    ),
-                                    /\{pl\|(.+)}/g,
-                                    (results) => <Link
-                                        href={`/places/${results.split('|')[0]}`}
-                                        className="text-blue-800"
-                                    >
-                                        {results.split('|')[1]}
-                                    </Link>,
-                                ),
-                                /\{(\d+)}/g,
-                                (footnote) => <FootnoteLinkNew footnotes={item.footnotes} value={footnote} />,
-                            ),
-                            /\{k\|(.+)}/,
-                            (red) => (
-                                <span className="text-red-600">
-                                        {red}
-                                    </span>
-                            )
-                        )}
-                    </p>
-                ))}
-            </div>
+            <ReadingContent item={item} />
             {item.footnotes?.length > 0 && (
                 <div className="font-serif">
                     <p>

@@ -1,10 +1,13 @@
 import '../styles/globals.css';
+import React from "react";
 import CountMeta from "@/app/meta/CountMeta";
 import InitiateUserSettings from './components/settings/InitiateUserSettings';
 import {Metadata, Viewport} from "next";
 import CommonMeta from "@/app/components/CommonMeta";
 import {myFont} from "@/utils/font";
 import NavMenu from "@/app/NavMenu";
+import StoreProvider from "@/app/StoreProvider";
+import {verifySession} from "@/lib/authorize/authorization";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -23,11 +26,13 @@ export const metadata: Metadata = {
     },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+    const session = await verifySession();
+    // в корне приложения проверять авторизованы ли мы где-то, если да, подтягивать инфу в меню и разрешения давать на фичи
     return (
     <html lang="en">
       <body>
@@ -39,14 +44,22 @@ export default function RootLayout({
           </noscript>
           <CountMeta />
           <InitiateUserSettings />
-          <nav className="border-b-2 w-full overflow-scroll">
-              <div className={myFont.variable}>
-                <NavMenu showAdmin={process.env.SHOW_ADMIN} />
-              </div>
-          </nav>
-          <div className="container mx-auto px-4">
-              {children}
-          </div>
+          <StoreProvider>
+              <>
+                  <nav className="border-b-2 w-full overflow-scroll">
+                      <div className={myFont.variable}>
+                          <NavMenu
+                              showButton={process.env.SHOW_LOGIN_BUTTON}
+                              showAdmin={process.env.SHOW_ADMIN}
+                              session={session}
+                          />
+                      </div>
+                  </nav>
+                  <div className="container mx-auto px-4">
+                      {children}
+                  </div>
+              </>
+          </StoreProvider>
       </body>
     </html>
   )

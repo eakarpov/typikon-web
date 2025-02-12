@@ -16,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
+            console.log(data);
             await db
                 .collection("books")
                 .updateOne(
@@ -26,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             description: data.description,
                             translator: data.translator,
                             updatedAt: new Date(),
+                            order: data.order,
                         },
                     },
                 );

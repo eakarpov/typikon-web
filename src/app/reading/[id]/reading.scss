@@ -1,0 +1,30 @@
+.context-menu {
+    position: absolute;
+    width: 200px;
+    background-color: white;
+    border-radius: 5px;
+    box-sizing: border-box;
+
+    & > ul {
+        box-sizing: border-box;
+        padding: 10px;
+        margin: 0;
+        list-style: none;
+        width: 100%;
+    }
+    & > ul li {
+        padding: 12px 12px;
+        width: 100%;
+    }
+
+    /* hover */
+    & > ul li:hover {
+        cursor: pointer;
+        background-color: #fcfaf2;
+    }
+}
+
+.highlight-word {
+    background-color: #f06;
+    color: white;
+}
