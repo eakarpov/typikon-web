@@ -2,10 +2,14 @@
 import React, {memo, useEffect, useRef} from "react";
 import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
+import {useAppSelector} from "@/lib/hooks";
+import {redirect} from "next/navigation";
 import {loginRedirect} from "@/lib/authorize/redirect";
 
 const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }) => {
     const buttonRef = useRef(null);
+
+    const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
 
     useEffect(() => {
         VKID.Config.init({
@@ -50,6 +54,12 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
     const vkidOnError = (error: any) => {
         console.log(error);
     };
+
+    useEffect(() => {
+        if (isAuthorized) {
+            loginRedirect();
+        }
+    }, [isAuthorized]);
 
     return (
         <div>
