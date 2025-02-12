@@ -8,6 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const body = req.body;
         // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
+        console.log(body);
         if (body.type === "VK") {
             let user = await getUserByVKId(body.user_id);
             if (!user) {
@@ -26,9 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 sameSite: 'lax',
                 path: '/',
             });
-            res.status(200);
+            res.status(200).end();;
         } else {
-            res.status(400);
+            res.status(400).end();;
         }
     }
 };
