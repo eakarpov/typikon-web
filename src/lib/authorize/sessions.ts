@@ -48,7 +48,15 @@ export const createNewSession = async (id: string, state: any, ip: string, times
     // 2. Encrypt the session ID
     const session = await encrypt({ sessionId, expiresAt, userId: id, });
 
-    return { session, expiresAt };
+    const cookieStore = await cookies()
+    console.log(session, expiresAt);
+    cookieStore.set('session', session, {
+        httpOnly: true,
+        secure: true,
+        expires: expiresAt,
+        sameSite: 'lax',
+        path: '/',
+    });
 };
 
 export async function deleteSession() {
