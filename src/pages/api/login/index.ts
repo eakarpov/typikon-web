@@ -10,12 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         console.log(body, body.type);
         if (body.type === "VK") {
-            let user = await getUserByVKId(body.user_id);
+            let user = await getUserByVKId(body.data.user_id);
             if (!user) {
                 // register
                 const new_id = await registerNewUserWithVK(body.data.user_id);
+                console.log("id", new_id);
                 user =  await getUserByVKId(new_id!);
             }
+            console.log(user);
             const { session, expiresAt } = await createNewSession(user!.id, body.data, ip as string, body.timestamp);
             // 3. Store the session in cookies for optimistic auth checks
             const cookieStore = await cookies()
