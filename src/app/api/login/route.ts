@@ -1,10 +1,11 @@
 import {NextApiRequest} from "next";
 import {getUserByVKId, registerNewUserWithVK} from "@/lib/authorize/users";
 import {createNewSession} from "@/lib/authorize/sessions";
-import {NextResponse} from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 
-export async function POST(req: NextApiRequest) {
-    const body = req.body;
+export async function POST(request: NextRequest) {
+    const body = await request.json();
+    // const body = req;
     // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     console.log(body, body.type);
