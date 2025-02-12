@@ -3,7 +3,10 @@ import Login from "@/app/login/Content";
 
 const LoginPage = () => {
     return (
-        <Login vkApp={parseInt(process.env.VK_APP!)} />
+        <Login
+            vkApp={parseInt(process.env.VK_APP!)}
+            codeVerifier={process.env.CODE_VERIFIER!}
+        />
     )
 };
 

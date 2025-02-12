@@ -3,7 +3,7 @@ import React, {memo, useEffect, useRef} from "react";
 import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
 
-const Login = ({ vkApp }: { vkApp: number; }) => {
+const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }) => {
     const buttonRef = useRef(null);
 
     useEffect(() => {
@@ -11,6 +11,7 @@ const Login = ({ vkApp }: { vkApp: number; }) => {
             app: vkApp,
             redirectUrl: 'https://typikon.su/login',
             responseMode: VKID.ConfigResponseMode.Callback,
+            codeVerifier,
             source: VKID.ConfigSource.LOWCODE,
             scope: '', // Заполните нужными доступами по необходимости
         });
