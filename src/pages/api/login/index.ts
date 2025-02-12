@@ -13,9 +13,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             let user = await getUserByVKId(body.data.user_id);
             if (!user) {
                 // register
-                const new_id = await registerNewUserWithVK(body.data.user_id);
-                console.log("id", new_id);
-                user =  await getUserByVKId(new_id!);
+                await registerNewUserWithVK(body.data.user_id);
+                user =  await getUserByVKId(body.data.user_id);
             }
             console.log(user);
             const { session, expiresAt } = await createNewSession(user!.id, body.data, ip as string, body.timestamp);
