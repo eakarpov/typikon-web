@@ -2,9 +2,13 @@
 import React, {memo, useEffect, useRef} from "react";
 import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
+import {useAppSelector} from "@/lib/hooks";
+import {redirect} from "next/navigation";
 
 const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }) => {
     const buttonRef = useRef(null);
+
+    const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
 
     useEffect(() => {
         VKID.Config.init({
@@ -35,22 +39,25 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
     }, [vkApp]);
 
     const vkidOnSuccess = (data: Omit<TokenResult, "id_token">) => {
-        console.log(data);
-        fetch("/login", {
+        fetch("/api/login", {
             method: "POST",
             body: JSON.stringify({
                 type: "VK",
                 data,
                 timestamp: Date.now(),
             }),
+        }).then(() => {
+            redirect("/");
         });
-        // Обработка полученного результата
     }
 
     const vkidOnError = (error: any) => {
         console.log(error);
-        // Обработка ошибки
     };
+
+    if (isAuthorized) {
+        redirect("/");
+    }
 
     return (
         <div>

@@ -57,3 +57,8 @@ export const createNewSession = async (id: string, state: any, ip: string, times
         path: '/',
     });
 };
+
+export async function deleteSession() {
+    const cookieStore = await cookies()
+    cookieStore.delete('session')
+}

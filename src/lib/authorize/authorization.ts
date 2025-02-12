@@ -11,5 +11,7 @@ export const verifySession = cache(async () => {
         return { isAuth: true, userId: session.userId };
     }
 
+    // maybe here go to db, get vk refresh token and try to update the access one
+
     return { isAuth: false };
 });

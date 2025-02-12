@@ -23,7 +23,7 @@ const NavMenu = ({ showButton, showAdmin, session }: { showAdmin?: string; sessi
     }, [session]);
 
     const onLogout = useCallback(() => {
-        // log out;
+        fetch("/api/logout");
     }, []);
 
     return (
