@@ -8,7 +8,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const body = req.body;
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-        console.log(body, body.type);
         if (body.type === "VK") {
             let user = await getUserByVKId(body.data.user_id);
             if (!user) {
@@ -20,7 +19,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const { session, expiresAt } = await createNewSession(user!.id, body.data, ip as string, body.timestamp);
             // 3. Store the session in cookies for optimistic auth checks
             const cookieStore = await cookies()
-            console.log(session, expiresAt);
             cookieStore.set('session', session, {
                 httpOnly: true,
                 secure: true,
