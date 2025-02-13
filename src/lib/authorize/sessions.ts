@@ -22,12 +22,12 @@ export async function decrypt(session: string | undefined = '') {
         })
         return payload
     } catch (error) {
-        console.log('Failed to verify session')
+        console.log('Failed to verify session', error)
     }
 }
 
 export const createNewSession = async (id: string, state: any, ip: string, timestamp: number) => {
-    const expiresAt = new Date(timestamp + state.expires_in);
+    const expiresAt = new Date(timestamp + state.expires_in * 1000);
 
     const client = await clientPromise;
     const db = client.db("typikon-users");
