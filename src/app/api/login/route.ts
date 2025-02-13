@@ -21,6 +21,9 @@ export async function POST(request: NextRequest) {
         await createNewSession(user!.id, body.data, "" as string, body.timestamp);
         return new NextResponse(null, {
             status: 200,
+            headers: {
+                'Access-Control-Expose-Headers': 'Set-Cookie'
+            }
         });
     } else {
         return new NextResponse(null, {
