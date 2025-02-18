@@ -4,7 +4,7 @@ import {ObjectId} from "mongodb";
 export const getItem = async (id: string): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
-        const db = client.db("typikon-user");
+        const db = client.db("typikon-users");
 
         const texts = await db
             .collection("users")
