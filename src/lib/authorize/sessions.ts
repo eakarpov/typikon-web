@@ -45,6 +45,7 @@ export const createNewSession = async (id: string, state: any, ip: string, times
         });
 
     const sessionId = newSession.insertedId;
+    console.log(id, ip);
 
     // 2. Encrypt the session ID
     const session = await encrypt({ sessionId, expiresAt, userId: id, });

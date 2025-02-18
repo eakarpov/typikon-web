@@ -47,17 +47,16 @@ export const getUserByVKId = async (id: string) => {
         const client = await clientPromise;
         const db = client.db("typikon-users");
 
-        const users = await db
+        const user = await db
             .collection("users")
-            .find({
+            .findOne({
                 auth: {
                     vk: {
                         userId: id,
                     },
                 },
-            })
-            .toArray();
-        return users[0];
+            });
+        return user;
     } catch (e) {
         console.error(e);
     }
