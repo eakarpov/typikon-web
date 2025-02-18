@@ -1,11 +1,11 @@
 'use server';
 import "server-only";
 import clientPromise from "@/lib/mongodb";
-import { SignJWT, jwtVerify } from 'jose';
+import {SignJWT, jwtVerify} from 'jose';
 import {cookies} from "next/headers";
 
-const secretKey = process.env.SESSION_SECRET
-const encodedKey = new TextEncoder().encode(secretKey)
+const secretKey = process.env.SESSION_SECRET;
+const encodedKey = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {
     return new SignJWT(payload)
@@ -22,7 +22,8 @@ export async function decrypt(session: string | undefined = '') {
         })
         return payload
     } catch (error) {
-        // console.log('Failed to verify session', error)
+        // console.log('Failed to verify session', secretKey, error)
+        return null;
     }
 }
 
@@ -49,7 +50,6 @@ export const createNewSession = async (id: string, state: any, ip: string, times
     const session = await encrypt({ sessionId, expiresAt, userId: id, });
 
     const cookieStore = await cookies()
-    console.log(session, expiresAt);
     cookieStore.set('session', session, {
         httpOnly: true,
         secure: true,
