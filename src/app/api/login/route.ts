@@ -1,8 +1,6 @@
-import {NextApiRequest} from "next";
 import {getUserByVKId, registerNewUserWithVK} from "@/lib/authorize/users";
 import {createNewSession} from "@/lib/authorize/sessions";
 import {NextRequest, NextResponse} from "next/server";
-import {cookies} from "next/headers";
 
 export async function POST(request: NextRequest) {
     const body = await request.json();

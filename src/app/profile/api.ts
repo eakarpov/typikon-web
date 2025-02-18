@@ -7,7 +7,7 @@ export const getItem = async (id: string): Promise<[any, any]> => {
         const db = client.db("typikon-user");
 
         const texts = await db
-            .collection("texts")
+            .collection("users")
             .aggregate([
                 { $match: { _id: new ObjectId(id) } },
                 {
