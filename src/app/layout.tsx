@@ -8,6 +8,7 @@ import {myFont} from "@/utils/font";
 import NavMenu from "@/app/NavMenu";
 import StoreProvider from "@/app/StoreProvider";
 import {verifySession} from "@/lib/authorize/authorization";
+import AuthorizeChecker from "@/app/AuthorizeChecker";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -46,6 +47,7 @@ export default async function RootLayout({
           <InitiateUserSettings />
           <StoreProvider>
               <>
+                  <AuthorizeChecker />
                   <nav className="border-b-2 w-full overflow-scroll">
                       <div className={myFont.variable}>
                           <NavMenu

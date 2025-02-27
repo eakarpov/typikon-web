@@ -17,6 +17,7 @@ import {AuthSlice} from "@/lib/store/auth";
 const NavMenu = ({ showButton, showAdmin, session }: { showAdmin?: string; session: any|null; showButton?: string; }) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
+    console.log("session", session);
 
     useEffect(() => {
         dispatch(AuthSlice.actions.SetAuthorized(session));
@@ -24,6 +25,7 @@ const NavMenu = ({ showButton, showAdmin, session }: { showAdmin?: string; sessi
 
     const onLogout = useCallback(() => {
         fetch("/api/logout");
+        dispatch(AuthSlice.actions.Logout());
     }, []);
 
     return (

@@ -8,7 +8,7 @@ export const verifySession = cache(async () => {
     const session = await decrypt(cookie);
 
     if (session) {
-        return { isAuth: true, userId: session.userId };
+        return { isAuth: true, userId: session.userId, expiresAt: session.expiresAt  };
     }
 
     // maybe here go to db, get vk refresh token and try to update the access one
