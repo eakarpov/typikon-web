@@ -17,7 +17,6 @@ import {AuthSlice} from "@/lib/store/auth";
 const NavMenu = ({ showButton, showAdmin, session }: { showAdmin?: string; session: any|null; showButton?: string; }) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
-    console.log("session", session);
 
     useEffect(() => {
         dispatch(AuthSlice.actions.SetAuthorized(session));
