@@ -86,6 +86,8 @@ export const writeMetaData = async (obj: any): Promise<any> => {
         const time = new Date();
 
         if (log && log[0]) {
+            const userAgents = log[0].userAgents || [];
+            const hasUserAgent = userAgents.find((el: string) => el === obj.userAgent);
             await db
                 .collection("logs")
                 .updateOne( { "_id" : log[0]._id },
@@ -98,6 +100,12 @@ export const writeMetaData = async (obj: any): Promise<any> => {
                                 ...log[0].wasAt,
                                 time,
                             ],
+                            userAgents: hasUserAgent
+                                ? log[0].userAgents
+                                : [
+                                    ...log[0].userAgents,
+                                    obj.userAgent,
+                            ],
                         }
                     });
             return;
@@ -109,6 +117,7 @@ export const writeMetaData = async (obj: any): Promise<any> => {
                     url: obj.url,
                     count: 1,
                     wasAt: [new Date()],
+                    userAgents: [obj.userAgent],
                 });
             return;
         }

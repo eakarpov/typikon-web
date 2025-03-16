@@ -13,9 +13,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     } else {
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const userAgent = req.headers['user-agent'];
         return writeMetaData({
             ip,
             url: req.query?.source,
+            userAgent,
         }).then(() => {
             return res.end();
         });

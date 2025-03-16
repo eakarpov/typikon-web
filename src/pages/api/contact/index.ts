@@ -4,7 +4,7 @@ import {store} from "@/lib/captcha";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
-        const {email, theme, value, captcha} = req.body;
+        const {email, theme, value, captcha, isMobile} = req.body;
 
         const ip: string = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress as string;
         // const data = await readCaptcha(ip as string);
@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             from: process.env.EMAIL,
             to: process.env.EMAIL,
             subject: theme || "Default theme",
-            text: `${email}: ${value}`,
+            text: `${email}: ${value} ${isMobile && ` (Отправлено из приложения)`}`,
         };
 
         transporter.sendMail(mailOption, (err, data) => {

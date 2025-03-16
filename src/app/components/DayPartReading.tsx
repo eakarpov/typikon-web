@@ -167,6 +167,8 @@ const DayPartReading = ({
         setShowDescription(false);
     }, []);
 
+    console.log(value?.items);
+
     return value?.items && (
             <section className="space-y-2" id={valueName}>
                 <p className="text-1xl font-bold font-serif text-red-600">
