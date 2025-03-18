@@ -101,9 +101,9 @@ export const writeMetaData = async (obj: any): Promise<any> => {
                                 time,
                             ],
                             userAgents: hasUserAgent
-                                ? log[0].userAgents
+                                ? userAgents
                                 : [
-                                    ...log[0].userAgents,
+                                    ...userAgents,
                                     obj.userAgent,
                             ],
                         }
