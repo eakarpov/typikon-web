@@ -3,6 +3,7 @@ import "server-only";
 import clientPromise from "@/lib/mongodb";
 import {SignJWT, jwtVerify} from 'jose';
 import {cookies} from "next/headers";
+import {ObjectId} from "mongodb";
 
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -89,7 +90,7 @@ export async function getSession(): Promise<any> {
         const res = await db
             .collection("sessions")
             .findOne({
-                _id: session.sessionId,
+                _id: new ObjectId(session.sessionId as string),
             });
         return res;
     }
