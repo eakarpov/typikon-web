@@ -10,7 +10,7 @@ export async function POST() {
         });
     }
     const vkInfo = sessionDb.auth?.vk;
-    return new NextResponse(vkInfo, {
+    return NextResponse.json(vkInfo, {
         status: 200,
     });
 }
