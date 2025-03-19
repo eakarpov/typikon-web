@@ -11,7 +11,7 @@ export async function encrypt(payload: any) {
     return new SignJWT(payload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('1h') // from VK token, may be another value
+        .setExpirationTime('6m') // from VK token, may be another value
         .sign(encodedKey)
 }
 
@@ -45,7 +45,6 @@ export const createNewSession = async (id: string, state: any, ip: string, times
         });
 
     const sessionId = newSession.insertedId;
-    console.log(id, ip);
 
     // 2. Encrypt the session ID
     const session = await encrypt({ sessionId, expiresAt, userId: id, });
@@ -54,7 +53,7 @@ export const createNewSession = async (id: string, state: any, ip: string, times
     cookieStore.set('session', session, {
         httpOnly: true,
         secure: true,
-        expires: expiresAt,
+        expires: new Date(timestamp + 1000 * 60 * 6),
         sameSite: 'lax',
         path: '/',
     });
