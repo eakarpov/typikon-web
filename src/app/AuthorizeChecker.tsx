@@ -9,7 +9,8 @@ const diff = 1000 * 60 * 5; // 5 minutes
 
 const AuthorizeChecker = () => {
     const expiresAt = useAppSelector(state => state.auth.cookieExpiresAt);
-
+    const auth = useAppSelector(state => state.auth);
+    console.log(auth);
     const prolong = useCallback(() => {
         fetch("/api/prolong", {
             method: "POST",
@@ -31,6 +32,7 @@ const AuthorizeChecker = () => {
     }, []);
 
     useEffect(() => {
+        console.log(expiresAt);
         if (expiresAt) {
             if (timeout) {
                 clearTimeout(timeout);
