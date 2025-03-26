@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
             user =  await getUserByVKId(body.data.user_id);
         }
         // 3. Store the session in cookies for optimistic auth checks
-        await createNewSession(user!._id?.toString(), body.data, "" as string, body.timestamp);
+        await createNewSession(user!._id?.toString(), body.data, "" as string, body.timestamp, body.deviceId);
         return new NextResponse(null, {
             status: 200,
             headers: {

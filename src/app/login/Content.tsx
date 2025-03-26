@@ -33,19 +33,20 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
                     const deviceId = payload.device_id;
 
                     VKID.Auth.exchangeCode(code, deviceId)
-                        .then(vkidOnSuccess)
+                        .then(() => vkidOnSuccess(deviceId))
                         .catch(vkidOnError);
                 });
         }
     }, [vkApp]);
 
-    const vkidOnSuccess = async (data: Omit<TokenResult, "id_token">) => {
+    const vkidOnSuccess = (deviceId: string) => async (data: Omit<TokenResult, "id_token">) => {
         await fetch("/api/login", {
             method: "POST",
             body: JSON.stringify({
                 type: "VK",
                 data,
                 timestamp: Date.now(),
+                deviceId,
             }),
             headers: {
                 'Content-Type': 'application/json',

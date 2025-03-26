@@ -15,13 +15,14 @@ const AuthorizeChecker = () => {
         fetch("/api/prolong", {
             method: "POST",
         }).then((res) => res.json()).then((res) => {
-            VKID.Auth.refreshToken(res.refresh_token, res.id_token).then(async (data) => {
+            VKID.Auth.refreshToken(res.state?.refresh_token, res.deviceId).then(async (data) => {
                 await fetch("/api/login", {
                     method: "POST",
                     body: JSON.stringify({
                         type: "VK",
                         data,
                         timestamp: Date.now(),
+                        deviceId: res.deviceId,
                     }),
                     headers: {
                         'Content-Type': 'application/json',

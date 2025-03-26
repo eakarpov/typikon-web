@@ -28,7 +28,7 @@ export async function decrypt(session: string | undefined = '') {
     }
 }
 
-export const createNewSession = async (id: string, state: any, ip: string, timestamp: number) => {
+export const createNewSession = async (id: string, state: any, ip: string, timestamp: number, deviceId: string) => {
     const expiresAt = new Date(timestamp + state.expires_in * 1000);
 
     const client = await clientPromise;
@@ -40,9 +40,12 @@ export const createNewSession = async (id: string, state: any, ip: string, times
             id,
             ip,
             auth: {
-                vk: state,
+                vk: {
+                    state,
+                    deviceId,
+                },
             },
-            expiresAt
+            expiresAt,
         });
 
     const sessionId = newSession.insertedId;
