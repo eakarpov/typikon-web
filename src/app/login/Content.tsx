@@ -33,7 +33,7 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
                     const deviceId = payload.device_id;
 
                     VKID.Auth.exchangeCode(code, deviceId)
-                        .then(() => vkidOnSuccess(deviceId))
+                        .then(vkidOnSuccess(deviceId))
                         .catch(vkidOnError);
                 });
         }
