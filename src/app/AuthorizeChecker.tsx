@@ -19,10 +19,12 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
     const prolong = useCallback(() => {
         fetch("/api/prolong", {
             method: "POST",
+            keepalive: true,
         }).then((res) => res.json()).then((res) => {
             VKID.Auth.refreshToken(res.state?.refresh_token, res.deviceId).then(async (data) => {
                 const loginRes = await fetch("/api/login", {
                     method: "POST",
+                    keepalive: true,
                     body: JSON.stringify({
                         type: "VK",
                         data,
