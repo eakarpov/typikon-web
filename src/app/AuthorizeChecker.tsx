@@ -15,6 +15,10 @@ const AuthorizeChecker = () => {
         fetch("/api/prolong", {
             method: "POST",
         }).then((res) => res.json()).then((res) => {
+            // VKID.Config.update({
+            //     redirectUrl: "https://typikon.su/login"
+            // });
+            console.log(VKID.Config.get());
             VKID.Auth.refreshToken(res.state?.refresh_token, res.deviceId).then(async (data) => {
                 await fetch("/api/login", {
                     method: "POST",
