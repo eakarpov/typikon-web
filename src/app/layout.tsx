@@ -47,7 +47,10 @@ export default async function RootLayout({
           <InitiateUserSettings />
           <StoreProvider>
               <>
-                  <AuthorizeChecker />
+                  <AuthorizeChecker
+                      vkApp={parseInt(process.env.VK_APP!)}
+                      codeVerifier={process.env.CODE_VERIFIER!}
+                  />
                   <nav className="border-b-2 w-full overflow-scroll">
                       <div className={myFont.variable}>
                           <NavMenu

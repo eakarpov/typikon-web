@@ -7,7 +7,10 @@ let timeout: NodeJS.Timeout|null = null;
 
 const diff = 1000 * 60 * 5; // 5 minutes
 
-const AuthorizeChecker = () => {
+const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
+    vkApp: number;
+    codeVerifier: string;
+}) => {
     const expiresAt = useAppSelector(state => state.auth.cookieExpiresAt);
     const auth = useAppSelector(state => state.auth);
     console.log(auth);
@@ -15,9 +18,6 @@ const AuthorizeChecker = () => {
         fetch("/api/prolong", {
             method: "POST",
         }).then((res) => res.json()).then((res) => {
-            // VKID.Config.update({
-            //     redirectUrl: "https://typikon.su/login"
-            // });
             console.log(VKID.Config.get());
             VKID.Auth.refreshToken(res.state?.refresh_token, res.deviceId).then(async (data) => {
                 await fetch("/api/login", {
@@ -33,6 +33,17 @@ const AuthorizeChecker = () => {
                     },
                 })
             });
+        });
+    }, []);
+
+    useEffect(() => {
+        VKID.Config.init({
+            app: vkApp,
+            redirectUrl: 'https://typikon.su/login',
+            responseMode: VKID.ConfigResponseMode.Callback,
+            codeVerifier,
+            source: VKID.ConfigSource.LOWCODE,
+            scope: '', // Заполните нужными доступами по необходимости
         });
     }, []);
 

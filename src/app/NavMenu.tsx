@@ -14,7 +14,11 @@ import {useCallback, useEffect} from "react";
 import {useAppDispatch} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
 
-const NavMenu = ({ showButton, showAdmin, session }: { showAdmin?: string; session: any|null; showButton?: string; }) => {
+const NavMenu = ({ showButton, showAdmin, session }: {
+    showAdmin?: string;
+    session: any|null;
+    showButton?: string;
+}) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
 
