@@ -1,5 +1,5 @@
 'use client';
-import React, {memo, useCallback, useEffect, useRef, useState} from "react";
+import React, {memo, MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import reactStringReplace from "react-string-replace";
 import Link from "next/link";
 import './reading.scss';
@@ -85,7 +85,7 @@ const ReadingContent = ({ item }: { item: any }) => {
         }
     }, [isAuthorized]);
 
-    const onContextMenuHandler = useCallback((e) => {
+    const onContextMenuHandler: MouseEventHandler = useCallback((e) => {
         if (selection) {
             e.preventDefault();
             setClicked(true);
@@ -98,7 +98,6 @@ const ReadingContent = ({ item }: { item: any }) => {
     }, [selection]);
 
     const onSendError = useCallback(() => {
-        console.log("should send error");
         setModalIsOpen(true);
     }, [selection]);
 
@@ -138,10 +137,6 @@ const ReadingContent = ({ item }: { item: any }) => {
     }, []);
 
     const onSendReport = useCallback(() => {
-        console.log({
-           selection,
-           correction,
-        });
         fetch("/api/report", {
             method: "POST",
             body: JSON.stringify({
@@ -151,8 +146,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                 textId: item.id,
             })
         }).then(() => {
-            // alert("Отчет отправлен успешно!");
-            alert("Ошибка при отправлении отчета!")
+            alert("Отчет отправлен успешно!");
         }).catch(() => {
             alert("Ошибка при отправлении отчета!")
         });

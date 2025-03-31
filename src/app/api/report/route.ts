@@ -1,9 +1,10 @@
 import {NextRequest, NextResponse} from "next/server";
+import {saveReport} from "@/app/api/report/service";
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
 
-    console.log(body);
+    await saveReport(body);
 
     return NextResponse.json(null, {
         status: 200,
