@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/20/solid";
 import {usePathname} from "next/navigation";
 import {useCallback, useEffect} from "react";
-import {useAppDispatch} from "@/lib/hooks";
+import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
 
 const NavMenu = ({ showButton, showAdmin, session }: {
@@ -22,8 +22,12 @@ const NavMenu = ({ showButton, showAdmin, session }: {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
 
+    const isAuth = useAppSelector(state => state.auth.isAuthorized);
+
     useEffect(() => {
-        dispatch(AuthSlice.actions.SetAuthorized(session));
+        if (session) {
+            dispatch(AuthSlice.actions.SetAuthorized(session));
+        }
     }, [session]);
 
     const onLogout = useCallback(() => {
@@ -105,7 +109,7 @@ const NavMenu = ({ showButton, showAdmin, session }: {
                 >
                     <Cog6ToothIcon className="w-4 h-4" />
                 </Link>
-                {session.isAuth && (
+                {isAuth && (
                     <Link
                         href="/profile"
                         className={`cursor-pointer min-w-fit flex items-center ${pathname === `/profile` && `text-red-600`}`}
@@ -113,7 +117,7 @@ const NavMenu = ({ showButton, showAdmin, session }: {
                         <UserCircleIcon className="w-4 h-4" />
                     </Link>
                 )}
-                {showButton === Boolean(true).toString() && (!session.isAuth ? (
+                {showButton === Boolean(true).toString() && (!isAuth ? (
                     <Link
                         href="/login"
                         className={`cursor-pointer min-w-fit flex items-center ${pathname === `/login` && `text-red-600`}`}
