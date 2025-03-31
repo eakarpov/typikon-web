@@ -15,8 +15,11 @@ export async function POST(request: NextRequest) {
             user =  await getUserByVKId(body.data.user_id);
         }
         // 3. Store the session in cookies for optimistic auth checks
-        await createNewSession(user!._id?.toString(), body.data, "" as string, body.timestamp, body.deviceId);
-        return new NextResponse(null, {
+        const expiresAt = await createNewSession(user!._id?.toString(), body.data, "" as string, body.timestamp, body.deviceId);
+        return NextResponse.json({
+            userId: user!._id?.toString(),
+            expiresAt,
+        }, {
             status: 200,
             headers: {
                 'Access-Control-Expose-Headers': 'Set-Cookie'

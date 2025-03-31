@@ -2,12 +2,14 @@
 import React, {memo, useEffect, useRef} from "react";
 import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
-import {useAppSelector} from "@/lib/hooks";
+import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {useRouter} from "next/navigation";
+import {AuthSlice} from "@/lib/store/auth";
 
 const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }) => {
     const buttonRef = useRef(null);
     const router = useRouter();
+    const dispatch = useAppDispatch();
 
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
 
@@ -51,7 +53,13 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
             headers: {
                 'Content-Type': 'application/json',
             },
-        })
+        }).then(res => res.json()).then((res) => {
+            dispatch(AuthSlice.actions.SetAuthorized({
+                isAuth: true,
+                expiresAt: res.expiresAt,
+                userId: res.userId,
+            }));
+        });
         router.push("/");
     }
 

@@ -1,7 +1,8 @@
 'use client';
 import {memo, useCallback, useEffect} from "react";
-import {useAppSelector} from "@/lib/hooks";
+import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import * as VKID from "@vkid/sdk";
+import {AuthSlice} from "@/lib/store/auth";
 
 let timeout: NodeJS.Timeout|null = null;
 
@@ -12,15 +13,15 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
     codeVerifier: string;
 }) => {
     const expiresAt = useAppSelector(state => state.auth.cookieExpiresAt);
-    const auth = useAppSelector(state => state.auth);
-    console.log(auth);
+    // const auth = useAppSelector(state => state.auth);
+    const dispatch = useAppDispatch();
+
     const prolong = useCallback(() => {
         fetch("/api/prolong", {
             method: "POST",
         }).then((res) => res.json()).then((res) => {
-            console.log(VKID.Config.get());
             VKID.Auth.refreshToken(res.state?.refresh_token, res.deviceId).then(async (data) => {
-                await fetch("/api/login", {
+                const loginRes = await fetch("/api/login", {
                     method: "POST",
                     body: JSON.stringify({
                         type: "VK",
@@ -31,7 +32,13 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                })
+                });
+                const loginData = await loginRes.json();
+                dispatch(AuthSlice.actions.SetAuthorized({
+                    isAuth: true,
+                    userId: loginData.userId,
+                    expiresAt: loginData.expiresAt,
+                }));
             });
         });
     }, []);
@@ -48,7 +55,6 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
     }, []);
 
     useEffect(() => {
-        console.log(expiresAt);
         if (expiresAt) {
             if (timeout) {
                 clearTimeout(timeout);

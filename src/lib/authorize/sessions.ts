@@ -51,16 +51,23 @@ export const createNewSession = async (id: string, state: any, ip: string, times
     const sessionId = newSession.insertedId;
 
     // 2. Encrypt the session ID
-    const session = await encrypt({ sessionId, expiresAt: new Date(timestamp + 1000 * 60 * 6), userId: id, });
+    const session = await encrypt({ sessionId, expiresAt: new Date(
+     timestamp + 1000 * 60 * 6
+      // expiresAt,
+    ), userId: id, });
 
     const cookieStore = await cookies()
     cookieStore.set('session', session, {
         httpOnly: true,
         secure: true,
-        expires: new Date(timestamp + 1000 * 60 * 6),
+        expires: new Date(
+            timestamp + 1000 * 60 * 6
+            // expiresAt
+        ),
         sameSite: 'lax',
         path: '/',
     });
+    return expiresAt;
 };
 
 export async function deleteSession() {
