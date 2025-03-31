@@ -7,7 +7,8 @@ export const getItem = async (id: string) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
-        const matcher = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { alias: id };
+        // Somehow september-13 is reviewed as a valid objectId, that is why the additional rule added
+        const matcher = ObjectId.isValid(id) && !id.includes('-') ? { _id: new ObjectId(id) } : { alias: id };
 
         const days = await db
             .collection("days")

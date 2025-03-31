@@ -42,6 +42,7 @@ const ReadingContent = ({ item }: { item: any }) => {
     const sentenceRef = useRef<HTMLDivElement|null>(null);
 
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
+    const userId = useAppSelector(state => state.auth.userId);
 
     // useEffect(() => {
     //     const handleClick = () => setClicked(false);
@@ -140,6 +141,20 @@ const ReadingContent = ({ item }: { item: any }) => {
         console.log({
            selection,
            correction,
+        });
+        fetch("/api/report", {
+            method: "POST",
+            body: JSON.stringify({
+                userId,
+                selection,
+                correction,
+                textId: item.id,
+            })
+        }).then(() => {
+            // alert("Отчет отправлен успешно!");
+            alert("Ошибка при отправлении отчета!")
+        }).catch(() => {
+            alert("Ошибка при отправлении отчета!")
         });
         setCorrection("");
         setSelection(null);

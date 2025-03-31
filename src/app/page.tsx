@@ -227,7 +227,7 @@ export default function Home() {
           <div className="border-t w-full border-slate-300 mt-4 p-2">
               <div className={myFont.variable}>
                   <span className="text-right font-serif">
-                      (с) 2023-2024, Уставные чтения
+                      (с) 2023-{new Date().getFullYear()}, Уставные чтения
                   </span>
               </div>
           </div>
