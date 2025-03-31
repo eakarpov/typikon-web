@@ -164,6 +164,7 @@ const ReadingContent = ({ item }: { item: any }) => {
             id="text-reading"
             className="space-y-1 mt-2"
             onMouseUp={onMouseUpHandler}
+            onTouchEnd={onMouseUpHandler}
             onContextMenu={onContextMenuHandler}
         >
             <div
