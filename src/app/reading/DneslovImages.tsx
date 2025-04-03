@@ -15,7 +15,7 @@ const DneslovImages = ({ dneslovId, dneslovEventId }: IDneslovImages) => {
 
     useEffect(() => {
         if (dneslovId) {
-            fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovEventId || dneslovId}`)
+            fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}${dneslovEventId ? `&e=${dneslovEventId}`: ""}`)
                 .then((res) => res.json())
                 .then((res) => {
                     setImages(res.map((e: { url: string; thumb_url: string; }) =>
