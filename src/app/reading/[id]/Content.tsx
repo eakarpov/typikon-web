@@ -121,7 +121,10 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
             <TextImages images={item.images} />
         )}
         {item.dneslovId && (
-            <DneslovImages dneslovId={item.dneslovId} />
+            <DneslovImages
+                dneslovId={item.dneslovId}
+                dneslovEventId={item.dneslovEventId}
+            />
         )}
         </div>
     );

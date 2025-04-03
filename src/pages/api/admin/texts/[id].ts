@@ -36,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             poems: data.poems,
                             images: data.images,
                             dneslovId: data.dneslovId,
+                            dneslovEventId: data.dneslovEventId,
                             dneslovType: data.dneslovType,
                             initialPriestExclamation: data.initialPriestExclamation,
                             startPhrase: data.startPhrase,

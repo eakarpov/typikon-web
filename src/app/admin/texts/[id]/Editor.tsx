@@ -9,7 +9,7 @@ import {
     TextKind,
     TextReadiness
 } from "@/utils/texts";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {KeyboardEventHandler, MouseEventHandler, useCallback, useEffect, useState} from "react";
 import Markdown from "react-markdown";
 
 const getMentionIds = (content: string) => {
@@ -40,6 +40,7 @@ const AdminEditor = ({ value }: any) => {
     const [poems, setPoems] = useState(value.poems || "");
     const [imageLink, setImageLink] = useState(value.images && value.images[0] || "");
     const [dneslovId, setDneslovId] = useState(value.dneslovId || "");
+    const [dneslovEventId, setDneslovEventId] = useState(value.dneslovEventId || "");
     const [dneslovType, setDneslovType] = useState(value.dneslovType || DneslovKind.MEMORY);
     const [startPhrase, setStartPhrase] = useState(value.startPhrase);
     const [initialPriestExclamation, setInitialPriestExclamation] = useState(value.initialPriestExclamation);
@@ -82,6 +83,7 @@ const AdminEditor = ({ value }: any) => {
                 images: [imageLink],
                 mentionIds: getMentionIds(content),
                 dneslovId,
+                dneslovEventId,
                 startPhrase,
                 initialPriestExclamation,
                 newUi,
@@ -90,6 +92,21 @@ const AdminEditor = ({ value }: any) => {
             setIsSaved(true);
         });
     };
+
+    const onMouseDown: KeyboardEventHandler = useCallback((e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            onSubmit();
+        }
+    }, [onSubmit]);
+
+    useEffect(() => {
+        document.addEventListener("keydown", onMouseDown as unknown as EventListener);
+        return () => {
+            document.removeEventListener("keydown", onMouseDown as unknown as EventListener);
+        };
+    }, []);
+
     return (
         <div className="flex flex-col">
             <button onClick={onSubmit}>
@@ -165,6 +182,16 @@ const AdminEditor = ({ value }: any) => {
                         className="border-2"
                         value={dneslovId}
                         onChange={e => setDneslovId(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Идентификатор события Днеслова
+                    </label>
+                    <input
+                        className="border-2"
+                        value={dneslovEventId}
+                        onChange={e => setDneslovEventId(e.target.value)}
                     />
                 </div>
                 <div className="flex flex-col pr-4">

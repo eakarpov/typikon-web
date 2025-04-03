@@ -5,16 +5,17 @@ import "react-image-gallery/styles/css/image-gallery.css";
 
 interface IDneslovImages {
     dneslovId: string;
+    dneslovEventId?: string;
 }
 
 const cdnDneslovUrl = "https://cdn.dneslov.org";
 
-const DneslovImages = ({ dneslovId }: IDneslovImages) => {
+const DneslovImages = ({ dneslovId, dneslovEventId }: IDneslovImages) => {
     const [images, setImages] = useState<ReactImageGalleryItem[]>([]);
 
     useEffect(() => {
         if (dneslovId) {
-            fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}`)
+            fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovEventId || dneslovId}`)
                 .then((res) => res.json())
                 .then((res) => {
                     setImages(res.map((e: { url: string; thumb_url: string; }) =>
