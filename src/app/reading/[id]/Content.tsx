@@ -101,6 +101,16 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                 </div>
             )}
             <ReadingContent item={item} />
+            {item.info && (
+                <div className="font-serif">
+                    <p>
+                        <strong>P.S.:</strong>
+                    </p>
+                    <p>
+                        {item.info}
+                    </p>
+                </div>
+            )}
             {item.footnotes?.length > 0 && (
                 <div className="font-serif">
                     <p>

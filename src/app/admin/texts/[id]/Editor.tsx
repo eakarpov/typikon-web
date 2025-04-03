@@ -45,6 +45,8 @@ const AdminEditor = ({ value }: any) => {
     const [startPhrase, setStartPhrase] = useState(value.startPhrase);
     const [initialPriestExclamation, setInitialPriestExclamation] = useState(value.initialPriestExclamation);
     const [newUi, setNewUi] = useState(value.newUi || false);
+    const [info, setInfo] = useState(value.info || "");
+    const [adminInfo, setAdminInfo] = useState(value.adminInfo || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -87,6 +89,8 @@ const AdminEditor = ({ value }: any) => {
                 startPhrase,
                 initialPriestExclamation,
                 newUi,
+                info,
+                adminInfo,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -378,6 +382,28 @@ const AdminEditor = ({ value }: any) => {
                     />
                 </>
             )}
+            <div className="flex flex-row">
+                <div className="flex flex-col pr-4 w-1/3">
+                    <label>
+                        P.S.
+                    </label>
+                    <textarea
+                        className="border-2"
+                        value={info}
+                        onChange={e => setInfo(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col pr-4 w-1/3">
+                    <label>
+                        Комментарий (для админов)
+                    </label>
+                    <textarea
+                        className="border-2"
+                        value={adminInfo}
+                        onChange={e => setAdminInfo(e.target.value)}
+                    />
+                </div>
+            </div>
         </div>
     );
 };

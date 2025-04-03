@@ -42,6 +42,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             startPhrase: data.startPhrase,
                             mentionIds: data.mentionIds,
                             newUi: data.newUi,
+                            info: data.info,
+                            adminInfo: data.adminInfo,
                         },
                     },
                 );
