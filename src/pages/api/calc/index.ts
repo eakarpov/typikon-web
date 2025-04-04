@@ -4,9 +4,21 @@ import {getTriodicItem} from "@/pages/api/calc/getTriodion";
 import {getCalendarItem} from "@/pages/api/calc/getCalenar";
 import {TextType} from "@/utils/texts";
 
-const getWeekAndDay = (date: Date, easter: Date) => {
-    const diffTime = Math.abs(date.getTime() - easter.getTime());
+const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
+    const diffTime = date.getTime() - easter.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const diffTimePrevious = date.getTime() - prevEaster.getTime();
+    const diffDaysPrevious = Math.ceil(diffTimePrevious / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+        if (diffDays >= -49) { // Great Lention (exclude preparational weeks)
+            const realVal = Math.floor((49 + diffDays) % 7);
+            return { week: Math.floor((49 + diffDays) / 7), day: !realVal ? 7 : realVal, type: "Fast" };
+        } else { // Previous Penticostarion
+            return { week: Math.floor((diffDaysPrevious - 50) / 7) + 1, day: Math.floor((diffDaysPrevious - 50) % 7) + 1, type: "Penticostarion" };
+        }
+    }
     if (diffDays <= 50) {
         // count from Pascha, 0 - sunday, 6 - saturday
         return { week: Math.floor(diffDays / 7) + 1, day: Math.floor(diffDays % 7), type: "Pascha" };
@@ -24,14 +36,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         const dateObj = new Date(date);
         let easter = orthodoxEaster(dateObj);
-        let easterDate = new Date(`${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`);
+        const prevDateObj = new Date(date);
+        prevDateObj.setFullYear(prevDateObj.getFullYear() - 1);
+        let prevEaster = orthodoxEaster(prevDateObj);
+        let easterDate = new Date(
+            `${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`
+        );
+        let prevEasterDate = new Date(
+            `${prevEaster.year}-${prevEaster.month > 9 ? prevEaster.month : `0${prevEaster.month}`}-${prevEaster.day}`
+        );
 
-        if (easterDate.getTime() > dateObj.getTime()) {
-            const prevYear = new Date(date);
-            prevYear.setFullYear(prevYear.getFullYear() - 1);
-            easter = orthodoxEaster(prevYear);
-            easterDate = new Date(`${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`);
-        }
+        // if (easterDate.getTime() > dateObj.getTime()) {
+        //     const prevYear = new Date(date);
+        //     prevYear.setFullYear(prevYear.getFullYear() - 1);
+        //     easter = orthodoxEaster(prevYear);
+        //     easterDate = new Date(`${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`);
+        // }
 
         if (dateObj.getTime() - easterDate.getTime() > 1000 * 3600 * 24 * 56) { // only pentacostarion, check penticostarion
             // res.status(400).end();
@@ -40,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // check triodion
 
-        const searchTriodion = getWeekAndDay(dateObj, easterDate);
+        const searchTriodion = getWeekAndDay(dateObj, easterDate, prevEasterDate);
         const triodicPromise = getTriodicItem(searchTriodion);
 
         const churchDate = new Date(dateObj.getTime() - 13 * 24 * 3600 * 1000);
@@ -83,12 +103,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     // after 6-th song Prologue is read, that's it can be added to triodic readings or not
                     // console.log(day.song6);
                     if (day.song6) {
-                        day.song6.items = day.song6.items?.flatMap((el: any) => {
-                           if (!el.paschal && calendarDay.song6) {
-                               return calendarDay.song6?.items;
-                           }
-                           return el;
-                        });
+                        // day.song6.items = day.song6.items?.flatMap((el: any) => {
+                        //    if (!el.paschal && calendarDay.song6) {
+                        //        return calendarDay.song6?.items;
+                        //    }
+                        //    return el;
+                        // });
+                        day.song6.items = [
+                            ...(calendarDay.song6?.items || []),
+                            ...day.song6.items,
+                        ]
                         // console.log(day.song6);
                     } else if (calendarDay.song6) {
                         day.song6 = {...calendarDay.song6};
