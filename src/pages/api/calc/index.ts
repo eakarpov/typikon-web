@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (dateObj.getTime() - easterDate.getTime() > 1000 * 3600 * 24 * 56) { // only pentacostarion, check penticostarion
-            res.status(400).end();
+            // res.status(400).end();
             // return;
         }
 
@@ -51,7 +51,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             triodicDay,
             calendarDay,
         ]) => {
-            // console.log(triodicDay, calendarDay);
             if (!triodicDay && !calendarDay) {
                 res.status(404).end();
                 return;

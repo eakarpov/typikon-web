@@ -12,7 +12,7 @@ const currMonthStr = now.getMonth() + 1 > 9 ? now.getMonth() + 1 :  `0${now.getM
 
 const Editor = () => {
     const [value, setValue] = useState(
-        `${now.getFullYear()}-${currMonthStr}-${now.getDate()}`
+        `${now.getFullYear()}-${currMonthStr}-${now.getDate() >= 10 ? now.getDate() : `0${now.getDate()}`}`
     );
     const [notImplemented, setNotImplemented] = useState(false);
 
