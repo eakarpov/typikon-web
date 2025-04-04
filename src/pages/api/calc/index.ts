@@ -14,7 +14,7 @@ const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
     if (diffDays < 0) {
         if (diffDays >= -49) { // Great Lention (exclude preparational weeks)
             const realVal = Math.floor((49 + diffDays) % 7);
-            return { week: Math.floor((49 + diffDays) / 7), day: !realVal ? 7 : realVal, type: "Fast" };
+            return { week: Math.floor((49 + diffDays + 6) / 7), day: !realVal ? 7 : realVal, type: "Fast" };
         } else { // Previous Penticostarion
             return { week: Math.floor((diffDaysPrevious - 50) / 7) + 1, day: Math.floor((diffDaysPrevious - 50) % 7) + 1, type: "Penticostarion" };
         }
