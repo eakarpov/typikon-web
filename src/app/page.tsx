@@ -11,6 +11,7 @@ import SearchForm from "@/app/components/search/Form";
 import ContentMoreThan from "@/app/ContentMoreThan";
 import ContentToday from "@/app/ContentToday";
 import Image from "next/image";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -39,6 +40,11 @@ export default function Home() {
                           <a href="#about" className="underline underline-offset-4 font-serif">
                               О предмете уставных чтений
                           </a>
+                      </li>
+                      <li>
+                          <Link href="/resources" className="underline underline-offset-4 font-serif">
+                              Полезные ресурсы
+                          </Link>
                       </li>
                       <li
                           className="border-t border-slate-300 pt-4"
