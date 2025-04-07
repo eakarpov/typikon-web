@@ -4,6 +4,7 @@ import {ArrowLongRightIcon, ArrowLongLeftIcon} from "@heroicons/react/20/solid";
 import {TextType, valueTitle} from "@/utils/texts";
 import Link from "next/link";
 import {getTodayDate, getZeroedNumber} from "@/utils/dates";
+import {getMonth} from "@/lib/common/date";
 
 export interface IPartItemWithText {
     cite: string;
@@ -45,37 +46,6 @@ const RenderItem = ({ data, type }: { data: null|WithTextItems, type: TextType})
         </div>
     )
 }
-
-export const getMonth = (month: number) => {
-    switch (month) {
-        case 1:
-            return "january";
-        case 2:
-            return "february";
-        case 3:
-            return "march";
-        case 4:
-            return "april";
-        case 5:
-            return "may";
-        case 6:
-            return "june";
-        case 7:
-            return "july";
-        case 8:
-            return "august";
-        case 9:
-            return "september";
-        case 10:
-            return "october";
-        case 11:
-            return "november";
-        case 12:
-            return "december";
-        default:
-            return "";
-    }
-};
 
 const ContentTodayResult = ({ item: textsToday }: IContentMeta) => {
 

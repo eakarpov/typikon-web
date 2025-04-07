@@ -4,7 +4,7 @@ import Content from "@/app/calendar/[id]/Content";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
-import {getMonth} from "@/app/months/[id]/Content";
+import {getMonth, getMonthLabel} from "@/lib/common/date";
 
 type Props = {
     params: { id: string }
@@ -20,13 +20,13 @@ export async function generateMetadata(
     const [item] = await getItem(id);
 
     return {
-        title: `Уставные чтения на день: ${getMonth(item?.month.value - 1)}, ${item?.monthIndex} число`,
-        description: `Список текстов с уставными чтениями на день: ${getMonth(item?.month.value - 1)}, ${item?.monthIndex} число`,
+        title: `Уставные чтения на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
+        description: `Список текстов с уставными чтениями на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
         openGraph: {
             type: "website",
             url: `//www.typikon.su/calendar/${id}`,
-            title: `Уставные чтения на день: ${getMonth(item?.month.value - 1)}, ${item?.monthIndex} число`,
-            description: `Список текстов с уставными чтениями на день: ${getMonth(item?.month.value - 1)}, ${item?.monthIndex} число`,
+            title: `Уставные чтения на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
+            description: `Список текстов с уставными чтениями на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
         },
     }
 }
