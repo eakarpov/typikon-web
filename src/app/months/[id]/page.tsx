@@ -1,9 +1,10 @@
 import {getItem} from "@/app/months/[id]/api";
 import {Suspense} from "react";
-import Content, {getMonth} from "@/app/months/[id]/Content";
+import Content from "@/app/months/[id]/Content";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
+import {getMonthLabel} from "@/lib/common/date";
 
 type Props = {
     params: { id: string }
@@ -19,13 +20,13 @@ export async function generateMetadata(
     const [item] = await getItem(id);
 
     return {
-        title: `Уставные чтения на месяц: ${getMonth(item?.value - 1)}`,
-        description: `Список дней с уставными чтениями на месяц: ${getMonth(item?.value - 1)}`,
+        title: `Уставные чтения на месяц: ${getMonthLabel(item?.value - 1)}`,
+        description: `Список дней с уставными чтениями на месяц: ${getMonthLabel(item?.value - 1)}`,
         openGraph: {
             type: "website",
             url: `//www.typikon.su/months/${id}`,
-            title: `Уставные чтения на месяц: ${getMonth(item?.value - 1)}`,
-            description: `Список дней с уставными чтениями на месяц: ${getMonth(item?.value - 1)}`,
+            title: `Уставные чтения на месяц: ${getMonthLabel(item?.value - 1)}`,
+            description: `Список дней с уставными чтениями на месяц: ${getMonthLabel(item?.value - 1)}`,
         },
     }
 }
