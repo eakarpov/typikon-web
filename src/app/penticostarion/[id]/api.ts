@@ -3,7 +3,7 @@ import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
 
-export const getItem = async (id: string): any => {
+export const getItem = async (id: string): Promise<any> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -20,6 +20,7 @@ export const getItem = async (id: string): any => {
                 getAggregationAddField(TextType.KATHISMA_1),
                 getAggregationAddField(TextType.KATHISMA_2),
                 getAggregationAddField(TextType.KATHISMA_3),
+                getAggregationAddField(TextType.BEFORE_50),
                 getAggregationAddField(TextType.IPAKOI),
                 getAggregationAddField(TextType.POLYELEOS),
                 getAggregationAddField(TextType.SONG_3),

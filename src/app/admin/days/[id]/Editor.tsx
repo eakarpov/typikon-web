@@ -30,6 +30,7 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [h3, setH3] = useState(value.h3);
     const [h6, setH6] = useState(value.h6);
     const [h9, setH9] = useState(value.h9);
+    const [before50, setBefore50] = useState(value.before50);
     const [alias, setAlias] = useState(value.alias || "");
 
     const [index, setIndex] = useState(value.paschal ? (value.weekIndex || 0) : (value.monthIndex || 0));
@@ -37,7 +38,6 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [saved, setIsSaved] = useState(false);
 
     const setTextField = (itemName: TextType, index: number, field: "textId"|"cite"|"paschal"|"description", value: string|boolean) => {
-        console.log(itemName, index, field, value);
         switch (itemName) {
             case TextType.VESPERS_PROKIMENON:
                 const newVespersProkimenon = {...vespersProkimenon};
@@ -63,6 +63,11 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
                 const newKathisma3 = {...kathisma3};
                 newKathisma3.items[index][field] = value;
                 setKathisma3(newKathisma3);
+                return;
+            case TextType.BEFORE_50:
+                const newBefore50 = {...before50};
+                newBefore50.items[index][field] = value;
+                setBefore50(newBefore50);
                 return;
             case TextType.IPAKOI:
                 const newIpakoi = {...ipakoi};
@@ -147,6 +152,7 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
             h9,
             panagia,
             alias,
+            before50,
         };
         if (paschal) {
             body.weekIndex = index;
@@ -260,6 +266,13 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
                 value={kathisma3}
                 setter={setKathisma3}
                 valueName={TextType.KATHISMA_3}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
+            <DayPart
+                value={before50}
+                setter={setBefore50}
+                valueName={TextType.BEFORE_50}
                 setTextField={setTextField}
                 paschal={paschal}
             />

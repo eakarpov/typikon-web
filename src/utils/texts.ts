@@ -1,4 +1,5 @@
 import {Nullable} from "mongodb/src/mongo_types";
+import {DayDTO} from "@/types/dto/days";
 
 export enum TextReadiness {
     READY= "ready",
@@ -112,13 +113,15 @@ export enum TextType {
     POLYELEOS= "polyeleos",
     SONG_3= "song3",
     SONG_6= "song6",
-    APOLUTIKA_TROPARIA= "apolutikaTroparia",
     BEFORE_1h= "before1h",
     PANAGIA= "panagia",
     H1= "h1",
     H3= "h3",
     H6= "h6",
     H9= "h9",
+
+    APOLUTIKA_TROPARIA= "apolutikaTroparia",
+    BEFORE_50= "before50"
 }
 
 export const footNotesToArray = (footNotesText: string): Nullable<string>[] =>
@@ -164,8 +167,6 @@ export const valueTitle = (valueName: TextType) => {
           return "По третьей песни";
       case TextType.SONG_6:
           return "По шестой песни";
-      case TextType.APOLUTIKA_TROPARIA:
-          return "По отпустительным тропарям утрени";
       case TextType.BEFORE_1h:
           return "Перед первым часом";
       case TextType.H1:
@@ -178,6 +179,11 @@ export const valueTitle = (valueName: TextType) => {
           return "На девятом часе";
       case TextType.PANAGIA:
           return "На панагии";
+
+      case TextType.APOLUTIKA_TROPARIA:
+          return "По отпустительным тропарям утрени"; // Только Пасха
+      case TextType.BEFORE_50:
+          return "Перед 50 псалмом"; // Только Великий пяток, т.к. нет кафизм
   }
 };
 

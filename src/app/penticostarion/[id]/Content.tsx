@@ -31,6 +31,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         <DayTitle value={item.kathisma1} valueName={TextType.KATHISMA_1} />
                         <DayTitle value={item.kathisma2} valueName={TextType.KATHISMA_2} />
                         <DayTitle value={item.kathisma3} valueName={TextType.KATHISMA_3} />
+                        <DayTitle value={item.before50} valueName={TextType.BEFORE_50} />
                         <DayTitle value={item.ipakoi} valueName={TextType.IPAKOI} />
                         <DayTitle value={item.polyeleos} valueName={TextType.POLYELEOS} />
                         <DayTitle value={item.song3} valueName={TextType.SONG_3} />
@@ -48,6 +49,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayPartReading value={item.kathisma1} valueName={TextType.KATHISMA_1} paschal />
                     <DayPartReading value={item.kathisma2} valueName={TextType.KATHISMA_2} paschal />
                     <DayPartReading value={item.kathisma3} valueName={TextType.KATHISMA_3} paschal />
+                    <DayPartReading value={item.before50} valueName={TextType.BEFORE_50} paschal />
                     <DayPartReading value={item.ipakoi} valueName={TextType.IPAKOI} paschal />
                     <DayPartReading value={item.polyeleos} valueName={TextType.POLYELEOS} paschal />
                     <DayPartReading value={item.song3} valueName={TextType.SONG_3} paschal />

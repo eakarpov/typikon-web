@@ -103,6 +103,16 @@ const StartPart = ({ part, firstText }: { part: TextType, firstText?: any; }) =>
                     <span className="text-red-600">И чтец:</span> Аминь.
                 </span>
             );
+        case TextType.BEFORE_50:
+            return (
+                <span className="font-serif">
+                    <span className="text-red-600">
+                        Чтется 7-е Евангелие святых страстей.
+                        И абие учиненный чтец: </span> {firstText?.text?.startPhrase || `Слово святаго Ефрема о святых страстей благослови, владыко, прочести.`}<br/><span className="text-red-600">
+                        Иерей:</span>{firstText?.text?.initialPriestExclamation || `Молитвами святых отец наших Господи, Иисусе Христе Боже наш, помилуй нас.`}<br/>
+                    <span className="text-red-600">И чтец:</span> Аминь.
+                </span>
+            );
     }
   return null;
 };

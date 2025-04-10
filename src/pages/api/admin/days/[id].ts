@@ -22,7 +22,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
         const data = req.body;
         const id = req.query.id as string;
-        console.log(data, data?.song6?.items);
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
@@ -42,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             kathisma1: mapToDbObject(data.kathisma1),
                             kathisma2: mapToDbObject(data.kathisma2),
                             kathisma3: mapToDbObject(data.kathisma3),
+                            before50: mapToDbObject(data.before50),
                             ipakoi: mapToDbObject(data.ipakoi),
                             polyeleos: mapToDbObject(data.polyeleos),
                             song3: mapToDbObject(data.song3),

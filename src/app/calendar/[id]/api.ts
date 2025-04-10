@@ -22,6 +22,7 @@ export const getItem = async (id: string) => {
                 getAggregationAddField(TextType.KATHISMA_1),
                 getAggregationAddField(TextType.KATHISMA_2),
                 getAggregationAddField(TextType.KATHISMA_3),
+                getAggregationAddField(TextType.BEFORE_50),
                 getAggregationAddField(TextType.IPAKOI),
                 getAggregationAddField(TextType.POLYELEOS),
                 getAggregationAddField(TextType.SONG_3),
