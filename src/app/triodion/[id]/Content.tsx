@@ -6,6 +6,7 @@ import DayPartReading from "@/app/components/DayPartReading";
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     const item = await itemPromise;
+    // Seems like this component is not using
 
     if (!item) {
         return (
@@ -38,6 +39,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         <DayTitle value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
                         <DayTitle value={item.before1h} valueName={TextType.BEFORE_1h} />
                         <DayTitle value={item.panagia} valueName={TextType.PANAGIA} />
+                        <DayTitle value={item.h3} valueName={TextType.H3} />
+                        <DayTitle value={item.h6} valueName={TextType.H6} />
+                        <DayTitle value={item.h9} valueName={TextType.H9} />
                     </ul>
                 </div>
                 <div className="flex flex-col flex-1 space-y-4">
@@ -52,6 +56,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayPartReading value={item.before1h} valueName={TextType.BEFORE_1h} paschal />
                     <DayPartReading value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
                     <DayPartReading value={item.panagia} valueName={TextType.PANAGIA} paschal />
+                    <DayPartReading value={item.h3} valueName={TextType.H3} paschal />
+                    <DayPartReading value={item.h6} valueName={TextType.H6} paschal />
+                    <DayPartReading value={item.h9} valueName={TextType.H9} paschal />
                 </div>
             </div>
         </div>

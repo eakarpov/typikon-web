@@ -312,6 +312,27 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
                 setTextField={setTextField}
                 paschal={paschal}
             />
+            <DayPart
+                value={h3}
+                setter={setH3}
+                valueName={TextType.H3}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
+            <DayPart
+                value={h6}
+                setter={setH6}
+                valueName={TextType.H6}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
+            <DayPart
+                value={h9}
+                setter={setH9}
+                valueName={TextType.H9}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
         </div>
     );
 };

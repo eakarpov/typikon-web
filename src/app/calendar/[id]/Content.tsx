@@ -89,6 +89,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<[DayDTO, string]>
                     <DayPartReading value={item.before1h} valueName={TextType.BEFORE_1h} />
                     <DayPartReading value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
                     <DayPartReading value={item.panagia} valueName={TextType.PANAGIA} />
+                    <DayPartReading value={item.h3} valueName={TextType.H3} />
+                    <DayPartReading value={item.h6} valueName={TextType.H6} />
+                    <DayPartReading value={item.h9} valueName={TextType.H9} />
                 </div>
             </div>
         </div>
