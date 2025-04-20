@@ -55,7 +55,7 @@ const NavMenu = ({ showButton, showAdmin, session }: {
                 </Link>
                 <Link
                     href="/rest-readings"
-                    className={`cursor-pointer min-w-fit text-stone-400 font-serif ${pathname === `/rest-readings` && `text-red-400`}`}
+                    className={`cursor-pointer min-w-fit font-serif ${pathname === `/rest-readings` && `text-red-600`}`}
                 >
                     Вне триодного цикла
                 </Link>
