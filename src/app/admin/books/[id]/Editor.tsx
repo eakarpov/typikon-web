@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {useState} from "react";
+import {TextReadiness} from "@/utils/texts";
 
 const AdminEditor = ({ value }: any) => {
     const [name, setName] = useState(value.name || "");
@@ -91,6 +92,17 @@ const AdminEditor = ({ value }: any) => {
             </p>
             {value.texts.map((text: any) => (
                 <div className="flex flex-row mb-4" key={text.id}>
+                    <div
+                        className={
+                            `w-4 h-4 mr-2 mt-2 
+                            ${text.readiness === TextReadiness.READY && ` bg-green-600 `}
+                            ${text.readiness === TextReadiness.TEXTING && ` bg-stone-400 `}
+                            ${text.readiness === TextReadiness.CORRECTION && ` bg-yellow-600 `}
+                            ${text.readiness === TextReadiness.PRESENCE && ` bg-red-600 `}
+                            ${text.readiness === TextReadiness.ABSENCE && ` bg-red-900 `}
+
+                      `}
+                    />
                     <p className="w-[40%]">
                         {text.name || "Нет названия"}
                     </p>
