@@ -2,6 +2,7 @@ import Link from "next/link";
 import CountMeta from "@/app/meta/CountMeta";
 import DneslovRoundImage from "@/lib/common/DneslovRoundImage";
 import {UserCircleIcon} from "@heroicons/react/24/outline";
+import {TextReadiness} from "@/utils/texts";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -48,7 +49,13 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         </div>
                         <Link
                             href={`/reading/${text._id.toString()}`}
-                            className="cursor-pointer font-serif"
+                            className={`
+                              cursor-pointer font-serif 
+                              ${text.readiness === TextReadiness.CORRECTION && ` text-yellow-600 `}
+                              ${text.readiness === TextReadiness.TEXTING && ` text-stone-400 `}
+                              ${text.readiness === TextReadiness.PRESENCE && ` text-red-600 `}
+                              ${text.readiness === TextReadiness.ABSENCE && ` text-red-900 `}
+                            `}
                         >
                             {text.name || text._id.toString()}
                         </Link>

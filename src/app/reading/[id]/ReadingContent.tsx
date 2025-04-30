@@ -29,6 +29,8 @@ interface ISelection {
     sentenceEnd: number;
 }
 
+let timer: NodeJS.Timeout|null = null;
+
 const ReadingContent = ({ item }: { item: any }) => {
     const [selection, setSelection] = useState<ISelection|null>(null);
     const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -51,6 +53,19 @@ const ReadingContent = ({ item }: { item: any }) => {
     //         window.removeEventListener("click", handleClick);
     //     };
     // }, []);
+
+   const onTouchStart = () => {
+       timer = setTimeout(() => {
+           timer = null;
+           onMouseUpHandler();
+       }, 500);
+   };
+
+    const cancel = () => {
+        if (timer) {
+            clearTimeout(timer);
+        }
+    }
 
     const onMouseUpHandler = useCallback(() => {
         if (!isAuthorized) return;
@@ -157,14 +172,19 @@ const ReadingContent = ({ item }: { item: any }) => {
 
     useEffect(() => {
         Modal.setAppElement('#text-reading');
+        // document.getElementById("text-reading")!.onselectionchange = () => {
+        //   alert("selection change")
+        // };
     }, []);
 
     return (
         <div
             id="text-reading"
             className="space-y-1 mt-2"
-            onMouseUp={onMouseUpHandler}
-            onTouchEnd={onMouseUpHandler}
+            // onMouseUp={onMouseUpHandler}
+            onTouchEnd={cancel}
+            onTouchMove={cancel}
+            onTouchStart={onTouchStart}
             onContextMenu={onContextMenuHandler}
         >
             <div
