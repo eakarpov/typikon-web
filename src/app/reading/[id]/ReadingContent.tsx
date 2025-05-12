@@ -58,39 +58,6 @@ const ReadingContent = ({ item }: { item: any }) => {
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
     const userId = useAppSelector(state => state.auth.userId);
 
-    const onMouseUpHandler = useCallback(() => {
-        if (!isAuthorized) return;
-        const selected = window.getSelection() as Selection;
-        if (selected.toString() && !selected.toString().includes('.')) {
-            const rangeStart = selected.anchorOffset;
-            const rangeEnd = selected.anchorOffset + selected.toString().length;
-            let sentence = "";
-            let sentenceStart = 0;
-            let sentenceEnd = 0;
-            let acc = 0;
-            selected.anchorNode?.textContent?.split('.').reduce((p, c, index) => {
-                acc = acc + (c.length - c.trim().length);
-                if ((rangeStart > p) && (rangeEnd < (p + c.length))) { // single sentence
-                    sentence = c.trim();
-                    sentenceStart = rangeStart - p - acc - 1;
-                    sentenceEnd = rangeEnd - p - acc - 1;
-                }
-                return p + c.length;
-            }, 0);
-            setSelection({
-                rangeStart,
-                rangeEnd,
-                sentence,
-                sentenceStart,
-                sentenceEnd,
-                selection: selected.toString(),
-                text: selected.anchorNode?.textContent!,
-            });
-        } else {
-            // setSelection(null); // сейчас два клика нужно чтоб открыть контекстное меню, поэтому здесь нельзя обнулять
-        }
-    }, [isAuthorized]);
-
     const onContextMenuHandler: MouseEventHandler = useCallback((e) => {
         const large = window.screen.width >= 600;
         if (selection) {
@@ -105,7 +72,9 @@ const ReadingContent = ({ item }: { item: any }) => {
             } else {
                 setIsOpenContextMenuMobile(true);
             }
-        } else if (!large && isAuthorized) {
+        } else if (
+            !large && isAuthorized
+        ) {
             setIsOpenContextMenuMobile(true);
         }
     }, [selection, isAuthorized]);
@@ -169,18 +138,49 @@ const ReadingContent = ({ item }: { item: any }) => {
         setModalIsOpen(false);
     }, [selection, correction]);
 
+    const onSelectionChange = () => {
+        if (!isAuthorized) return;
+        const selected = window.getSelection() as Selection;
+        if (selected.toString() && !selected.toString().includes('.')) {
+            const rangeStart = selected.anchorOffset;
+            const rangeEnd = selected.anchorOffset + selected.toString().length;
+            let sentence = "";
+            let sentenceStart = 0;
+            let sentenceEnd = 0;
+            let acc = 0;
+            selected.anchorNode?.textContent?.split('.').reduce((p, c, index) => {
+                acc = acc + (c.length - c.trim().length);
+                if ((rangeStart > p) && (rangeEnd < (p + c.length))) { // single sentence
+                    sentence = c.trim();
+                    sentenceStart = rangeStart - p - acc - 1;
+                    sentenceEnd = rangeEnd - p - acc - 1;
+                }
+                return p + c.length;
+            }, 0);
+            setSelection({
+                rangeStart,
+                rangeEnd,
+                sentence,
+                sentenceStart,
+                sentenceEnd,
+                selection: selected.toString(),
+                text: selected.anchorNode?.textContent!,
+            });
+        }
+    };
+
     useEffect(() => {
         Modal.setAppElement('#text-reading');
-        // document.getElementById("text-reading")!.onselectionchange = () => {
-        //   alert("selection change")
-        // };
+        document.addEventListener("selectionchange", onSelectionChange);
+        return () => {
+            document.removeEventListener("selectionchange", onSelectionChange);
+        }
     }, []);
 
     return (
         <div
             id="text-reading"
             className="space-y-1 mt-2"
-            onMouseUp={onMouseUpHandler}
             onContextMenu={onContextMenuHandler}
         >
             <div
