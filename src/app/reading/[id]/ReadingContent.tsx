@@ -19,6 +19,18 @@ const customStyles = {
     },
 };
 
+const customStylesSmall = {
+    content: {
+        top: '80%',
+        left: '10%',
+        height: '100px',
+        transform: 'translate(-10%, -80%)',
+    },
+    overlay: {
+        background: 'transparent'
+    },
+};
+
 interface ISelection {
     rangeStart: number;
     rangeEnd: number;
@@ -29,12 +41,12 @@ interface ISelection {
     sentenceEnd: number;
 }
 
-let timer: NodeJS.Timeout|null = null;
-
 const ReadingContent = ({ item }: { item: any }) => {
     const [selection, setSelection] = useState<ISelection|null>(null);
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [correction, setCorrection] = useState("");
+
+    const [isOpenContextMenuMobile, setIsOpenContextMenuMobile] = useState(false);
 
     const [clicked, setClicked] = useState(false);
     const [points, setPoints] = useState({
@@ -45,27 +57,6 @@ const ReadingContent = ({ item }: { item: any }) => {
 
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
     const userId = useAppSelector(state => state.auth.userId);
-
-    // useEffect(() => {
-    //     const handleClick = () => setClicked(false);
-    //     window.addEventListener("click", handleClick);
-    //     return () => {
-    //         window.removeEventListener("click", handleClick);
-    //     };
-    // }, []);
-
-   const onTouchStart = () => {
-       timer = setTimeout(() => {
-           timer = null;
-           onMouseUpHandler();
-       }, 500);
-   };
-
-    const cancel = () => {
-        if (timer) {
-            clearTimeout(timer);
-        }
-    }
 
     const onMouseUpHandler = useCallback(() => {
         if (!isAuthorized) return;
@@ -101,18 +92,26 @@ const ReadingContent = ({ item }: { item: any }) => {
     }, [isAuthorized]);
 
     const onContextMenuHandler: MouseEventHandler = useCallback((e) => {
+        const large = window.screen.width >= 600;
         if (selection) {
             e.preventDefault();
-            setClicked(true);
-            setPoints({
-                x: e.pageX,
-                y: e.pageY,
-            });
-            window.addEventListener("click", () => setClicked(false), { once: true });
+            if (large) {
+                setClicked(true);
+                setPoints({
+                    x: e.pageX,
+                    y: e.pageY,
+                });
+                window.addEventListener("click", () => setClicked(false), { once: true });
+            } else {
+                setIsOpenContextMenuMobile(true);
+            }
+        } else if (!large && isAuthorized) {
+            setIsOpenContextMenuMobile(true);
         }
-    }, [selection]);
+    }, [selection, isAuthorized]);
 
     const onSendError = useCallback(() => {
+        setIsOpenContextMenuMobile(false);
         setModalIsOpen(true);
     }, [selection]);
 
@@ -181,10 +180,7 @@ const ReadingContent = ({ item }: { item: any }) => {
         <div
             id="text-reading"
             className="space-y-1 mt-2"
-            // onMouseUp={onMouseUpHandler}
-            onTouchEnd={cancel}
-            onTouchMove={cancel}
-            onTouchStart={onTouchStart}
+            onMouseUp={onMouseUpHandler}
             onContextMenu={onContextMenuHandler}
         >
             <div
@@ -244,7 +240,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                 onAfterOpen={afterOpenModal}
                 onRequestClose={closeModal}
                 style={customStyles}
-                contentLabel="Example Modal"
+                contentLabel="Отчет об ошибке"
             >
                 <div className="flex flex-col">
                     <button onClick={closeModal}>Закрыть</button>
@@ -278,6 +274,25 @@ const ReadingContent = ({ item }: { item: any }) => {
                     )}
                 </div>
             </Modal>
+            {isOpenContextMenuMobile && (
+                <div
+                    className="context-menu"
+                    style={{
+                        height: '50px',
+                        top: '80%',
+                        position: 'fixed',
+                        left: '10%',
+                        width: 'fit-content',
+                        display: 'flex',
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <ul>
+                        <li onClick={onSendError}>Сообщить об ошибке</li>
+                    </ul>
+                </div>
+            )}
         </div>
     );
 };
