@@ -1,5 +1,5 @@
-export const getTodayDate = () => {
-    const currTime = new Date();
+export const getTodayDate = (date?: string) => {
+    const currTime = date ? new Date(date) : new Date();
     let tomorrow = false;
     if (currTime.getHours() > 15) {
         tomorrow = true;

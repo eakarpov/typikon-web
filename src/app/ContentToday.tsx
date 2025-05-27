@@ -103,7 +103,7 @@ const ContentToday = () => {
   const [item, setItem] = useState<any|null>(null);
 
   useEffect(() => {
-    fetch("/api/v1/days/today").then((res) => res.json()).then((res) => {
+    fetch(`/api/v1/days/today?date=${new Date().toISOString()}`).then((res) => res.json()).then((res) => {
         setItem(res);
     })
   }, []);
