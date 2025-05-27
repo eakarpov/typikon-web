@@ -26,7 +26,14 @@ const ProfilePage = async () => {
 
     return (
         <div>
-            Пользователь {item.id}
+            <p>
+                Пользователь {item.id}
+            </p>
+            {item.isAdmin && (
+                <p>
+                    Вы админ.
+                </p>
+            )}
         </div>
     );
 };
