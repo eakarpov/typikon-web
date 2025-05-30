@@ -17,6 +17,8 @@ NOTES.md
 *.crt
 *.key
 
+script-data/*
+
 /db/
 db.*
 
