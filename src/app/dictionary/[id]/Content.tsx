@@ -19,7 +19,7 @@ const Declension = ({ declension }) => {
     return (
         <div>
             <p>
-                Склонение слова "{declension.normal}"
+                Склонение слова &quot;{declension.normal}&quot;
             </p>
             <div className="grid grid-cols-4 gap-4">
                 <div></div><div><b>Ед. ч.</b></div><div><b>Дв. ч.</b></div><div><b>Мн. ч.</b></div>
