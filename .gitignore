@@ -25,6 +25,9 @@ db.*
 /meta-db/
 meta-db.*
 
+/csl-db/
+csl-db.*
+
 # idea
 /.idea/
 

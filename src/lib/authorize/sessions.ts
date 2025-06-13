@@ -83,7 +83,7 @@ export async function deleteSession() {
         await db
             .collection("sessions")
             .deleteOne({
-                _id: session.sessionId,
+                _id: new ObjectId(session.sessionId as string),
             });
     }
 }

@@ -12,6 +12,25 @@ const Resources = () => {
                         Полезные ресурсы
                     </h1>
                 </div>
+                <div className="flex flex-row">
+                    <h2 className="font-bold">
+                        Внутренние
+                    </h2>
+                </div>
+                <ul>
+                    <li>
+                        <Link href="/dictionary">
+                            <span>
+                                Склонение/спряжение церковнославянских слов
+                            </span>
+                        </Link>
+                    </li>
+                </ul>
+                <div className="flex flex-row">
+                    <h2 className="font-bold">
+                        Внешние
+                    </h2>
+                </div>
                 <ul>
                     <li>
                         <Link href="https://dneslov.org/">

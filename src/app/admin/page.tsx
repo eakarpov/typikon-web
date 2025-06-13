@@ -36,7 +36,12 @@ const Admin = () => {
                     </Link>
                 </div>
             </div>
-            <div>
+            <div className="flex flex-row">
+                <div className="flex flex-col">
+                    <Link href="/admin/corrections">
+                        Исправление ошибок
+                    </Link>
+                </div>
             </div>
         </div>
     );
