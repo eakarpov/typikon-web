@@ -9,7 +9,7 @@ import {
     ArrowRightOnRectangleIcon,
     UserCircleIcon,
 } from "@heroicons/react/20/solid";
-import {usePathname} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import {useCallback, useEffect} from "react";
 import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
@@ -21,6 +21,7 @@ const NavMenu = ({ showButton, showAdmin, session }: {
 }) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
+    const router = useRouter();
 
     const isAuth = useAppSelector(state => state.auth.isAuthorized);
 
@@ -31,7 +32,9 @@ const NavMenu = ({ showButton, showAdmin, session }: {
     }, [session]);
 
     const onLogout = useCallback(() => {
-        fetch("/api/logout");
+        fetch("/api/logout", {
+            method: "POST"
+        });
         dispatch(AuthSlice.actions.Logout());
     }, []);
 
