@@ -74,7 +74,8 @@ export async function deleteSession() {
     const cookieStore = await cookies()
     const cookie = cookieStore.get('session')?.value;
     const session = await decrypt(cookie);
-    cookieStore.delete('session')
+    cookieStore.delete('session');
+    cookieStore.set('session', '', { maxAge: 0 });
 
     const client = await clientPromise;
     const db = client.db("typikon-users");
