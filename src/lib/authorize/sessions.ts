@@ -70,11 +70,7 @@ export const createNewSession = async (id: string, state: any, ip: string, times
     return expiresAt;
 };
 
-export async function deleteSession() {
-    const cookieStore = await cookies()
-    const cookie = cookieStore.get('session')?.value;
-    const session = await decrypt(cookie);
-    cookieStore.delete('session');
+export async function deleteSession(session: any) {
     // cookieStore.set('session', '', { maxAge: 0 });
 
     const client = await clientPromise;
