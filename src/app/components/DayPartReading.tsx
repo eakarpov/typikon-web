@@ -2,7 +2,7 @@
 import {fullTitle, isFootnoteBook, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
 import {BookOpenIcon, InformationCircleIcon} from "@heroicons/react/24/outline";
 import Link from "next/link";
-import {useCallback, useState} from "react";
+import {useCallback, useMemo, useState} from "react";
 import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 
@@ -153,6 +153,22 @@ const EndPart = ({ part }: { part: TextType }) => {
     return null;
 };
 
+const getStatias = (content: string) => {
+  const regSreda = /\[Среда]/;
+  if (regSreda.test(content)) {
+      const parts = content.split(regSreda);
+      return parts;
+  } else {
+      const regStatias = /\[Статия \d+]/;
+      if (regStatias.test(content)) {
+          const parts = content.split(regStatias);
+          return parts;
+      } else {
+          return [content];
+      }
+  }
+};
+
 const DayPartReading = ({
     value,
     valueName,
@@ -176,6 +192,12 @@ const DayPartReading = ({
     const onHideDescription = useCallback(() => {
         setShowDescription(false);
     }, []);
+
+    const getContent = (item: any) => {
+        const statia = item.statia || 0;
+        const parts = getStatias(item.text.content);
+        return parts[statia] || "";
+    };
 
     return value?.items && (
             <section className="space-y-2" id={valueName}>
@@ -238,7 +260,7 @@ const DayPartReading = ({
                             </div>
                         )}
                         <div className="space-y-1 mt-2">
-                            {item.text.content?.split("\n\n").map((paragraph: string, j: number) => (
+                            {getContent(item)?.split("\n\n").map((paragraph: string, j: number) => (
                                 <p
                                     key={paragraph}
                                     className="whitespace-pre-wrap text-justify text-lg font-serif first-letter:text-red-600"

@@ -21,6 +21,7 @@ export const getAggregationAddField = (name: TextType, withText: boolean = true)
                                             cite: "$$i.cite",
                                             paschal: "$$i.paschal",
                                             description: "$$i.description",
+                                            statia: "$$i.statia",
                                             text: {
                                                 $mergeObjects: [
                                                     {
