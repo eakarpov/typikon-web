@@ -9,6 +9,8 @@ interface IAdminEditor {
     id: string;
 }
 
+interface IDayPartItem { textId: string; cite?: string; description?: string; paschal: boolean; statia?: number; }
+
 const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [subnames, setSubnames] = useState<string[]>(value.subnames || []);
     const [name, setName] = useState(value.name || "");
@@ -37,7 +39,8 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
 
     const [saved, setIsSaved] = useState(false);
 
-    const setTextField = (itemName: TextType, index: number, field: "textId"|"cite"|"paschal"|"description", value: string|boolean) => {
+    const setTextField = (itemName: TextType, index: number, field: keyof IDayPartItem, value: string|boolean|number|undefined) => {
+        console.log(field, value);
         switch (itemName) {
             case TextType.VESPERS_PROKIMENON:
                 const newVespersProkimenon = {...vespersProkimenon};

@@ -4,13 +4,18 @@ import {TrashIcon, PlusIcon, InformationCircleIcon, LinkIcon} from "@heroicons/r
 import {memo, useCallback, useEffect, useState} from "react";
 
 export interface IDayTextPart {
-    item: { textId: string; cite?: string; description?: string; paschal: boolean; };
+    item: { textId: string; cite?: string; description?: string; paschal: boolean; statia?: number; };
     index: number;
     paschal: boolean;
     value: any;
     valueName: TextType;
     setter: any;
-    setTextField: (itemName: TextType, index: number, field: "textId"|"cite"|"paschal"|"description", value: string|boolean) => void;
+    setTextField: (
+        itemName: TextType,
+        index: number,
+        field: keyof IDayTextPart["item"],
+        value: string|boolean|number|undefined,
+    ) => void;
 }
 
 export interface IDayPart {
@@ -18,7 +23,12 @@ export interface IDayPart {
     valueName: TextType;
     setter: any;
     paschal: boolean;
-    setTextField: (itemName: TextType, index: number, field: "textId"|"cite"|"paschal"|"description", value: string|boolean) => void;
+    setTextField: (
+        itemName: TextType,
+        index: number,
+        field: keyof IDayTextPart["item"],
+        value: string|boolean|number|undefined,
+    ) => void;
 }
 
 const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, setter }: IDayTextPart) => {
@@ -26,10 +36,11 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
     const [isOpenCite, setIsOpenCite] = useState(false);
     const [val, setVal] = useState<string>(item.textId);
     const [text, setText] = useState<any>(null);
+    const [statia, setStatia] = useState<number|undefined>(item.statia);
 
     const onSaveText = useCallback(() => {
         setTextField(valueName, index, "textId", val);
-    }, [val, valueName, index, setTextField]);
+    }, [val, valueName, index, setTextField, statia]);
 
     const onAdd = useCallback((index: number) => () => {
         const newItems = [...value.items];
@@ -38,6 +49,10 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
             items: newItems,
         });
     }, [setter, value]);
+
+    useEffect(() => {
+        setTextField(valueName, index, "statia", statia);
+    }, [statia]);
 
     useEffect(() => {
         setVal(item.textId);
@@ -72,6 +87,23 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
               >
                   {item.paschal ? "Триодный цикл" : "Календарный цикл"}
               </div>
+              <select
+                  className="border"
+                  onChange={(e) => setStatia(parseInt(e.target.value, 10))}
+              >
+                  <option value={undefined} selected={!statia}>
+                      -
+                  </option>
+                  <option value={1} selected={statia === 1}>
+                      Статия 1
+                  </option>
+                  <option value={2} selected={statia === 2}>
+                      Статия 2
+                  </option>
+                  <option value={3} selected={statia === 3}>
+                      Статия 3
+                  </option>
+              </select>
               <div
                   className="cursor-pointer h-6"
                   onClick={() => setIsOpenDescription(old => !old)}

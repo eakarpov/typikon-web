@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     cookieStore.delete('session');
     await deleteSession(session);
 
+    // лишнее, убрать
     redirect('/login');
 
     return new NextResponse(null, {
