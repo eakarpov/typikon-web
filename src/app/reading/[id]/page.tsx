@@ -20,12 +20,12 @@ export async function generateMetadata(
 
     return {
         title: item?.name,
-        description: item.description || `Уставные чтения на день: ${item?.name}`,
+        description: item.description?.replace('́', '') || `Уставные чтения на день: ${item?.name?.replace('́', '')}`,
         openGraph: {
             type: "website",
             url: `//www.typikon.su/reading/${id}`,
-            title: item?.name,
-            description: item.description || `Уставные чтения на день: ${item?.name}`,
+            title: item?.name?.replace('́', ''),
+            description: item.description?.replace('́', '') || `Уставные чтения на день: ${item?.name?.replace('́', '')}`,
         },
     }
 }

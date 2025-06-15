@@ -32,6 +32,13 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
         <div className="flex flex-col pt-2 flex-1">
             <div className="text-1xl font-bold font-serif">
                 <div className="flex flex-row items-center overflow-scroll">
+                    {process.env.SHOW_ADMIN && (
+                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
+                            <Link href={`/admin/texts/${item.id}`}>
+                                Редактировать
+                            </Link>
+                        </span>
+                    )}
                     {item.ruLink && (
                         <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
                             <a href={item.ruLink} target="_blank" rel="noreferrer">

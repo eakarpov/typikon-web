@@ -48,6 +48,8 @@ export enum TextKind {
     INTERPRETATION= "Interpretation",
     CATECHISTIC= "Catechistic",
     SYNAXARION= "Synaxarion",
+    SERVICE= "Service",
+    PRAYER= "Prayer",
 }
 
 export enum DneslovKind {
@@ -70,6 +72,10 @@ export const printTextKind = (kind: TextKind) => {
           return "Огласительное";
       case TextKind.SYNAXARION:
           return "Синаксарь";
+      case TextKind.SERVICE:
+          return "Последование";
+      case TextKind.PRAYER:
+          return "Молитва";
   }  
 };
 

@@ -103,8 +103,19 @@ const ContentToday = () => {
   const [item, setItem] = useState<any|null>(null);
 
   useEffect(() => {
-    fetch(`/api/v1/days/today?date=${new Date().toISOString()}`).then((res) => res.json()).then((res) => {
-        setItem(res);
+      const now = new Date();
+      const currMonthStr = now.getMonth() + 1 > 9 ? now.getMonth() + 1 :  `0${now.getMonth() + 1}`;
+      const value = `${now.getFullYear()}-${currMonthStr}-${now.getDate() >= 10 ? now.getDate() : `0${now.getDate()}`}`;
+    fetch(`/api/calc`, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            date: value,
+        }),
+    }).then((res) => res.json()).then((res) => {
+        setItem(res.day);
     })
   }, []);
 

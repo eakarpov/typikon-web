@@ -12,9 +12,9 @@ const TextToDateContent = async ({ itemPromise }: { itemPromise: Promise<any> })
 
     return (
         <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
-            <Link href={!!day.monthIndex ? `/calendar/${day.id}`
-                : day.week?.penticostration ? `/penticostarion/${day.id}`
-                    : `/triodion/${day.id}`}>
+            <Link href={!!day.monthIndex ? `/calendar/${day.alias || day.id}`
+                : day.week?.penticostration ? `/penticostarion/${day.alias || day.id}`
+                    : `/triodion/${day.alias || day.id}`}>
                 День&nbsp;
             </Link>
             <CalendarIcon className="w-4 h-4" />
