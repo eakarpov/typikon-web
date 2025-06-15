@@ -65,21 +65,21 @@ const ContentTodayResult = ({ item: textsToday }: IContentMeta) => {
                 <div>
                     <Link href={`/calendar/${getMonth(yesterday.getMonth() + 1)}-${getZeroedNumber(yesterday.getDate())}`}>
                         <span className="flex flex-row items-center">
-                            <ArrowLongLeftIcon className="w-4 h-4" />&nbsp;<b>Вчера</b>
+                            <ArrowLongLeftIcon className="w-4 h-4" />&nbsp;<b>Вчера (только календарное)</b>
                         </span>
                     </Link>
                 </div>
                 <div className="flex flex-1">
                         <span className="flex flex-row flex-1 items-center justify-center">
                              <Link href={`/calendar/today`}>
-                                <b>Сегодня, {getZeroedNumber(today.getDate())}.{getZeroedNumber(month)}</b>
+                                <b>Сегодня (полное), {getZeroedNumber(today.getDate())}.{getZeroedNumber(month)}</b>
                               </Link>
                         </span>
                 </div>
                 <div>
                     <Link href={`/calendar/${getMonth(tomorrow.getMonth() + 1)}-${getZeroedNumber(tomorrow.getDate())}`}>
                         <span className="flex flex-row items-center">
-                            <b>Завтра</b>&nbsp;<ArrowLongRightIcon className="w-4 h-4" />
+                            <b>Завтра (только календарное)</b>&nbsp;<ArrowLongRightIcon className="w-4 h-4" />
                         </span>
                     </Link>
                 </div>
@@ -99,11 +99,11 @@ const ContentTodayResult = ({ item: textsToday }: IContentMeta) => {
     );
 };
 
-const ContentToday = () => {
+const ContentToday = ({ today }: { today: Date; }) => {
   const [item, setItem] = useState<any|null>(null);
 
   useEffect(() => {
-      const now = new Date();
+      const now = new Date(+today +  1000 * 60 * 60 * 24 * 13);
       const currMonthStr = now.getMonth() + 1 > 9 ? now.getMonth() + 1 :  `0${now.getMonth() + 1}`;
       const value = `${now.getFullYear()}-${currMonthStr}-${now.getDate() >= 10 ? now.getDate() : `0${now.getDate()}`}`;
     fetch(`/api/calc`, {
@@ -117,7 +117,7 @@ const ContentToday = () => {
     }).then((res) => res.json()).then((res) => {
         setItem(res.day);
     })
-  }, []);
+  }, [today]);
 
   if (!item) return null;
 

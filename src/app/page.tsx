@@ -12,10 +12,12 @@ import ContentMoreThan from "@/app/ContentMoreThan";
 import ContentToday from "@/app/ContentToday";
 import Image from "next/image";
 import Link from "next/link";
+import {getTodayDate} from "@/utils/dates";
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+    const today = getTodayDate();
     const itemsData = getLastItems();
     const textCount = getCount();
     setMeta();
@@ -164,7 +166,7 @@ export default function Home() {
                       </Suspense>
                   </div>
                   <div className={myFont.variable}>
-                      <ContentToday />
+                      <ContentToday today={today} />
                   </div>
                   <div className={myFont.variable}>
                       <ContentRandom />
