@@ -26,6 +26,7 @@ interface IError {
 
 interface IContentMeta {
     item: any;
+    today: Date;
 }
 
 const RenderItem = ({ data, type }: { data: null|WithTextItems, type: TextType}) => {
@@ -47,9 +48,8 @@ const RenderItem = ({ data, type }: { data: null|WithTextItems, type: TextType})
     )
 }
 
-const ContentTodayResult = ({ item: textsToday }: IContentMeta) => {
+const ContentTodayResult = ({ item: textsToday, today }: IContentMeta) => {
 
-    const today = getTodayDate();
     const month = today.getMonth() + 1;
 
     const yesterday = new Date(+today - 1000 * 60 * 60 * 24);
@@ -123,7 +123,7 @@ const ContentToday = ({ today }: { today: Date; }) => {
 
   return (
       <Suspense fallback={<div>Loading...</div>}>
-          <ContentTodayResult item={item} />
+          <ContentTodayResult item={item} today={today} />
       </Suspense>
   )
 };
