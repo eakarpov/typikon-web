@@ -19,13 +19,13 @@ export async function generateMetadata(
     const [item] = await getItem(id);
 
     return {
-        title: item?.name,
-        description: item.description?.replace('́', '') || `Уставные чтения на день: ${item?.name?.replace('́', '')}`,
+        title: item?.name?.replaceAll('́', ''),
+        description: item.description?.replaceAll('́', '') || `Уставные чтения на день: ${item?.name?.replaceAll('́', '')}`,
         openGraph: {
             type: "website",
             url: `//www.typikon.su/reading/${id}`,
-            title: item?.name?.replace('́', ''),
-            description: item.description?.replace('́', '') || `Уставные чтения на день: ${item?.name?.replace('́', '')}`,
+            title: item?.name?.replaceAll('́', ''),
+            description: item.description?.replaceAll('́', '') || `Уставные чтения на день: ${item?.name?.replaceAll('́', '')}`,
         },
     }
 }
