@@ -154,7 +154,7 @@ const EndPart = ({ part }: { part: TextType }) => {
 };
 
 const getStatias = (content: string) => {
-  const regSreda = /\[Среда]/;
+  const regSreda = /\[Среда:]/;
   if (regSreda.test(content)) {
       const parts = content.split(regSreda);
       return parts;
@@ -196,7 +196,7 @@ const DayPartReading = ({
     const getContent = (item: any) => {
         const statia = item.statia || 0;
         const parts = getStatias(item.text.content);
-        return parts[statia] || "";
+        return parts[statia - 1] || "";
     };
 
     return value?.items && (
