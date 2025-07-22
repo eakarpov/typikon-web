@@ -154,12 +154,12 @@ const EndPart = ({ part }: { part: TextType }) => {
 };
 
 const getStatias = (content: string) => {
-  const regSreda = /\[Среда:]/;
+  const regSreda = /\[Среда:]/; // Для ввода ударения если получится, использовать отдельный кейс
   if (regSreda.test(content)) {
       const parts = content.split(regSreda);
       return parts;
   } else {
-      const regStatias = /\[Статия \d+]/;
+      const regStatias = /\[Статия \d+]/; // Для учета двоеточия или ударения если нужно - отдельный кейс, чтобы не сломать обратную совместимость
       if (regStatias.test(content)) {
           const parts = content.split(regStatias);
           return parts;
@@ -194,9 +194,9 @@ const DayPartReading = ({
     }, []);
 
     const getContent = (item: any) => {
-        const statia = item.statia || 0;
+        const statia = (item.statia - 1) || 0;
         const parts = getStatias(item.text.content);
-        return parts[statia - 1] || "";
+        return parts[statia] || "";
     };
 
     return value?.items && (
