@@ -6,10 +6,10 @@ import DneslovImages from "@/app/reading/DneslovImages";
 import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
-import {redirect} from "next/navigation";
 import TextToDate from "@/app/reading/[id]/TextToDate";
 import TextSave from "@/app/components/save/TextSave";
 import ReadingContent from "@/app/reading/[id]/ReadingContent";
+import Redirector from "@/app/reading/[id]/Redirector";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -24,7 +24,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     }
 
     if (shouldRedirect) {
-        redirect(`/reading/${item.alias}`);
+        return (
+            <Redirector alias={item.alias} />
+        );
     }
 
     return (
@@ -147,4 +149,4 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     );
 };
 
-export default Content;
+export default (Content);

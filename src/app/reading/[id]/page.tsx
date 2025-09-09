@@ -30,7 +30,7 @@ export async function generateMetadata(
     }
 }
 
-const PenticostarionItem = ({ params: { id }}: { params: { id: string }}) => {
+const ReadingItem = ({ params: { id } }: { params: { id: string }}) => {
     setMeta();
     const itemPromise = getItem(id);
 
@@ -44,4 +44,4 @@ const PenticostarionItem = ({ params: { id }}: { params: { id: string }}) => {
     );
 };
 
-export default PenticostarionItem;
+export default ReadingItem;

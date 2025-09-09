@@ -2,6 +2,7 @@ import {getItems} from "@/app/admin/reports/api";
 import {Suspense} from "react";
 import AdminEditorManager from "@/app/admin/reports/EditorManager";
 
+// Reports - возможно дубляж corrections
 const PlacesAdmin = async () => {
     if (!process.env.SHOW_ADMIN) {
         return null;

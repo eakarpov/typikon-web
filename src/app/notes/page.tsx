@@ -1,22 +1,19 @@
-import {getItem} from "@/app/months/[id]/api";
-import {setMeta} from "@/lib/meta";
-import {myFont} from "@/utils/font";
 import {Suspense} from "react";
-import Content from "@/app/months/[id]/Content";
-import {getItems} from "@/app/notes/api";
+import Content from "@/app/notes/Content";
+import { searchData } from "./api";
+import {myFont} from "@/utils/font";
 
-const NotesPage = async () => {
-    const itemPromise = getItems();
-    setMeta();
+const Notes = (req: { searchParams: { query?: string; }}) => {
+    const data = searchData(req.searchParams.query);
 
     return (
         <div className={myFont.variable}>
             <Suspense fallback={<div>Loading...</div>}>
                 {/* @ts-expect-error Async Server Component */}
-                <Content itemPromise={itemPromise} />
+                <Content itemsPromise={data} />
             </Suspense>
         </div>
-    );
+    )
 };
 
-export default NotesPage;
+export default Notes;

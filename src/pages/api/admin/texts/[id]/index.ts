@@ -44,6 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             newUi: data.newUi,
                             info: data.info,
                             adminInfo: data.adminInfo,
+                            quotes: data.quotes,
                         },
                     },
                 );

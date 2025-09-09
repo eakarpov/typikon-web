@@ -7,6 +7,8 @@ import "./highlight.css";
 import Modal from "react-modal";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import {useAppSelector} from "@/lib/hooks";
+import TextNote from "@/app/reading/[id]/TextNote";
+import {useRouterHash} from "@/app/reading/[id]/useRouterHash";
 
 const customStyles = {
     content: {
@@ -57,6 +59,11 @@ const ReadingContent = ({ item }: { item: any }) => {
 
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
     const userId = useAppSelector(state => state.auth.userId);
+
+    const [notes, setNotes] = useState([]);
+    const [isHovered, setIsHovered] = useState<number|null>(null);
+
+    const hash = useRouterHash();;
 
     const onContextMenuHandler: MouseEventHandler = useCallback((e) => {
         const large = window.screen.width >= 600;
@@ -169,6 +176,60 @@ const ReadingContent = ({ item }: { item: any }) => {
         }
     };
 
+    const handlerHovered = useCallback((num: number|null) => () => {
+        setIsHovered(num);
+    }, []);
+
+    useEffect(() => {
+        const paragraph = document.getElementById("text-reading")
+            ?.getElementsByTagName('p');
+        const myP = paragraph![0];
+        if (!myP) return;
+
+        const treeWalker = document.createTreeWalker(myP, NodeFilter.SHOW_TEXT);
+        const allTextNodes: Node[] = [];
+        let currentNode = treeWalker.nextNode();
+        while (currentNode) {
+            allTextNodes.push(currentNode);
+            currentNode = treeWalker.nextNode();
+        }
+        // @ts-ignore
+        if (!CSS.highlights) {
+            console.log("CSS highlight is not supported");
+            return;
+        }
+        // @ts-ignore
+        CSS.highlights.clear();
+
+        const ranges = allTextNodes
+            .map((el) => {
+                const q = item.quotes.find((el: any, i: number) => i === isHovered);
+                if (!q) return;
+                const start = el.nodeValue?.indexOf(q.value);
+                if (!start || start < 0) return;
+                const range = new Range();
+                range.setStart(el, start);
+                range.setEnd(el, start + q.value.toString().length);
+                return range;
+            }).filter(el => el);
+        // @ts-ignore
+        const searchResultsHighlight = new Highlight(...ranges.flat());
+        // @ts-ignore
+        CSS.highlights.set("search-results", searchResultsHighlight);
+    }, [item.quotes, isHovered]);
+
+    useEffect(() => {
+        fetch(`/api/notes?id=${item.id}`).then((res) => res.json()).then((data) => {
+            setNotes(data);
+        });
+        if (window.location.hash) {
+            const scrollToEl = document.getElementById(window.location.hash);
+            if (scrollToEl) {
+                scrollToEl.scrollIntoView(true);
+            }
+        }
+    }, []);
+
     useEffect(() => {
         Modal.setAppElement('#text-reading');
         document.addEventListener("selectionchange", onSelectionChange);
@@ -206,7 +267,11 @@ const ReadingContent = ({ item }: { item: any }) => {
                         reactStringReplace(
                             reactStringReplace(
                                 reactStringReplace(
-                                    paragraph,
+                                    reactStringReplace(
+                                        paragraph,
+                                        /note_(\d+)#/g,
+                                        (results) => <TextNote value={results} hash={hash} />
+                                    ),
                                     /\{st\|(.+)}/g,
                                     (results) => <Link
                                         href={`/saints/${results.split('|')[0]}`}
@@ -235,6 +300,36 @@ const ReadingContent = ({ item }: { item: any }) => {
                     )}
                 </p>
             ))}
+            {notes.length > 0 && (
+                <div>
+                    <h3 className="font-bold">Заметки:</h3>
+                    {notes.map((note: any) => (
+                        <Link
+                            key={note.value}
+                            href={`#note_${note.value}`}
+                            className={`#note_${note.value}` === hash ? 'font-bold' : ''}
+                        >
+                            {note.title}
+                        </Link>
+                    ))}
+                </div>
+            )}
+            {item.quotes?.length > 0 && (
+                <div>
+                    <h3 className="font-bold">Цитаты:</h3>
+                    {item.quotes.map((quote: any, i: number) => (
+                        <div
+                            key={quote.value}
+                            onMouseEnter={handlerHovered(i)}
+                            onMouseLeave={handlerHovered(null)}
+                        >
+                            <cite>
+                                {quote.value}
+                            </cite>
+                        </div>
+                    ))}
+                </div>
+            )}
             <Modal
                 isOpen={modalIsOpen}
                 onAfterOpen={afterOpenModal}
