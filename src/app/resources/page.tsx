@@ -33,23 +33,48 @@ const Resources = () => {
                 </div>
                 <ul>
                     <li>
-                        <Link href="https://dneslov.org/">
+                        <Link href="https://dneslov.org/" target="_blank" referrerPolicy="no-referrer">
                             <span>
-                                Днеслов
+                                <b>Днеслов</b> (Церковный календарь
                             </span>
                         </Link>
                     </li>
                     <li>
-                        <Link href="https://osanna.russportal.ru">
+                        <Link href="https://osanna.russportal.ru" target="_blank" referrerPolicy="no-referrer">
                             <span>
-                                Портал Осанна
+                                <b>Портал Осанна</b> (Киевские минеи)
                             </span>
                         </Link>
                     </li>
                     <li>
-                        <Link href="https://ustavschik.livejournal.com/">
+                        <Link href="https://ustavschik.livejournal.com/" target="_blank" referrerPolicy="no-referrer">
                             <span>
-                                ЖЖ Уставщик
+                                <b>ЖЖ Уставщик</b> (Новые и редкие богослужебные тексты)
+                            </span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="http://znamen.ru/" target="_blank" referrerPolicy="no-referrer">
+                            <span>
+                                <b>znamen.ru</b> (Знаменные ноты)
+                            </span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            href="http://scripta-bulgarica.eu/bg/manuscript"
+                            target="_blank"
+                            referrerPolicy="no-referrer"
+                        >
+                            <span>
+                                <b>Scripta Bulgarica</b> (Отекстованные книги болгарской коллекции
+                            </span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="https://lib-fond.ru/" target="_blank" referrerPolicy="no-referrer">
+                            <span>
+                                <b>lib-fond</b> (Сканы документов русских архивов)
                             </span>
                         </Link>
                     </li>
