@@ -203,7 +203,7 @@ const ReadingContent = ({ item }: { item: any }) => {
 
         const ranges = allTextNodes
             .map((el) => {
-                const q = item.quotes.find((el: any, i: number) => i === isHovered);
+                const q = item.quotes?.find((el: any, i: number) => i === isHovered);
                 if (!q) return;
                 const start = el.nodeValue?.indexOf(q.value);
                 if (!start || start < 0) return;
