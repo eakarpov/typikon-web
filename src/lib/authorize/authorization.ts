@@ -4,7 +4,7 @@ import { decrypt } from '@/lib/authorize/sessions';
 import {NextApiRequest} from "next";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
-import {getUserByVKId} from "@/lib/authorize/users";
+import {getUserByVKId, getUserInfo} from "@/lib/authorize/users";
 
 export const verifySession = async () => {
     const cookie = (await cookies()).get('session')?.value;
@@ -43,7 +43,7 @@ export const verifySessionBack = async (req: NextApiRequest, isAdmin?: boolean) 
             if (!sessionExist) return false;
 
             if (isAdmin) {
-                let user = await getUserByVKId(sessionExist.id as string);
+                let user = await getUserInfo(sessionExist.id as string);
                 if (!user) return false;
                 console.log(user);
 
