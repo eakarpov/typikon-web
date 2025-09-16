@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {checkRightsBack} from "@/lib/admin/back";
 
 const mapToDbObject = (value: any) => {
   if (value?.items) {
@@ -20,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
+        await checkRightsBack(req, res);
         const data = req.body;
         const id = req.query.id as string;
         try {

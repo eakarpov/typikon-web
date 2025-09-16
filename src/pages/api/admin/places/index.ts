@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
+import {checkRightsBack} from "@/lib/admin/back";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -7,6 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
+        await checkRightsBack(req, res);
         try {
             const client = await clientPromise;
             const db = client.db("typikon");

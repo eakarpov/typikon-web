@@ -38,16 +38,12 @@ export const verifySessionBack = async (req: NextApiRequest, isAdmin?: boolean) 
                 .findOne({
                     _id: new ObjectId(session.sessionId as string),
                 });
-            console.log(sessionExist);
 
             if (!sessionExist) return false;
 
             if (isAdmin) {
-                console.log(sessionExist.id);
                 let user = await getUserInfo(sessionExist.id as string);
-                console.log(user);
                 if (!user) return false;
-                console.log(user);
 
                 return user.isAdmin;
             }
@@ -55,7 +51,6 @@ export const verifySessionBack = async (req: NextApiRequest, isAdmin?: boolean) 
         }
         return false;
     } catch (error) {
-        console.log(error);
         return false;
     }
 };

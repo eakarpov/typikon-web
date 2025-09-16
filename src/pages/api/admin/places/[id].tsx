@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {verifySession, verifySessionBack} from "@/lib/authorize/authorization";
 import * as process from "node:process";
+import {checkRightsBack} from "@/lib/admin/back";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -10,13 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        if (process.env.NODE_ENV !== "development") {
-            const hasSession = await verifySessionBack(req, true);
-            console.log(hasSession);
-            if (!hasSession) {
-                res.status(404).end();
-            }
-        }
+        await checkRightsBack(req, res);
         const data = req.body;
         const id = req.query.id as string;
         try {

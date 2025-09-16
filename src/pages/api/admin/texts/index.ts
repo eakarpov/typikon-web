@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {checkRightsBack} from "@/lib/admin/back";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -8,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
+        await checkRightsBack(req, res);
         const {bookId} = req.body;
         if (!bookId) {
             res.status(400).end();
