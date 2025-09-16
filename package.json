@@ -8,8 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "release": "bash release.sh",
+    "release:db": "bash release-db.sh",
+    "release:common": "npm run release && npm run release:db",
     "release-meta": "bash meta-db-release.sh",
     "release-csl": "bash csl-db-release.sh",
+    "sync:db": "bash download-db.sh",
     "script": "node src/scripts"
   },
   "dependencies": {

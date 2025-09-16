@@ -13,11 +13,13 @@ import {usePathname, useRouter} from "next/navigation";
 import {useCallback, useEffect} from "react";
 import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
+import {WithRights} from "@/lib/admin/client";
 
-const NavMenu = ({ showButton, showAdmin, session }: {
+const NavMenu = ({ showButton, showAdmin, session, user }: {
     showAdmin?: string;
     session: any|null;
     showButton?: string;
+    user?: any;
 }) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
@@ -80,14 +82,20 @@ const NavMenu = ({ showButton, showAdmin, session }: {
                 >
                     Библиотека
                 </Link>
-                {showAdmin === Boolean(true).toString() && (
-                    <Link
-                        href="/admin"
-                          className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/admin`) && `text-red-600`}`}
-                    >
-                        Админка
-                    </Link>
-                )}
+                <WithRights
+                    session={session}
+                    user={user}
+                    isDevelopment={process.env.NODE_ENV === "development"}
+                    showButton={showAdmin === Boolean(true).toString()}
+                    Component={() => (
+                        <Link
+                            href="/admin"
+                            className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/admin`) && `text-red-600`}`}
+                        >
+                            Админка
+                        </Link>
+                    )}
+                />
                 <Link
                     href="/search"
                     className={`cursor-pointer min-w-fit flex items-center ${pathname === `/search` && `text-red-600`}`}

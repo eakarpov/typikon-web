@@ -21,6 +21,8 @@ script-data/*
 
 /db/
 db.*
+/db-download/
+db-download.*
 
 /meta-db/
 meta-db.*

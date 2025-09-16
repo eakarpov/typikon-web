@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {hasAdminRights} from "@/lib/admin";
 
 const Admin = () => {
     if (!process.env.SHOW_ADMIN) {
@@ -47,4 +48,4 @@ const Admin = () => {
     );
 };
 
-export default Admin;
+export default hasAdminRights(Admin);

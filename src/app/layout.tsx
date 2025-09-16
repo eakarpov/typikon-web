@@ -9,6 +9,7 @@ import NavMenu from "@/app/NavMenu";
 import StoreProvider from "@/app/StoreProvider";
 import {verifySession} from "@/lib/authorize/authorization";
 import AuthorizeChecker from "@/app/AuthorizeChecker";
+import {getItem} from "@/app/profile/api";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -33,6 +34,10 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
     const session = await verifySession();
+    let item;
+    if (session.isAuth) {
+       item = await getItem(session.userId as string);
+    }
     // в корне приложения проверять авторизованы ли мы где-то, если да, подтягивать инфу в меню и разрешения давать на фичи
     return (
     <html lang="en">
@@ -57,6 +62,7 @@ export default async function RootLayout({
                               showButton={process.env.SHOW_LOGIN_BUTTON}
                               showAdmin={process.env.SHOW_ADMIN}
                               session={session}
+                              user={item}
                           />
                       </div>
                   </nav>
