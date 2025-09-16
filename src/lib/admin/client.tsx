@@ -20,20 +20,13 @@ export const WithRights = ({
         if (!showButton) return null;
 
         if (!session) {
-            return (
-                <div>
-                    Ошибка
-                </div>
-            );
+            return null;
         }
 
         if (!user) {
-            return (
-                <div>
-                    Ошибка
-                </div>
-            )
+            return null;
         }
+        console.log(user);
 
         if (!user.isAdmin) {
             return (

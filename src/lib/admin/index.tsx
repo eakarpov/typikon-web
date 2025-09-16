@@ -22,6 +22,7 @@ export const hasAdminRights = (Component: FunctionComponent) =>
     }
 
     const [item] = await getItem(session!.userId as string);
+    console.log(item, Component);
 
     if (!item) {
         return (
