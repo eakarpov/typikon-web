@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {ObjectId} from "mongodb";
 
 export const getUserInfo = async (id: string) => {
     try {
@@ -8,7 +9,7 @@ export const getUserInfo = async (id: string) => {
         const users = await db
             .collection("users")
             .find({
-                id,
+                _id: new ObjectId(id),
             })
             .toArray();
         return users[0];
