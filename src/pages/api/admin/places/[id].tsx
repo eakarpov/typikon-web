@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {verifySession} from "@/lib/authorize/authorization";
+import * as process from "node:process";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -8,6 +10,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
+        if (process.env.NODE_ENV !== "development") {
+            const session = await verifySession();
+            if (!session.isAuth) {
+                res.status(404).end();
+            }
+        }
         const data = req.body;
         const id = req.query.id as string;
         try {
