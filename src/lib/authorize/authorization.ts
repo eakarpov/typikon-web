@@ -40,8 +40,10 @@ export const verifySessionBack = async (req: NextApiRequest, isAdmin?: boolean) 
                 });
             console.log(sessionExist);
 
+            if (!sessionExist) return false;
+
             if (isAdmin) {
-                let user = await getUserByVKId(session.userId as string);
+                let user = await getUserByVKId(sessionExist.id as string);
                 if (!user) return false;
                 console.log(user);
 
