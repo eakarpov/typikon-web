@@ -9,7 +9,6 @@ export const getItems = async () => {
             .collection("weeks")
             .find({})
             .toArray();
-        console.log(weeks)
         return weeks;
     } catch (e) {
         console.error(e);

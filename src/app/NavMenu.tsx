@@ -26,10 +26,11 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
     const router = useRouter();
 
     const isAuth = useAppSelector(state => state.auth.isAuthorized);
+    const userStore =  useAppSelector(state => state.auth.user);
 
     useEffect(() => {
         if (session) {
-            dispatch(AuthSlice.actions.SetAuthorized(session));
+            dispatch(AuthSlice.actions.SetAuthorized({ ...session, user }));
         }
     }, [session]);
 
@@ -84,7 +85,7 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
                 </Link>
                 <WithRights
                     session={session}
-                    user={user}
+                    user={userStore}
                     isDevelopment={process.env.NODE_ENV === "development"}
                     showButton={showAdmin === Boolean(true).toString()}
                     Component={() => (

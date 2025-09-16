@@ -1,11 +1,9 @@
 import {getItems} from "@/app/admin/places/api";
 import {Suspense} from "react";
 import AdminEditorManager from "@/app/admin/places/EditorManager";
+import {hasAdminRights} from "@/lib/admin";
 
-const PlacesAdmin = async () => {
-    if (!process.env.SHOW_ADMIN) {
-        return null;
-    }
+const PlacesAdmin = () => {
     const itemPromise = getItems();
     return (
         <div>
@@ -20,4 +18,4 @@ const PlacesAdmin = async () => {
     );
 };
 
-export default PlacesAdmin;
+export default hasAdminRights(PlacesAdmin);

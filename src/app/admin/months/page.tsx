@@ -1,11 +1,9 @@
 import Content from "@/app/admin/months/Content";
 import {Suspense} from "react";
 import {getItems} from "@/app/admin/months/api";
+import {hasAdminRights} from "@/lib/admin";
 
 const AdminWeeks = () => {
-    if (!process.env.SHOW_ADMIN) {
-        return null;
-    }
     const itemsData = getItems();
 
     return (
@@ -21,4 +19,4 @@ const AdminWeeks = () => {
     );
 };
 
-export default AdminWeeks;
+export default hasAdminRights(AdminWeeks);

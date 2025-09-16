@@ -9,6 +9,9 @@ export const hasAdminRights = (Component: FunctionComponent) =>
     if (process.env.NODE_ENV === "development") {
         return <Component />;
     }
+    if (!process.env.SHOW_ADMIN) {
+        return null;
+    }
 
     const cookie = (await cookies()).get('session')?.value;
     const session = await decrypt(cookie);

@@ -36,7 +36,7 @@ export default async function RootLayout({
     const session = await verifySession();
     let item;
     if (session.isAuth) {
-       item = await getItem(session.userId as string);
+       [item] = await getItem(session.userId as string);
     }
     // в корне приложения проверять авторизованы ли мы где-то, если да, подтягивать инфу в меню и разрешения давать на фичи
     return (
