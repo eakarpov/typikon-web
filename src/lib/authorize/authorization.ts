@@ -4,7 +4,7 @@ import { decrypt } from '@/lib/authorize/sessions';
 import {NextApiRequest} from "next";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
-import {getUserByVKId, getUserInfo} from "@/lib/authorize/users";
+import {getUserInfo} from "@/lib/authorize/users";
 
 export const verifySession = async () => {
     const cookie = (await cookies()).get('session')?.value;

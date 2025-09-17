@@ -2,7 +2,7 @@
 
 import React from "react";
 
-const TextNote = ({ value, hash }: { value: string; hash?: string }) =>
+const TextNote = ({ value, hash }: { value: string; hash?: string|null }) =>
     `#note_${value}` === hash ? (
         <span
             id={`#note_${value}`}
