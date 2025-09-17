@@ -1,6 +1,7 @@
 import {getItem} from "@/app/admin/texts/[id]/api";
 import {Suspense} from "react";
 import AdminEditorManager from "@/app/admin/texts/[id]/EditorManager";
+import {hasAdminRights} from "@/lib/admin";
 
 const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
     if (!process.env.SHOW_ADMIN) {
@@ -20,4 +21,4 @@ const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
     );
 };
 
-export default AdminTextId;
+export default hasAdminRights(AdminTextId);
