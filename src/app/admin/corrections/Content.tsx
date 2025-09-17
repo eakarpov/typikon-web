@@ -1,5 +1,4 @@
 import Link from "next/link";
-import {useCallback} from "react";
 
 interface ICorrection {
     _id: string;
@@ -13,9 +12,9 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<any[]> }) => {
 
     const [items, error] = await itemsPromise;
 
-    const onDelete = useCallback((item: ICorrection) => () => {
+    const onDelete = (item: ICorrection) => () => {
         console.log(item);
-    }, []);
+    };
 
     if (error) {
         return (

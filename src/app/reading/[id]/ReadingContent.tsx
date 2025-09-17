@@ -222,8 +222,9 @@ const ReadingContent = ({ item }: { item: any }) => {
         fetch(`/api/notes?id=${item.id}`).then((res) => res.json()).then((data) => {
             setNotes(data);
         });
-        if (window.location.hash) {
-            const scrollToEl = document.getElementById(window.location.hash);
+        const hash = typeof window !== "undefined" ? window.location.hash : "";
+        if (hash) {
+            const scrollToEl = document.getElementById(hash);
             if (scrollToEl) {
                 scrollToEl.scrollIntoView(true);
             }
