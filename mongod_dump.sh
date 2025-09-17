@@ -1,10 +1,10 @@
 #!/bin/bash
 
-export $(grep -v '^#' .env.production | xargs)
+export $(grep -v '^#' /home/admin/typikon-web/.env.production | xargs)
 
 # Define variables
-MONGODB_HOST=$MONGODB_URI_HOST
-MONGODB_PORT=$MONGODB_URI_PORT
+MONGODB_HOST="$MONGODB_URI_HOST"
+MONGODB_PORT="$MONGODB_URI_PORT"
 MONGODB_USER=""      # Leave empty if no auth is enabled
 MONGODB_PASSWORD=""  # Leave empty if no auth is enabled
 BACKUP_DIR="/home/admin/db-backup"
