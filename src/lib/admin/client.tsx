@@ -26,7 +26,6 @@ export const WithRights = ({
         if (!user) {
             return null;
         }
-        console.log(user);
 
         if (!user.isAdmin) {
             return (

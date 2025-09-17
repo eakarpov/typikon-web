@@ -1,20 +1,10 @@
 import Link from "next/link";
-
-interface ICorrection {
-    _id: string;
-    userId: string;
-    correction: any;
-    selection: any;
-    textId: string;
-}
+import DeleteItem from "@/app/admin/corrections/DeleteItem";
+import {ICorrection} from "@/types/dto/corrections";
 
 const Content = async ({ itemsPromise }: { itemsPromise: Promise<any[]> }) => {
 
     const [items, error] = await itemsPromise;
-
-    const onDelete = (item: ICorrection) => () => {
-        console.log(item);
-    };
 
     if (error) {
         return (
@@ -45,9 +35,7 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<any[]> }) => {
                             {item.textId}
                         </Link>
                     </div>
-                    <div onClick={onDelete(item)}>
-                        Удалить
-                    </div>
+                    <DeleteItem item={item} />
                 </div>
             ))}
         </div>
