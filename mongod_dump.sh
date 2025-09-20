@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(grep -v '^#' /home/admin/typikon-web/.env.production | xargs)
+export $(grep -v '^#' '/home/admin/typikon-web/.env.production' | xargs)
 
 # Define variables
 MONGODB_HOST="$MONGODB_URI_HOST"
