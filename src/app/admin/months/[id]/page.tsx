@@ -1,11 +1,9 @@
 import {getItem} from "@/app/admin/months/[id]/api";
 import {Suspense} from "react";
 import AdminEditorManager from "@/app/admin/months/[id]/EditorManager";
+import {hasAdminRights} from "@/lib/admin";
 
 const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
-    if (!process.env.SHOW_ADMIN) {
-        return null;
-    }
     const itemPromise = getItem(id);
     return (
         <div>
@@ -20,4 +18,4 @@ const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
     );
 };
 
-export default AdminTextId;
+export default hasAdminRights(AdminTextId);

@@ -61,6 +61,7 @@ export default async function RootLayout({
                           <NavMenu
                               showButton={process.env.SHOW_LOGIN_BUTTON}
                               showAdmin={process.env.SHOW_ADMIN}
+                              isDevelopment={process.env.NODE_ENV === "development"}
                               session={session}
                               user={item}
                           />

@@ -15,10 +15,11 @@ import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
 import {WithRights} from "@/lib/admin/client";
 
-const NavMenu = ({ showButton, showAdmin, session, user }: {
+const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
     showAdmin?: string;
     session: any|null;
     showButton?: string;
+    isDevelopment?: boolean;
     user?: any;
 }) => {
     const pathname = usePathname();
@@ -39,6 +40,7 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
             method: "POST"
         });
         dispatch(AuthSlice.actions.Logout());
+        router.push("/");
     }, []);
 
     return (
@@ -86,7 +88,7 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
                 <WithRights
                     session={session}
                     user={userStore}
-                    isDevelopment={process.env.NODE_ENV === "development"}
+                    isDevelopment={isDevelopment}
                     showButton={showAdmin === Boolean(true).toString()}
                     Component={() => (
                         <Link
@@ -99,23 +101,29 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
                 />
                 <Link
                     href="/search"
+                    title="Поиск"
                     className={`cursor-pointer min-w-fit flex items-center ${pathname === `/search` && `text-red-600`}`}
                 >
-                    <MagnifyingGlassIcon className="w-4 h-4" />
+                    <MagnifyingGlassIcon
+                        className="w-4 h-4"
+                    />
                 </Link>
                 <Link
                     href="/contact"
+                    title="Обратная связь"
                     className={`cursor-pointer min-w-fit flex items-center ${pathname === `/contact` && `text-red-600`}`}
                 >
                     <EnvelopeIcon className="w-4 h-4" />
                 </Link>
                 <Link
                     href="/about"
+                    title="О проекте"
                     className={`cursor-pointer min-w-fit flex items-center ${pathname === `/about` && `text-red-600`}`}
                 >
                     <InformationCircleIcon className="w-4 h-4" />
                 </Link>
                 <Link
+                    title="Настройки"
                     href="/settings"
                     className={`cursor-pointer min-w-fit flex items-center ${pathname === `/settings` && `text-red-600`}`}
                 >
@@ -123,6 +131,7 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
                 </Link>
                 {isAuth && (
                     <Link
+                        title="Профиль"
                         href="/profile"
                         className={`cursor-pointer min-w-fit flex items-center ${pathname === `/profile` && `text-red-600`}`}
                     >
@@ -132,6 +141,7 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
                 {showButton === Boolean(true).toString() && (!isAuth ? (
                     <Link
                         href="/login"
+                        title="Войти"
                         className={`cursor-pointer min-w-fit flex items-center ${pathname === `/login` && `text-red-600`}`}
                     >
                         <ArrowLeftOnRectangleIcon className="w-4 h-4" />
@@ -139,6 +149,7 @@ const NavMenu = ({ showButton, showAdmin, session, user }: {
                 ) : (
                     <Link
                         href={"#"}
+                        title="Выход"
                         onClick={onLogout}
                         className={`cursor-pointer min-w-fit flex items-center ${pathname === `/login` && `text-red-600`}`}
                     >

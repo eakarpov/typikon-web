@@ -3,7 +3,7 @@ import Link from "next/link";
 import {WithRights} from "@/lib/admin/client";
 import {useAppSelector} from "@/lib/hooks";
 
-const EditButton = ({ id }: { id: string }) => {
+const EditButton = ({ id, showButton, isDevelopment }: { id: string; isDevelopment?: boolean; showButton?: boolean; }) => {
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
     const user = useAppSelector(state => state.auth.user);
 
@@ -16,10 +16,10 @@ const EditButton = ({ id }: { id: string }) => {
                     </Link>
                 </span>
             )}
-            showButton={process.env.SHOW_ADMIN === Boolean(true).toString()}
+            showButton={showButton}
             session={isAuthorized}
             user={user}
-            isDevelopment={process.env.NODE_ENV === "development"}
+            isDevelopment={isDevelopment}
         />
     );
 }

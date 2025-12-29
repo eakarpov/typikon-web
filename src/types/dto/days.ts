@@ -19,3 +19,13 @@ export interface DayDTO extends WithParts {
 
     fileId: null; // ?
 }
+
+export enum SIGN {
+    HALLELUJAH= "HALLELUJAH",
+    NO_SIGN= "NO_SIGN",
+    SIX_STICHERA= "SIX_STICHERA",
+    DOXOLOGIC= "DOXOLOGIC",
+    POLYELEOS= "POLYELEOS",
+    VIGIL= "VIGIL",
+    GREAT_VIGIL= "GREAT_VIGIL",
+}

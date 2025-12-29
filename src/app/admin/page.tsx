@@ -21,6 +21,9 @@ const Admin = () => {
                     <Link href="/admin/months">
                         Редактирование месяцев
                     </Link>
+                    <Link href="/admin/signs">
+                        Редактирование знаков Типикона
+                    </Link>
                 </div>
                 <div className="flex flex-col">
                     <p>

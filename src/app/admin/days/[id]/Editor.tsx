@@ -1,8 +1,9 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import DayPart from "@/app/admin/components/DayPart";
 import {TextType} from "@/utils/texts";
+import {ISaintPartItem, SaintPart} from "@/app/admin/components/SaintPart";
 
 interface IAdminEditor {
     value: any;
@@ -17,7 +18,7 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
 
     const [vespersProkimenon, setVespersProkimenon] = useState(value.vespersProkimenon);
     const [vigil, setVigil] = useState(value.vigil);
-    const [paschal, setPaschal] = useState(value.paschal === undefined ? true : value.paschal);
+    const [paschal, setPaschal] = useState<boolean>(value.paschal === undefined ? true : value.paschal);
     const [kathisma1, setKathisma1] = useState(value.kathisma1);
     const [kathisma2, setKathisma2] = useState(value.kathisma2);
     const [kathisma3, setKathisma3] = useState(value.kathisma3);
@@ -35,12 +36,19 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [before50, setBefore50] = useState(value.before50);
     const [alias, setAlias] = useState(value.alias || "");
 
+    const [signs, setSigns] = useState(value.signs || []);
+
     const [index, setIndex] = useState(value.paschal ? (value.weekIndex || 0) : (value.monthIndex || 0));
 
     const [saved, setIsSaved] = useState(false);
 
+    const saveSign = (field: keyof ISaintPartItem, value: string, index: number) => {
+        const newSigns = [...signs];
+        newSigns[index][field] = value;
+        setSigns(newSigns);
+    }
+
     const setTextField = (itemName: TextType, index: number, field: keyof IDayPartItem, value: string|boolean|number|undefined) => {
-        console.log(field, value);
         switch (itemName) {
             case TextType.VESPERS_PROKIMENON:
                 const newVespersProkimenon = {...vespersProkimenon};
@@ -172,11 +180,21 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
             setIsSaved(true);
         });
     };
+
     return (
         <div className="flex flex-col space-y-1">
             <button onClick={onSubmit}>
                 {saved ? "Сохранено!" : "Сохранить"}
             </button>
+            {!paschal && (
+                <div className="flex flex-row space-x-1">
+                    <SaintPart
+                        signs={signs}
+                        setSigns={setSigns}
+                        saveSign={saveSign}
+                    />
+                </div>
+            )}
             <label>
                 Триодный круг <span
                 className="cursor-pointer font-bold"

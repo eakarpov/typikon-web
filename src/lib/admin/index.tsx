@@ -5,9 +5,9 @@ import {FunctionComponent} from "react";
 
 export const hasAdminRights = (Component: FunctionComponent) =>
     // eslint-disable-next-line react/display-name
-    async () => {
+    async (props) => {
     if (process.env.NODE_ENV === "development") {
-        return <Component />;
+        return <Component  {...props} />;
     }
     if (!process.env.SHOW_ADMIN) {
         return null;
@@ -42,5 +42,5 @@ export const hasAdminRights = (Component: FunctionComponent) =>
         );
     }
 
-    return <Component />;
+    return <Component {...props} />;
 }

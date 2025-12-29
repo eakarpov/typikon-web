@@ -3,14 +3,12 @@ import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon, BookOpenIcon, UserCircleIcon} from "@heroicons/react/24/outline";
 import TextImages from "@/app/reading/TextImages";
 import DneslovImages from "@/app/reading/DneslovImages";
-import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
 import TextToDate from "@/app/reading/[id]/TextToDate";
 import TextSave from "@/app/components/save/TextSave";
 import ReadingContent from "@/app/reading/[id]/ReadingContent";
 import Redirector from "@/app/reading/[id]/Redirector";
-import {WithRights} from "@/lib/admin/client";
 import EditButton from "@/app/reading/[id]/EditButton";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
@@ -36,7 +34,11 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
         <div className="flex flex-col pt-2 flex-1">
             <div className="text-1xl font-bold font-serif">
                 <div className="flex flex-row items-center overflow-scroll">
-                    <EditButton id={item.id} />
+                    <EditButton
+                        id={item.id}
+                        showButton={process.env.SHOW_ADMIN === Boolean(true).toString()}
+                        isDevelopment={process.env.NODE_ENV === "development"}
+                    />
                     {item.ruLink && (
                         <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
                             <a href={item.ruLink} target="_blank" rel="noreferrer">
