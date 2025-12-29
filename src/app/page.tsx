@@ -14,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {getTodayDate} from "@/utils/dates";
 import {verifySession} from "@/lib/authorize/authorization";
+import SessionChecker from "@/app/SessionChecker";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,10 +24,10 @@ export default function Home() {
     const textCount = getCount();
     setMeta();
     const session = verifySession();
-    console.log(session);
 
     return (
       <div>
+          <SessionChecker session={session} />
           <div className="flex flex-col pt-2 md:flex-row">
               <div className="md:w-1/4">
                 <div className={myFont.variable}>
