@@ -27,7 +27,9 @@ export default function Home() {
 
     return (
       <div>
-          <SessionChecker session={session} />
+          <Suspense fallback={null}>
+              <SessionChecker session={session} />
+          </Suspense>
           <div className="flex flex-col pt-2 md:flex-row">
               <div className="md:w-1/4">
                 <div className={myFont.variable}>
