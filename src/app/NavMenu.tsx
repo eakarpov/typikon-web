@@ -85,20 +85,22 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
                 >
                     Библиотека
                 </Link>
-                <WithRights
-                    session={session}
-                    user={userStore}
-                    isDevelopment={isDevelopment}
-                    showButton={showAdmin === Boolean(true).toString()}
-                    Component={() => (
-                        <Link
-                            href="/admin"
-                            className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/admin`) && `text-red-600`}`}
-                        >
-                            Админка
-                        </Link>
-                    )}
-                />
+                {isAuth && (
+                    <WithRights
+                        session={session}
+                        user={userStore}
+                        isDevelopment={isDevelopment}
+                        showButton={showAdmin === Boolean(true).toString()}
+                        Component={() => (
+                            <Link
+                                href="/admin"
+                                className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/admin`) && `text-red-600`}`}
+                            >
+                                Админка
+                            </Link>
+                        )}
+                    />
+                )}
                 <Link
                     href="/search"
                     title="Поиск"
