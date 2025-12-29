@@ -16,7 +16,7 @@ export const verifySession = async () => {
 
     // maybe here go to db, get vk refresh token and try to update the access one
 
-    return { isAuth: false };
+    return { isAuth: false, userId: undefined, expiresAt: 0 };
 };
 
 export const verifySessionBack = async (req: NextApiRequest, isAdmin?: boolean) => {

@@ -13,6 +13,7 @@ import ContentToday from "@/app/ContentToday";
 import Image from "next/image";
 import Link from "next/link";
 import {getTodayDate} from "@/utils/dates";
+import {verifySession} from "@/lib/authorize/authorization";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,8 +22,10 @@ export default function Home() {
     const itemsData = getLastItems();
     const textCount = getCount();
     setMeta();
+    const session = verifySession();
+    console.log(session);
 
-  return (
+    return (
       <div>
           <div className="flex flex-col pt-2 md:flex-row">
               <div className="md:w-1/4">
