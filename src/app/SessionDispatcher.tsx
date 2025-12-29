@@ -14,8 +14,6 @@ const SessionChecker = async ({ session, user }: {
             dispatch(AuthSlice.actions.SetAuthorized({ ...session, user }));
         }
     }, [session, user]);
-
-    console.log(session);
     return null;
 };
 

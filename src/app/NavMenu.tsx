@@ -86,7 +86,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
                     Библиотека
                 </Link>
                 <WithRights
-                    session={session || isAuth}
+                    session={isAuth}
                     user={userStore}
                     isDevelopment={isDevelopment}
                     showButton={showAdmin === Boolean(true).toString()}
