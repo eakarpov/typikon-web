@@ -11,6 +11,7 @@ import ReadingContent from "@/app/reading/[id]/ReadingContent";
 import Redirector from "@/app/reading/[id]/Redirector";
 import EditButton from "@/app/reading/[id]/EditButton";
 import TextSaveLocal from "@/app/components/save/TextSaveLocal";
+import {myFont} from "@/utils/font";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -32,9 +33,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     return (
         <div className="flex flex-col md:flex-row">
-        <div className="flex flex-col pt-2 flex-1">
+        <div id="text-reading-container" className={`${myFont.variable} flex flex-col pt-2 flex-1`}>
             <div className="text-1xl font-bold font-serif">
-                <div className="flex flex-row items-center overflow-scroll">
+                <div className="flex flex-row items-center overflow-scroll no-pdf">
                     <EditButton
                         id={item.id}
                         showButton={process.env.SHOW_ADMIN === Boolean(true).toString()}
@@ -76,7 +77,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <TextSave text={item} canDownloadPdf={process.env.CAN_DOWNLOAD_PDF} />
                     <TextSaveLocal name={item.name} />
                 </div>
-                <div className="flex flex-row items-center">
+                <div className="flex flex-row items-center no-pdf">
                     <span className="w-fit text-xs pr-2">
                         <ReadinessButton value={item.readiness} />
                     </span>

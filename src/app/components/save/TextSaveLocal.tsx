@@ -6,7 +6,12 @@ import html2pdf from "html2pdf.js";
 const TextSaveLocal = ({ name }) => {
 
     const onSave = useCallback(() => {
-        const element = document.getElementById('text-reading')!;
+        const element = document.getElementById('text-reading-container')!;
+        const clone = element.cloneNode(true);
+        const items = clone.getElementsByClassName("no-pdf");
+        [...items].forEach((element) => {
+            element.style.display = "none";
+        });
         const opt = {
             margin: [15,15],
             filename: `${name}.pdf`,
@@ -15,7 +20,7 @@ const TextSaveLocal = ({ name }) => {
             jsPDF:        { unit: 'pt', format: 'letter', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
-        html2pdf().set(opt).from(element).save();
+        html2pdf().set(opt).from(clone).save();
     }, []);
 
     return (
