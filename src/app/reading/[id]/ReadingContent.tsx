@@ -243,7 +243,7 @@ const ReadingContent = ({ item }: { item: any }) => {
     return (
         <div
             id="text-reading"
-            className="space-y-1 mt-2"
+            className="space-y-1 mt-2 pb-2"
             onContextMenu={onContextMenuHandler}
         >
             <div

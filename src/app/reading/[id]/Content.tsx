@@ -10,6 +10,7 @@ import TextSave from "@/app/components/save/TextSave";
 import ReadingContent from "@/app/reading/[id]/ReadingContent";
 import Redirector from "@/app/reading/[id]/Redirector";
 import EditButton from "@/app/reading/[id]/EditButton";
+import TextSaveLocal from "@/app/components/save/TextSaveLocal";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -73,6 +74,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         </span>
                     )}
                     <TextSave text={item} canDownloadPdf={process.env.CAN_DOWNLOAD_PDF} />
+                    <TextSaveLocal name={item.name} />
                 </div>
                 <div className="flex flex-row items-center">
                     <span className="w-fit text-xs pr-2">
