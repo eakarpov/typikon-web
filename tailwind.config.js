@@ -9,6 +9,9 @@ module.exports = {
         serif: [
           'var(--font-old-standard)',
         ],
+        'sans-serif': [
+          'var(--font-monomakh)',
+        ],
       }
     },
   },

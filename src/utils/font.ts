@@ -14,3 +14,14 @@ export const myFont = localFont({
     variable: '--font-old-standard',
     display: "swap",
 });
+
+export const csFont = localFont({
+    src: [
+        {
+            path: "../../public/fonts/Monomakh-Regular.ttf",
+            weight: "normal",
+        },
+    ],
+    variable: '--font-monomakh',
+    display: "swap",
+});

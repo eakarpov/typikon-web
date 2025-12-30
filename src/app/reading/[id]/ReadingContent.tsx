@@ -9,6 +9,7 @@ import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import {useAppSelector} from "@/lib/hooks";
 import TextNote from "@/app/reading/[id]/TextNote";
 import {useRouterHash} from "@/app/reading/[id]/useRouterHash";
+import {csFont, myFont} from "@/utils/font";
 
 const customStyles = {
     content: {
@@ -261,7 +262,11 @@ const ReadingContent = ({ item }: { item: any }) => {
             {item.content?.split("\n\n").map((paragraph: string) => (
                 <p
                     key={paragraph}
-                    className="whitespace-pre-wrap text-justify text-lg font-serif first-letter:text-red-600"
+                    className={`${
+                        item.csSource ? csFont.variable : ""
+                    } whitespace-pre-wrap text-justify text-lg ${
+                        item.csSource ? "font-sans-serif" : "font-serif"
+                    } first-letter:text-red-600`}
                 >
 
                     {reactStringReplace(

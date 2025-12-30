@@ -74,6 +74,8 @@ const AdminEditor = ({ value }: any) => {
     const [quotes, setQuotes] = useState<Array<IQuote>>(value.quotes || []);
     const [notes, setNotes] = useState<Array<INote>>(value.notes || []);
     const [selection, setSelection] = useState<ISelection|null>(null);
+    const [csSource, setCsSource] = useState<boolean>(!!value.csSource);
+    console.log(value);
 
     const [saved, setIsSaved] = useState(false);
 
@@ -246,6 +248,7 @@ const AdminEditor = ({ value }: any) => {
                 info,
                 adminInfo,
                 quotes,
+                csSource,
             }),
         });
         const notesProcess = fetch(`/api/admin/texts/${value.id}/notes`, {
@@ -511,6 +514,17 @@ const AdminEditor = ({ value }: any) => {
                 </div>
             </div>
             <div className="flex flex-row">
+                <div className="flex flex-row pr-4">
+                    <label>
+                        Ввод на ЦС
+                    </label>
+                    <input
+                        type="checkbox"
+                        checked={csSource}
+                        value={csSource ? "true" : ""}
+                        onChange={() => setCsSource(!csSource)}
+                    />
+                </div>
                 <div className="flex flex-row pr-4">
                     <label>
                         Новый UI (Markdown)
