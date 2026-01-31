@@ -58,7 +58,7 @@ const Login = ({
             "https://typikon.su/oauth",
             {
                 view: "button",
-                parentId: "buttonContainerId",
+                parentId: "yandexAuth",
                 buttonSize: 'm',
                 buttonView: 'main',
                 buttonTheme: 'light',
@@ -111,6 +111,7 @@ const Login = ({
             <div ref={buttonRef}>
 
             </div>
+            <div id="yandexAuth" />
         </div>
     )
 };
