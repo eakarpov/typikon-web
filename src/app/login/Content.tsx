@@ -6,7 +6,15 @@ import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {useRouter} from "next/navigation";
 import {AuthSlice} from "@/lib/store/auth";
 
-const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }) => {
+const Login = ({
+    vkApp,
+    yandexApp,
+    codeVerifier,
+}: {
+    vkApp: number;
+    codeVerifier: string;
+    yandexApp: string;
+}) => {
     const buttonRef = useRef(null);
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -40,6 +48,28 @@ const Login = ({ vkApp, codeVerifier }: { vkApp: number; codeVerifier: string; }
                 });
         }
     }, [vkApp]);
+
+    useEffect(() => {
+        window.YaAuthSuggest.init(
+            {
+                client_id: yandexApp,
+                response_type: 'token',
+            },
+            "https://typikon.su/oauth",
+            {
+                view: "button",
+                parentId: "buttonContainerId",
+                buttonSize: 'm',
+                buttonView: 'main',
+                buttonTheme: 'light',
+                buttonBorderRadius: "0",
+                buttonIcon: 'ya',
+            }
+        )
+            .then(({handler}) => handler())
+            .then(data => console.log('Сообщение с токеном', data))
+            .catch(error => console.log('Обработка ошибки', error))
+    }, []);
 
     const vkidOnSuccess = (deviceId: string) => async (data: Omit<TokenResult, "id_token">) => {
         await fetch("/api/login", {

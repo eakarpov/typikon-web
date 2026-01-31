@@ -10,6 +10,7 @@ import StoreProvider from "@/app/StoreProvider";
 import {verifySession} from "@/lib/authorize/authorization";
 import AuthorizeChecker from "@/app/AuthorizeChecker";
 import {getItem} from "@/app/profile/api";
+import Script from "next/script";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -41,6 +42,10 @@ export default async function RootLayout({
     // в корне приложения проверять авторизованы ли мы где-то, если да, подтягивать инфу в меню и разрешения давать на фичи
     return (
     <html lang="en">
+      <head>
+          <Script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js"></Script>
+          <Script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-token-with-polyfills-latest.js"></Script>
+      </head>
       <body>
           <CommonMeta />
           <noscript>
