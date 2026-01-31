@@ -54,6 +54,7 @@ const Login = ({
             {
                 client_id: yandexApp,
                 response_type: 'token',
+                redirect_url: "https://typikon.su/login"
             },
             "https://typikon.su/oauth",
             {
