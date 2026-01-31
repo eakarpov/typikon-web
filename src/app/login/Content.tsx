@@ -50,26 +50,28 @@ const Login = ({
     }, [vkApp]);
 
     useEffect(() => {
-        window.YaAuthSuggest.init(
-            {
-                client_id: yandexApp,
-                response_type: 'token',
-                redirect_url: "https://typikon.su/login"
-            },
-            "https://typikon.su/oauth",
-            {
-                view: "button",
-                parentId: "yandexAuth",
-                buttonSize: 'm',
-                buttonView: 'main',
-                buttonTheme: 'light',
-                buttonBorderRadius: "0",
-                buttonIcon: 'ya',
-            }
-        )
-            .then(({handler}) => handler())
-            .then(data => console.log('Сообщение с токеном', data))
-            .catch(error => console.log('Обработка ошибки', error))
+        window.onload = () => {
+            window.YaAuthSuggest.init(
+                {
+                    client_id: yandexApp,
+                    response_type: 'token',
+                    redirect_url: "https://typikon.su/login"
+                },
+                "https://typikon.su/oauth",
+                {
+                    view: "button",
+                    parentId: "yandexAuth",
+                    buttonSize: 'm',
+                    buttonView: 'main',
+                    buttonTheme: 'light',
+                    buttonBorderRadius: "0",
+                    buttonIcon: 'ya',
+                }
+            )
+                .then(({handler}) => handler())
+                .then(data => console.log('Сообщение с токеном', data))
+                .catch(error => console.log('Обработка ошибки', error))
+        };
     }, [yandexApp]);
 
     const vkidOnSuccess = (deviceId: string) => async (data: Omit<TokenResult, "id_token">) => {
