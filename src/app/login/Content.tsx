@@ -70,7 +70,7 @@ const Login = ({
             .then(({handler}) => handler())
             .then(data => console.log('Сообщение с токеном', data))
             .catch(error => console.log('Обработка ошибки', error))
-    }, []);
+    }, [yandexApp]);
 
     const vkidOnSuccess = (deviceId: string) => async (data: Omit<TokenResult, "id_token">) => {
         await fetch("/api/login", {
