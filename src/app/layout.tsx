@@ -48,6 +48,7 @@ export default async function RootLayout({
       </head>
       <body>
           <CommonMeta />
+          <Script src="https://accounts.google.com/gsi/client" async></Script>
           <noscript>
               <div>
                   <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
