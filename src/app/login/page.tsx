@@ -1,5 +1,6 @@
 import React, {memo} from "react";
 import Login from "@/app/login/Content";
+import {GoogleAuth} from "google-auth-library";
 
 const LoginPage = () => {
     return (

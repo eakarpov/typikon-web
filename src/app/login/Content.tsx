@@ -1,14 +1,14 @@
 'use client';
-import React, {memo, useEffect, useRef} from "react";
+import React, {memo, useCallback, useEffect, useRef} from "react";
 import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
 import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {useRouter} from "next/navigation";
 import {AuthSlice} from "@/lib/store/auth";
+import { signIn } from "next-auth/react";
 
 const Login = ({
     vkApp,
-    yandexApp,
     codeVerifier,
 }: {
     vkApp: number;
@@ -49,28 +49,9 @@ const Login = ({
         }
     }, [vkApp]);
 
-    useEffect(() => {
-        window.YaAuthSuggest.init(
-            {
-                client_id: yandexApp,
-                response_type: 'token',
-                redirect_url: "https://typikon.su/login"
-            },
-            "https://typikon.su",
-            {
-                view: "button",
-                parentId: "yandexAuth",
-                buttonSize: 'm',
-                buttonView: 'main',
-                buttonTheme: 'light',
-                buttonBorderRadius: "0",
-                buttonIcon: 'ya',
-            }
-        )
-            .then(({handler}) => handler())
-            .then(data => console.log('Сообщение с токеном', data))
-            .catch(error => console.log('Обработка ошибки', error))
-    }, [yandexApp]);
+   const onGoogleAuth = useCallback(() => {
+       signIn("google");
+   }, []);
 
     const vkidOnSuccess = (deviceId: string) => async (data: Omit<TokenResult, "id_token">) => {
         await fetch("/api/login", {
@@ -113,6 +94,10 @@ const Login = ({
 
             </div>
             <div id="yandexAuth" />
+
+            <div onClick={onGoogleAuth}>
+                Гугл
+            </div>
         </div>
     )
 };
