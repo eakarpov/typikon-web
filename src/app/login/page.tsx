@@ -5,9 +5,9 @@ const LoginPage = () => {
     return (
         <Login
             vkApp={parseInt(process.env.VK_APP!)}
-            yandexApp={process.env.YANDEX_APP!}
             googleApp={process.env.GOOGLE_APP!}
             codeVerifier={process.env.CODE_VERIFIER!}
+            hasVkAuth={process.env.HAS_VK_AUTH! === "true"}
         />
     )
 };

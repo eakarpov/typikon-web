@@ -42,11 +42,6 @@ export default async function RootLayout({
     // в корне приложения проверять авторизованы ли мы где-то, если да, подтягивать инфу в меню и разрешения давать на фичи
     return (
     <html lang="en">
-      <head>
-          <Script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-latest.js"></Script>
-          <Script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-token-latest.js"></Script>
-          <Script src="https://accounts.google.com/gsi/client"></Script>
-      </head>
       <body>
           <CommonMeta />
           <noscript>

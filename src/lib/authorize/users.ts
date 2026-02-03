@@ -32,7 +32,32 @@ export const registerNewUserWithVK = async (id: string) => {
                 phone: "",
                 auth: {
                     vk: {
-                        userId: id,
+                        userId: id.toString(),
+                    },
+                },
+                roles: [],
+            });
+        return users.insertedId.toString();
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+export const registerNewUserWithGoogle = async (id: string) => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon-users");
+
+        const users = await db
+            .collection("users")
+            .insertOne({
+                name: "",
+                surname: "",
+                email: "",
+                phone: "",
+                auth: {
+                    google: {
+                        userId: id.toString(),
                     },
                 },
                 roles: [],
@@ -53,7 +78,27 @@ export const getUserByVKId = async (id: string) => {
             .findOne({
                 auth: {
                     vk: {
-                        userId: id,
+                        userId: id.toString(),
+                    },
+                },
+            });
+        return user;
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export const getUserByGoogleId = async (id: string) => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon-users");
+
+        const user = await db
+            .collection("users")
+            .findOne({
+                auth: {
+                    google: {
+                        userId: id.toString(),
                     },
                 },
             });
