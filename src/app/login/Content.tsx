@@ -71,6 +71,8 @@ const Login = ({
                 isAuth: true,
                 expiresAt: res.expiresAt,
                 userId: res.userId,
+                isVK: res.isVK,
+                isGoogle: res.isGoogle,
             }));
         });
         router.push("/");

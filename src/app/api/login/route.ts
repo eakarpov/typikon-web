@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             userId: user!._id?.toString(),
             expiresAt,
+            isVK: true,
         }, {
             status: 200,
             headers: {
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             userId: user!._id?.toString(),
             expiresAt,
+            isGoogle: true,
         }, {
             status: 200,
             headers: {

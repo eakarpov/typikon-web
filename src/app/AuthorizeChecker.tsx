@@ -13,6 +13,7 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
     codeVerifier: string;
 }) => {
     const expiresAt = useAppSelector(state => state.auth.cookieExpiresAt);
+    const isVK = useAppSelector(state => state.auth.isVK);
     // const auth = useAppSelector(state => state.auth);
     const dispatch = useAppDispatch();
 
@@ -57,7 +58,7 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
     }, []);
 
     useEffect(() => {
-        if (expiresAt) {
+        if (expiresAt && isVK) {
             if (timeout) {
                 clearTimeout(timeout);
                 timeout = null;
@@ -70,7 +71,8 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
                 prolong();
             }
         }
-    }, [expiresAt]);
+        // for Google key there is no prolongation now
+    }, [expiresAt, isVK]);
     return null;
 };
 
