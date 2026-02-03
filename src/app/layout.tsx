@@ -45,10 +45,10 @@ export default async function RootLayout({
       <head>
           <Script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-latest.js"></Script>
           <Script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-token-latest.js"></Script>
+          <Script src="https://accounts.google.com/gsi/client"></Script>
       </head>
       <body>
           <CommonMeta />
-          <Script src="https://accounts.google.com/gsi/client" async></Script>
           <noscript>
               <div>
                   <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
