@@ -76,10 +76,8 @@ export const getUserByVKId = async (id: string) => {
         const user = await db
             .collection("users")
             .findOne({
-                auth: {
-                    vk: {
-                        userId: id.toString(),
-                    },
+                "auth.vk": {
+                    userId: id.toString(),
                 },
             });
         return user;
@@ -96,10 +94,8 @@ export const getUserByGoogleId = async (id: string) => {
         const user = await db
             .collection("users")
             .findOne({
-                auth: {
-                    google: {
-                        userId: id.toString(),
-                    },
+                "auth.google": {
+                    userId: id.toString(),
                 },
             });
         return user;
