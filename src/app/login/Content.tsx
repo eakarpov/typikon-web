@@ -134,6 +134,8 @@ const Login = ({
                 id="g_id_onload"
                 data-auto_prompt="false"
                 data-callback="handleCredentialResponse"
+                data-use_fedcm_for_prompt="true"
+                data-use_fedcm_for_button="true"
                 data-client_id={googleApp}
             ></div>
             <div className="g_id_signin"></div>
