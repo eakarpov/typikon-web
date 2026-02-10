@@ -21,7 +21,7 @@ export const searchData = async (query: string) => {
             .map(e => ({
                 ...e,
                 bookId: e.bookId.toString(),
-                _id: e._id.toString(),
+                id: e._id.toString(),
             }))
             .toArray();
         return [texts, null];
