@@ -4,6 +4,7 @@ import Content from "@/app/calendar/Content";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
+import DateCalendar from "./DateCalendar";
 
 export const metadata: Metadata = {
     title: "Чтения на календарный день",
@@ -27,6 +28,9 @@ const Calendar = () => {
                 </h1>
                 <div className="border-1 rounded-sm">
                     <a href="/calendar/today" className="font-bold font-serif">Чтения на сегодня</a>
+                </div>
+                <div>
+                    <DateCalendar />
                 </div>
             </div>
             <div className={myFont.variable}>
