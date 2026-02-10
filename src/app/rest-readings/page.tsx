@@ -1,5 +1,8 @@
-import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
+import {myFont} from "@/utils/font";
+import {Suspense} from "react";
+import Content from "@/app/rest-readings/Content";
+import {getItems} from "@/app/rest-readings/api";
 
 export const metadata: Metadata = {
     title: "Чтения на год",
@@ -13,31 +16,16 @@ export const metadata: Metadata = {
 };
 
 const RestReadings = () => {
-    setMeta();
+    const itemsData = getItems();
 
     return (
-        <div className="pt-2">
-            <p>
-                Данный раздел на сегодня в разработке.
-            </p>
-            <p>
-                В данном разделе будет информация об уставных чтения с начала Петрова поста до недели о мытаре и фарисее.<br/><br/>
-            </p>
-            <h1 className="font-bold">Уставные чтения вне Триоди</h1>
-            <p>
-                Внетриодный период года подразделяется на три этапа:
-            </p>
-            <ul>
-                <li>
-                    1. От недели всех святых до Крестовоздвижения. В этот период читаются толкования на Евангелие от Матфея (за 2 месяца) и соборные послания апостольские. Если Пасха ранняя, то в промежуток до Крестовоздвижения после чтения толкований на Евангелия от Матфея читается толкование Евангелия от Марка.
-                </li>
-                <li>
-                    2. От Крестовоздвижения до предпразднства Рождества (начало святых богоявлений). В этот период читаются толкования на Евангелие от Луки и послания святого апостола Павла, а также Маргарит и Метафраст Логофетов.
-                </li>
-                <li>
-                    3. От предпразднства Рождества (от святых богоявлений) до Сырной седмицы. В период святых Богоялений читаются 12 бесед на Евангелие от Матфея. И скончаются в Сырную седмицу, где Триодь вытесняет прошлый пасхальный круг чтений.
-                </li>
-            </ul>
+        <div>
+            <div className={myFont.variable}>
+                <Suspense fallback={<div>Loading...</div>}>
+                    {/* @ts-expect-error Async Server Component */}
+                    <Content itemsPromise={itemsData} />
+                </Suspense>
+            </div>
         </div>
     );
 };
