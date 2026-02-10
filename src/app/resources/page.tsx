@@ -25,6 +25,13 @@ const Resources = () => {
                             </span>
                         </Link>
                     </li>
+                    <li>
+                        <Link href="/signs">
+                            <span>
+                                Список памятей по знаку Типикона
+                            </span>
+                        </Link>
+                    </li>
                 </ul>
                 <div className="flex flex-row">
                     <h2 className="font-bold">
