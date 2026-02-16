@@ -36,8 +36,8 @@ const AdminEditor = ({ value }: any) => {
             },
             body: JSON.stringify({
                 name,
-                month,
-                date,
+                month: parseInt(month),
+                date: parseInt(date),
                 sign,
                 source,
             }),
