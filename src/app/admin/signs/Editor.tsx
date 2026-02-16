@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import {useState} from "react";
 
@@ -7,7 +6,7 @@ const AdminEditor = ({ value }: { value: any[] }) => {
     const [saved, setIsSaved] = useState(false);
 
     const onSubmitAdd = () => {
-        fetch('/api/admin/places', {
+        fetch('/api/admin/signs', {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
@@ -18,7 +17,7 @@ const AdminEditor = ({ value }: { value: any[] }) => {
     return (
         <div className="flex flex-col">
             <p onClick={onSubmitAdd} className="cursor-pointer">
-                Добавить место
+                Добавить святого
             </p>
             {value?.map((text: any) => (
                 <div className="flex flex-row mb-4" key={text._id}>
@@ -30,7 +29,7 @@ const AdminEditor = ({ value }: { value: any[] }) => {
                     </p>
                     <div className="flex flex-col space-y-1 w-60">
                         <Link
-                            href={`/admin/places/${text._id}`}
+                            href={`/admin/signs/${text._id}`}
                             className="cursor-pointer"
                         >
                             {text._id}

@@ -1,10 +1,10 @@
-import {getItems} from "@/app/admin/signs/api";
+import {getItem} from "@/app/admin/signs/[id]/api";
 import {Suspense} from "react";
-import AdminEditorManager from "@/app/admin/signs/EditorManager";
+import AdminEditorManager from "@/app/admin/signs/[id]/EditorManager";
 import {hasAdminRights} from "@/lib/admin";
 
-const SignsAdmin = () => {
-    const itemPromise = getItems();
+const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
+    const itemPromise = getItem(id);
     return (
         <div>
             <p>
@@ -18,4 +18,4 @@ const SignsAdmin = () => {
     );
 };
 
-export default hasAdminRights(SignsAdmin);
+export default hasAdminRights(AdminTextId);

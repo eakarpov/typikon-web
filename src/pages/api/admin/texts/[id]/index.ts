@@ -48,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             adminInfo: data.adminInfo,
                             quotes: data.quotes,
                             csSource: data.csSource, // Только маркер, паралелльно не сохраняем и то, и то
+                            saintId: data.saintId,
                         },
                     },
                 );

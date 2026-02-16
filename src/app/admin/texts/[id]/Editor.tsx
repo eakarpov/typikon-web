@@ -75,7 +75,7 @@ const AdminEditor = ({ value }: any) => {
     const [notes, setNotes] = useState<Array<INote>>(value.notes || []);
     const [selection, setSelection] = useState<ISelection|null>(null);
     const [csSource, setCsSource] = useState<boolean>(!!value.csSource);
-    console.log(value);
+    const [saintId, setSaintId] = useState(value.saintId || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -249,6 +249,7 @@ const AdminEditor = ({ value }: any) => {
                 adminInfo,
                 quotes,
                 csSource,
+                saintId,
             }),
         });
         const notesProcess = fetch(`/api/admin/texts/${value.id}/notes`, {
@@ -361,6 +362,16 @@ const AdminEditor = ({ value }: any) => {
                             </option>
                         ))}
                     </select>
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Идентификатор святого
+                    </label>
+                    <input
+                        className="border-2"
+                        value={saintId}
+                        onChange={e => setSaintId(e.target.value)}
+                    />
                 </div>
                 <div className="flex flex-col pr-4">
                     <label>
