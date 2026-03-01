@@ -94,15 +94,15 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
                   <option value={undefined} selected={!statia}>
                       -
                   </option>
-                  <option value={1} selected={statia === 1}>
-                      Статия 1
-                  </option>
-                  <option value={2} selected={statia === 2}>
-                      Статия 2
-                  </option>
-                  <option value={3} selected={statia === 3}>
-                      Статия 3
-                  </option>
+                  {new Array(15).fill(0).map((_, i) => (
+                      <option
+                          key={i}
+                          value={i + 1}
+                          selected={statia === i + 1}
+                      >
+                          Статия {i + 1}
+                      </option>
+                  ))}
               </select>
               <div
                   className="cursor-pointer h-6"

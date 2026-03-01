@@ -263,7 +263,11 @@ const DayPartReading = ({
                             {getContent(item)?.split("\n\n").map((paragraph: string, j: number) => (
                                 <p
                                     key={paragraph}
-                                    className="whitespace-pre-wrap text-justify text-lg font-serif first-letter:text-red-600"
+                                    className={
+                                        `whitespace-pre-wrap text-justify text-lg ${
+                                            item.text.csSource ? "font-sans-serif" : "font-serif"
+                                        } first-letter:text-red-600`
+                                    }
                                 >
                                     {reactStringReplace(
                                         reactStringReplace(
