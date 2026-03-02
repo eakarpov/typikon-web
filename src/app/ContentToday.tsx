@@ -8,6 +8,7 @@ import {getMonth} from "@/lib/common/date";
 
 export interface IPartItemWithText {
     cite: string;
+    statia: number|null;
     text: {
         _id: string;
         name: string;
@@ -40,7 +41,7 @@ const RenderItem = ({ data, type }: { data: null|WithTextItems, type: TextType})
             {data.items?.map((item) => (
                 <span key={item.text._id}>
                     <Link href={`/reading/${item.text?._id}`}>
-                        {item.text?.name}
+                        {item.text?.name} {item.statia ? `[Статия ${item.statia}]` : ""}
                     </Link>
                 </span>
             ))}
@@ -94,6 +95,9 @@ const ContentTodayResult = ({ item: textsToday, today }: IContentMeta) => {
                 <RenderItem data={textsToday.song3} type={TextType.SONG_3} />
                 <RenderItem data={textsToday.song6} type={TextType.SONG_6} />
                 <RenderItem data={textsToday.before1h} type={TextType.BEFORE_1h} />
+                <RenderItem data={textsToday.h3} type={TextType.H3} />
+                <RenderItem data={textsToday.h6} type={TextType.H6} />
+                <RenderItem data={textsToday.h9} type={TextType.H9} />
             </div>
         </div>
     );
