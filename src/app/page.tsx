@@ -3,7 +3,7 @@ import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/so
 import {getCount, getLastItems} from "@/app/api";
 import Content from "@/app/Content";
 import {Suspense} from "react";
-import {myFont} from "@/utils/font";
+import {csFont, myFont} from "@/utils/font";
 import ContentMeta from "@/app/ContentMeta";
 import {setMeta} from "@/lib/meta";
 import ContentRandom from "@/app/ContentRandom";
@@ -174,7 +174,7 @@ export default function Home() {
                   <div className={myFont.variable}>
                       <ContentToday today={today} />
                   </div>
-                  <div className={myFont.variable}>
+                  <div className={`${myFont.variable} ${csFont.variable}`}>
                       <ContentRandom />
                   </div>
                   <div className={myFont.variable}>

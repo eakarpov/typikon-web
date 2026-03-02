@@ -4,7 +4,7 @@ import {useMemo, useState} from "react";
 import {orthodoxEaster} from "date-easter";
 import DayTitle from "@/app/components/DayTitle";
 import {TextType} from "@/utils/texts";
-import {myFont} from "@/utils/font";
+import {csFont, myFont} from "@/utils/font";
 import DayPartReading from "@/app/components/DayPartReading";
 
 const now = new Date();
@@ -77,7 +77,7 @@ const Editor = () => {
                 </div>
             )}
             {data && (
-                <div className={myFont.variable}>
+                <div className={`${myFont.variable} ${csFont.variable}`}>
                     <span>Ответ по триодному циклу получен. Cоединение с календарным днем пока в разработке.</span>
                     <p>
                         День - {data.day?.name}. Число (по старому стилю) - {new Date(data.date).toLocaleDateString()}
@@ -96,6 +96,9 @@ const Editor = () => {
                                 <DayTitle value={data.day?.song6} valueName={TextType.SONG_6} />
                                 <DayTitle value={data.day?.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
                                 <DayTitle value={data.day?.before1h} valueName={TextType.BEFORE_1h} />
+                                <DayTitle value={data.day?.h3} valueName={TextType.H3} />
+                                <DayTitle value={data.day?.h6} valueName={TextType.H6} />
+                                <DayTitle value={data.day?.h9} valueName={TextType.H9} />
                                 <DayTitle value={data.day?.panagia} valueName={TextType.PANAGIA} />
                             </ul>
                         </div>
@@ -110,6 +113,10 @@ const Editor = () => {
                             <DayPartReading value={data.day?.song6} valueName={TextType.SONG_6} paschal />
                             <DayPartReading value={data.day?.before1h} valueName={TextType.BEFORE_1h} paschal />
                             <DayPartReading value={data.day?.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
+                            <DayPartReading value={data.day?.before1h} valueName={TextType.BEFORE_1h} paschal />
+                            <DayPartReading value={data.day?.h3} valueName={TextType.H3} paschal />
+                            <DayPartReading value={data.day?.h6} valueName={TextType.H6} paschal />
+                            <DayPartReading value={data.day?.h9} valueName={TextType.H9} paschal />
                             <DayPartReading value={data.day?.panagia} valueName={TextType.PANAGIA} paschal />
                         </div>
                     </div>

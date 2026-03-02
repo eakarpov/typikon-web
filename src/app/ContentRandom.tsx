@@ -56,7 +56,10 @@ const ContentRandom = () => {
                     {item.content.substring(0, 1000)?.split("\n\n").map((paragraph: string) => (
                         <p
                             key={paragraph}
-                            className="whitespace-pre-wrap text-justify text-lg font-serif first-letter:text-red-600"
+                            className={`whitespace-pre-wrap text-justify text-lg ${
+                                item.csSource ? 'font-sans-serif' : 'font-serif'
+                            } first-letter:text-red-600
+                            `}
                         >
 
                             {reactStringReplace(
