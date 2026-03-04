@@ -38,7 +38,9 @@ const Content = ({ item }: { item : any }) => {
                 id: item.id,
                 data,
             }),
-        });
+        }).then(() => {
+            setIsSaved(true);
+        })
     };
 
     return (

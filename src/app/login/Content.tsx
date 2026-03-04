@@ -22,6 +22,7 @@ const Login = ({
     const router = useRouter();
     const dispatch = useAppDispatch();
     const id = new Date().getTime();
+    const id2 = new Date().getTime() + 5;
 
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
 
@@ -163,6 +164,13 @@ const Login = ({
         };
     }, []);
 
+    useEffect(() => () => {
+      const el = document.getElementById("telegram-login-typikonBot");
+      if (el) {
+          el.remove();
+      }
+    }, []);
+
     return (
         <div>
             <label>
@@ -174,8 +182,8 @@ const Login = ({
                 src={`https://accounts.google.com/gsi/client?v=${id}`}
             ></Script>
             <Script
+                id={id2.toString()}
                 async
-                id={id.toString()}
                 src="https://telegram.org/js/telegram-widget.js?23"
                 data-telegram-login="typikonBot"
                 data-size="large"
