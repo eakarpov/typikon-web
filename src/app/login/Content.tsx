@@ -99,14 +99,7 @@ const Login = ({
 
     useEffect(() => {
         window.handleCredentialResponse = async (response: any) => {
-            console.log(response);
             const responsePayload = decodeJWT(response.credential);
-            console.log("ID: " + responsePayload.sub);
-            console.log('Full Name: ' + responsePayload.name);
-            console.log('Given Name: ' + responsePayload.given_name);
-            console.log('Family Name: ' + responsePayload.family_name);
-            console.log("Image URL: " + responsePayload.picture);
-            console.log("Email: " + responsePayload.email);
             await fetch("/api/login", {
                 method: "POST",
                 body: JSON.stringify({
@@ -139,6 +132,34 @@ const Login = ({
         }
     }, [isAuthorized]);
 
+    useEffect(() => {
+        window.onTelegramAuth = async (userData: any) => {
+            console.log(userData);
+            await fetch("/api/login", {
+                method: "POST",
+                body: JSON.stringify({
+                    type: "Telegram",
+                    data: {
+                        user_id: userData.id,
+                        expiresAt: Date.now() + 3600 * 60 * 60,
+                    },
+                    timestamp: Date.now(),
+                    deviceId: Navigator.toString(),
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }).then(res => res.json()).then((res) => {
+                dispatch(AuthSlice.actions.SetAuthorized({
+                    isAuth: true,
+                    expiresAt: res.expiresAt,
+                    userId: res.userId,
+                }));
+            });
+            router.push("/");
+        };
+    }, []);
+
     return (
         <div>
             <label>
@@ -149,6 +170,14 @@ const Login = ({
                 id={id.toString()}
                 src={`https://accounts.google.com/gsi/client?v=${id}`}
             ></Script>
+            <Script
+                async
+                src="https://telegram.org/js/telegram-widget.js?23"
+                data-telegram-login="typikonBot"
+                data-size="large"
+                data-onauth="onTelegramAuth(user)"
+                data-request-access="write"
+            />
             <div
                 id="g_id_onload"
                 data-auto_prompt="false"

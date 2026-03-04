@@ -1,7 +1,7 @@
 import {
-    getUserByGoogleId,
+    getUserByGoogleId, getUserByTelegramId,
     getUserByVKId,
-    registerNewUserWithGoogle,
+    registerNewUserWithGoogle, registerNewUserWithTelegram,
     registerNewUserWithVK
 } from "@/lib/authorize/users";
 import {createNewSession} from "@/lib/authorize/sessions";
@@ -20,7 +20,13 @@ export async function POST(request: NextRequest) {
             user =  await getUserByVKId(body.data.user_id);
         }
         // 3. Store the session in cookies for optimistic auth checks
-        const expiresAt = await createNewSession(user!._id?.toString(), body.data, "" as string, body.timestamp, body.deviceId);
+        const expiresAt = await createNewSession(
+            user!._id?.toString(),
+            body.data, "" as string,
+            body.timestamp,
+            body.deviceId,
+            "VK",
+        );
         return NextResponse.json({
             userId: user!._id?.toString(),
             expiresAt,
@@ -36,10 +42,42 @@ export async function POST(request: NextRequest) {
         if (!user) {
             // register
             await registerNewUserWithGoogle(body.data.user_id);
-            user =  await getUserByGoogleId(body.data.user_id);
+            user = await getUserByGoogleId(body.data.user_id);
         }
         // 3. Store the session in cookies for optimistic auth checks
-        const expiresAt = await createNewSession(user!._id?.toString(), body.data, "" as string, body.timestamp, body.deviceId);
+        const expiresAt = await createNewSession(
+            user!._id?.toString(),
+            body.data,
+            "" as string,
+            body.timestamp,
+            body.deviceId,
+            "Google",
+        );
+        return NextResponse.json({
+            userId: user!._id?.toString(),
+            expiresAt,
+            isGoogle: true,
+        }, {
+            status: 200,
+            headers: {
+                'Access-Control-Expose-Headers': 'Set-Cookie'
+            }
+        });
+    }  else if (body.type === "Telegram") {
+        let user = await getUserByTelegramId(body.data.user_id);
+        if (!user) {
+            // register
+            await registerNewUserWithTelegram(body.data.user_id);
+            user = await getUserByTelegramId(body.data.user_id);
+        }
+        // 3. Store the session in cookies for optimistic auth checks
+        const expiresAt = await createNewSession(
+            user!._id?.toString(),
+            body.data, "" as string,
+            body.timestamp,
+            body.deviceId,
+            "Telegram",
+        );
         return NextResponse.json({
             userId: user!._id?.toString(),
             expiresAt,

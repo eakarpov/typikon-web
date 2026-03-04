@@ -28,25 +28,68 @@ export async function decrypt(session: string | undefined = '') {
     }
 }
 
-export const createNewSession = async (id: string, state: any, ip: string, timestamp: number, deviceId: string) => {
+export const createNewSession = async (
+    id: string,
+    state: any,
+    ip: string,
+    timestamp: number,
+    deviceId: string,
+    type: string,
+) => {
     const expiresAt = new Date(timestamp + state.expires_in * 1000);
 
     const client = await clientPromise;
     const db = client.db("typikon-users");
 
-    const newSession = await db
-        .collection("sessions")
-        .insertOne({
-            id,
-            ip,
-            auth: {
-                vk: {
-                    state,
-                    deviceId,
+    let newSession;
+
+    if (type === "VK") {
+        newSession = await db
+            .collection("sessions")
+            .insertOne({
+                id,
+                ip,
+                auth: {
+                    vk: {
+                        state,
+                        deviceId,
+                    },
                 },
-            },
-            expiresAt,
-        });
+                expiresAt,
+            });
+    }
+    if (type === "Google") {
+        newSession = await db
+            .collection("sessions")
+            .insertOne({
+                id,
+                ip,
+                auth: {
+                    google: {
+                        state,
+                        deviceId,
+                    },
+                },
+                expiresAt,
+            });
+    }
+    if (type === "Telegram") {
+        newSession = await db
+            .collection("sessions")
+            .insertOne({
+                id,
+                ip,
+                auth: {
+                    telegram: {
+                        state,
+                        deviceId,
+                    },
+                },
+                expiresAt,
+            });
+    }
+
+    if (!newSession) return 0;
 
     const sessionId = newSession.insertedId;
 

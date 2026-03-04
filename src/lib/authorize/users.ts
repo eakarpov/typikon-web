@@ -68,6 +68,31 @@ export const registerNewUserWithGoogle = async (id: string) => {
     }
 };
 
+export const registerNewUserWithTelegram = async (id: string) => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon-users");
+
+        const users = await db
+            .collection("users")
+            .insertOne({
+                name: "",
+                surname: "",
+                email: "",
+                phone: "",
+                auth: {
+                    telegram: {
+                        userId: id.toString(),
+                    },
+                },
+                roles: [],
+            });
+        return users.insertedId.toString();
+    } catch (e) {
+        console.error(e);
+    }
+};
+
 export const getUserByVKId = async (id: string) => {
     try {
         const client = await clientPromise;
@@ -95,6 +120,24 @@ export const getUserByGoogleId = async (id: string) => {
             .collection("users")
             .findOne({
                 "auth.google": {
+                    userId: id.toString(),
+                },
+            });
+        return user;
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export const getUserByTelegramId = async (id: string) => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon-users");
+
+        const user = await db
+            .collection("users")
+            .findOne({
+                "auth.telegram": {
                     userId: id.toString(),
                 },
             });
