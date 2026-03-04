@@ -8,7 +8,8 @@ export const getItems = async () => {
         const books = await db
             .collection("books")
             .aggregate([
-                { $sort: { order: 1 }}
+                // { $sort: { order: 1 }}
+                { $sort: { name: 1 } },
             ])
             .toArray();
         return [books, null];
