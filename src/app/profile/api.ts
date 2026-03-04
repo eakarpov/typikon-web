@@ -25,3 +25,26 @@ export const getItem = async (id: string): Promise<[any, any]> => {
         return [null, e];
     }
 };
+
+export const setItem = async (id: string, data: any): Promise<[any, any]> => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon-users");
+
+        await db
+            .collection("users")
+            .updateOne(
+                { "_id" : new ObjectId(id) },
+                {
+                    $set: {
+                        ...data,
+                    },
+                }
+            );
+
+        return [true, null];
+    } catch (e) {
+        console.error(e);
+        return [null, e];
+    }
+};
