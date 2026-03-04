@@ -134,14 +134,17 @@ const Login = ({
 
     useEffect(() => {
         window.onTelegramAuth = async (userData: any) => {
-            console.log(userData);
             await fetch("/api/login", {
                 method: "POST",
                 body: JSON.stringify({
                     type: "Telegram",
                     data: {
+                        data_check_string: Object.entries(userData)
+                            .map(([k, v]) => `${k}=${v}`)
+                            .join('\n'),
+                        hash: userData.hash,
                         user_id: userData.id,
-                        expiresAt: Date.now() + 3600 * 60 * 60,
+                        expiresAt: userData.auth_date + 3600 * 60 * 60,
                     },
                     timestamp: Date.now(),
                     deviceId: Navigator.toString(),
@@ -172,6 +175,7 @@ const Login = ({
             ></Script>
             <Script
                 async
+                id={id.toString()}
                 src="https://telegram.org/js/telegram-widget.js?23"
                 data-telegram-login="typikonBot"
                 data-size="large"

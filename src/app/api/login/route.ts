@@ -5,7 +5,12 @@ import {
     registerNewUserWithVK
 } from "@/lib/authorize/users";
 import {createNewSession} from "@/lib/authorize/sessions";
+import * as sha256 from "fast-sha256";
 import {NextRequest, NextResponse} from "next/server";
+
+function toHex(buffer: Uint8Array): string {
+    return Array.prototype.map.call(buffer, x => ('00' + x.toString(16)).slice(-2)).join('');
+}
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
@@ -22,7 +27,8 @@ export async function POST(request: NextRequest) {
         // 3. Store the session in cookies for optimistic auth checks
         const expiresAt = await createNewSession(
             user!._id?.toString(),
-            body.data, "" as string,
+            body.data,
+            "" as string,
             body.timestamp,
             body.deviceId,
             "VK",
@@ -64,6 +70,15 @@ export async function POST(request: NextRequest) {
             }
         });
     }  else if (body.type === "Telegram") {
+        const encoder = new TextEncoder();
+        const secret_key = sha256.default(encoder.encode(process.env.TELEGRAM_BOT_TOKEN!))
+        if (toHex(sha256.hmac(body.data_check_string, secret_key)) !== body.hash) {
+            // Неверная проверка
+            return new NextResponse(null, {
+                status: 400,
+            });
+        }
+
         let user = await getUserByTelegramId(body.data.user_id);
         if (!user) {
             // register
