@@ -135,21 +135,24 @@ const Login = ({
 
     useEffect(() => {
         window.onTelegramAuth = async (userData: any) => {
+            console.log(userData);
+            const toSave = {
+                type: "Telegram",
+                data: {
+                    data_check_string: Object.entries(userData)
+                        .map(([k, v]) => `${k}=${v}`)
+                        .join('\n'),
+                    hash: userData.hash,
+                    user_id: userData.id,
+                    expiresAt: userData.auth_date + 3600 * 60 * 60,
+                },
+                timestamp: Date.now(),
+                deviceId: Navigator.toString(),
+            };
+            console.log(toSave);
             await fetch("/api/login", {
                 method: "POST",
-                body: JSON.stringify({
-                    type: "Telegram",
-                    data: {
-                        data_check_string: Object.entries(userData)
-                            .map(([k, v]) => `${k}=${v}`)
-                            .join('\n'),
-                        hash: userData.hash,
-                        user_id: userData.id,
-                        expiresAt: userData.auth_date + 3600 * 60 * 60,
-                    },
-                    timestamp: Date.now(),
-                    deviceId: Navigator.toString(),
-                }),
+                body: JSON.stringify(toSave),
                 headers: {
                     'Content-Type': 'application/json',
                 },
