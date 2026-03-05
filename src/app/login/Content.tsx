@@ -135,7 +135,6 @@ const Login = ({
 
     useEffect(() => {
         window.onTelegramAuth = async (userData: any) => {
-            console.log(userData);
             const toSave = {
                 type: "Telegram",
                 data: {
@@ -149,7 +148,6 @@ const Login = ({
                 timestamp: Date.now(),
                 deviceId: Navigator.toString(),
             };
-            console.log(toSave);
             await fetch("/api/login", {
                 method: "POST",
                 body: JSON.stringify(toSave),

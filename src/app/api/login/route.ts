@@ -73,13 +73,12 @@ export async function POST(request: NextRequest) {
     }  else if (body.type === "Telegram") {
         const encoder = new TextEncoder();
         const secret_key = sha256.default(encoder.encode(process.env.TELEGRAM_BOT_TOKEN!))
-        if (toHex(sha256.hmac(body.data_check_string, secret_key)) !== body.hash) {
+        if (toHex(sha256.hmac(body.data.data_check_string, secret_key)) !== body.data.hash) {
             // Неверная проверка
             return new NextResponse(null, {
                 status: 400,
             });
         }
-        console.log("here");
 
         let user = await getUserByTelegramId(body.data.user_id);
         if (!user) {
@@ -90,7 +89,8 @@ export async function POST(request: NextRequest) {
         // 3. Store the session in cookies for optimistic auth checks
         const expiresAt = await createNewSession(
             user!._id?.toString(),
-            body.data, "" as string,
+            body.data,
+            "" as string,
             body.timestamp,
             body.deviceId,
             "Telegram",
