@@ -164,13 +164,6 @@ const Login = ({
         };
     }, []);
 
-    useEffect(() => () => {
-      const el = document.getElementById("telegram-login-typikonBot");
-      if (el) {
-          el.remove();
-      }
-    }, []);
-
     return (
         <div>
             <label>

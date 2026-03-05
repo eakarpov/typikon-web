@@ -11,6 +11,7 @@ import {verifySession} from "@/lib/authorize/authorization";
 import AuthorizeChecker from "@/app/AuthorizeChecker";
 import {getItem} from "@/app/profile/api";
 import Script from "next/script";
+import TelegramLoginRemover from "@/app/TelegramLoginRemover";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -51,6 +52,7 @@ export default async function RootLayout({
           </noscript>
           <CountMeta />
           <InitiateUserSettings />
+          <TelegramLoginRemover />
           <StoreProvider>
               <>
                   <AuthorizeChecker
