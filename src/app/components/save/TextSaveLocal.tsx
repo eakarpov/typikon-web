@@ -1,7 +1,7 @@
 'use client';
 import React, {memo, useCallback} from "react";
 import {ArrowDownTrayIcon} from "@heroicons/react/24/outline";
-import html2pdf from "html2pdf.js";
+// import html2pdf from "html2pdf.js";
 
 const TextSaveLocal = ({ name }) => {
 
@@ -20,7 +20,10 @@ const TextSaveLocal = ({ name }) => {
             jsPDF:        { unit: 'pt', format: 'letter', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
-        html2pdf().set(opt).from(clone).save();
+        import('html2pdf.js').then(html2pdf => {
+            html2pdf.default().set(opt).from(clone).save();
+        }).catch(() => {console("load failed")})
+        // html2pdf().set(opt).from(clone).save();
     }, []);
 
     return (
