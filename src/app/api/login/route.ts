@@ -14,6 +14,7 @@ function toHex(buffer: Uint8Array): string {
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
+    console.log(body);
     // const body = req;
     // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
                 status: 400,
             });
         }
+        console.log("here");
 
         let user = await getUserByTelegramId(body.data.user_id);
         if (!user) {
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             userId: user!._id?.toString(),
             expiresAt,
-            isGoogle: true,
+            isTelegram: true,
         }, {
             status: 200,
             headers: {
