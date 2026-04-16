@@ -81,6 +81,15 @@ export default function Home() {
                               <ArrowSmallRightIcon className="w-4 h-4" />
                               Dzen
                           </a>
+                          <a
+                              className="flex flex-row items-center cursor-pointer font-bold font-serif"
+                              href="https://vk.com/im/channels/-236747456"
+                              target="_blank"
+                              rel="noreferrer"
+                          >
+                              <ArrowSmallRightIcon className="w-4 h-4" />
+                              VK
+                          </a>
                       </li>
                       <li>
                           <a className="flex flex-row items-center cursor-pointer font-serif" href="/app/app.apk">
