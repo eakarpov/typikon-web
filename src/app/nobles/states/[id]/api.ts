@@ -28,7 +28,7 @@ export const getItem = async (id: string) => {
 
         return [{
             data,
-            rules: rulesTemp.map((item) => {
+            rules: rulesTemp.map((item: any) => {
                 return ({
                     ...item,
                     person: personData.find((person) => person.id === item.personId),

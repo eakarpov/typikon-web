@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const State = ({ value }: { value: any }) => {
     const minDate = useMemo(() => {
-        return value.rules.reduce((p, c) => {
+        return value.rules.reduce((p: number|null, c: any) => {
             if (p === null) {
                 if (c.startDate !== 0) {
                     return parseInt(c.startDate);
@@ -18,7 +18,7 @@ const State = ({ value }: { value: any }) => {
     }, [value.rules]);
 
     const maxDate = useMemo(() => {
-        return value.rules.reduce((p, c) => {
+        return value.rules.reduce((p: number|null, c: any) => {
             if (p === null) {
                 if (c.endDate !== 0) {
                     return parseInt(c.endDate);
@@ -32,7 +32,7 @@ const State = ({ value }: { value: any }) => {
 
     const sorted = useMemo(() => {
         if (!value.rules) return [];
-        return value.rules.sort((a, b) => {
+        return value.rules.sort((a: any, b: any) => {
             if (parseInt(a.startDate) > parseInt(b.startDate)) {
                 return 1;
             } else {

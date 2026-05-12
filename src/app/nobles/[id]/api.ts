@@ -16,7 +16,7 @@ export const getItem = async (id: string) => {
         );
 
         const spousesTemp = resultTemp
-            .filter((item) => isMale ? item.husbandId === parseInt(id) : item.wifeId === parseInt(id) );
+            .filter((item: any) => isMale ? item.husbandId === parseInt(id) : item.wifeId === parseInt(id) );
 
         const selectRequest = await db.prepare(`select * from nobles where id= ?`);
 
@@ -27,7 +27,7 @@ export const getItem = async (id: string) => {
             ));
         }
 
-        const spouses = spousesTemp.map((item) => ({
+        const spouses = spousesTemp.map((item: any) => ({
             ...item,
             data: spousesData.find((el) => isMale ? el.id === item.wifeId : el.id === item.husbandId),
         }));
@@ -104,7 +104,7 @@ export const getItem = async (id: string) => {
             ));
         }
 
-        const rules = rulesTemp.map((item) => {
+        const rules = rulesTemp.map((item: any) => {
             const suzerainRule = statesData.find((el) => el.id === item.suzerainId);
             const successorRule = successorData.find((el) => el.predessorId === item.id);
             const predessorRule = predessorData.find((el) => el.id === item.predessorId);

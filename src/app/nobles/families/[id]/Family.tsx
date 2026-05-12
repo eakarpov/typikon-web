@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const Family = ({ value }: { value: any }) => {
     const minDate = useMemo(() => {
-        return value.persons.reduce((p, c) => {
+        return value.persons.reduce((p: number|null, c: any) => {
             if (p === null) {
                 if (c.birthDate !== 0) {
                     return parseInt(c.birthDate);
@@ -18,7 +18,7 @@ const Family = ({ value }: { value: any }) => {
     }, [value.persons]);
 
     const maxDate = useMemo(() => {
-        return value.persons.reduce((p, c) => {
+        return value.persons.reduce((p: number|null, c: any) => {
             if (p === null) {
                 if (c.deathDate !== 0) {
                     return parseInt(c.deathDate);
@@ -32,7 +32,7 @@ const Family = ({ value }: { value: any }) => {
 
     const sorted = useMemo(() => {
         if (!value.persons) return [];
-        return value.persons.sort((a, b) => {
+        return value.persons.sort((a: any, b: any) => {
             if (parseInt(a.birthDate) > parseInt(b.birthDate)) {
                 return 1;
             } else {

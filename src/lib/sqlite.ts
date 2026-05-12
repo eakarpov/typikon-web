@@ -1,4 +1,5 @@
 import sqlite3 from 'sqlite3';
+// @ts-ignore
 import Database from 'better-sqlite3';
 import { open } from 'sqlite';
 import path from "path";

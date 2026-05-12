@@ -48,11 +48,11 @@ const AdminEditor = ({ value }: any) => {
         setSpouses((old) => [...old, { person: null }]);
     }, [setSpouses]);
 
-    const onDeleteSpouse = useCallback((index) => () => {
+    const onDeleteSpouse = useCallback((index: number) => () => {
         setSpouses((old) => old.filter((item, i) => i !== index));
     }, []);
 
-    const setSpouse = (index, key) => (val) => {
+    const setSpouse = (index: number, key: string) => (val: any) => {
         setSpouses((old) => {
             return old.map((item, i) => {
                 if (i === index) {
@@ -70,7 +70,7 @@ const AdminEditor = ({ value }: any) => {
         fetch(`/api/admin/nobles/${value.id}/spouses`)
             .then((res) => res.json())
             .then((data) => {
-            setSpouses(data.data.map((item => {
+            setSpouses(data.data.map(((item: any) => {
                 return item.husbandId === value.id ? {
                     person: item.wifeId,
                     marriageDate: item.marriageDate,
@@ -95,7 +95,7 @@ const AdminEditor = ({ value }: any) => {
         setRules((old) => [...old, { state: null }]);
     }, [setRules]);
 
-    const setRule = (index, key, isText = false) => (val) => {
+    const setRule = (index: number, key: string, isText = false) => (val: any) => {
         setRules((old) => {
             return old.map((item, i) => {
                 if (i === index) {
@@ -109,7 +109,7 @@ const AdminEditor = ({ value }: any) => {
         });
     };
 
-    const onDeleteRule = useCallback((index) => () => {
+    const onDeleteRule = useCallback((index: number) => () => {
         setRules((old) => old.filter((item, i) => i !== index));
     }, []);
 
@@ -373,7 +373,7 @@ const AdminEditor = ({ value }: any) => {
                                 onChange={setSpouse(index, "divorceDate")}
                             />
                         </div>
-                        <div onClick={onDeleteSpouse}>
+                        <div onClick={onDeleteSpouse(index)}>
                             X
                         </div>
                     </div>

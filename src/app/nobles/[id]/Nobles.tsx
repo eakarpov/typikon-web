@@ -9,13 +9,14 @@ import "treespider/dist/css/treeSpider.css";
 import 'family-chart/styles/family-chart.css';
 import NobleContemporaries from "@/app/nobles/[id]/NobleContemporaries";
 import {csFont} from "@/utils/font";
+import {Tree} from "family-chart/dist/types/layout/calculate-tree";
 
 const Nobles = ({ value }: {value: any}) => {
     const treeRef = useRef(null);
 
     const router = useRouter();
 
-    const create = (data) => {
+    const create = (data: any) => {
         const cont = document.getElementById("familyTree")!;
         if (cont) {
             cont.innerHTML = "";
@@ -23,15 +24,17 @@ const Nobles = ({ value }: {value: any}) => {
         const store = f3.createStore({
             data,
             node_separation: 250,
-            level_separation: 150
+            level_separation: 150,
+            main_id: ""
         })
         const svg = f3.createSvg(cont);
         const Card = f3.elements.CardSvg({
             svg,
             card_dim: {w:220,h:70,text_x:75,text_y:15,img_w:60,img_h:60,img_x:5,img_y:5},
+            // @ts-ignore
             card_display: [
-                d => d.data.name || 'Неизвестно',
-                d => `${d.data?.birthDate || ""} - ${d.data?.deathDate || ""}`,
+                (d: any) => d.data.name || 'Неизвестно',
+                (d: any) => `${d.data?.birthDate || ""} - ${d.data?.deathDate || ""}`,
             ],
             mini_tree: false,
             link_break: false,
@@ -41,13 +44,12 @@ const Nobles = ({ value }: {value: any}) => {
             // }
             onCardClick: onClickNode,
         })
-        store.setOnUpdate(props => f3.view(store.getTree(), svg, Card, props || {}))
+        store.setOnUpdate(props => f3.view(store.getTree() as Tree, svg, Card, props || {}))
         store.updateTree({initial: true})
     }
 
-    const createRules = (index, d) => {
-        const data = d.filter(el => !!el);
-        console.log(data);
+    const createRules = (index: number, d: any) => {
+        const data = d.filter((el: any) => !!el);
         const cont = document.getElementById(`tree-rules-${index}`)!;
         if (cont) {
             cont.innerHTML = "";
@@ -58,14 +60,16 @@ const Nobles = ({ value }: {value: any}) => {
             level_separation: 150,
             is_horizontal: true,
             single_parent_empty_card: false,
+            main_id: ""
         })
         const svg = f3.createSvg(cont);
         const Card = f3.elements.CardSvg({
             svg,
             card_dim: {w:220,h:70,text_x:75,text_y:15,img_w:60,img_h:60,img_x:5,img_y:5},
+            // @ts-ignore
             card_display: [
-                d => d.data.name || '',
-                d => `${d.data?.startDate || ""} - ${d.data?.endDate || ""}`,
+                (d: any) => d.data.name || '',
+                (d: any) => `${d.data?.startDate || ""} - ${d.data?.endDate || ""}`,
             ],
             mini_tree: false,
             link_break: false,
@@ -75,7 +79,7 @@ const Nobles = ({ value }: {value: any}) => {
             // },
             onCardClick: onClickRuleNode,
         })
-        store.setOnUpdate(props => f3.view(store.getTree(), svg, Card, props || {}))
+        store.setOnUpdate(props => f3.view(store.getTree() as Tree, svg, Card, props || {}))
         store.updateTree({initial: true})
     }
 
@@ -91,8 +95,8 @@ const Nobles = ({ value }: {value: any}) => {
                 data: value.data,
                 rels: {
                     parents: [value.data.fatherId?.toString(), value.data.motherId?.toString()].filter(el => !!el),
-                    spouses: value.spouses.map(item => item.id.toString()),
-                    children: value.children.map(item => item.id.toString()),
+                    spouses: value.spouses.map((item: any) => item.id.toString()),
+                    children: value.children.map((item: any) => item.id.toString()),
                 }
             },
             ...[
@@ -110,30 +114,30 @@ const Nobles = ({ value }: {value: any}) => {
                     }
                 }
             ].filter(el => !!el),
-            ...value.spouses.map((c) => {
+            ...value.spouses.map((c: any) => {
                 return {
                   id: c.id.toString(),
                   data: c.data,
                   rels: {
                       spouses: [value.data.gender ? c.husbandId.toString() : c.wifeId.toString()],
                      children: value.children
-                             .filter(item => value.data.gender
+                             .filter((item: any) => value.data.gender
                                  ? item.motherId === value.data.id
                                  : item.fatherId === value.data.id)
-                             .map(item => item.id.toString()),
+                             .map((item: any) => item.id.toString()),
                   }
                 };
             }),
-            ...value.children.map((c) => {
+            ...value.children.map((c: any) => {
                 return {
                     id: c.id.toString(),
                     data: c,
                     rels: {
-                      parents: [value.data.id.toString(), ...value.spouses.filter(item =>
+                      parents: [value.data.id.toString(), ...value.spouses.filter((item: any) =>
                           value.data.gender
                               ? item.wifeId === c.motherId
                               : item.husbandId === c.fatherId
-                      ).map(item => item.id.toString())],
+                      ).map((item: any) => item.id.toString())],
                     },
                 }
             }),
@@ -141,7 +145,7 @@ const Nobles = ({ value }: {value: any}) => {
 
         create(d);
 
-        value.rules.forEach((rule, index) => {
+        value.rules.forEach((rule: any, index: number) => {
            createRules(index, [
                {
                    id: rule.id.toString(),
@@ -197,11 +201,11 @@ const Nobles = ({ value }: {value: any}) => {
         });
     }, [value]);
 
-    const onClickNode = useCallback((e, d) => {
+    const onClickNode = useCallback((e: any, d: any) => {
         router.push(`/nobles/${d.data?.data?.id}`);
     }, []);
 
-    const onClickRuleNode = useCallback((e, d) => {
+    const onClickRuleNode = useCallback((e: any, d: any) => {
         if (d.data?.data?.type === "rule") {
             router.push(`/nobles/${d.data?.data?.personId}`);
         }
@@ -232,7 +236,8 @@ const Nobles = ({ value }: {value: any}) => {
                     />
                     <div id="rules">
                         <b>Правления</b>
-                        {value.rules.map((r, i) => (
+                        {value.rules.map((r: any, i: number) => (
+                            // eslint-disable-next-line react/jsx-key
                             <div
                                 className="tree-root tree-root-2 f3"
                                 id={`tree-rules-${i}`}
