@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             );
 
             res.json({
-                data: result.filter((el) => parseInt(el.rank) > 1),
+                data: result.filter((el: any) => parseInt(el.rank) > 1),
             });
         } catch (e) {
             console.log("mongodb error", e);

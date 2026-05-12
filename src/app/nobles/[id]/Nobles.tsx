@@ -5,7 +5,6 @@ import NobleCard from "@/app/nobles/[id]/NobleCard";
 import * as f3 from "family-chart";
 import {useRouter} from "next/navigation";
 
-import "treespider/dist/css/treeSpider.css";
 import 'family-chart/styles/family-chart.css';
 import NobleContemporaries from "@/app/nobles/[id]/NobleContemporaries";
 import {csFont} from "@/utils/font";
