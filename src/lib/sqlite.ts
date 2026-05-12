@@ -1,7 +1,6 @@
-import sqlite3 from 'sqlite3';
-// @ts-ignore
+// import sqlite3 from 'sqlite3';
 import Database from 'better-sqlite3';
-import { open } from 'sqlite';
+// import { open } from 'sqlite';
 import path from "path";
 
 export const init = async () => {
