@@ -45,6 +45,18 @@ const Admin = () => {
                     <Link href="/admin/corrections">
                         Исправление ошибок
                     </Link>
+                    <Link href="/admin/nobles">
+                        База по князьям (sqlite)
+                    </Link>
+                    <Link href="/admin/nobles/families">
+                        База по князьям - рода (sqlite)
+                    </Link>
+                    <Link href="/admin/nobles/states">
+                        База по князьям - державности (sqlite)
+                    </Link>
+                    <Link href="/admin/nobles/nationalities">
+                        База по князьям - национальности (sqlite)
+                    </Link>
                 </div>
             </div>
         </div>
