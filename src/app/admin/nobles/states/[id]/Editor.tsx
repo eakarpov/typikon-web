@@ -7,6 +7,7 @@ const AdminEditor = ({ value }: any) => {
     const [surnames, setSurnames] = useState(value.surnames || "");
     const [title, setTitle] = useState(value.defaultTitle || "");
     const [predessorId, setPredessorId] = useState(value.predessorId || "");
+    const [ancestorId, setAncestorId] = useState(value.ancestorId || "");
 
     const [saved, setSaved] = useState<boolean>(false);
 
@@ -19,6 +20,7 @@ const AdminEditor = ({ value }: any) => {
                 surnames,
                 title,
                 predessorId,
+                ancestorId,
             }),
         }).then(() => {
             setSaved(true);
@@ -67,6 +69,11 @@ const AdminEditor = ({ value }: any) => {
                     value={predessorId}
                     setValue={setPredessorId}
                     placeholder="Державность-предшественник"
+                />
+                <StateItem
+                    value={ancestorId}
+                    setValue={setAncestorId}
+                    placeholder="Является наследником державности"
                 />
             </div>
         </div>

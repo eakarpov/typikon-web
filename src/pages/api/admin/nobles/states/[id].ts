@@ -19,12 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   name = ?,
                   defaultTitle = ?,
                   predessorId = ?,
+                  ancestorId = ?,
                   surnames = ?
               where id = ?`)
                 .run(
                     data.name,
                     data.title,
                     data.predessorId || null,
+                    data.ancestorId || null,
                     data.surnames,
                     parseInt(id),
                 );

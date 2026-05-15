@@ -31,16 +31,16 @@ const AdminEditor = ({ value }: any) => {
     const [saved, setSaved] = useState<boolean>(false);
 
     useEffect(() => {
-        if (birthDate) {
+        if (birthDate && birthDate !== value.birthDate) {
             setBirthDateMarker(parseInt(birthDate));
         }
-    }, [birthDate]);
+    }, [birthDate, value]);
 
     useEffect(() => {
-        if (deathDate) {
+        if (deathDate && deathDate !== value.deathDate) {
             setDeathDateMarker(parseInt(deathDate));
         }
-    }, [deathDate]);
+    }, [deathDate, value]);
 
     const [spouses, setSpouses] = useState<any[]>([]);
 
@@ -253,7 +253,7 @@ const AdminEditor = ({ value }: any) => {
                         className="border-2"
                         value={birthDateMarker}
                         type="number"
-                        onChange={e => setBirthDateMarker(e.target.value)}
+                        onChange={e => setBirthDateMarker(parseInt(e.target.value))}
                     />
                 </div>
                 <div className="flex flex-col pr-4">
@@ -264,7 +264,7 @@ const AdminEditor = ({ value }: any) => {
                         className="border-2"
                         type="number"
                         value={deathDateMarker}
-                        onChange={e => setDeathDateMarker(e.target.value)}
+                        onChange={e => setDeathDateMarker(parseInt(e.target.value))}
                     />
                 </div>
             </div>

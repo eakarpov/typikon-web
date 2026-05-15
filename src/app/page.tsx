@@ -165,6 +165,15 @@ export default function Home() {
                                   rel="noreferrer"
                               >этой ссылке</a>
                           </span>
+                              <span className="font-serif">
+                              Также помочь проекту можно через <br/>
+                              <a
+                                  className="cursor-pointer font-bold underline underline-offset-4"
+                                  href="https://messenger.online.sberbank.ru/sl/8xVnkqtrmfkJzj8yO"
+                                  target="_blank"
+                                  rel="noreferrer"
+                              >сбор (только Сбер)</a>
+                          </span>
                           </div>
                       </li>
                       <li>
