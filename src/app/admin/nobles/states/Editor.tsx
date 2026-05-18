@@ -75,7 +75,7 @@ const AdminEditor = ({ value }: { value: any[] }) => {
                 <div className="flex flex-row mb-4" key={text.id}>
                     <div className="flex flex-col space-y-1 w-60">
                         <Link
-                            href={`/admin/states/${text.id}`}
+                            href={`/admin/nobles/states/${text.id}`}
                             className="cursor-pointer"
                         >
                             {text.name || "Нет названия"}

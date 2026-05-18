@@ -39,12 +39,10 @@ const Admin = () => {
                         Редактирование мест
                     </Link>
                 </div>
-            </div>
-            <div className="flex flex-row">
                 <div className="flex flex-col">
-                    <Link href="/admin/corrections">
-                        Исправление ошибок
-                    </Link>
+                    <p>
+                        <strong>SQLITE БД</strong>
+                    </p>
                     <Link href="/admin/nobles">
                         База по князьям (sqlite)
                     </Link>
@@ -56,6 +54,13 @@ const Admin = () => {
                     </Link>
                     <Link href="/admin/nobles/nationalities">
                         База по князьям - национальности (sqlite)
+                    </Link>
+                </div>
+            </div>
+            <div className="flex flex-row">
+                <div className="flex flex-col">
+                    <Link href="/admin/corrections">
+                        Исправление ошибок
                     </Link>
                 </div>
             </div>
