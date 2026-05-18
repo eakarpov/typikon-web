@@ -41,7 +41,7 @@ const NobleCard = ({ value, family }: { value: any; family: any}) => {
             <div>
                 <label><b>Ссылки</b></label>
                 {links.map((item) => (
-                    <div>
+                    <div key={item}>
                         <a href={item} target="_blank" rel="noopener noreferrer">
                             {item}
                         </a>
