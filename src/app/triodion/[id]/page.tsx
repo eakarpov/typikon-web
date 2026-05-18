@@ -1,5 +1,5 @@
-import {getItem} from "@/app/penticostarion/[id]/api";
-import Content from "@/app/penticostarion/[id]/Content";
+import {getItem} from "@/app/weeks/[id]/api";
+import Content from "@/app/weeks/[id]/Content";
 import {Suspense} from "react";
 import {csFont, myFont} from "@/utils/font";
 import {Metadata} from "next";

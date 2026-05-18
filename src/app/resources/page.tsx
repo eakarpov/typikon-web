@@ -32,6 +32,13 @@ const Resources = () => {
                             </span>
                         </Link>
                     </li>
+                    <li>
+                        <Link href="/nobles">
+                            <span>
+                                Древо князей и царей
+                            </span>
+                        </Link>
+                    </li>
                 </ul>
                 <div className="flex flex-row">
                     <h2 className="font-bold">
@@ -42,7 +49,7 @@ const Resources = () => {
                     <li>
                         <Link href="https://dneslov.org/" target="_blank" referrerPolicy="no-referrer">
                             <span>
-                                <b>Днеслов</b> (Церковный календарь
+                                <b>Днеслов</b> (Церковный календарь)
                             </span>
                         </Link>
                     </li>

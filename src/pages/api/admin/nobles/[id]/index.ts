@@ -32,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   nickName = ?,
                   churchName = ?,
                   info = ?,
+                  links = ?,
                   birthDateMarker = ?,
                   deathDateMarker = ?,
                   rank = ?
@@ -53,6 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     data.nickName,
                     data.churchName,
                     data.info,
+                    data.links,
                     parseInt(data.birthDateMarker, 10),
                     parseInt(data.deathDateMarker, 10),
                     parseInt(data.rank),

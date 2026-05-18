@@ -17,19 +17,11 @@ const NobleContemporaries = ({ value }: { value: any }) => {
                 {items.map(item => (
                     <div className="property-card" key={item.id}>
                         <a href={`/nobles/${item.id}`}>
-                            <div className="property-image">
-                                <div className="property-image-title">
-                                </div>
+                            <div className="property-description">
+                                <h5><b>{item.name}</b></h5>
+                                <p>{"<"}{item.birthDate || item.birthDateMarker} - {">"}{item.deathDate || item.deathDateMarker}</p>
                             </div>
                         </a>
-                        <div className="property-description">
-                            <h5>{item.name}</h5>
-                            <p>{"<"}{item.birthDate || item.birthDateMarker} - {">"}{item.deathDate || item.deathDateMarker}</p>
-                        </div>
-                        {/*<a href="#">*/}
-                        {/*    <div className="property-social-icons">*/}
-                        {/*    </div>*/}
-                        {/*</a>*/}
                     </div>
                 ))}
             </div>

@@ -24,6 +24,7 @@ const AdminEditor = ({ value }: any) => {
     const [churchName, setChurchName] = useState(value.churchName || "");
     const [csName, setCsName] = useState(value.csName || "");
     const [info, setInfo] = useState(value.info || "");
+    const [links, setLinks] = useState(value.links ? JSON.parse(value.links) : []);
     const [birthDateMarker, setBirthDateMarker] = useState(value.birthDateMarker || 0);
     const [deathDateMarker, setDeathDateMarker] = useState(value.deathDateMarker || 0);
     const [rank, setRank] = useState(value.rank || 0);
@@ -41,6 +42,25 @@ const AdminEditor = ({ value }: any) => {
             setDeathDateMarker(parseInt(deathDate));
         }
     }, [deathDate, value]);
+
+    const onAddLink = useCallback(() => {
+        setLinks((old) => [...old, ""]);
+    }, [setLinks]);
+
+    const onDeleteLink = useCallback((index: number) => () => {
+        setLinks((old) => old.filter((item, i) => i !== index));
+    }, []);
+
+    const setLink = (index: number) => (val: any) => {
+        setLinks((old) => {
+            return old.map((item, i) => {
+                if (i === index) {
+                    return val.target.value;
+                }
+                return item;
+            })
+        });
+    };
 
     const [spouses, setSpouses] = useState<any[]>([]);
 
@@ -145,6 +165,7 @@ const AdminEditor = ({ value }: any) => {
                 birthDateMarker,
                 deathDateMarker,
                 rank,
+                links: JSON.stringify(links),
             }),
         }).then(() => {
             setSaved(true);
@@ -341,6 +362,25 @@ const AdminEditor = ({ value }: any) => {
                         onChange={e => setInfo(e.target.value)}
                     />
                 </div>
+            </div>
+            <div className="flex flex-col flex-wrap">
+                <div onClick={onAddLink}>
+                    Добавить ссылку
+                </div>
+                {links.map((spouse, index) => (
+                    <div key={index} className="flex flex-row pr-4">
+                        <div className="flex flex-col pr-4">
+                            <input
+                                className="border-2"
+                                value={spouse}
+                                onChange={setLink(index)}
+                            />
+                        </div>
+                        <div onClick={onDeleteLink(index)}>
+                            X
+                        </div>
+                    </div>
+                ))}
             </div>
             <div className="flex flex-col flex-wrap">
                 <div onClick={onAddSpouse}>

@@ -29,7 +29,7 @@ const DneslovImages = ({ dneslovId, dneslovEventId }: IDneslovImages) => {
     if (!images.length) return null;
 
     return (
-        <div className="flex flex-col pt-2 w-full md:w-1/2" style={{ paddingLeft: '12px' }}>
+        <div className="flex flex-col pt-2 w-full md:w-1/2" style={{ paddingLeft: '12px', width: '300px' }}>
             <ImageGallery
                 items={images}
                 lazyLoad

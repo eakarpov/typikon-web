@@ -1,5 +1,5 @@
 'use client';
-import React, {useCallback, useEffect, useRef} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import './index.css';
 import NobleCard from "@/app/nobles/[id]/NobleCard";
 import * as f3 from "family-chart";
@@ -15,7 +15,9 @@ const Nobles = ({ value }: {value: any}) => {
 
     const router = useRouter();
 
-    const create = (data: any) => {
+    const [spouseFilter, setSpouseFilter] = useState(null);
+
+    const create = (data: any, mainId: string) => {
         const cont = document.getElementById("familyTree")!;
         if (cont) {
             cont.innerHTML = "";
@@ -24,7 +26,7 @@ const Nobles = ({ value }: {value: any}) => {
             data,
             node_separation: 250,
             level_separation: 150,
-            main_id: ""
+            main_id: mainId
         })
         const svg = f3.createSvg(cont);
         const Card = f3.elements.CardSvg({
@@ -88,14 +90,23 @@ const Nobles = ({ value }: {value: any}) => {
             return;
         }
 
+        console.log(spouseFilter, value.children, value.spouses, value.children
+            .filter(c => spouseFilter ? value.data.gender
+                ? spouseFilter === c.motherId
+                : spouseFilter === c.fatherId : true));
         const d = [
             {
                 id: value.data.id.toString(),
                 data: value.data,
                 rels: {
                     parents: [value.data.fatherId?.toString(), value.data.motherId?.toString()].filter(el => !!el),
-                    spouses: value.spouses.map((item: any) => item.id.toString()),
-                    children: value.children.map((item: any) => item.id.toString()),
+                    spouses: value.spouses.filter(el => spouseFilter ? el.data.id === spouseFilter : true)
+                        .map((item: any) => item.data?.id.toString()),
+                    children: value.children
+                        .filter(c => spouseFilter ? value.data.gender
+                            ? spouseFilter === c.motherId
+                            : spouseFilter === c.fatherId : true)
+                        .map((item: any) => item.id.toString()),
                 }
             },
             ...[
@@ -113,13 +124,13 @@ const Nobles = ({ value }: {value: any}) => {
                     }
                 }
             ].filter(el => !!el),
-            ...value.spouses.map((c: any) => {
+            ...value.spouses.filter(el => spouseFilter ? el.data.id === spouseFilter : true).map((c: any) => {
                 return {
-                  id: c.id.toString(),
+                  id: c.data?.id.toString(),
                   data: c.data,
                   rels: {
                       spouses: [value.data.gender ? c.husbandId.toString() : c.wifeId.toString()],
-                     children: value.children
+                      children: value.children
                              .filter((item: any) => value.data.gender
                                  ? item.motherId === value.data.id
                                  : item.fatherId === value.data.id)
@@ -127,7 +138,11 @@ const Nobles = ({ value }: {value: any}) => {
                   }
                 };
             }),
-            ...value.children.map((c: any) => {
+            ...value.children
+                .filter(c => spouseFilter ? value.data.gender
+                    ? spouseFilter === c.motherId
+                    : spouseFilter === c.fatherId : true)
+                .map((c: any) => {
                 return {
                     id: c.id.toString(),
                     data: c,
@@ -136,67 +151,70 @@ const Nobles = ({ value }: {value: any}) => {
                           value.data.gender
                               ? item.wifeId === c.motherId
                               : item.husbandId === c.fatherId
-                      ).map((item: any) => item.id.toString())],
+                      ).map((item: any) => item.data.id.toString())],
                     },
                 }
             }),
         ]
+        console.log(d);
 
-        create(d);
+        create(d, value.data.id.toString());
+    }, [value, spouseFilter]);
 
+    useEffect(() => {
         value.rules.forEach((rule: any, index: number) => {
-           createRules(index, [
-               {
-                   id: rule.id.toString(),
-                   data: {
-                       type: "state",
-                       stateId: rule.state?.id,
-                       name: rule.state?.name,
-                       startDate: rule.startDate || value.data.birthDate,
-                       endDate: rule.endDate || value.data.deathDate,
-                   },
-                   rels: {
-                       parents: rule.predessorId ? [rule.predessorId.toString()] : [],
-                       children: rule.successor?.id ? [rule.successor?.id?.toString()] : [],
-                       spouses: rule.suzerainId ? [rule.suzerainId.toString()] : [],
-                   }
-               },
-               rule.successor ? {
-                   id: rule.successor.id.toString(),
-                   data: {
-                       type: "rule",
-                       id: rule.successor.id,
-                       personId: rule.successor.personId,
-                       name: rule.successor.person?.name,
-                       startDate: rule.successor.startDate,
-                       endDate: rule.successor.endDate,
-                   },
-                   rels: { parents: [rule.id.toString()] },
-               } : null,
-               rule.predessorId ? {
-                   id: rule.predessorId.toString(),
-                   data: {
-                       type: "rule",
-                       id: rule.predessorId,
-                       personId: rule.predessor?.personId,
-                       name: rule.predessor?.person?.name,
-                       startDate: rule.predessor?.startDate,
-                       endDate: rule.predessor?.endDate,
-                   },
-                   rels: { children: [rule.id.toString()] },
-               } : null,
-               rule.suzerainId ? {
-                   id: rule.suzerainId.toString(),
-                   data: {
-                       type: "state",
-                       id: rule.suzerainId,
-                       name: rule.suzerain?.state?.name,
-                   },
-                   rels: {
-                       spouses: [rule.id.toString()],
-                   },
-               } : null,
-           ]);
+            createRules(index, [
+                {
+                    id: rule.id.toString(),
+                    data: {
+                        type: "state",
+                        stateId: rule.state?.id,
+                        name: rule.state?.name,
+                        startDate: rule.startDate || value.data.birthDate,
+                        endDate: rule.endDate || value.data.deathDate,
+                    },
+                    rels: {
+                        parents: rule.predessorId ? [rule.predessorId.toString()] : [],
+                        children: rule.successor?.id ? [rule.successor?.id?.toString()] : [],
+                        spouses: rule.suzerainId ? [rule.suzerainId.toString()] : [],
+                    }
+                },
+                rule.successor ? {
+                    id: rule.successor.id.toString(),
+                    data: {
+                        type: "rule",
+                        id: rule.successor.id,
+                        personId: rule.successor.personId,
+                        name: rule.successor.person?.name,
+                        startDate: rule.successor.startDate,
+                        endDate: rule.successor.endDate,
+                    },
+                    rels: { parents: [rule.id.toString()] },
+                } : null,
+                rule.predessorId ? {
+                    id: rule.predessorId.toString(),
+                    data: {
+                        type: "rule",
+                        id: rule.predessorId,
+                        personId: rule.predessor?.personId,
+                        name: rule.predessor?.person?.name,
+                        startDate: rule.predessor?.startDate,
+                        endDate: rule.predessor?.endDate,
+                    },
+                    rels: { children: [rule.id.toString()] },
+                } : null,
+                rule.suzerainId ? {
+                    id: rule.suzerainId.toString(),
+                    data: {
+                        type: "state",
+                        id: rule.suzerainId,
+                        name: rule.suzerain?.state?.name,
+                    },
+                    rels: {
+                        spouses: [rule.id.toString()],
+                    },
+                } : null,
+            ]);
         });
     }, [value]);
 
@@ -223,25 +241,44 @@ const Nobles = ({ value }: {value: any}) => {
                     />
                     <NobleContemporaries value={value.data} />
                 </div>
-                <div
-                    className="w-1/2 flex"
-                    style={{flexDirection: "column"}}
-                >
+                <div className="w-1/2 flex flex-col">
                     <b>Ближайшие родственники</b>
-                    <div
-                        ref={treeRef}
-                        className="tree-root f3"
-                        id="familyTree"
-                    />
-                    <div id="rules">
-                        <b>Правления</b>
-                        {value.rules.map((r: any, i: number) => (
-                            // eslint-disable-next-line react/jsx-key
-                            <div
-                                className="tree-root tree-root-2 f3"
-                                id={`tree-rules-${i}`}
-                            />
+                    <div>
+                        Фильтр дерева по супругам:&nbsp;
+                        <span
+                            onClick={() => setSpouseFilter(null)}
+                            style={{ fontWeight: spouseFilter === null ? 'bold' : 'normal' }}
+                        >
+                            Все супруги&nbsp;
+                        </span>
+                        {value.spouses?.map((item: any) => (
+                            <span
+                                key={item.id}
+                                onClick={() => setSpouseFilter(item.data.id)}
+                                style={{ fontWeight: spouseFilter === item.data.id ? 'bold' : 'normal' }}
+                            >
+                                {item.data?.name}&nbsp;
+                            </span>
                         ))}
+                    </div>
+                    <div
+                        className="flex flex-col"
+                    >
+                        <div
+                            ref={treeRef}
+                            className="tree-root f3"
+                            id="familyTree"
+                        />
+                        <div id="rules">
+                            <b>Правления</b>
+                            {value.rules.map((r: any, i: number) => (
+                                // eslint-disable-next-line react/jsx-key
+                                <div
+                                    className="tree-root tree-root-2 f3"
+                                    id={`tree-rules-${i}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

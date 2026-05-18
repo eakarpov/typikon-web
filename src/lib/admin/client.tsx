@@ -28,11 +28,7 @@ export const WithRights = ({
         }
 
         if (!user.isAdmin) {
-            return (
-                <div>
-                    Нет доступа
-                </div>
-            );
+            return null;
         }
 
         return <Component />;

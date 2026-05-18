@@ -2,7 +2,7 @@
 import Link from "next/link";
 import {useCallback, useEffect, useState} from "react";
 
-const Content = ({ value }: { value: any[] }) => {
+const Content = ({ }: { }) => {
     const [search, setSearch] = useState("");
     const [items, setItems] = useState<any[]>([]);
 
@@ -28,7 +28,7 @@ const Content = ({ value }: { value: any[] }) => {
 
     return (
         <div className="flex flex-col">
-            <div>
+            <div className="font-serif">
                 <label>Поиск</label>
                 <input
                   value={search}
@@ -41,7 +41,7 @@ const Content = ({ value }: { value: any[] }) => {
                     <div className="flex flex-col space-y-1 w-60">
                         <Link
                             href={`/nobles/${text.id}`}
-                            className="cursor-pointer"
+                            className="cursor-pointer font-serif"
                         >
                             {text.name}
                         </Link>

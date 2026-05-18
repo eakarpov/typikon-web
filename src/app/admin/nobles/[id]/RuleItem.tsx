@@ -25,6 +25,10 @@ const RuleItem = ({
                     setFatherData([]);
                     setFatherSearch(getData(data.data));
                 });
+        } else {
+            setFatherData([]);
+            setFatherSearch("");
+            setFather(null);
         }
     }, [value]);
 
@@ -47,7 +51,7 @@ const RuleItem = ({
             </label>
             {father ? (
                 <div>
-                    {getData(father)} <span onClick={() => setFather(null)}>X</span>
+                    {getData(father)} <span onClick={() => setValue(null)}>X</span>
                 </div>
             ) : (
                 <>

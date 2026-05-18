@@ -1,6 +1,11 @@
 import Link from "next/link";
+import {useMemo} from "react";
 
 const NobleCard = ({ value, family }: { value: any; family: any}) => {
+    const links = useMemo(() => {
+        return value.links ? JSON.parse(value.links) : [];
+    }, [value]);
+
     return (
         <div className="flex flex-col p-4">
             <div>
@@ -35,6 +40,13 @@ const NobleCard = ({ value, family }: { value: any; family: any}) => {
             </div>
             <div>
                 <label><b>Ссылки</b></label>
+                {links.map((item) => (
+                    <div>
+                        <a href={item} target="_blank" rel="noopener noreferrer">
+                            {item}
+                        </a>
+                    </div>
+                ))}
             </div>
             <div>
                 <label><b>Краткое описание</b></label>
