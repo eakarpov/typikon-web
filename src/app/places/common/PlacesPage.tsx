@@ -18,8 +18,6 @@ import Style from 'ol/style/Style.js';
 import Text from 'ol/style/Text.js';
 import "ol/ol.css";
 
-let openSansAdded = false;
-
 const data = [
     {
         title: "test",
@@ -142,13 +140,6 @@ const createTextStyle = function (feature: FeatureLike, resolution: number, dom:
     const maxAngle = dom.maxangle ? parseFloat(dom.maxangle.value) : undefined;
     const overflow = dom.overflow ? dom.overflow.value == 'true' : undefined;
     const rotation = parseFloat(dom.rotation.value);
-    if (dom.font.value == "'Open Sans'" && !openSansAdded) {
-        const openSans = document.createElement('link');
-        openSans.href = 'https://fonts.googleapis.com/css?family=Open+Sans';
-        openSans.rel = 'stylesheet';
-        document.head.appendChild(openSans);
-        openSansAdded = true;
-    }
     const font = weight + ' ' + size + '/' + height + ' ' + dom.font.value;
     const fillColor = dom.color.value;
     const outlineColor = dom.outline.value;
