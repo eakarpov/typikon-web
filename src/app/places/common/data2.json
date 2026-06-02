@@ -1102,5 +1102,37 @@
     "createdAt": "1221 год",
     "destroyedAt": null,
     "color": "green"
+  },
+  {
+    "name": "Аркона (Руян)",
+    "lat": 54.6764,
+    "lon": 13.4378,
+    "createdAt": "9 век",
+    "destroyedAt": "1168 год",
+    "color": "red"
+  },
+  {
+    "name": "Любице (Старый Любек)",
+    "lat": 53.9094,
+    "lon": 10.7136,
+    "createdAt": "819 год",
+    "destroyedAt": "1138 год",
+    "color": "red"
+  },
+  {
+    "name": "Радогощ",
+    "lat": 53.3556,
+    "lon": 13.3167,
+    "createdAt": "10 век",
+    "destroyedAt": "1125 год",
+    "color": "green"
+  },
+  {
+    "name": "Велиград (Микулин Бор)",
+    "lat": 53.8444,
+    "lon": 11.4703,
+    "createdAt": "7 век",
+    "destroyedAt": "14 век",
+    "color": "red"
   }
 ]
