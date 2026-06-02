@@ -9,6 +9,7 @@ import Feature from "ol/Feature";
 import {fromLonLat} from "ol/proj";
 import {Point} from "ol/geom";
 import {Heatmap} from "ol/layer";
+import "ol/ol.css";
 
 const Content = () => {
     useEffect(() => {
@@ -16,7 +17,7 @@ const Content = () => {
         const layer = new TileLayer({
             source: source,
         });
-        document.getElementById("map").innerHTML = "";
+        document.getElementById("map")!.innerHTML = "";
         const map = new Map({
             layers: [layer],
             target: "map",
@@ -39,7 +40,6 @@ const Content = () => {
             radius: 10,
         });
         map.addLayer(heatMapLayer);
-        console.log(map);
     }, []);
     return (
         <>
