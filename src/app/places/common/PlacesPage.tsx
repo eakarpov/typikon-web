@@ -2,7 +2,7 @@
 import React, {useEffect} from "react";
 import {fromLonLat} from "ol/proj";
 import Vector from "ol/source/Vector";
-import {Point} from "ol/geom";
+import {Point, MultiLineString, LineString} from "ol/geom";
 import Feature, {FeatureLike} from "ol/Feature";
 import {Heatmap} from "ol/layer";
 import Map from 'ol/Map.js';
@@ -17,6 +17,7 @@ import Stroke from 'ol/style/Stroke.js';
 import Style from 'ol/style/Style.js';
 import Text from 'ol/style/Text.js';
 import "ol/ol.css";
+import {Coordinate} from "ol/coordinate";
 
 const data = [
     {
@@ -105,6 +106,60 @@ const myDom = {
             value: undefined,
         },
     },
+    lines: {
+        text: {
+            value: "wrap"
+        },
+        align: {
+            value: "left"
+        },
+        baseline: {
+            value: "middle"
+        },
+        rotation: {
+            value: "0deg",
+        },
+        font: {
+            value: "Arial"
+        },
+        weight: {
+            value: "bold",
+        },
+        size: {
+            value: "12px"
+        },
+        height: {
+            value: "1em"
+        },
+        offsetX: {
+            value: "0"
+        },
+        offsetY: {
+            value: "0"
+        },
+        color: {
+            value: "blue"
+        },
+        outline: {
+            value: "#fff"
+        },
+        outlineWidth: {
+            value: "3px"
+        },
+        maxreso: {
+            value: 1200
+        },
+
+        overflow: {
+            value: "true",
+        },
+        maxangle: {
+            value: "45deg",
+        },
+        placement: {
+            value: undefined,
+        },
+    },
 };
 
 const getText = function (feature: FeatureLike, resolution: number, dom: typeof myDom.points) {
@@ -163,6 +218,42 @@ const createTextStyle = function (feature: FeatureLike, resolution: number, dom:
     });
 };
 
+// Lines
+function lineStyleFunction(feature: FeatureLike, resolution: number) {
+    return new Style({
+        stroke: new Stroke({
+            color: feature.get('color'),
+            width: 1,
+        }),
+        text: createTextStyle(feature, resolution, myDom.lines),
+    });
+}
+
+const customSourceLines = new VectorSource({
+    loader: function (extent, resolution, projection, success, failure) {
+        import("./dataLines.json")
+            .then(response => response.default)
+            .then(data => {
+                const features = data.map(item => {
+                    return new Feature({
+                        geometry: new LineString(
+                            item.coordinates.map(el => fromLonLat([el.lon, el.lat])),
+                        ),
+                        name: item.name,
+                        color: item.color,
+                    });
+                });
+
+                customSourceLines.addFeatures(features);
+                success!(features);
+            })
+            .catch(error => {
+                failure!();
+                console.error('Failed to load JSON:', error);
+            });
+    }
+});
+
 // Points
 function pointStyleFunction(feature: FeatureLike, resolution: number) {
     return new Style({
@@ -210,23 +301,14 @@ const PlacesPage = () => {
         const latitude = item.latitude;
         const longitude = item.longitude;
 
-        // green center
-        const data = new Vector();
-        const coord = fromLonLat([longitude, latitude]);
-        const lonLat = new Point(coord);
-        const pointFeature = new Feature({
-            geometry: lonLat,
-            weight: 50,
-        });
-        data.addFeature(pointFeature);
-        const heatMapLayer = new Heatmap({
-            source: data,
-            radius: 10,
-        });
-
         const vectorPoints = new VectorLayer({
             source: customSource,
             style: pointStyleFunction,
+        });
+
+        const vectorLines = new VectorLayer({
+            source: customSourceLines,
+            style: lineStyleFunction,
         });
 
         const map = new Map({
@@ -235,6 +317,7 @@ const PlacesPage = () => {
                     source: new OSM(),
                 }),
                 vectorPoints,
+                vectorLines,
             ],
             target: 'map',
             view: new View({
@@ -242,7 +325,6 @@ const PlacesPage = () => {
                 zoom: 4,
             }),
         });
-        // map.addLayer(heatMapLayer);
 
         map.on('click', (e) => {
             const feature = map.forEachFeatureAtPixel(e.pixel, function (feature) {

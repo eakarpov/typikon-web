@@ -39,6 +39,13 @@ const Resources = () => {
                             </span>
                         </Link>
                     </li>
+                    <li>
+                        <Link href="/places/common">
+                            <span>
+                                Карта славянских поселений
+                            </span>
+                        </Link>
+                    </li>
                 </ul>
                 <div className="flex flex-row">
                     <h2 className="font-bold">

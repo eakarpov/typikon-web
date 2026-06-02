@@ -40,14 +40,6 @@
     "color": "black"
   },
   {
-    "name": "Якубово",
-    "lat": 53.9456,
-    "lon": 19.5397,
-    "createdAt": "14 век",
-    "destroyedAt": null,
-    "color": "green"
-  },
-  {
     "name": "Слупск",
     "lat": 54.4641,
     "lon": 17.0285,
@@ -456,11 +448,11 @@
     "color": "green"
   },
   {
-    "name": "Фризиле",
-    "lat": 43.764,
-    "lon": 11.2978,
-    "createdAt": "13 век",
-    "destroyedAt": null,
+    "name": "Фризеле",
+    "lat": 54.7744,
+    "lon": 11.9547,
+    "createdAt": "11 век",
+    "destroyedAt": "13 век",
     "color": "green"
   },
   {
@@ -1133,6 +1125,46 @@
     "lon": 11.4703,
     "createdAt": "7 век",
     "destroyedAt": "14 век",
+    "color": "red"
+  },
+  {
+    "name": "Дрогичин (археологическое поселение)",
+    "lat": 52.0514,
+    "lon": 25.1325,
+    "createdAt": "4 век до н.э.",
+    "destroyedAt": "2 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Млынище (могильник/поселение)",
+    "lat": 50.8712,
+    "lon": 24.2845,
+    "createdAt": "4 век до н.э.",
+    "destroyedAt": "1 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Юшковщина (городище)",
+    "lat": 54.8912,
+    "lon": 28.7456,
+    "createdAt": "3 век",
+    "destroyedAt": "7 век",
+    "color": "black"
+  },
+  {
+    "name": "Якубово (городище/замчище)",
+    "lat": 52.5113,
+    "lon": 16.3358,
+    "createdAt": "5 век до н.э.",
+    "destroyedAt": "3 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Городище под Слупском (Лосице/Лосско)",
+    "lat": 54.4320,
+    "lon": 17.0610,
+    "createdAt": "9 век",
+    "destroyedAt": "11 век",
     "color": "red"
   }
 ]
