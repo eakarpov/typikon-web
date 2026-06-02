@@ -1,0 +1,1106 @@
+[
+  {
+    "name": "Черменика",
+    "lat": 41.25,
+    "lon": 20.2,
+    "createdAt": "14 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Канина",
+    "lat": 40.4444,
+    "lon": 19.5206,
+    "createdAt": "4 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Девол",
+    "lat": 40.7303,
+    "lon": 20.9706,
+    "createdAt": "9 век",
+    "destroyedAt": "14 век",
+    "color": "red"
+  },
+  {
+    "name": "Конисполь",
+    "lat": 39.6589,
+    "lon": 20.1803,
+    "createdAt": "14 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Бискупин",
+    "lat": 52.7879,
+    "lon": 17.7423,
+    "createdAt": "8 век до н.э.",
+    "destroyedAt": "5 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Якубово",
+    "lat": 53.9456,
+    "lon": 19.5397,
+    "createdAt": "14 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Слупск",
+    "lat": 54.4641,
+    "lon": 17.0285,
+    "createdAt": "11 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Камень-Поморский",
+    "lat": 53.9689,
+    "lon": 14.7878,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Свислочь",
+    "lat": 53.4328,
+    "lon": 28.9881,
+    "createdAt": "11 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Бельское городище",
+    "lat": 50.0931,
+    "lon": 34.6317,
+    "createdAt": "8 век до н.э.",
+    "destroyedAt": "3 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Вщиж",
+    "lat": 53.4221,
+    "lon": 33.8192,
+    "createdAt": "11 век",
+    "destroyedAt": "1239 год",
+    "color": "green"
+  },
+  {
+    "name": "Мошны",
+    "lat": 49.5115,
+    "lon": 31.7440,
+    "createdAt": "15 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Юхново",
+    "lat": 51.942,
+    "lon": 33.2435,
+    "createdAt": "5 век до н.э.",
+    "destroyedAt": "2 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Куземинское городище",
+    "lat": 50.1467,
+    "lon": 34.65,
+    "createdAt": "4 век до н.э.",
+    "destroyedAt": "3 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Переяславль-Залесское",
+    "lat": 56.7356,
+    "lon": 38.8569,
+    "createdAt": "1152 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Псков",
+    "lat": 57.8136,
+    "lon": 28.3496,
+    "createdAt": "903 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Ромен (Ромны)",
+    "lat": 50.7419,
+    "lon": 33.4847,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Титовское городище",
+    "lat": 52.8804,
+    "lon": 33.3917,
+    "createdAt": "9 век",
+    "destroyedAt": "11 век",
+    "color": "red"
+  },
+  {
+    "name": "Красное городище",
+    "lat": 51.1578,
+    "lon": 37.3828,
+    "createdAt": "10 век",
+    "destroyedAt": "13 век",
+    "color": "green"
+  },
+  {
+    "name": "Брашов",
+    "lat": 45.6427,
+    "lon": 25.5887,
+    "createdAt": "1211 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Крайова",
+    "lat": 44.3302,
+    "lon": 23.7949,
+    "createdAt": "15 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Нитра",
+    "lat": 48.3116,
+    "lon": 18.0845,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Девин",
+    "lat": 48.1738,
+    "lon": 16.9783,
+    "createdAt": "1 век до н.э.",
+    "destroyedAt": "1809 год",
+    "color": "black"
+  },
+  {
+    "name": "Прешпорок (Братислава)",
+    "lat": 48.1486,
+    "lon": 17.1077,
+    "createdAt": "1 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Микульчице",
+    "lat": 48.8042,
+    "lon": 17.0875,
+    "createdAt": "6 век",
+    "destroyedAt": "10 век",
+    "color": "red"
+  },
+  {
+    "name": "Копчани",
+    "lat": 48.7962,
+    "lon": 17.1087,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Блатница",
+    "lat": 48.9369,
+    "lon": 18.9267,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Велестино (Тессалия)",
+    "lat": 39.3817,
+    "lon": 22.7461,
+    "createdAt": "6 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Гардики",
+    "lat": 39.54,
+    "lon": 21.2592,
+    "createdAt": "7 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Арахова",
+    "lat": 38.4789,
+    "lon": 22.5867,
+    "createdAt": "13 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Солунь",
+    "lat": 40.6401,
+    "lon": 22.9444,
+    "createdAt": "315 год до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Тайгет",
+    "lat": 36.9531,
+    "lon": 22.3497,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Катера",
+    "lat": 43.8242,
+    "lon": 18.3756,
+    "createdAt": "10 век",
+    "destroyedAt": "10 век",
+    "color": "green"
+  },
+  {
+    "name": "Десник",
+    "lat": 44.1333,
+    "lon": 19.3333,
+    "createdAt": "10 век",
+    "destroyedAt": "10 век",
+    "color": "green"
+  },
+  {
+    "name": "Благай на Буне",
+    "lat": 43.2572,
+    "lon": 17.8869,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Яйце",
+    "lat": 44.3422,
+    "lon": 17.2703,
+    "createdAt": "14 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Градиште (Лонтодокл)",
+    "lat": 42.4578,
+    "lon": 19.2631,
+    "createdAt": "2 век до н.э.",
+    "destroyedAt": "6 век",
+    "color": "black"
+  },
+  {
+    "name": "Бар (Дебар)",
+    "lat": 41.5256,
+    "lon": 20.5286,
+    "createdAt": "11 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Хедебю",
+    "lat": 54.4919,
+    "lon": 9.5644,
+    "createdAt": "8 век",
+    "destroyedAt": "1066 год",
+    "color": "red"
+  },
+  {
+    "name": "Жабляк",
+    "lat": 42.2708,
+    "lon": 19.1603,
+    "createdAt": "15 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Котор (Декатера)",
+    "lat": 42.4247,
+    "lon": 18.7712,
+    "createdAt": "168 год до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Алчедар",
+    "lat": 47.8778,
+    "lon": 28.8756,
+    "createdAt": "6 век",
+    "destroyedAt": "12 век",
+    "color": "red"
+  },
+  {
+    "name": "Екимауцы",
+    "lat": 47.6881,
+    "lon": 28.9897,
+    "createdAt": "9 век",
+    "destroyedAt": "11 век",
+    "color": "red"
+  },
+  {
+    "name": "Каларашовка",
+    "lat": 48.4239,
+    "lon": 27.8139,
+    "createdAt": "4 век до н.э.",
+    "destroyedAt": "3 век до н.э.",
+    "color": "black"
+  },
+  {
+    "name": "Бранешты",
+    "lat": 47.3117,
+    "lon": 28.9242,
+    "createdAt": "14 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Заславль (Изяславль)",
+    "lat": 54.0041,
+    "lon": 27.2882,
+    "createdAt": "985 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Брест",
+    "lat": 52.0976,
+    "lon": 23.7341,
+    "createdAt": "1019 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Коростень",
+    "lat": 50.9497,
+    "lon": 28.6425,
+    "createdAt": "705 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Тмутаракань",
+    "lat": 45.2198,
+    "lon": 36.6853,
+    "createdAt": "6 век до н.э.",
+    "destroyedAt": "14 век",
+    "color": "black"
+  },
+  {
+    "name": "Мукачево",
+    "lat": 48.4419,
+    "lon": 22.7214,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Ужгород",
+    "lat": 48.6208,
+    "lon": 22.2879,
+    "createdAt": "893 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Хуст",
+    "lat": 48.1751,
+    "lon": 23.2939,
+    "createdAt": "1090 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Пряшев",
+    "lat": 48.9984,
+    "lon": 21.2405,
+    "createdAt": "13 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Берегово (Берегсас)",
+    "lat": 48.2047,
+    "lon": 22.6437,
+    "createdAt": "11 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Санок",
+    "lat": 49.5609,
+    "lon": 22.2062,
+    "createdAt": "12 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Гродно",
+    "lat": 53.6693,
+    "lon": 23.8131,
+    "createdAt": "1127 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Новогрудок",
+    "lat": 53.6015,
+    "lon": 25.8246,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Фризиле",
+    "lat": 43.764,
+    "lon": 11.2978,
+    "createdAt": "13 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Левы-Градец",
+    "lat": 50.1706,
+    "lon": 14.3725,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Старе-Место",
+    "lat": 49.0744,
+    "lon": 17.4144,
+    "createdAt": "8 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Будеч",
+    "lat": 50.1917,
+    "lon": 14.2444,
+    "createdAt": "9 век",
+    "destroyedAt": "13 век",
+    "color": "red"
+  },
+  {
+    "name": "Белград (Берат)",
+    "lat": 40.7049,
+    "lon": 19.9493,
+    "createdAt": "4 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Москва",
+    "lat": 55.7558,
+    "lon": 37.6173,
+    "createdAt": "1147 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Киев",
+    "lat": 50.4501,
+    "lon": 30.5234,
+    "createdAt": "5 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Варшава",
+    "lat": 52.2297,
+    "lon": 21.0122,
+    "createdAt": "13 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Берлин",
+    "lat": 52.52,
+    "lon": 13.405,
+    "createdAt": "13 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Трново",
+    "lat": 43.0757,
+    "lon": 25.6172,
+    "createdAt": "12 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "София",
+    "lat": 42.6977,
+    "lon": 23.3219,
+    "createdAt": "1 век нашей эры",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Белград",
+    "lat": 44.7866,
+    "lon": 20.4489,
+    "createdAt": "3 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Прага",
+    "lat": 50.0755,
+    "lon": 14.4378,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Дрезден",
+    "lat": 51.0504,
+    "lon": 13.7373,
+    "createdAt": "1206 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Минск",
+    "lat": 53.9006,
+    "lon": 27.559,
+    "createdAt": "1067 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Полоцк",
+    "lat": 55.4855,
+    "lon": 28.7681,
+    "createdAt": "862 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Новгород Великий",
+    "lat": 58.5255,
+    "lon": 31.2742,
+    "createdAt": "859 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Старая Ладога",
+    "lat": 59.9989,
+    "lon": 32.2958,
+    "createdAt": "753 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Хемниц",
+    "lat": 50.8333,
+    "lon": 12.9167,
+    "createdAt": "12 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Смоленск",
+    "lat": 54.7814,
+    "lon": 32.0461,
+    "createdAt": "863 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Изборск",
+    "lat": 57.7094,
+    "lon": 27.8597,
+    "createdAt": "862 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Витебск",
+    "lat": 55.18,
+    "lon": 30.16,
+    "createdAt": "974 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Туров",
+    "lat": 52.0663,
+    "lon": 27.7406,
+    "createdAt": "980 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Ростов Великий",
+    "lat": 57.1856,
+    "lon": 39.4139,
+    "createdAt": "862 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Калиш",
+    "lat": 51.7597,
+    "lon": 18.0858,
+    "createdAt": "2 век нашей эры",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Гнезно",
+    "lat": 52.5333,
+    "lon": 17.6,
+    "createdAt": "8 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Познань",
+    "lat": 52.4064,
+    "lon": 16.9252,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Блатноград",
+    "lat": 46.6608,
+    "lon": 17.1378,
+    "createdAt": "839 год",
+    "destroyedAt": "10 век",
+    "color": "red"
+  },
+  {
+    "name": "Охрид",
+    "lat": 41.1208,
+    "lon": 20.8064,
+    "createdAt": "3 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Лейпциг",
+    "lat": 51.3396,
+    "lon": 12.3731,
+    "createdAt": "1015 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Росток",
+    "lat": 54.0924,
+    "lon": 12.1286,
+    "createdAt": "12 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Любек",
+    "lat": 53.8655,
+    "lon": 10.6866,
+    "createdAt": "1143 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Шверин",
+    "lat": 53.6266,
+    "lon": 11.4116,
+    "createdAt": "1018 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Потсдам",
+    "lat": 52.3989,
+    "lon": 13.0657,
+    "createdAt": "993 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Баутцен",
+    "lat": 51.1814,
+    "lon": 14.4239,
+    "createdAt": "1002 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Котбус",
+    "lat": 51.7563,
+    "lon": 14.3329,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Книн",
+    "lat": 44.0414,
+    "lon": 16.1961,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Нин",
+    "lat": 44.2428,
+    "lon": 15.1794,
+    "createdAt": "9 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Шибеник",
+    "lat": 43.735,
+    "lon": 15.8953,
+    "createdAt": "1066 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Стари-Рас",
+    "lat": 43.1283,
+    "lon": 20.4156,
+    "createdAt": "9 век",
+    "destroyedAt": "13 век",
+    "color": "red"
+  },
+  {
+    "name": "Достиника",
+    "lat": 42.6186,
+    "lon": 20.4347,
+    "createdAt": "9 век",
+    "destroyedAt": "10 век",
+    "color": "red"
+  },
+  {
+    "name": "Плиска",
+    "lat": 43.3873,
+    "lon": 27.1307,
+    "createdAt": "681 год",
+    "destroyedAt": "14 век",
+    "color": "red"
+  },
+  {
+    "name": "Велики-Преслав",
+    "lat": 43.1667,
+    "lon": 26.8167,
+    "createdAt": "893 год",
+    "destroyedAt": "14 век",
+    "color": "red"
+  },
+  {
+    "name": "Крань",
+    "lat": 46.2389,
+    "lon": 14.3556,
+    "createdAt": "1 век нашей эры",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Птуй",
+    "lat": 46.4201,
+    "lon": 15.8697,
+    "createdAt": "1 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Любляна",
+    "lat": 46.0569,
+    "lon": 14.5058,
+    "createdAt": "1 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Целе",
+    "lat": 46.2333,
+    "lon": 15.2667,
+    "createdAt": "3 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Айдовский градек",
+    "lat": 46.2783,
+    "lon": 13.9629,
+    "createdAt": "5 век",
+    "destroyedAt": "6 век",
+    "color": "red"
+  },
+  {
+    "name": "Крнски град",
+    "lat": 46.6832,
+    "lon": 14.3147,
+    "createdAt": "7 век",
+    "destroyedAt": "11 век",
+    "color": "red"
+  },
+  {
+    "name": "Власоград",
+    "lat": 46.6133,
+    "lon": 14.3986,
+    "createdAt": "9 век",
+    "destroyedAt": "12 век",
+    "color": "red"
+  },
+  {
+    "name": "Грац",
+    "lat": 47.0707,
+    "lon": 15.4395,
+    "createdAt": "12 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Вена",
+    "lat": 48.2082,
+    "lon": 16.3738,
+    "createdAt": "1 век нашей эры",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Ново Место",
+    "lat": 47.8089,
+    "code": 16.2325,
+    "createdAt": "12 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Краков",
+    "lat": 50.0647,
+    "lon": 19.945,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Вроцлав",
+    "lat": 51.1079,
+    "lon": 17.0385,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Гданьск",
+    "lat": 54.352,
+    "lon": 18.6466,
+    "createdAt": "997 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Плоцк",
+    "lat": 52.5463,
+    "lon": 19.7065,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Волин",
+    "lat": 53.8405,
+    "lon": 14.6114,
+    "createdAt": "9 век",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Владимир",
+    "lat": 56.129,
+    "lon": 40.4066,
+    "createdAt": "990 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Суздаль",
+    "lat": 56.4193,
+    "lon": 40.4489,
+    "createdAt": "1024 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Старая Рязань",
+    "lat": 54.3975,
+    "lon": 40.4283,
+    "createdAt": "11 век",
+    "destroyedAt": "1237 год",
+    "color": "green"
+  },
+  {
+    "name": "Муром",
+    "lat": 55.575,
+    "lon": 42.0401,
+    "createdAt": "862 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Галич",
+    "lat": 49.1247,
+    "lon": 24.7289,
+    "createdAt": "12 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Владимир-Волынский",
+    "lat": 50.8482,
+    "lon": 24.3222,
+    "createdAt": "988 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Чернигов",
+    "lat": 51.4982,
+    "lon": 31.2893,
+    "createdAt": "907 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Переяславль-Южный",
+    "lat": 50.0651,
+    "lon": 31.4614,
+    "createdAt": "992 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Новгород-Северский",
+    "lat": 52.0078,
+    "lon": 33.2728,
+    "createdAt": "1044 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Печ",
+    "lat": 46.0727,
+    "lon": 18.2323,
+    "createdAt": "2 век нашей эры",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Безприм",
+    "lat": 47.0933,
+    "lon": 17.9115,
+    "createdAt": "11 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Черниград",
+    "lat": 46.7113,
+    "lon": 20.1403,
+    "createdAt": "10 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Вышеград",
+    "lat": 47.7854,
+    "lon": 18.9706,
+    "createdAt": "4 век нашей эры",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Бэлград (Алба-Юлия)",
+    "lat": 46.0733,
+    "lon": 23.5805,
+    "createdAt": "2 век нашей эры",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Чернавода",
+    "lat": 44.3382,
+    "lon": 28.0336,
+    "createdAt": "4 век до н.э.",
+    "destroyedAt": null,
+    "color": "black"
+  },
+  {
+    "name": "Рымник",
+    "lat": 45.0997,
+    "lon": 24.3693,
+    "createdAt": "14 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Тырговиште",
+    "lat": 44.9254,
+    "lon": 25.4561,
+    "createdAt": "14 век",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Городец",
+    "lat": 56.6433,
+    "lon": 43.4736,
+    "createdAt": "1152 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Кострома",
+    "lat": 57.7665,
+    "lon": 40.9269,
+    "createdAt": "1152 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Тверь",
+    "lat": 56.8587,
+    "lon": 35.9176,
+    "createdAt": "1135 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Белое озеро",
+    "lat": 60.0315,
+    "lon": 32.3275,
+    "createdAt": "862 год",
+    "destroyedAt": null,
+    "color": "red"
+  },
+  {
+    "name": "Стародуб Северский",
+    "lat": 52.6074,
+    "lon": 32.7628,
+    "createdAt": "1080 год",
+    "destroyedAt": null,
+    "color": "green"
+  },
+  {
+    "name": "Нижний Новгород",
+    "lat": 56.3269,
+    "lon": 44.0059,
+    "createdAt": "1221 год",
+    "destroyedAt": null,
+    "color": "green"
+  }
+]

@@ -169,7 +169,7 @@ function pointStyleFunction(feature: FeatureLike, resolution: number) {
         image: new CircleStyle({
             radius: 10,
             fill: new Fill({color: 'rgba(255, 0, 0, 0.1)'}),
-            stroke: new Stroke({color: 'red', width: 1}),
+            stroke: new Stroke({color: feature.get('color'), width: 1}),
         }),
         text: createTextStyle(feature, resolution, myDom.points),
     });
@@ -177,13 +177,16 @@ function pointStyleFunction(feature: FeatureLike, resolution: number) {
 
 const customSource = new VectorSource({
     loader: function (extent, resolution, projection, success, failure) {
-        import("./data.json")
+        import("./data2.json")
             .then(response => response.default)
             .then(data => {
                 const features = data.map(item => {
+                    const to = item.destroyedAt ? ` - ${item.destroyedAt}` : '';
+                    const name = `${item.name} (${item.createdAt}${to})`;
                     return new Feature({
                         geometry: new Point(fromLonLat([item.lon, item.lat])),
-                        name: item.name
+                        name,
+                        color: item.color,
                     });
                 });
 
@@ -260,7 +263,16 @@ const PlacesPage = () => {
         <>
             <div className="flex flex-col mb-2">
                 <span className="text-xl">
-                    Карта по-славянски (5-13 вв. по РХ)
+                    Карта славянских поселений (до 14 вв. по РХ)&nbsp;
+                    <span style={{ color: "black", fontSize: 12, paddingLeft: '4px' }}>
+                        Города до 5 в. по РХ
+                    </span>
+                    <span style={{ color: "red", fontSize: 12, paddingLeft: '4px'}}>
+                        Города с 5 по 10 вв. по РХ
+                    </span>
+                    <span style={{ color: "green", fontSize: 12, paddingLeft: '4px'}}>
+                        Города с 10 по 14 вв. по РХ
+                    </span>
                 </span>
             </div>
             <div id="map" style={{ height: 'calc(100vh - 100px)', width: '100%'}} />
