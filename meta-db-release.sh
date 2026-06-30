@@ -5,6 +5,6 @@ sshpass -f <(printf '%s\n' $PASSWORD) scp .env.production $USERNAME@$HOST:/var/w
 rm -rf meta-db
 mongodump -d typikon-meta -o meta-db
 zip -rX meta-db.zip meta-db
-sshpass -f <(printf '%s\n' $PASSWORD) scp meta-db.zip $USERNAME@$HOST:/var/www/typikon.su/meta-db.zip
+sshpass -f <(printf '%s\n' $PASSWORD) scp meta-db.zip $USERNAME@$HOST:/var/www/typikon.su/typikon-web/meta-db.zip
 
 sshpass -f <(printf '%s\n' $PASSWORD) ssh $USERNAME@$HOST 'bash -s' < meta-db-remote.sh
