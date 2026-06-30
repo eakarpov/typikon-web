@@ -2,10 +2,16 @@
 Description=Typikon Web
 
 [Service]
-ExecStart=npm start --prefix /home/admin/typikon-web -- -p 80
+Environment="PATH=/home/admin/.nvm/versions/node/v20.20.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment=NODE_ENV=production
+
+ExecStart=/home/admin/.nvm/versions/node/v20.20.2/bin/npm start --prefix /var/www/typikon.su/typikon-web -- -p 80
+Environment=AUTH_TRUST_HOST=true
+Environment=NEXTAUTH_URL=https://www.interslavic-lexicon.com
+
 Restart=on-failure
 User=admin
-WorkingDirectory=/home/admin/typikon-web
+WorkingDirectory=/var/www/typikon.su/typikon-web
 
 [Install]
 WantedBy=multi-user.target
