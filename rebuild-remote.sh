@@ -1,4 +1,4 @@
-cd typikon-web
+cd /var/www/typikon.su/typikon-web
 git checkout master
 git pull
 npm i -f
