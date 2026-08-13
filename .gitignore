@@ -9,6 +9,8 @@
 .env.production
 .env.release
 
+/public/app/
+
 nobles.db
 
 NOTES.md
