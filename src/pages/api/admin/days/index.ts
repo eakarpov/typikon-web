@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        await checkRightsBack(req, res);
+        if (!(await checkRightsBack(req, res))) return;
         const {weekId, monthId} = req.body;
         if (!weekId && !monthId) {
             res.status(400).end();

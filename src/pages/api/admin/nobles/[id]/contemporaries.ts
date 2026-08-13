@@ -11,6 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
         res.status(405).end();
     } else {
+        if (!(await checkRightsBack(req, res))) return;
         try {
             const id = req.query.id as string;
             const db = await init();

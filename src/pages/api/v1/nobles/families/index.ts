@@ -15,8 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 data = await db.prepare(`
                 SELECT *
                 FROM families
-                WHERE ROWID IN (SELECT ROWID FROM families_text WHERE name LIKE '%${search}%' ORDER BY rank)`)
-                    .all();
+                WHERE ROWID IN (SELECT ROWID FROM families_text WHERE name LIKE ? ORDER BY rank)`)
+                    .all(`%${search}%`);
             } else {
                 data = await db.prepare(`
                 SELECT *

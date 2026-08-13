@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        await checkRightsBack(req, res);
+        if (!(await checkRightsBack(req, res))) return;
         try {
             const client = await clientPromise;
             const db = client.db("typikon");

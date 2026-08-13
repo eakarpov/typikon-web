@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        await checkRightsBack(req, res);
+        if (!(await checkRightsBack(req, res))) return;
         res.status(405).end();
     } else {
         try {
@@ -19,8 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const dataNobles = await db.prepare(`
                 SELECT *
                 FROM nobles
-                WHERE ROWID IN (SELECT ROWID FROM nobles_text WHERE name LIKE '%${search}%' ORDER BY rank)`)
-                .all();
+                WHERE ROWID IN (SELECT ROWID FROM nobles_text WHERE name LIKE ? ORDER BY rank)`)
+                .all(`%${search}%`);
 
             const dataRequest = await db.prepare(`select * from rules where personId=?`);
 

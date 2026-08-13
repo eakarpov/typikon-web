@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
-        await checkRightsBack(req, res);
+        if (!(await checkRightsBack(req, res))) return;
         try {
             const db = await init();
 
@@ -28,8 +28,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const data = await db.prepare(`
                 SELECT *
                 FROM families
-                WHERE ROWID IN (SELECT ROWID FROM families_text WHERE name LIKE '%${search}%' ORDER BY rank)`)
-                .all();
+                WHERE ROWID IN (SELECT ROWID FROM families_text WHERE name LIKE ? ORDER BY rank)`)
+                .all(`%${search}%`);
 
             res.json({
                 data,

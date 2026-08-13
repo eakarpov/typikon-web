@@ -7,6 +7,8 @@ export const checkRightsBack = async (req: NextApiRequest, res: NextApiResponse)
         const hasSession = await verifySessionBack(req, true);
         if (!hasSession) {
             res.status(404).end();
+            return false;
         }
     }
+    return true;
 }
