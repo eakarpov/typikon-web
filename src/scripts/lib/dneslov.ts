@@ -3,15 +3,37 @@
 // src/app/reading/DneslovImages.tsx). Используем тот же путь: dneslovId текста -> память -> фото/название.
 import { Agent, fetch as undiciFetch, RequestInfo, RequestInit } from "undici";
 
-interface DneslovMemo {
-    title?: string;
-    eventId?: string;
-    description?: string;
+// Реальная форма ответа {slug}.json (проверено на живых данных, см. buildPost.ts) — не совпадает
+// с тем, что ожидает мобильное приложение (DneslovMemory{memoes, links} прямо на верхнем уровне) —
+// там, похоже, тоже не находит "memoes" на верхнем уровне и падает на пустом месте.
+// Реально: верхний уровень — сама "память" (персона/событие), с уже готовым short_name,
+// и массивом events — у каждого события своя подборка memoes с чином (orders).
+export interface DneslovOrderTag {
+    name: string;
+    slug: string;
 }
 
-interface DneslovMemory {
-    slug?: string;
+export interface DneslovMemo {
+    id?: number;
+    title?: string;
+    // Карта "сокращение чина -> каноническое сокращение", например {"ап":"мч","мч":"мч"} —
+    // запись, где ключ === значению, и есть каноническая категория для этой памяти.
+    orders?: Record<string, string>;
+    year_date?: string;
+}
+
+export interface DneslovEvent {
+    id?: number;
+    kind_code?: string;
+    orders?: DneslovOrderTag[];
     memoes?: DneslovMemo[];
+}
+
+export interface DneslovMemory {
+    slug?: string;
+    short_name?: string;
+    gallery_title?: string;
+    events?: DneslovEvent[];
 }
 
 interface DneslovImage {

@@ -1,5 +1,6 @@
-import { getDneslovMemory, getDneslovImage } from "@/scripts/lib/dneslov";
-import { extractHeroFromDneslovTitle, extractHeroFromHeuristic, HeroName } from "@/scripts/lib/heroName";
+import { getDneslovMemory, getDneslovImage, DneslovEvent } from "@/scripts/lib/dneslov";
+import { extractHeroFromHeuristic, HeroName } from "@/scripts/lib/heroName";
+import { expandOrderAbbreviation } from "@/scripts/lib/orderAbbreviations";
 import { ChannelPostNameSource } from "@/types/dto/channelPost";
 
 interface DaySongText {
@@ -76,26 +77,56 @@ const truncateBody = (html: string): { html: string; truncated: boolean } => {
     return { html: `${safeCut}…`, truncated: true };
 };
 
-const resolveHero = async (text: DaySongText): Promise<{ hero: HeroName | null; dneslovSlug: string | null }> => {
-    if (text.dneslovId) {
-        const memory = await getDneslovMemory(text.dneslovId);
-        if (!memory) {
-            console.warn(`dneslov: память для dneslovId=${text.dneslovId} не получена`);
-        }
-        const memo =
-            memory?.memoes?.find((m) => !text.dneslovEventId || m.eventId === text.dneslovEventId) ||
-            memory?.memoes?.[0];
-        if (memory && !memo) {
-            console.warn(`dneslov: у памяти dneslovId=${text.dneslovId} нет memoes:`, JSON.stringify(memory).slice(0, 300));
-        }
-        const hero = extractHeroFromDneslovTitle(memo?.title);
-        if (hero) return { hero, dneslovSlug: memory?.slug ?? null };
-        if (memo?.title) {
-            console.warn(`dneslov: не удалось разобрать чин/имя из заголовка "${memo.title}" — использую эвристику`);
-        }
-        return { hero: extractHeroFromHeuristic(text.name), dneslovSlug: memory?.slug ?? null };
+// Реальная форма ответа Днеслова (проверено на живых данных, см. dneslov.ts): чистое имя —
+// в top-level short_name/gallery_title ("Стефа́н Первому́ченик"). Чин — в events[].memoes[].orders,
+// карта вида {"ап":"мч","мч":"мч"}: самореферентная запись (ключ === значению) — каноническое
+// сокращение чина для этой памяти. Событие выбираем по dneslovEventId, если он есть, иначе первое.
+// Берём канонические сокращения по ВСЕМ memoes события (не только первому) — у одной памяти
+// может быть несколько справедливых чинов одновременно (например Стефан — "ап" и "мч" сразу,
+// он в лике семидесяти апостолов, но чтится в первую очередь как первомученик). Выбирать между
+// ними произвольно не хотим — отдаём оба, это только увеличивает шанс найти пост по хэштегу.
+const findCanonicalOrderAbbreviations = (event?: DneslovEvent): string[] => {
+    const abbreviations = new Set<string>();
+    for (const memo of event?.memoes || []) {
+        if (!memo.orders) continue;
+        const selfMapped = Object.entries(memo.orders).find(([abbr, canonical]) => abbr === canonical);
+        if (selfMapped) abbreviations.add(selfMapped[0]);
     }
-    return { hero: extractHeroFromHeuristic(text.name), dneslovSlug: null };
+    return [...abbreviations];
+};
+
+const resolveHero = async (text: DaySongText): Promise<{ hero: HeroName | null; dneslovSlug: string | null }> => {
+    const heuristic = extractHeroFromHeuristic(text.name);
+
+    if (!text.dneslovId) {
+        return { hero: heuristic, dneslovSlug: null };
+    }
+
+    const memory = await getDneslovMemory(text.dneslovId);
+    if (!memory) {
+        console.warn(`dneslov: память для dneslovId=${text.dneslovId} не получена`);
+        return { hero: heuristic, dneslovSlug: null };
+    }
+
+    const name = (memory.short_name || memory.gallery_title || "").trim();
+    if (!name) {
+        console.warn(`dneslov: у памяти dneslovId=${text.dneslovId} нет short_name/gallery_title:`, JSON.stringify(memory).slice(0, 300));
+        return { hero: heuristic, dneslovSlug: memory.slug ?? null };
+    }
+
+    const event =
+        memory.events?.find((e) => !text.dneslovEventId || String(e.id) === text.dneslovEventId) ||
+        memory.events?.[0];
+    const orderAbbreviations = findCanonicalOrderAbbreviations(event);
+
+    return {
+        hero: {
+            name,
+            ranks: orderAbbreviations.length ? orderAbbreviations.map(expandOrderAbbreviation) : heuristic?.ranks ?? [],
+            source: "dneslov",
+        },
+        dneslovSlug: memory.slug ?? null,
+    };
 };
 
 export const buildChannelPost = async ({
@@ -117,9 +148,17 @@ export const buildChannelPost = async ({
     const { hero, dneslovSlug } = await resolveHero(text);
     const imageUrl = text.dneslovId ? await getDneslovImage(text.dneslovId, text.dneslovEventId) : null;
 
-    const hashtags = hero
-        ? [hero.name, hero.rank].filter((v): v is string => !!v).map((w) => `#${w.replace(/[\s,.;:!?]/g, "")}`)
+    // normalize+strip диакритику (Днеслов пишет с ударениями: "Стефа́н") — иначе значок ударения
+    // остаётся в хэштеге как отдельный символ.
+    const toHashtag = (w: string) =>
+        `#${w.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[\s,.;:!?]/g, "")}`;
+    // Имя разбиваем на отдельные хэштеги по словам ("Стефан Первомученик" -> #Стефан #Первомученик) —
+    // по одному слову искать вероятнее, чем по слитному "#СтефанПервомученик". Чисто цифровые
+    // токены (например "9" из "9 мучеников Пергийских") в хэштег не превращаем — по ним не ищут.
+    const nameWords = hero?.name
+        ? hero.name.split(/\s+/).filter((w) => /[А-Яа-яЁё]/.test(w))
         : [];
+    const hashtags = [...nameWords, ...(hero?.ranks || [])].map(toHashtag);
     hashtags.push("#Пролог");
 
     const csLabel = truncated ? "Полный церковнославянский текст" : "Церковнославянский текст";
