@@ -29,6 +29,8 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
     const [vkEnabled, setVkEnabled] = useState(!!item.targets?.vk);
     const [saving, setSaving] = useState(false);
     const [deleted, setDeleted] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [sendError, setSendError] = useState<string | null>(null);
 
     const save = async (fields: Record<string, unknown>) => {
         setSaving(true);
@@ -56,6 +58,26 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
         const next = !vkEnabled;
         setVkEnabled(next);
         await save({ targets: { telegram: true, vk: next } });
+    };
+
+    const onSendNow = async () => {
+        if (!window.confirm("Отправить этот пост в Telegram прямо сейчас, не дожидаясь слота?")) return;
+        setSending(true);
+        setSendError(null);
+        try {
+            // сохраняем текущие правки, чтобы отправилось то, что видно на экране, а не старая версия
+            await save({ text, imageUrl, hashtags: hashtags.split(/\s+/).filter(Boolean) });
+            const res = await fetch(`/api/admin/channel-posts/${item.id}/send`, { method: "POST" });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setSendError(data.error || `Ошибка ${res.status}`);
+                return;
+            }
+            setStatus("published");
+            router.refresh();
+        } finally {
+            setSending(false);
+        }
     };
 
     const onDelete = async () => {
@@ -163,11 +185,23 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
                 <button className="border px-2 py-1 text-red-700" disabled={saving} onClick={onDelete}>
                     Удалить
                 </button>
+                <button
+                    className="border px-2 py-1 bg-amber-100"
+                    disabled={sending}
+                    onClick={onSendNow}
+                >
+                    {sending ? "Отправляю…" : "Отправить сейчас"}
+                </button>
                 <label className="flex flex-row items-center gap-1 text-sm ml-4">
                     <input type="checkbox" checked={vkEnabled} onChange={onToggleVk} disabled />
                     Дублировать в VK (пока недоступно)
                 </label>
             </div>
+            {sendError && (
+                <div className="text-red-700 text-sm">
+                    Ошибка отправки: {sendError}
+                </div>
+            )}
         </div>
     );
 };

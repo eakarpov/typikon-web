@@ -143,7 +143,7 @@ export const buildChannelPost = async ({
     const paragraphs = (text.content || "").split("\n\n").map(markupToTelegramHtml);
     const { html: bodyHtml, truncated } = truncateBody(paragraphs.join("\n\n"));
 
-    const poemsBlock = text.poems ? `<b>Стихи́:</b>\n${escapeHtml(text.poems)}\n\n` : "";
+    const poemsBlock = text.poems ? `<b>Стихи́:</b>\n${escapeHtml(text.poems)}` : "";
 
     const { hero, dneslovSlug } = await resolveHero(text);
     const imageUrl = text.dneslovId ? await getDneslovImage(text.dneslovId, text.dneslovEventId) : null;
@@ -163,25 +163,29 @@ export const buildChannelPost = async ({
 
     const csLabel = truncated ? "Полный церковнославянский текст" : "Церковнославянский текст";
 
-    const lines = [
-        `<b>ПРОЛОГ на день (${formatOldStyleDate(day)})</b>`,
-        escapeHtml(text.name),
-        "",
-        poemsBlock,
-        bodyHtml,
-        "",
+    const headerBlock = `<b>ПРОЛОГ на день (${formatOldStyleDate(day)})</b>\n${escapeHtml(text.name)}`;
+    const linksBlock = [
         `<a href="${SITE}/reading/${text.alias}">${csLabel}</a>`,
         text.ruLink ? `<a href="${text.ruLink}">Русский текст</a>` : "",
         `<a href="${SITE}/calendar/${dayAlias}">Чтения на день</a>`,
+    ]
+        .filter((l) => l !== "")
+        .join("\n");
+
+    // Каждый блок — законченная смысловая часть (может быть в несколько строк внутри себя).
+    // Между блоками — ровно одна пустая строка; блоки, которых нет (например нет стихов),
+    // просто отсутствуют в массиве, а не превращаются в пустую строку, которую потом
+    // приходится вычищать регуляркой (раньше так терялся перенос перед "Стихи́:").
+    const blocks = [
+        headerBlock,
+        poemsBlock,
+        bodyHtml,
+        linksBlock,
         hashtags.join(" "),
         `<a href="${HELP_LINK}">Помочь проекту</a>`,
-    ];
+    ].filter((b) => b !== "");
 
-    let fullText = lines
-        .filter((l) => l !== "")
-        .join("\n")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
+    let fullText = blocks.join("\n\n").trim();
 
     if (fullText.length > TELEGRAM_LIMIT) {
         fullText = `${fullText.slice(0, TELEGRAM_LIMIT - 1)}…`;

@@ -12,6 +12,7 @@
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { ChannelPostDTO } from "@/types/dto/channelPost";
+import { sendChannelPostToTelegram } from "@/lib/channelPosts/telegram";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID;
@@ -20,25 +21,6 @@ type ChannelPostDoc = Omit<ChannelPostDTO, "id" | "date" | "scheduledAt" | "crea
     _id: unknown;
     date: Date;
     scheduledAt: Date;
-};
-
-const sendToTelegram = async (post: ChannelPostDoc) => {
-    const method = post.imageUrl ? "sendPhoto" : "sendMessage";
-    const body = post.imageUrl
-        ? { chat_id: CHANNEL_ID, photo: post.imageUrl, caption: post.text, parse_mode: "HTML" }
-        : { chat_id: CHANNEL_ID, text: post.text, parse_mode: "HTML", disable_web_page_preview: true };
-
-    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-    if (!data.ok) {
-        throw new Error(`Telegram: ${data.description || res.status}`);
-    }
-    return data.result;
 };
 
 // Заглушка — публикация в VK пока не подключена (см. ROADMAP.md: тип сообщества "Канал"
@@ -73,7 +55,7 @@ const main = async () => {
     for (const post of duePosts) {
         try {
             if (post.targets?.telegram !== false) {
-                await sendToTelegram(post);
+                await sendChannelPostToTelegram(post, BOT_TOKEN!, CHANNEL_ID!);
             }
             if (post.targets?.vk) {
                 await publishToVk(post);
