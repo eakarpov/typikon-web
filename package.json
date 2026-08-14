@@ -10,6 +10,9 @@
     "release": "bash release.sh",
     "release:db": "bash release-db.sh",
     "release:common": "npm run release && npm run release:db",
+    "release-app": "bash release-app.sh",
+    "channel-posts:generate": "tsx src/scripts/generate-channel-posts.ts",
+    "channel-posts:publish": "tsx src/scripts/publish-channel-posts.ts",
     "release-meta": "bash meta-db-release.sh",
     "release-csl": "bash csl-db-release.sh",
     "sync:db": "bash download-db.sh",
@@ -60,6 +63,7 @@
     "eslint-config-next": "13.1.2",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.4",
+    "tsx": "^4.23.12",
     "typescript": "4.9.4"
   }
 }
