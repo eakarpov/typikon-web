@@ -47,15 +47,27 @@ const dneslovFetch = async (url: string) => {
 };
 
 export const getDneslovMemory = async (dneslovId?: string | null): Promise<DneslovMemory | null> => {
-    if (!dneslovId) return null;
+    if (!dneslovId) {
+        console.log("dneslov: у текста не заполнен dneslovId — пропускаю");
+        return null;
+    }
     try {
         const memoryRes = await dneslovFetch(MEMORY_URL(dneslovId));
-        if (!memoryRes.ok) return null;
+        if (!memoryRes.ok) {
+            console.warn(`dneslov: memories/${dneslovId}.json ответил ${memoryRes.status}`);
+            return null;
+        }
         const memory = await memoryRes.json();
-        if (!memory?.slug) return null;
+        if (!memory?.slug) {
+            console.warn(`dneslov: memories/${dneslovId}.json без slug:`, JSON.stringify(memory).slice(0, 300));
+            return null;
+        }
 
         const detailsRes = await dneslovFetch(`https://dneslov.org/${memory.slug}.json`);
-        if (!detailsRes.ok) return null;
+        if (!detailsRes.ok) {
+            console.warn(`dneslov: ${memory.slug}.json ответил ${detailsRes.status}`);
+            return null;
+        }
         return await detailsRes.json();
     } catch (e) {
         console.error("dneslov: не удалось получить память", e);
@@ -70,9 +82,15 @@ export const getDneslovImage = async (
     if (!dneslovId) return null;
     try {
         const res = await dneslovFetch(IMAGES_URL(dneslovId, dneslovEventId));
-        if (!res.ok) return null;
+        if (!res.ok) {
+            console.warn(`dneslov: images.json?m=${dneslovId} ответил ${res.status}`);
+            return null;
+        }
         const images: DneslovImage[] = await res.json();
-        if (!images?.length) return null;
+        if (!images?.length) {
+            console.warn(`dneslov: images.json?m=${dneslovId} вернул пустой список`);
+            return null;
+        }
         return resolveUrl(images[0].url);
     } catch (e) {
         console.error("dneslov: не удалось получить фото", e);

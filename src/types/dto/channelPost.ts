@@ -13,8 +13,8 @@ export interface ChannelPostDTO {
     date: string;
     slot: ChannelPostSlot;
     scheduledAt: string;
-    sourceTextId: string;
-    sourceTextName: string;
+    sourceTextId: string | null;
+    sourceTextName: string | null;
     text: string;
     imageUrl: string | null;
     hashtags: string[];

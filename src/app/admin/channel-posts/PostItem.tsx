@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChannelPostDTO } from "@/types/dto/channelPost";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -20,12 +21,14 @@ const STATUS_CLASS: Record<string, string> = {
 };
 
 const PostItem = ({ item }: { item: ChannelPostDTO }) => {
+    const router = useRouter();
     const [text, setText] = useState(item.text || "");
     const [imageUrl, setImageUrl] = useState(item.imageUrl || "");
     const [hashtags, setHashtags] = useState((item.hashtags || []).join(" "));
     const [status, setStatus] = useState(item.status);
     const [vkEnabled, setVkEnabled] = useState(!!item.targets?.vk);
     const [saving, setSaving] = useState(false);
+    const [deleted, setDeleted] = useState(false);
 
     const save = async (fields: Record<string, unknown>) => {
         setSaving(true);
@@ -54,6 +57,20 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
         setVkEnabled(next);
         await save({ targets: { telegram: true, vk: next } });
     };
+
+    const onDelete = async () => {
+        if (!window.confirm("Удалить этот пост безвозвратно?")) return;
+        setSaving(true);
+        try {
+            await fetch(`/api/admin/channel-posts/${item.id}`, { method: "DELETE" });
+            setDeleted(true);
+            router.refresh();
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (deleted) return null;
 
     return (
         <div className="flex flex-col border rounded border-slate-300 p-3 gap-2">
@@ -115,6 +132,9 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
                 </button>
                 <button className="border px-2 py-1" onClick={onToggleReady}>
                     {status === "ready" ? "Вернуть в черновики" : "Готово к отправке"}
+                </button>
+                <button className="border px-2 py-1 text-red-700" disabled={saving} onClick={onDelete}>
+                    Удалить
                 </button>
                 <label className="flex flex-row items-center gap-1 text-sm ml-4">
                     <input type="checkbox" checked={vkEnabled} onChange={onToggleVk} disabled />

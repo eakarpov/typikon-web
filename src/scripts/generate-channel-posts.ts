@@ -14,6 +14,12 @@
 //     (вечерняя служба уже относится к следующему по Уставу дню);
 //   - если черновик для (dayAlias, slot, sourceTextId) уже существует — не трогаем его,
 //     чтобы не затереть уже отредактированные/подтверждённые/опубликованные посты.
+//
+// Старый/новый стиль: alias дня в базе (july-09 и т.п.) — старый стиль (по Уставу), а дата
+// отправки (scheduledAt) должна быть в новом стиле (реальное календарное время публикации).
+// Поэтому для выбора alias дата публикации переводится в старый стиль (-13 дней), а сама
+// scheduledAt остаётся в новом стиле как есть — см. toOldStyle/getTodayDate в @/utils/dates.ts,
+// где используется тот же сдвиг для "сегодня" на сайте.
 import "@/scripts/lib/env";
 import { Db } from "mongodb";
 import clientPromise from "@/lib/mongodb";
@@ -23,6 +29,10 @@ import { buildChannelPost } from "@/scripts/lib/buildPost";
 import { ChannelPostSlot } from "@/types/dto/channelPost";
 
 const API_BASE_URL = process.env.API_BASE_URL || "http://127.0.0.1:3000";
+
+// Разница между новым (григорианским) и старым (юлианским) стилем в XXI веке
+const OLD_STYLE_OFFSET_DAYS = 13;
+const toOldStyle = (date: Date): Date => new Date(+date - OLD_STYLE_OFFSET_DAYS * 24 * 60 * 60 * 1000);
 
 const dayAliasFor = (date: Date) => `${getMonth(date.getMonth() + 1)}-${getZeroedNumber(date.getDate())}`;
 
@@ -51,8 +61,8 @@ const fetchDay = async (alias: string): Promise<any | null> => {
     return res.json();
 };
 
-const generateForDate = async (db: Db, date: Date) => {
-    const alias = dayAliasFor(date);
+const generateForDate = async (db: Db, deliveryDate: Date) => {
+    const alias = dayAliasFor(toOldStyle(deliveryDate));
     const day = await fetchDay(alias);
     const items = (day?.song6?.items || []).filter((i: any) => i?.text);
 
@@ -61,14 +71,14 @@ const generateForDate = async (db: Db, date: Date) => {
     const picked = items.slice(0, 2);
     const slots: { item: any; slot: ChannelPostSlot; scheduledAt: Date }[] =
         picked.length === 1
-            ? [{ item: picked[0], slot: "morning", scheduledAt: withTime(date, 9) }]
+            ? [{ item: picked[0], slot: "morning", scheduledAt: withTime(deliveryDate, 9) }]
             : [
                   {
                       item: picked[0],
                       slot: "evening",
-                      scheduledAt: withTime(new Date(+date - 24 * 60 * 60 * 1000), 18),
+                      scheduledAt: withTime(new Date(+deliveryDate - 24 * 60 * 60 * 1000), 18),
                   },
-                  { item: picked[1], slot: "morning", scheduledAt: withTime(date, 9) },
+                  { item: picked[1], slot: "morning", scheduledAt: withTime(deliveryDate, 9) },
               ];
 
     for (const { item, slot, scheduledAt } of slots) {
@@ -83,7 +93,7 @@ const generateForDate = async (db: Db, date: Date) => {
 
         await db.collection("channelPosts").insertOne({
             dayAlias: alias,
-            date,
+            date: deliveryDate,
             slot,
             scheduledAt,
             ...built,
