@@ -106,6 +106,14 @@
   `TELEGRAM_BOT_TOKEN` уже есть.
 - Два крона: генератор раз в день, паблишер в 9:00 и 18:00.
 
+**Если api.telegram.org недоступен напрямую** (проверено — блокировка на уровне хостера/региона,
+`curl https://api.telegram.org` с сервера тоже не проходит) — два обхода, включаются через
+`.env.production`, код уже готов ([src/lib/channelPosts/telegram.ts](src/lib/channelPosts/telegram.ts)):
+- `TELEGRAM_API_BASE=https://<worker>.workers.dev` — свой бесплатный релей на Cloudflare Workers,
+  код и инструкция по деплою в [telegram-relay/worker.js](telegram-relay/worker.js) (просто
+  прозрачно перекладывает запрос на api.telegram.org, токен в воркере не хранится).
+- `TELEGRAM_PROXY_URL=http://user:pass@host:port` — если уже есть HTTP/SOCKS5-прокси.
+
 **Не проверено на реальных данных** — вся логика прогнана на моках (мок-ответы dneslov.org,
 без обращения к прод-базе). Перед первым запуском стоит проверить `channel-posts:generate`
 на нескольких настоящих днях и просмотреть черновики в `/admin/channel-posts` до включения крона публикации.
