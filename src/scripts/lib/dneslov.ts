@@ -1,6 +1,7 @@
 // Обёртка над внешним API dneslov.org — уже используется на сайте для получения
 // иконы и канонического названия памяти святого (см. src/app/saints/[id]/api.ts,
 // src/app/reading/DneslovImages.tsx). Используем тот же путь: dneslovId текста -> память -> фото/название.
+import { Agent, fetch as undiciFetch, RequestInfo, RequestInit } from "undici";
 
 interface DneslovMemo {
     title?: string;
@@ -24,15 +25,36 @@ const CDN = "https://cdn.dneslov.org";
 
 const resolveUrl = (url: string) => (url.includes("https") ? url : `${CDN}${url}`);
 
+// dneslov.org отдаёт неполную цепочку сертификатов на некоторых серверах (UNABLE_TO_VERIFY_LEAF_SIGNATURE) —
+// сначала стоит попробовать починить это на уровне ОС (обновить ca-certificates), это безопасно и правильно.
+// Если проблема именно в сертификате dneslov.org, а не в CA-хранилище сервера — включить точечный обход
+// ТОЛЬКО для запросов к dneslov.org переменной окружения DNESLOV_INSECURE_TLS=true. По умолчанию выключено,
+// на остальные запросы приложения (включая fetch внутри /api/v1/days/...) это никак не влияет.
+const insecureAgent = new Agent({ connect: { rejectUnauthorized: false } });
+let warned = false;
+
+const dneslovFetch = async (url: string) => {
+    if (process.env.DNESLOV_INSECURE_TLS === "true") {
+        if (!warned) {
+            console.warn(
+                "dneslov: проверка TLS-сертификата отключена для запросов к dneslov.org (DNESLOV_INSECURE_TLS=true)",
+            );
+            warned = true;
+        }
+        return undiciFetch(url as RequestInfo, { dispatcher: insecureAgent } as RequestInit);
+    }
+    return fetch(url);
+};
+
 export const getDneslovMemory = async (dneslovId?: string | null): Promise<DneslovMemory | null> => {
     if (!dneslovId) return null;
     try {
-        const memoryRes = await fetch(MEMORY_URL(dneslovId));
+        const memoryRes = await dneslovFetch(MEMORY_URL(dneslovId));
         if (!memoryRes.ok) return null;
         const memory = await memoryRes.json();
         if (!memory?.slug) return null;
 
-        const detailsRes = await fetch(`https://dneslov.org/${memory.slug}.json`);
+        const detailsRes = await dneslovFetch(`https://dneslov.org/${memory.slug}.json`);
         if (!detailsRes.ok) return null;
         return await detailsRes.json();
     } catch (e) {
@@ -47,7 +69,7 @@ export const getDneslovImage = async (
 ): Promise<string | null> => {
     if (!dneslovId) return null;
     try {
-        const res = await fetch(IMAGES_URL(dneslovId, dneslovEventId));
+        const res = await dneslovFetch(IMAGES_URL(dneslovId, dneslovEventId));
         if (!res.ok) return null;
         const images: DneslovImage[] = await res.json();
         if (!images?.length) return null;
