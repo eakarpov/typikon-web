@@ -9,6 +9,7 @@
 // Нужные переменные окружения:
 //   TELEGRAM_BOT_TOKEN  — уже есть в .env.production
 //   TELEGRAM_CHANNEL_ID — @username канала или числовой chat_id, бот должен быть администратором
+import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { ChannelPostDTO } from "@/types/dto/channelPost";
 

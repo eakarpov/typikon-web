@@ -92,9 +92,9 @@
    стабильнее). VK — заглушка (`publishToVk` в `publish-channel-posts.ts`), пайплайн уже готов
    принять реальный вызов.
 
-Скрипты — TypeScript, запускаются через `tsx` (добавлен в devDependencies), не `node --env-file`:
-переменные окружения подгружаются в самой cron-команде (`export $(grep ...) .env.production`),
-подробности — в разделе "Настройка крона" ниже.
+Скрипты — TypeScript, запускаются через `tsx` (добавлен в devDependencies). Переменные окружения
+подгружают сами через `@next/env` (`src/scripts/lib/env.ts`) — тот же механизм, что у `next dev`/
+`next start`, вручную `.env.production` не нужно ни экспортировать, ни передавать флагами.
 
 **Почему VK — заглушка:** канал `@blagoslovie` в VK создан как тип "Канал", а API для этого типа
 сообществ сейчас в закрытой альфе VK (не общедоступно, не зависит от настроек прав). Рабочий путь —
@@ -124,7 +124,8 @@ PATH=/home/admin/.nvm/versions/node/v20.20.2/bin:/usr/local/sbin:/usr/local/bin:
 
 Дальше сами задания:
 ```
-0 3 * * * cd /var/www/typikon.su/typikon-web && export $(grep -v '^#' .env.production | xargs) && npm run channel-posts:generate 2>&1 | logger -t channel-posts-gen
-0 9,18 * * * cd /var/www/typikon.su/typikon-web && export $(grep -v '^#' .env.production | xargs) && npm run channel-posts:publish 2>&1 | logger -t channel-posts-pub
+0 3 * * * cd /var/www/typikon.su/typikon-web && npm run channel-posts:generate 2>&1 | logger -t channel-posts-gen
+0 9,18 * * * cd /var/www/typikon.su/typikon-web && npm run channel-posts:publish 2>&1 | logger -t channel-posts-pub
 ```
-`export $(grep ...)` — тот же приём, что уже используется в `release.sh`/`release-db.sh`, подгружает `.env.production` в окружение перед запуском (в отличие от `next dev/start`, обычный скрипт сам файл `.env.production` не читает).
+`.env.production` подгружать вручную не нужно — скрипты делают это сами через `@next/env`
+(`src/scripts/lib/env.ts`), важен только `cd` в корень репозитория, где лежит `.env.production`.

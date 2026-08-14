@@ -14,6 +14,7 @@
 //     (вечерняя служба уже относится к следующему по Уставу дню);
 //   - если черновик для (dayAlias, slot, sourceTextId) уже существует — не трогаем его,
 //     чтобы не затереть уже отредактированные/подтверждённые/опубликованные посты.
+import "@/scripts/lib/env";
 import { Db } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { getMonth } from "@/lib/common/date";
