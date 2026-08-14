@@ -94,6 +94,33 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
                     ⚠️ Не удалось определить святого для хэштега — заполните вручную
                 </div>
             )}
+            {(item.nameSource === "heuristic" || item.nameSource === "none") && (
+                <div className="text-sm">
+                    {item.dneslovSlug ? (
+                        <a
+                            className="text-blue-700 underline"
+                            href={`https://dneslov.org/${item.dneslovSlug}?c=днес,рпц`}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Проверить страницу на dneslov.org →
+                        </a>
+                    ) : item.dneslovId ? (
+                        <a
+                            className="text-blue-700 underline"
+                            href={`https://www.typikon.su/saints/${item.dneslovId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Проверить страницу святого на сайте →
+                        </a>
+                    ) : (
+                        <span className="text-slate-500">
+                            У текста не заполнен dneslovId — проверять нечего, это точно эвристика
+                        </span>
+                    )}
+                </div>
+            )}
 
             <div className="flex flex-row gap-4">
                 {imageUrl ? (

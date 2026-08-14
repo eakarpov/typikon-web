@@ -105,7 +105,12 @@ export const extractHeroFromHeuristic = (name?: string | null): HeroName | null 
 
 export const extractHeroFromDneslovTitle = (title?: string | null): HeroName | null => {
     if (!title) return null;
-    const words = title.split(/\s+/).filter(Boolean);
+    // Днеслов иногда пишет заголовок через запятую ("Каллиник, мученик") — знаки препинания
+    // нужно снять с каждого слова, иначе они попадут в хэштег (#Каллиник, вместо #Каллиник).
+    const words = title
+        .split(/\s+/)
+        .map((w) => w.replace(/[.,;:!?]+$/, "").replace(/^[.,;:!?]+/, ""))
+        .filter(Boolean);
     const rankWord = words.find((w) => RANKS.includes(w.toLowerCase()));
     const nameWord = words.find((w) => /^[А-ЯЁ]/.test(w) && !RANKS.includes(w.toLowerCase()));
 

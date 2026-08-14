@@ -15,6 +15,8 @@ export interface ChannelPostDTO {
     scheduledAt: string;
     sourceTextId: string | null;
     sourceTextName: string | null;
+    dneslovId?: string | null;
+    dneslovSlug?: string | null;
     text: string;
     imageUrl: string | null;
     hashtags: string[];

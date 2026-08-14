@@ -29,6 +29,8 @@ export interface BuiltChannelPost {
     nameSource: ChannelPostNameSource;
     sourceTextId: string;
     sourceTextName: string;
+    dneslovId: string | null;
+    dneslovSlug: string | null;
 }
 
 const SITE = "https://www.typikon.su";
@@ -74,7 +76,7 @@ const truncateBody = (html: string): { html: string; truncated: boolean } => {
     return { html: `${safeCut}…`, truncated: true };
 };
 
-const resolveHero = async (text: DaySongText): Promise<HeroName | null> => {
+const resolveHero = async (text: DaySongText): Promise<{ hero: HeroName | null; dneslovSlug: string | null }> => {
     if (text.dneslovId) {
         const memory = await getDneslovMemory(text.dneslovId);
         if (!memory) {
@@ -87,12 +89,13 @@ const resolveHero = async (text: DaySongText): Promise<HeroName | null> => {
             console.warn(`dneslov: у памяти dneslovId=${text.dneslovId} нет memoes:`, JSON.stringify(memory).slice(0, 300));
         }
         const hero = extractHeroFromDneslovTitle(memo?.title);
-        if (hero) return hero;
+        if (hero) return { hero, dneslovSlug: memory?.slug ?? null };
         if (memo?.title) {
             console.warn(`dneslov: не удалось разобрать чин/имя из заголовка "${memo.title}" — использую эвристику`);
         }
+        return { hero: extractHeroFromHeuristic(text.name), dneslovSlug: memory?.slug ?? null };
     }
-    return extractHeroFromHeuristic(text.name);
+    return { hero: extractHeroFromHeuristic(text.name), dneslovSlug: null };
 };
 
 export const buildChannelPost = async ({
@@ -111,11 +114,11 @@ export const buildChannelPost = async ({
 
     const poemsBlock = text.poems ? `<b>Стихи́:</b>\n${escapeHtml(text.poems)}\n\n` : "";
 
-    const hero = await resolveHero(text);
+    const { hero, dneslovSlug } = await resolveHero(text);
     const imageUrl = text.dneslovId ? await getDneslovImage(text.dneslovId, text.dneslovEventId) : null;
 
     const hashtags = hero
-        ? [hero.name, hero.rank].filter((v): v is string => !!v).map((w) => `#${w.replace(/\s+/g, "")}`)
+        ? [hero.name, hero.rank].filter((v): v is string => !!v).map((w) => `#${w.replace(/[\s,.;:!?]/g, "")}`)
         : [];
     hashtags.push("#Пролог");
 
@@ -152,5 +155,7 @@ export const buildChannelPost = async ({
         nameSource: hero?.source || "none",
         sourceTextId: text._id,
         sourceTextName: text.name,
+        dneslovId: text.dneslovId || null,
+        dneslovSlug,
     };
 };

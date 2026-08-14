@@ -72,7 +72,9 @@ export const getDneslovMemory = async (dneslovId?: string | null): Promise<Dnesl
             console.warn(`dneslov: ${memory.slug}.json ответил ${detailsRes.status}`);
             return null;
         }
-        return await detailsRes.json();
+        const details = await detailsRes.json();
+        // slug гарантированно берём из первого ответа — на details он может отсутствовать
+        return { ...details, slug: memory.slug };
     } catch (e) {
         console.error("dneslov: не удалось получить память", e);
         return null;
