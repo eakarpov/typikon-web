@@ -36,11 +36,13 @@ const toOldStyle = (date: Date): Date => new Date(+date - OLD_STYLE_OFFSET_DAYS 
 
 const dayAliasFor = (date: Date) => `${getMonth(date.getMonth() + 1)}-${getZeroedNumber(date.getDate())}`;
 
-const withTime = (date: Date, hours: number): Date => {
-    const d = new Date(date);
-    d.setHours(hours, 0, 0, 0);
-    return d;
-};
+// Слоты 9:00/18:00 — это московское время (аудитория канала), а не время сервера. Москва не
+// переходит на летнее/зимнее время (всегда UTC+3), поэтому просто явно считаем через Date.UTC —
+// не полагаемся на системный часовой пояс процесса (setHours брал бы локальный TZ сервера,
+// из-за чего 18:00 могло реально сохраниться как 21:00 или другое время в зависимости от TZ сервера).
+const MOSCOW_UTC_OFFSET_HOURS = 3;
+const withMoscowTime = (date: Date, moscowHours: number): Date =>
+    new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), moscowHours - MOSCOW_UTC_OFFSET_HOURS, 0, 0, 0));
 
 const parseArgs = () => {
     const args = Object.fromEntries(
@@ -71,14 +73,14 @@ const generateForDate = async (db: Db, deliveryDate: Date) => {
     const picked = items.slice(0, 2);
     const slots: { item: any; slot: ChannelPostSlot; scheduledAt: Date }[] =
         picked.length === 1
-            ? [{ item: picked[0], slot: "morning", scheduledAt: withTime(deliveryDate, 9) }]
+            ? [{ item: picked[0], slot: "morning", scheduledAt: withMoscowTime(deliveryDate, 9) }]
             : [
                   {
                       item: picked[0],
                       slot: "evening",
-                      scheduledAt: withTime(new Date(+deliveryDate - 24 * 60 * 60 * 1000), 18),
+                      scheduledAt: withMoscowTime(new Date(+deliveryDate - 24 * 60 * 60 * 1000), 18),
                   },
-                  { item: picked[1], slot: "morning", scheduledAt: withTime(deliveryDate, 9) },
+                  { item: picked[1], slot: "morning", scheduledAt: withMoscowTime(deliveryDate, 9) },
               ];
 
     for (const { item, slot, scheduledAt } of slots) {

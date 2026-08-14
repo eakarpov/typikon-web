@@ -77,11 +77,20 @@ const truncateBody = (html: string): { html: string; truncated: boolean } => {
 const resolveHero = async (text: DaySongText): Promise<HeroName | null> => {
     if (text.dneslovId) {
         const memory = await getDneslovMemory(text.dneslovId);
+        if (!memory) {
+            console.warn(`dneslov: память для dneslovId=${text.dneslovId} не получена`);
+        }
         const memo =
             memory?.memoes?.find((m) => !text.dneslovEventId || m.eventId === text.dneslovEventId) ||
             memory?.memoes?.[0];
+        if (memory && !memo) {
+            console.warn(`dneslov: у памяти dneslovId=${text.dneslovId} нет memoes:`, JSON.stringify(memory).slice(0, 300));
+        }
         const hero = extractHeroFromDneslovTitle(memo?.title);
         if (hero) return hero;
+        if (memo?.title) {
+            console.warn(`dneslov: не удалось разобрать чин/имя из заголовка "${memo.title}" — использую эвристику`);
+        }
     }
     return extractHeroFromHeuristic(text.name);
 };

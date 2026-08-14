@@ -77,7 +77,7 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
             <div className="flex flex-row justify-between items-center">
                 <span className="font-serif">
                     {item.dayAlias} — {item.slot === "morning" ? "утро (9:00)" : "вечер (18:00)"} —{" "}
-                    {new Date(item.scheduledAt).toLocaleString("ru-RU")}
+                    {new Date(item.scheduledAt).toLocaleString("ru-RU", { timeZone: "Europe/Moscow" })} МСК
                 </span>
                 <span className={`text-xs px-2 py-1 rounded ${STATUS_CLASS[status] || "bg-slate-200"}`}>
                     {STATUS_LABEL[status] || status}

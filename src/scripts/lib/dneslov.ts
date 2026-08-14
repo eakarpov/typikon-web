@@ -18,7 +18,11 @@ interface DneslovImage {
     url: string;
 }
 
-const MEMORY_URL = (id: string) => `https://dneslov.org/api/v0/memories/${id}.json`;
+// Внимание: memories/{slug}.json стабильно отдаются dneslov.org только по http — так же,
+// как на сайте в getDneslovObject (src/app/saints/[id]/api.ts). По https эти два конкретных
+// эндпоинта не работают (не только сертификат — похоже, дело в самом приложении на их сервере),
+// в отличие от api/v1/images.json и roundels.json, которые по https работают нормально.
+const MEMORY_URL = (id: string) => `http://dneslov.org/api/v0/memories/${id}.json`;
 const IMAGES_URL = (id: string, eventId?: string | null) =>
     `https://dneslov.org/api/v1/images.json?m=${id}${eventId ? `&e=${eventId}` : ""}`;
 const CDN = "https://cdn.dneslov.org";
@@ -63,7 +67,7 @@ export const getDneslovMemory = async (dneslovId?: string | null): Promise<Dnesl
             return null;
         }
 
-        const detailsRes = await dneslovFetch(`https://dneslov.org/${memory.slug}.json`);
+        const detailsRes = await dneslovFetch(`http://dneslov.org/${memory.slug}.json`);
         if (!detailsRes.ok) {
             console.warn(`dneslov: ${memory.slug}.json ответил ${detailsRes.status}`);
             return null;
