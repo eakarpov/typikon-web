@@ -12,6 +12,7 @@ import Redirector from "@/app/reading/[id]/Redirector";
 import EditButton from "@/app/reading/[id]/EditButton";
 import TextSaveLocal from "@/app/components/save/TextSaveLocal";
 import {myFont} from "@/utils/font";
+import {TextReadiness} from "@/utils/texts";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -86,6 +87,11 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         ? new Date(item.updatedAt).toLocaleDateString("ru-RU")
                         : "Не задано"}
                     </span>
+                    {item.readiness === TextReadiness.PRESENCE && (
+                        <Link href={`/texting/${item.id}`} className="pl-2 text-amber-800 no-pdf">
+                            Помочь с отекстовкой
+                        </Link>
+                    )}
                 </div>
                 <div className="flex flex-row items-center">
                     <span className="pr-2 font-serif">

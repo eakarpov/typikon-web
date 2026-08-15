@@ -85,6 +85,12 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
                 >
                     Библиотека
                 </Link>
+                <Link
+                    href="/texting"
+                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/texting`) && `text-red-600`}`}
+                >
+                    Отекстовка
+                </Link>
                 <WithRights
                     session={isAuth}
                     user={userStore}

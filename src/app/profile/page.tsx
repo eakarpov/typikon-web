@@ -1,4 +1,4 @@
-import {getItem} from "@/app/profile/api";
+import {getAcceptedTextingCount, getItem} from "@/app/profile/api";
 import {cookies} from "next/headers";
 import {decrypt} from "@/lib/authorize/sessions";
 import Link from "next/link";
@@ -26,10 +26,20 @@ const ProfilePage = async () => {
         )
     }
 
+    const [acceptedTextingCount] = await getAcceptedTextingCount(session!.userId as string);
+
     return (
         <div>
             <p>
                 Пользователь {item.id}
+            </p>
+            <p>
+                Принято ваших отекстовок: {acceptedTextingCount}
+            </p>
+            <p>
+                <Link href="/texting">
+                    Помочь с отекстовкой
+                </Link>
             </p>
             <Content item={item} />
             {item.isAdmin && (

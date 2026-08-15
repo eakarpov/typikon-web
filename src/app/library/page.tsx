@@ -4,6 +4,7 @@ import {getItems} from "@/app/library/api";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
+import Link from "next/link";
 
 export const metadata: Metadata = {
     title: "Библиотека текстов",
@@ -24,6 +25,9 @@ const Library = async () => {
             <div className={myFont.variable}>
                 <p className="font-serif">
                     В данном разделе будет организован доступ к отекстованным книгам в целом по содержанию без привязки к дате.
+                </p>
+                <p className="font-serif">
+                    Часть текстов ещё не отекстована — <Link href="/texting" className="text-amber-800">помогите проекту с отекстовкой</Link>.
                 </p>
                 <Suspense fallback={<div>Loading...</div>}>
                     {/* @ts-expect-error Async Server Component */}

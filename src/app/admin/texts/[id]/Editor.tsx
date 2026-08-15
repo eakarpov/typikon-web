@@ -55,6 +55,9 @@ const AdminEditor = ({ value }: any) => {
     const [description, setDescription] = useState(value.description || "");
     const [type, setType] = useState(value.type || TextKind.TEACHIND);
     const [readiness, setReadiness] = useState(value.readiness || TextReadiness.READY);
+    const [textingPriority, setTextingPriority] = useState(
+        value.textingPriority ?? ""
+    );
     const [content, setContent] = useState<string>(value.content || "");
     const [link, setLink] = useState(value.link || "");
     const [ruLink, setRuLink] = useState(value.ruLink || "");
@@ -231,6 +234,7 @@ const AdminEditor = ({ value }: any) => {
                 content,
                 bookIndex,
                 readiness,
+                textingPriority: textingPriority === "" ? null : textingPriority,
                 author,
                 translator,
                 footnotes: fNotes,
@@ -328,6 +332,17 @@ const AdminEditor = ({ value }: any) => {
                             </option>
                         ))}
                     </select>
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Приоритет отекстовки (пусто — не в очереди)
+                    </label>
+                    <input
+                        className="border-2"
+                        type="number"
+                        value={textingPriority}
+                        onChange={e => setTextingPriority(e.target.value)}
+                    />
                 </div>
                 <div className="flex flex-col pr-4">
                     <label>

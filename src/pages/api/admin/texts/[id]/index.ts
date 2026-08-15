@@ -28,6 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             type: data.type,
                             bookIndex: parseInt(data.bookIndex, 10),
                             readiness: data.readiness,
+                            textingPriority: data.textingPriority === "" || data.textingPriority == null
+                                ? null
+                                : parseInt(data.textingPriority, 10),
                             content: data.content,
                             updatedAt: new Date(),
                             ruLink: data.ruLink,
