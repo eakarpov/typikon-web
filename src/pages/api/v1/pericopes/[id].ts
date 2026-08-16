@@ -1,7 +1,7 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
-import {filterVersesByRanges, sortVerses} from "@/utils/verses";
+import {resolvePericopeVerses} from "@/lib/pericopes";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'GET') {
@@ -9,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     const id = req.query.id as string;
+    const lang = req.query.lang as string | undefined;
     if (!id || !ObjectId.isValid(id)) {
         res.status(400).end();
         return;
@@ -21,19 +22,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(404).end();
             return;
         }
-        const rawVerses = await db
-            .collection("verses")
-            .find({ textId: pericope.textId })
-            .toArray();
-        const sorted = sortVerses(rawVerses.map(v => ({ ...(v as any), id: v._id.toString() })));
-        const verses = filterVersesByRanges(sorted, pericope.ranges || []);
-        res.status(200).json({
+
+        const base = {
             id: pericope._id.toString(),
-            name: pericope.name,
-            textId: pericope.textId.toString(),
+            source: pericope.source,
+            bookSlug: pericope.bookSlug,
+            number: pericope.number,
+            variant: pericope.variant,
+            label: pericope.label,
+            occasions: pericope.occasions,
             ranges: pericope.ranges,
-            verses,
-        });
+        };
+
+        if (!lang) {
+            res.status(200).json(base);
+            return;
+        }
+
+        const resolved = await resolvePericopeVerses(db, pericope, lang);
+        if (!resolved) {
+            res.status(200).json({ ...base, lang, verses: null, error: "Для этого языка ещё нет размеченной книги" });
+            return;
+        }
+
+        res.status(200).json({ ...base, lang, ...resolved });
     } catch (e) {
         console.error(e);
         res.status(400).end();

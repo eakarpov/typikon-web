@@ -208,85 +208,90 @@ export const valueTitle = (valueName: TextType) => {
   }
 };
 
+interface IBookMapEntry {
+    code: string; // код книги в адресной схеме azbyka.ru (для ссылок на сноски)
+    slug: string; // язык-независимый идентификатор книги для Библий/зачал (biblia-{lang}-{slug}-N)
+}
+
 const bookMap = {
-    "Быт": "Gen",
-    "Исх": "Ex",
-    "Лев": "Lev",
-    "Чис": "Num",
-    "Втор": "Deut",
-    "Нав": "Nav",
-    "Суд": "Judg",
-    "Руф": "Rth",
-    "1Цар": "1Sam",
-    "2Цар": "2Sam",
-    "3Цар": "3Sam",
-    "4Цар": "4Sam",
-    "1Пар": "1Chron",
-    "2Пар": "2Chron",
-    "1Езд": "Ezr",
-    "Неем": "Nehem",
-    "2Езд": "2Ezr",
-    "Тов": "Tov",
-    "Иудиф": "Judf",
-    "Есф": "Est",
-    "Иов": "Job",
-    "Пс": "Ps",
-    "Прит": "Prov",
-    "Еккл": "Eccl",
-    "Песн": "Song",
-    "Прем": "Solom",
-    "Сир": "Sir",
-    "Ис": "Is",
-    "Иер": "Jer",
-    "Плч": "Lam",
-    "ПослИер": "pJer",
-    "Вар": "Bar",
-    "Иез": "Ezek",
-    "Дан": "Dan",
-    "Ос": "Hos",
-    "Иоил": "Joel",
-    "Ам": "Am",
-    "Авд": "Avd",
-    "Ион": "Jona",
-    "Мих": "Mic",
-    "Наум": "Naum",
-    "Авв": "Habak",
-    "Соф": "Sofon",
-    "Аг": "Hag",
-    "Зах": "Zah",
-    "Мал": "Mal",
-    "1Мак": "1Mac",
-    "2Мак": "2Mac",
-    "3Мак": "3Mac",
-    "3Езд": "3Ezr",
-    "Мф": "Mt",
-    "Мк": "Mk",
-    "Лк": "Lk",
-    "Ин": "Jn",
-    "Деян": "Act",
-    "Иак": "Jac",
-    "1Пет": "1Pet",
-    "2Пет": "2Pet",
-    "1Ин": "1Jn",
-    "2Ин": "2Jn",
-    "3Ин": "3Jn",
-    "Иуд": "Juda",
-    "Рим": "Rom",
-    "1Кор": "1Cor",
-    "2Кор": "2Cor",
-    "Гал": "Gal",
-    "Еф": "Eph",
-    "Флп": "Phil",
-    "Кол": "Col",
-    "1Фес": "1Thes",
-    "2Фес": "2Thes",
-    "1Тим": "1Tim",
-    "2Тим": "2Tim",
-    "Тит": "Tit",
-    "Флм": "Phlm",
-    "Евр": "Hebr",
-    "Откр": "Apok",
-} as { [key: string]: string };
+    "Быт": { code: "Gen", slug: "bytie" },
+    "Исх": { code: "Ex", slug: "iskhod" },
+    "Лев": { code: "Lev", slug: "levit" },
+    "Чис": { code: "Num", slug: "chisla" },
+    "Втор": { code: "Deut", slug: "vtorozakonie" },
+    "Нав": { code: "Nav", slug: "iisus-navin" },
+    "Суд": { code: "Judg", slug: "sudi" },
+    "Руф": { code: "Rth", slug: "ruf" },
+    "1Цар": { code: "1Sam", slug: "1-tsarstv" },
+    "2Цар": { code: "2Sam", slug: "2-tsarstv" },
+    "3Цар": { code: "3Sam", slug: "3-tsarstv" },
+    "4Цар": { code: "4Sam", slug: "4-tsarstv" },
+    "1Пар": { code: "1Chron", slug: "1-paralipomenon" },
+    "2Пар": { code: "2Chron", slug: "2-paralipomenon" },
+    "1Езд": { code: "Ezr", slug: "1-ezdry" },
+    "Неем": { code: "Nehem", slug: "neemii" },
+    "2Езд": { code: "2Ezr", slug: "2-ezdry" },
+    "Тов": { code: "Tov", slug: "tovita" },
+    "Иудиф": { code: "Judf", slug: "iudifi" },
+    "Есф": { code: "Est", slug: "esfir" },
+    "Иов": { code: "Job", slug: "iova" },
+    "Пс": { code: "Ps", slug: "psaltir" },
+    "Прит": { code: "Prov", slug: "pritchi" },
+    "Еккл": { code: "Eccl", slug: "ekklesiast" },
+    "Песн": { code: "Song", slug: "pesn-pesney" },
+    "Прем": { code: "Solom", slug: "premudrosti-solomona" },
+    "Сир": { code: "Sir", slug: "sirakha" },
+    "Ис": { code: "Is", slug: "isaii" },
+    "Иер": { code: "Jer", slug: "ieremii" },
+    "Плч": { code: "Lam", slug: "plach-ieremii" },
+    "ПослИер": { code: "pJer", slug: "poslanie-ieremii" },
+    "Вар": { code: "Bar", slug: "varukha" },
+    "Иез": { code: "Ezek", slug: "iezekiilya" },
+    "Дан": { code: "Dan", slug: "daniila" },
+    "Ос": { code: "Hos", slug: "osii" },
+    "Иоил": { code: "Joel", slug: "ioilya" },
+    "Ам": { code: "Am", slug: "amosa" },
+    "Авд": { code: "Avd", slug: "avdiya" },
+    "Ион": { code: "Jona", slug: "iony" },
+    "Мих": { code: "Mic", slug: "mikheya" },
+    "Наум": { code: "Naum", slug: "nauma" },
+    "Авв": { code: "Habak", slug: "avvakuma" },
+    "Соф": { code: "Sofon", slug: "sofonii" },
+    "Аг": { code: "Hag", slug: "aggeya" },
+    "Зах": { code: "Zah", slug: "zakharii" },
+    "Мал": { code: "Mal", slug: "malakhii" },
+    "1Мак": { code: "1Mac", slug: "1-makkaveyskaya" },
+    "2Мак": { code: "2Mac", slug: "2-makkaveyskaya" },
+    "3Мак": { code: "3Mac", slug: "3-makkaveyskaya" },
+    "3Езд": { code: "3Ezr", slug: "3-ezdry" },
+    "Мф": { code: "Mt", slug: "matfeya" },
+    "Мк": { code: "Mk", slug: "marka" },
+    "Лк": { code: "Lk", slug: "luki" },
+    "Ин": { code: "Jn", slug: "ioanna" },
+    "Деян": { code: "Act", slug: "deyaniya" },
+    "Иак": { code: "Jac", slug: "iakova" },
+    "1Пет": { code: "1Pet", slug: "1-petra" },
+    "2Пет": { code: "2Pet", slug: "2-petra" },
+    "1Ин": { code: "1Jn", slug: "1-ioanna-posl" },
+    "2Ин": { code: "2Jn", slug: "2-ioanna-posl" },
+    "3Ин": { code: "3Jn", slug: "3-ioanna-posl" },
+    "Иуд": { code: "Juda", slug: "iudy" },
+    "Рим": { code: "Rom", slug: "rimlyanam" },
+    "1Кор": { code: "1Cor", slug: "1-korinfyanam" },
+    "2Кор": { code: "2Cor", slug: "2-korinfyanam" },
+    "Гал": { code: "Gal", slug: "galatam" },
+    "Еф": { code: "Eph", slug: "efesyanam" },
+    "Флп": { code: "Phil", slug: "filippiytsam" },
+    "Кол": { code: "Col", slug: "kolossyanam" },
+    "1Фес": { code: "1Thes", slug: "1-fessaloniyitsam" },
+    "2Фес": { code: "2Thes", slug: "2-fessaloniyitsam" },
+    "1Тим": { code: "1Tim", slug: "1-timofeyu" },
+    "2Тим": { code: "2Tim", slug: "2-timofeyu" },
+    "Тит": { code: "Tit", slug: "titu" },
+    "Флм": { code: "Phlm", slug: "filimonu" },
+    "Евр": { code: "Hebr", slug: "evreyam" },
+    "Откр": { code: "Apok", slug: "otkrovenie" },
+} as { [key: string]: IBookMapEntry };
 
 export const isFootnoteBook = (value?: string) => {
     const [probableBook, probablePlace] = (value || "").split(".");
@@ -295,6 +300,31 @@ export const isFootnoteBook = (value?: string) => {
         isBook,
         probableBook,
         probablePlace,
-        book: bookMap[probableBook],
+        book: bookMap[probableBook]?.code,
+        bookSlug: bookMap[probableBook]?.slug,
     };
 };
+
+// Ищет книгу по сокращению из внешних источников (например, "Мф." или "1 Кор." со
+// страниц зачал azbyka.ru) — не завязано на формат "Книга.Место", просто нормализует
+// пробелы/точку и ищет точное совпадение с ключом bookMap.
+export const findBookSlugByAbbreviation = (abbreviation: string): string | null => {
+    const normalized = abbreviation.replace(/\s+/g, "").replace(/\.$/, "");
+    return bookMap[normalized]?.slug ?? null;
+};
+
+// Обратный поиск по коду azbyka.ru (например, "Mt", "Act", "1Cor" — тот же код,
+// что используется в data-title у зачал) — возвращает наш slug и короткую русскую
+// аббревиатуру книги (без точки).
+export const findBookByCode = (code: string): { slug: string; abbreviation: string } | null => {
+    const entry = Object.entries(bookMap).find(([, v]) => v.code === code);
+    return entry ? { slug: entry[1].slug, abbreviation: entry[0] } : null;
+};
+
+// Список канонических книг для выбора в админке (редактор текста, поле "каноническая
+// книга Библии для зачал"). Поле остаётся свободным текстовым вводом — не все книги
+// изданий Библии есть в bookMap (например, отдельно изданные "Песнь трёх отроков"
+// в румынской Библии), поэтому это только подсказки, а не жёсткий enum.
+export const BIBLE_BOOK_SLUG_OPTIONS = Object.entries(bookMap)
+    .map(([abbreviation, { slug }]) => ({ slug, label: `${abbreviation} — ${slug}` }))
+    .sort((a, b) => a.slug.localeCompare(b.slug));

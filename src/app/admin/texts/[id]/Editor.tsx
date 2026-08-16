@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    BIBLE_BOOK_SLUG_OPTIONS,
     DneslovKind,
     footNotesToArray,
     printDneslovKind,
@@ -124,6 +125,7 @@ const AdminEditor = ({ value }: any) => {
     const [contentType, setContentType] = useState<TextContentType>(
         value.contentType || TextContentType.PARAGRAPHS
     );
+    const [bibleBookSlug, setBibleBookSlug] = useState(value.bibleBookSlug || "");
     const [verses, setVerses] = useState<IEditorVerse[]>([]);
     const [bulkVersesText, setBulkVersesText] = useState("");
     const [versesSaved, setVersesSaved] = useState(false);
@@ -324,6 +326,7 @@ const AdminEditor = ({ value }: any) => {
                 csSource,
                 saintId,
                 contentType,
+                bibleBookSlug: bibleBookSlug || null,
             }),
         });
         const notesProcess = fetch(`/api/admin/texts/${value.id}/notes`, {
@@ -754,6 +757,21 @@ const AdminEditor = ({ value }: any) => {
             </div>
             {contentType === TextContentType.VERSES ? (
                 <div className="flex flex-col">
+                    <label>
+                        Каноническая книга Библии (для резолюции зачал — общий идентификатор
+                        между изданиями на разных языках, напр. «matfeya»)
+                    </label>
+                    <input
+                        className="border-2"
+                        list="bible-book-slug-options"
+                        value={bibleBookSlug}
+                        onChange={e => setBibleBookSlug(e.target.value)}
+                    />
+                    <datalist id="bible-book-slug-options">
+                        {BIBLE_BOOK_SLUG_OPTIONS.map(opt => (
+                            <option key={opt.slug} value={opt.slug}>{opt.label}</option>
+                        ))}
+                    </datalist>
                     <label><b>Стихи</b></label>
                     <label>
                         Массовый импорт (полностью заменяет текущие стихи). Поддерживаются два формата построчно:

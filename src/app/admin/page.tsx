@@ -38,6 +38,9 @@ const Admin = () => {
                     <Link href="/admin/places">
                         Редактирование мест
                     </Link>
+                    <Link href="/admin/pericopes">
+                        Зачала
+                    </Link>
                 </div>
                 <div className="flex flex-col">
                     <p>

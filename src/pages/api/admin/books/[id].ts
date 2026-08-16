@@ -30,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             updatedAt: new Date(),
                             order: data.order,
                             public: data.public,
+                            bibleLanguageCode: data.bibleLanguageCode || null,
                         },
                     },
                 );
