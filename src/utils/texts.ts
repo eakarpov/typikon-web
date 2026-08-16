@@ -41,6 +41,21 @@ export const textReadinessClassname = (readiness: TextReadiness) => {
     }
 }
 
+export enum TextContentType {
+    PARAGRAPHS= "paragraphs",
+    VERSES= "verses",
+}
+
+export const printTextContentType = (contentType: TextContentType) => {
+    switch (contentType) {
+        case TextContentType.VERSES:
+            return "Стихи (Библия и т.п.)";
+        case TextContentType.PARAGRAPHS:
+        default:
+            return "Абзацы";
+    }
+};
+
 export enum TextKind {
     TEACHIND= "Teaching",
     PRAISING= "Praising",

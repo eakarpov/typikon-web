@@ -8,6 +8,7 @@ export const getItems = async () => {
         const books = await db
             .collection("books")
             .aggregate([
+                { $match: { public: { $ne: false } } },
                 // { $sort: { order: 1 }}
                 { $sort: { name: 1 } },
             ])

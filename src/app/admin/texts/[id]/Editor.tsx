@@ -4,15 +4,77 @@ import {
     DneslovKind,
     footNotesToArray,
     printDneslovKind,
+    printTextContentType,
     printTextKind,
     printTextReadiness,
+    TextContentType,
     TextKind,
     TextReadiness
 } from "@/utils/texts";
-import React, {KeyboardEventHandler, useCallback, useEffect, useState} from "react";
+import React, {KeyboardEventHandler, useCallback, useEffect, useMemo, useState} from "react";
 import Markdown from "react-markdown";
 import Modal from "react-modal";
 import "./highlight.css";
+
+interface IEditorVerse {
+    id: string;
+    chapter: number;
+    verse: number;
+    content: string;
+}
+
+interface IVerseRowProps {
+    verse: IEditorVerse;
+    onChangeField: (id: string, field: "chapter" | "verse" | "content", value: string) => void;
+    onSave: (verse: IEditorVerse) => void;
+    onDelete: (id: string) => void;
+}
+
+const VerseRow = React.memo(({ verse, onChangeField, onSave, onDelete }: IVerseRowProps) => {
+    const onChapterChange = useCallback(
+        (e: any) => onChangeField(verse.id, "chapter", e.target.value), [verse.id, onChangeField]
+    );
+    const onVerseChange = useCallback(
+        (e: any) => onChangeField(verse.id, "verse", e.target.value), [verse.id, onChangeField]
+    );
+    const onContentChange = useCallback(
+        (e: any) => onChangeField(verse.id, "content", e.target.value), [verse.id, onChangeField]
+    );
+    const onSaveClick = useCallback(() => onSave(verse), [verse, onSave]);
+    const onDeleteClick = useCallback(() => onDelete(verse.id), [verse.id, onDelete]);
+
+    return (
+        <div className="flex flex-row items-start mb-1">
+            <input
+                className="border-2 w-16"
+                type="number"
+                value={verse.chapter}
+                onChange={onChapterChange}
+            />
+            <input
+                className="border-2 w-16"
+                type="number"
+                value={verse.verse}
+                onChange={onVerseChange}
+            />
+            <textarea
+                className="border-2 flex-1"
+                value={verse.content}
+                onChange={onContentChange}
+            />
+            <button onClick={onSaveClick}>
+                Сохранить
+            </button>
+            <span
+                className="cursor-pointer pl-2"
+                onClick={onDeleteClick}
+            >
+                Удалить
+            </span>
+        </div>
+    );
+});
+VerseRow.displayName = "VerseRow";
 
 interface IQuote {
     rangeStart: number;
@@ -59,6 +121,13 @@ const AdminEditor = ({ value }: any) => {
         value.textingPriority ?? ""
     );
     const [content, setContent] = useState<string>(value.content || "");
+    const [contentType, setContentType] = useState<TextContentType>(
+        value.contentType || TextContentType.PARAGRAPHS
+    );
+    const [verses, setVerses] = useState<IEditorVerse[]>([]);
+    const [bulkVersesText, setBulkVersesText] = useState("");
+    const [versesSaved, setVersesSaved] = useState(false);
+    const [selectedChapter, setSelectedChapter] = useState(1);
     const [link, setLink] = useState(value.link || "");
     const [ruLink, setRuLink] = useState(value.ruLink || "");
     const [author, setAuthor] = useState(value.author || "");
@@ -254,6 +323,7 @@ const AdminEditor = ({ value }: any) => {
                 quotes,
                 csSource,
                 saintId,
+                contentType,
             }),
         });
         const notesProcess = fetch(`/api/admin/texts/${value.id}/notes`, {
@@ -268,6 +338,89 @@ const AdminEditor = ({ value }: any) => {
             setIsSaved(true);
         });
     };
+
+    const loadVerses = useCallback(() => {
+        fetch(`/api/admin/texts/${value.id}/verses`)
+            .then(res => res.json())
+            .then(data => setVerses(data || []))
+            .catch(() => setVerses([]));
+    }, [value.id]);
+
+    useEffect(() => {
+        if (contentType === TextContentType.VERSES) {
+            loadVerses();
+        }
+    }, [contentType, loadVerses]);
+
+    const chapters = useMemo(
+        () => Array.from(new Set(verses.map(v => v.chapter))).sort((a, b) => a - b),
+        [verses]
+    );
+
+    useEffect(() => {
+        if (chapters.length > 0 && !chapters.includes(selectedChapter)) {
+            setSelectedChapter(chapters[0]);
+        }
+    }, [chapters, selectedChapter]);
+
+    const versesInChapter = useMemo(
+        () => verses
+            .filter(v => v.chapter === selectedChapter)
+            .sort((a, b) => a.verse - b.verse),
+        [verses, selectedChapter]
+    );
+
+    const onBulkImportVerses = useCallback(() => {
+        setVersesSaved(false);
+        fetch(`/api/admin/texts/${value.id}/verses/bulk`, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: bulkVersesText }),
+        }).then(async (res) => {
+            if (!res.ok) {
+                const err = await res.json().catch(() => null);
+                alert(err?.error || "Ошибка при импорте стихов");
+                return;
+            }
+            setVersesSaved(true);
+            loadVerses();
+        });
+    }, [bulkVersesText, value.id, loadVerses]);
+
+    // Стабильные ссылки на колбэки — иначе React.memo(VerseRow) перерисовывал бы
+    // все строки главы при любой правке одного поля.
+    const onChangeVerseField = useCallback((id: string, field: "chapter" | "verse" | "content", value: string) => {
+        const val = field === "content" ? value : parseInt(value, 10);
+        setVerses(old => old.map(v => v.id === id ? { ...v, [field]: val } : v));
+    }, []);
+
+    const onSaveVerse = useCallback((verse: IEditorVerse) => {
+        fetch(`/api/admin/texts/${value.id}/verses/${verse.id}`, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chapter: verse.chapter, verse: verse.verse, content: verse.content }),
+        });
+    }, [value.id]);
+
+    const onDeleteVerse = useCallback((id: string) => {
+        setVerses(old => old.filter(v => v.id !== id));
+        fetch(`/api/admin/texts/${value.id}/verses/${id}`, { method: "DELETE" });
+    }, [value.id]);
+
+    const onAddVerse = useCallback(() => {
+        const chapterVerses = verses.filter(v => v.chapter === selectedChapter);
+        const lastVerseNumber = chapterVerses.reduce((max, v) => Math.max(max, v.verse), 0);
+        const newVerse = { chapter: selectedChapter, verse: lastVerseNumber + 1, content: "" };
+        fetch(`/api/admin/texts/${value.id}/verses`, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newVerse),
+        })
+            .then(res => res.json())
+            .then(data => {
+                setVerses(old => [...old, { ...newVerse, id: data.id }]);
+            });
+    }, [value.id, verses, selectedChapter]);
 
     const onMouseDown: KeyboardEventHandler = useCallback((e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -355,6 +508,25 @@ const AdminEditor = ({ value }: any) => {
                                 value={val}
                             >
                                 {printTextKind(val)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex flex-col pr-4">
+                    <label>
+                        Тип содержимого
+                    </label>
+                    <select
+                        className="border-2"
+                        value={contentType}
+                        onChange={(event) => setContentType(event.target.value as TextContentType)}
+                    >
+                        {Object.values(TextContentType).map((val) => (
+                            <option
+                                key={val}
+                                value={val}
+                            >
+                                {printTextContentType(val)}
                             </option>
                         ))}
                     </select>
@@ -580,7 +752,59 @@ const AdminEditor = ({ value }: any) => {
                     Подробный редактор
                 </div>
             </div>
-            {newUi ? (
+            {contentType === TextContentType.VERSES ? (
+                <div className="flex flex-col">
+                    <label><b>Стихи</b></label>
+                    <label>
+                        Массовый импорт (полностью заменяет текущие стихи). Поддерживаются два формата построчно:
+                        «глава:стих текст», либо строка «Глава N» с последующими строками «стих текст»
+                        (глава наследуется от последнего заголовка). Строки-баннеры («===== Книга =====»)
+                        и подзаголовки в квадратных скобках игнорируются.
+                    </label>
+                    <textarea
+                        className="border-2 h-32"
+                        placeholder={
+                            "1:1 В начале сотворил Бог небо и землю.\n1:2 Земля же была...\n\n— или —\n\nГлава 1\n1 В начале сотворил Бог небо и землю.\n2 Земля же была..."
+                        }
+                        value={bulkVersesText}
+                        onChange={e => setBulkVersesText(e.target.value)}
+                    />
+                    <button onClick={onBulkImportVerses} className="w-fit">
+                        {versesSaved ? "Импортировано!" : "Заменить все стихи"}
+                    </button>
+                    <div className="flex flex-col mt-2">
+                        <div className="flex flex-row items-center justify-between">
+                            <label>
+                                <b>Стихи текста</b> (всего {verses.length}, показана глава — {versesInChapter.length})
+                            </label>
+                            <div className="flex flex-row items-center">
+                                <label className="pr-2">Глава:</label>
+                                <select
+                                    className="border-2"
+                                    value={selectedChapter}
+                                    onChange={e => setSelectedChapter(parseInt(e.target.value, 10))}
+                                >
+                                    {chapters.map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                                <span className="cursor-pointer pl-4" onClick={onAddVerse}>
+                                    Добавить стих
+                                </span>
+                            </div>
+                        </div>
+                        {versesInChapter.map((v) => (
+                            <VerseRow
+                                key={v.id}
+                                verse={v}
+                                onChangeField={onChangeVerseField}
+                                onSave={onSaveVerse}
+                                onDelete={onDeleteVerse}
+                            />
+                        ))}
+                    </div>
+                </div>
+            ) : newUi ? (
                 <>
                     <label><b>Содержимое</b></label>
                     {viewUi ? (

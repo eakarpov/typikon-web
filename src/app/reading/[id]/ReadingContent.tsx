@@ -10,6 +10,7 @@ import {useAppSelector} from "@/lib/hooks";
 import TextNote from "@/app/reading/[id]/TextNote";
 import {useRouterHash} from "@/app/reading/[id]/useRouterHash";
 import {csFont, myFont} from "@/utils/font";
+import {TextContentType} from "@/utils/texts";
 
 const customStyles = {
     content: {
@@ -181,6 +182,53 @@ const ReadingContent = ({ item }: { item: any }) => {
         setIsHovered(num);
     }, []);
 
+    const renderMarkup = useCallback((text: string) => reactStringReplace(
+        reactStringReplace(
+            reactStringReplace(
+                reactStringReplace(
+                    reactStringReplace(
+                        text,
+                        /note_(\d+)#/g,
+                        (results) => <TextNote value={results} hash={hash} />
+                    ),
+                    /\{st\|(.+)}/g,
+                    (results) => <Link
+                        href={`/saints/${results.split('|')[0]}`}
+                        className="text-blue-800"
+                    >
+                        {results.split('|')[1]}
+                    </Link>,
+                ),
+                /\{pl\|(.+)}/g,
+                (results) => <Link
+                    href={`/places/${results.split('|')[0]}`}
+                    className="text-blue-800"
+                >
+                    {results.split('|')[1]}
+                </Link>,
+            ),
+            /\{(\d+)}/g,
+            (footnote) => <FootnoteLinkNew footnotes={item.footnotes} value={footnote} />,
+        ),
+        /\{k\|(.+)}/,
+        (red) => (
+            <span className="text-red-600">
+                {red}
+            </span>
+        )
+    ), [hash, item.footnotes]);
+
+    const versesByChapter = React.useMemo(() => {
+        if (!item.verses) return [];
+        const groups = new Map<number, any[]>();
+        item.verses.forEach((v: any) => {
+            const chapterVerses = groups.get(v.chapter) || [];
+            chapterVerses.push(v);
+            groups.set(v.chapter, chapterVerses);
+        });
+        return [...groups.entries()].sort(([a], [b]) => a - b);
+    }, [item.verses]);
+
     useEffect(() => {
         const paragraph = document.getElementById("text-reading")
             ?.getElementsByTagName('p');
@@ -259,53 +307,46 @@ const ReadingContent = ({ item }: { item: any }) => {
                     <li onClick={onSendError}>Сообщить об ошибке</li>
                 </ul>
             </div>
-            {item.content?.split("\n\n").map((paragraph: string) => (
-                <p
-                    key={paragraph}
-                    className={`${
-                        item.csSource ? csFont.variable : ""
-                    } whitespace-pre-wrap text-justify text-lg ${
-                        item.csSource ? "font-sans-serif" : "font-serif"
-                    } first-letter:text-red-600`}
-                >
-
-                    {reactStringReplace(
-                        reactStringReplace(
-                            reactStringReplace(
-                                reactStringReplace(
-                                    reactStringReplace(
-                                        paragraph,
-                                        /note_(\d+)#/g,
-                                        (results) => <TextNote value={results} hash={hash} />
-                                    ),
-                                    /\{st\|(.+)}/g,
-                                    (results) => <Link
-                                        href={`/saints/${results.split('|')[0]}`}
-                                        className="text-blue-800"
-                                    >
-                                        {results.split('|')[1]}
-                                    </Link>,
-                                ),
-                                /\{pl\|(.+)}/g,
-                                (results) => <Link
-                                    href={`/places/${results.split('|')[0]}`}
-                                    className="text-blue-800"
-                                >
-                                    {results.split('|')[1]}
-                                </Link>,
-                            ),
-                            /\{(\d+)}/g,
-                            (footnote) => <FootnoteLinkNew footnotes={item.footnotes} value={footnote} />,
-                        ),
-                        /\{k\|(.+)}/,
-                        (red) => (
-                            <span className="text-red-600">
-                                        {red}
-                                    </span>
-                        )
-                    )}
-                </p>
-            ))}
+            {item.contentType === TextContentType.VERSES ? (
+                versesByChapter.map(([chapter, chapterVerses]) => (
+                    <div key={chapter} className="space-y-1">
+                        <p className="font-bold font-serif">
+                            Глава {chapter}
+                        </p>
+                        <p
+                            className={`${
+                                item.csSource ? csFont.variable : ""
+                            } text-justify text-lg ${
+                                item.csSource ? "font-sans-serif" : "font-serif"
+                            }`}
+                        >
+                            {chapterVerses.map((verse: any) => (
+                                <span key={verse.id}>
+                                    <sup className="text-red-600 font-bold">
+                                        {verse.verse}
+                                    </sup>
+                                    {" "}
+                                    {renderMarkup(verse.content)}
+                                    {" "}
+                                </span>
+                            ))}
+                        </p>
+                    </div>
+                ))
+            ) : (
+                item.content?.split("\n\n").map((paragraph: string) => (
+                    <p
+                        key={paragraph}
+                        className={`${
+                            item.csSource ? csFont.variable : ""
+                        } whitespace-pre-wrap text-justify text-lg ${
+                            item.csSource ? "font-sans-serif" : "font-serif"
+                        } first-letter:text-red-600`}
+                    >
+                        {renderMarkup(paragraph)}
+                    </p>
+                ))
+            )}
             {notes.length > 0 && (
                 <div>
                     <h3 className="font-bold">Заметки:</h3>

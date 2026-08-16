@@ -10,6 +10,7 @@ const AdminEditor = ({ value }: any) => {
     const [author, setAuthor] = useState(value.author || "");
     const [translator, setTranslator] = useState(value.translator || "");
     const [order, setOrder] = useState(value.order || "");
+    const [isPublic, setIsPublic] = useState(value.public !== false);
 
     const [saved, setIsSaved] = useState(false);
 
@@ -34,6 +35,7 @@ const AdminEditor = ({ value }: any) => {
                 description,
                 translator,
                 order: parseInt(order),
+                public: isPublic,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -87,6 +89,16 @@ const AdminEditor = ({ value }: any) => {
                 value={order}
                 onChange={e => setOrder(e.target.value)}
             />
+            <div className="flex flex-row pr-4">
+                <label>
+                    Публичный (виден в библиотеке)
+                </label>
+                <input
+                    type="checkbox"
+                    checked={isPublic}
+                    onChange={() => setIsPublic(!isPublic)}
+                />
+            </div>
             <p onClick={onSubmitAdd} className="cursor-pointer mb-2">
                 <b>Добавить текст</b>
             </p>

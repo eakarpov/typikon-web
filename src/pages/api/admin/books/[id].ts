@@ -29,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             translator: data.translator,
                             updatedAt: new Date(),
                             order: data.order,
+                            public: data.public,
                         },
                     },
                 );

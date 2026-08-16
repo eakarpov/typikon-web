@@ -7,6 +7,7 @@ import {Metadata} from "next";
 
 type Props = {
     params: { id: string }
+    searchParams: { range?: string }
 }
 
 export async function generateMetadata(
@@ -30,9 +31,9 @@ export async function generateMetadata(
     }
 }
 
-const ReadingItem = ({ params: { id } }: { params: { id: string }}) => {
+const ReadingItem = ({ params: { id }, searchParams: { range } }: Props) => {
     setMeta();
-    const itemPromise = getItem(id);
+    const itemPromise = getItem(id, range);
 
     return (
       <div className={myFont.variable}>

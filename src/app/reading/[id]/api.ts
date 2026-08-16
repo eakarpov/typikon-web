@@ -2,8 +2,10 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {DayDTO} from "@/types/dto/days";
 import {getAggregationFindIdInField} from "@/utils/database";
+import {filterVersesByRanges, parseVerseRanges, sortVerses} from "@/utils/verses";
+import {TextContentType} from "@/utils/texts";
 
-export const getItem = async (id: string): Promise<[any, any, boolean]> => {
+export const getItem = async (id: string, range?: string): Promise<[any, any, boolean]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -24,6 +26,16 @@ export const getItem = async (id: string): Promise<[any, any, boolean]> => {
             ])
             .toArray();
         const res = texts[0];
+
+        if (res?.contentType === TextContentType.VERSES) {
+            const rawVerses = await db
+                .collection("verses")
+                .find({ textId: new ObjectId(res.id) })
+                .toArray();
+            const sorted = sortVerses(rawVerses.map(v => ({ ...(v as any), id: v._id.toString() })));
+            res.verses = filterVersesByRanges(sorted, parseVerseRanges(range));
+        }
+
         return [res, null, shouldRedirect && res?.alias];
     } catch (e) {
         console.error(e);
