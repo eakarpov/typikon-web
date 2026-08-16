@@ -62,6 +62,9 @@ export const getCalendarItem = async (date: Date) => {
                 getAggregationAddField(TextType.H6),
                 getAggregationAddField(TextType.H9),
                 getAggregationAddField(TextType.PANAGIA),
+                getAggregationAddField(TextType.GOSPEL_MATINS),
+                getAggregationAddField(TextType.APOSTLE_LITURGY),
+                getAggregationAddField(TextType.GOSPEL_LITURGY),
                 ...parentProject,
             ])
             .toArray();

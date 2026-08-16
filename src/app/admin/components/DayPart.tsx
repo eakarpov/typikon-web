@@ -4,7 +4,7 @@ import {TrashIcon, PlusIcon, InformationCircleIcon, LinkIcon} from "@heroicons/r
 import {memo, useCallback, useEffect, useState} from "react";
 
 export interface IDayTextPart {
-    item: { textId: string; cite?: string; description?: string; paschal: boolean; statia?: number; };
+    item: { textId?: string; pericopeId?: string; cite?: string; description?: string; paschal: boolean; statia?: number; };
     index: number;
     paschal: boolean;
     value: any;
@@ -34,17 +34,23 @@ export interface IDayPart {
 const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, setter }: IDayTextPart) => {
     const [isOpenDescription, setIsOpenDescription] = useState(false);
     const [isOpenCite, setIsOpenCite] = useState(false);
-    const [val, setVal] = useState<string>(item.textId);
+    const [val, setVal] = useState<string>(item.textId || "");
+    const [pericopeVal, setPericopeVal] = useState<string>(item.pericopeId || "");
     const [text, setText] = useState<any>(null);
+    const [pericope, setPericope] = useState<any>(null);
     const [statia, setStatia] = useState<number|undefined>(item.statia);
 
     const onSaveText = useCallback(() => {
         setTextField(valueName, index, "textId", val);
     }, [val, valueName, index, setTextField, statia]);
 
+    const onSavePericope = useCallback(() => {
+        setTextField(valueName, index, "pericopeId", pericopeVal);
+    }, [pericopeVal, valueName, index, setTextField]);
+
     const onAdd = useCallback((index: number) => () => {
         const newItems = [...value.items];
-        newItems.splice(index, 0, { cite: "", textId: "", paschal });
+        newItems.splice(index, 0, { cite: "", textId: "", pericopeId: "", paschal });
         setter({
             items: newItems,
         });
@@ -55,12 +61,24 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
     }, [statia]);
 
     useEffect(() => {
-        setVal(item.textId);
+        setVal(item.textId || "");
     }, [item.textId]);
 
     useEffect(() => {
+        setPericopeVal(item.pericopeId || "");
+    }, [item.pericopeId]);
+
+    useEffect(() => {
+        if (!item.textId) return;
         fetch(`/api/v1/texts/${item.textId}`).then((res) => res.json()).then((res) => {
             setText(res);
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!item.pericopeId) return;
+        fetch(`/api/v1/pericopes/${item.pericopeId}`).then((res) => res.json()).then((res) => {
+            setPericope(res);
         });
     }, []);
 
@@ -78,6 +96,20 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
                           onBlur={onSaveText}
                           value={val}
                           onChange={e => setVal(e.target.value)}
+                      />
+                  </div>
+              )}
+              {item.paschal === paschal && (
+                  <div className="flex flex-col">
+                      <label>
+                          Идентификатор зачала (вместо текста — стихи соберутся из Библии)
+                      </label>
+                      <input
+                          style={{ width: '250px'}}
+                          className="border-2"
+                          onBlur={onSavePericope}
+                          value={pericopeVal}
+                          onChange={e => setPericopeVal(e.target.value)}
                       />
                   </div>
               )}
@@ -139,6 +171,13 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
                       {text.name}
                   </div>
               )}
+              {pericope && (
+                  <div
+                      className="border ml-4"
+                  >
+                      Зачало: {pericope.label}
+                  </div>
+              )}
           </div>
           {isOpenDescription && (
               <>
@@ -181,7 +220,7 @@ export const DayPart = ({
             <span
                 className="cursor-pointer text-slate-300"
                 onClick={() => {
-                    setter({ items: [ ...(value?.items || []), { cite: "", textId: "", paschal } ]});
+                    setter({ items: [ ...(value?.items || []), { cite: "", textId: "", pericopeId: "", paschal } ]});
                 }}
             >
                 Добавить в конец
@@ -191,7 +230,7 @@ export const DayPart = ({
             <div>
                 {value.items?.map((item: any, index: number) => (
                     <DayTextPart
-                        key={item.textId}
+                        key={`${item.textId || ""}-${item.pericopeId || ""}-${index}`}
                         item={item}
                         index={index}
                         paschal={paschal}

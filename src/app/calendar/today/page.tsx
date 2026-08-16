@@ -5,6 +5,8 @@ import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {getTodayDate, getZeroedNumber} from "@/utils/dates";
 import {Metadata} from "next";
+import {cookies} from "next/headers";
+import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 
 export const metadata: Metadata = {
     title: "Чтения на сегодняшний календарный день",
@@ -19,7 +21,8 @@ export const metadata: Metadata = {
 const AdminTextId = async () => {
     setMeta();
 
-    const itemPromise = getItem();
+    const lang = (await cookies()).get(BIBLE_LANGUAGE_COOKIE)?.value || DEFAULT_BIBLE_LANGUAGE;
+    const itemPromise = getItem(lang);
     const d = getTodayDate();
     const day = d.getDate();
     const month = d.getMonth() + 1;

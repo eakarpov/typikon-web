@@ -2,8 +2,9 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {aggregationDayWithMonth, aggregationTextWithBook, getAggregationAddField} from "@/utils/database";
+import {resolveDayPericopes} from "@/lib/pericopes";
 
-export const getItem = async (id: string) => {
+export const getItem = async (id: string, lang: string) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -34,6 +35,9 @@ export const getItem = async (id: string) => {
                 getAggregationAddField(TextType.H3),
                 getAggregationAddField(TextType.H6),
                 getAggregationAddField(TextType.H9),
+                getAggregationAddField(TextType.GOSPEL_MATINS),
+                getAggregationAddField(TextType.APOSTLE_LITURGY),
+                getAggregationAddField(TextType.GOSPEL_LITURGY),
                 {
                     $addFields: {
                         id: { $toString: "$_id" },
@@ -79,7 +83,8 @@ export const getItem = async (id: string) => {
                     }}
             ])
             .toArray();
-        return [days[0], null];
+        const resolved = await resolveDayPericopes(db, days[0], lang);
+        return [resolved, null];
     } catch (e) {
         console.error(e);
         return [null, { error: "Ошибка"}];

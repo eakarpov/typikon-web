@@ -2,8 +2,9 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
+import {resolveDayPericopes} from "@/lib/pericopes";
 
-export const getItem = async (id: string): Promise<any> => {
+export const getItem = async (id: string, lang: string): Promise<any> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -32,6 +33,9 @@ export const getItem = async (id: string): Promise<any> => {
                 getAggregationAddField(TextType.H3),
                 getAggregationAddField(TextType.H6),
                 getAggregationAddField(TextType.H9),
+                getAggregationAddField(TextType.GOSPEL_MATINS),
+                getAggregationAddField(TextType.APOSTLE_LITURGY),
+                getAggregationAddField(TextType.GOSPEL_LITURGY),
                 {
                   $addFields: {
                       id: { $toString: "$_id" },
@@ -40,7 +44,7 @@ export const getItem = async (id: string): Promise<any> => {
                 { $project: { texts: 0, books: 0, weekId: 0, _id: 0 }}
             ])
             .toArray();
-        return days[0];
+        return resolveDayPericopes(db, days[0], lang);
     } catch (e) {
         console.error(e);
         return {};

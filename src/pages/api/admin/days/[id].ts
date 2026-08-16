@@ -10,6 +10,7 @@ const mapToDbObject = (value: any) => {
           items: value.items.map((item: any) => ({
               ...item,
               textId: item.textId ? new ObjectId(item.textId) : null,
+              pericopeId: item.pericopeId ? new ObjectId(item.pericopeId) : null,
           })),
       }
   } return null;

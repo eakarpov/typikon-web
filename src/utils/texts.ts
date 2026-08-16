@@ -141,8 +141,14 @@ export enum TextType {
     H6= "h6",
     H9= "h9",
 
+    // Отпустительные тропари утрени — Пасха, Великая суббота, в т.ч. после входа
+    // на Великом славословии (не только Пасха, несмотря на название поля).
     APOLUTIKA_TROPARIA= "apolutikaTroparia",
-    BEFORE_50= "before50"
+    BEFORE_50= "before50",
+
+    APOSTLE_LITURGY= "apostleLiturgy",
+    GOSPEL_LITURGY= "gospelLiturgy",
+    GOSPEL_MATINS= "gospelMatins",
 }
 
 export const footNotesToArray = (footNotesText: string): Nullable<string>[] =>
@@ -202,9 +208,15 @@ export const valueTitle = (valueName: TextType) => {
           return "На панагии";
 
       case TextType.APOLUTIKA_TROPARIA:
-          return "По отпустительным тропарям утрени"; // Только Пасха
+          return "По отпустительным тропарям утрени"; // Пасха, Великая суббота и т.п.
       case TextType.BEFORE_50:
           return "Перед 50 псалмом"; // Только Великий пяток, т.к. нет кафизм
+      case TextType.APOSTLE_LITURGY:
+          return "Апостол на Литургии";
+      case TextType.GOSPEL_LITURGY:
+          return "Евангелие на Литургии";
+      case TextType.GOSPEL_MATINS:
+          return "Евангелие на утрени";
   }
 };
 

@@ -10,10 +10,11 @@ import {
     UserCircleIcon,
 } from "@heroicons/react/20/solid";
 import {usePathname, useRouter} from "next/navigation";
-import {useCallback, useEffect} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
 import {WithRights} from "@/lib/admin/client";
+import {BIBLE_LANGUAGE_OPTIONS, DEFAULT_BIBLE_LANGUAGE, getClientBibleLanguage, setClientBibleLanguage} from "@/utils/bibleLanguage";
 
 const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
     showAdmin?: string;
@@ -29,11 +30,23 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
     const isAuth = useAppSelector(state => state.auth.isAuthorized);
     const userStore =  useAppSelector(state => state.auth.user);
 
+    const [bibleLang, setBibleLang] = useState(DEFAULT_BIBLE_LANGUAGE);
+
     useEffect(() => {
         if (session) {
             dispatch(AuthSlice.actions.SetAuthorized({ ...session, user }));
         }
     }, [session]);
+
+    useEffect(() => {
+        setBibleLang(getClientBibleLanguage());
+    }, []);
+
+    const onChangeBibleLang = useCallback((lang: string) => {
+        setBibleLang(lang);
+        setClientBibleLanguage(lang);
+        router.refresh();
+    }, [router]);
 
     const onLogout = useCallback(() => {
         fetch("/api/logout", {
@@ -128,6 +141,22 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
                 >
                     <InformationCircleIcon className="w-4 h-4" />
                 </Link>
+                <div
+                    title="Язык Библии (для зачал)"
+                    className="cursor-pointer min-w-fit flex items-center font-serif text-sm"
+                >
+                    {BIBLE_LANGUAGE_OPTIONS.map((opt, i) => (
+                        <span key={opt.code}>
+                            {i > 0 && <span className="text-slate-400">/</span>}
+                            <span
+                                className={bibleLang === opt.code ? "text-red-600 font-bold" : "text-slate-400"}
+                                onClick={() => onChangeBibleLang(opt.code)}
+                            >
+                                {opt.label}
+                            </span>
+                        </span>
+                    ))}
+                </div>
                 <Link
                     title="Настройки"
                     href="/settings"

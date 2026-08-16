@@ -5,6 +5,8 @@ import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {getMonth, getMonthLabel} from "@/lib/common/date";
+import {cookies} from "next/headers";
+import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 
 type Props = {
     params: { id: string }
@@ -17,7 +19,8 @@ export async function generateMetadata(
     const id = params.id
 
     // fetch data
-    const [item] = await getItem(id);
+    const lang = (await cookies()).get(BIBLE_LANGUAGE_COOKIE)?.value || DEFAULT_BIBLE_LANGUAGE;
+    const [item] = await getItem(id, lang);
 
     return {
         title: `Уставные чтения на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
@@ -32,7 +35,8 @@ export async function generateMetadata(
 }
 
 const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
-    const itemPromise = getItem(id);
+    const lang = (await cookies()).get(BIBLE_LANGUAGE_COOKIE)?.value || DEFAULT_BIBLE_LANGUAGE;
+    const itemPromise = getItem(id, lang);
     setMeta();
 
     return (

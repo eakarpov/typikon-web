@@ -9,7 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return;
         }
         const dateValue = new Date(date);
-        const [books, error] = await getItem(dateValue);
+        const lang = req.query.lang as string | undefined;
+        const [books, error] = await getItem(dateValue, lang);
         if (error) {
             res.status(400).end();
             return;

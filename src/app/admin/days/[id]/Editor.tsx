@@ -10,7 +10,7 @@ interface IAdminEditor {
     id: string;
 }
 
-interface IDayPartItem { textId: string; cite?: string; description?: string; paschal: boolean; statia?: number; }
+interface IDayPartItem { textId?: string; pericopeId?: string; cite?: string; description?: string; paschal: boolean; statia?: number; }
 
 const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [subnames, setSubnames] = useState<string[]>(value.subnames || []);
@@ -34,6 +34,9 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
     const [h6, setH6] = useState(value.h6);
     const [h9, setH9] = useState(value.h9);
     const [before50, setBefore50] = useState(value.before50);
+    const [apostleLiturgy, setApostleLiturgy] = useState(value.apostleLiturgy);
+    const [gospelLiturgy, setGospelLiturgy] = useState(value.gospelLiturgy);
+    const [gospelMatins, setGospelMatins] = useState(value.gospelMatins);
     const [alias, setAlias] = useState(value.alias || "");
 
     const [signs, setSigns] = useState(value.signs || []);
@@ -135,6 +138,21 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
                 newPanagia.items[index][field] = value;
                 setPanagia(newPanagia);
                 return;
+            case TextType.APOSTLE_LITURGY:
+                const newApostleLiturgy = {...apostleLiturgy};
+                newApostleLiturgy.items[index][field] = value;
+                setApostleLiturgy(newApostleLiturgy);
+                return;
+            case TextType.GOSPEL_LITURGY:
+                const newGospelLiturgy = {...gospelLiturgy};
+                newGospelLiturgy.items[index][field] = value;
+                setGospelLiturgy(newGospelLiturgy);
+                return;
+            case TextType.GOSPEL_MATINS:
+                const newGospelMatins = {...gospelMatins};
+                newGospelMatins.items[index][field] = value;
+                setGospelMatins(newGospelMatins);
+                return;
             default:
                 return;
         }
@@ -164,6 +182,9 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
             panagia,
             alias,
             before50,
+            apostleLiturgy,
+            gospelLiturgy,
+            gospelMatins,
         };
         if (paschal) {
             body.weekIndex = index;
@@ -364,6 +385,27 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
                 value={h9}
                 setter={setH9}
                 valueName={TextType.H9}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
+            <DayPart
+                value={gospelMatins}
+                setter={setGospelMatins}
+                valueName={TextType.GOSPEL_MATINS}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
+            <DayPart
+                value={apostleLiturgy}
+                setter={setApostleLiturgy}
+                valueName={TextType.APOSTLE_LITURGY}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
+            <DayPart
+                value={gospelLiturgy}
+                setter={setGospelLiturgy}
+                valueName={TextType.GOSPEL_LITURGY}
                 setTextField={setTextField}
                 paschal={paschal}
             />

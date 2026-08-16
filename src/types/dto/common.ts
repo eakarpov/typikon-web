@@ -1,6 +1,7 @@
 export interface IPartItem {
     cite: string;
-    textId: string;
+    textId?: string;      // прямая ссылка на конкретный текст
+    pericopeId?: string;  // ссылка на зачало — стихи собираются на лету под выбранный язык Библии
     paschal: boolean;
     description: string;
 }
@@ -26,4 +27,8 @@ export interface WithParts {
     h9: WithItems|null;
     vespersProkimenon: WithItems|null;
     apolutikaTroparia: WithItems|null;
+    before50: WithItems|null;
+    apostleLiturgy: WithItems|null;
+    gospelLiturgy: WithItems|null;
+    gospelMatins: WithItems|null;
 }

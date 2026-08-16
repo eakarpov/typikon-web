@@ -22,6 +22,7 @@ export const getAggregationAddField = (name: TextType, withText: boolean = true)
                                             paschal: "$$i.paschal",
                                             description: "$$i.description",
                                             statia: "$$i.statia",
+                                            pericopeId: { $toString: "$$i.pericopeId" },
                                             text: {
                                                 $mergeObjects: [
                                                     {
@@ -44,7 +45,10 @@ export const getAggregationAddField = (name: TextType, withText: boolean = true)
                                         } : {
                                             $mergeObjects: [
                                                 '$$i',
-                                                {textId: {$toString: "$$i.textId"}},
+                                                {
+                                                    textId: { $toString: "$$i.textId" },
+                                                    pericopeId: { $toString: "$$i.pericopeId" },
+                                                },
                                             ],
                                         },
                                     },

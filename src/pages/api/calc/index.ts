@@ -3,6 +3,9 @@ import {orthodoxEaster} from "date-easter";
 import {getTriodicItem} from "@/pages/api/calc/getTriodion";
 import {getCalendarItem} from "@/pages/api/calc/getCalenar";
 import {TextType} from "@/utils/texts";
+import clientPromise from "@/lib/mongodb";
+import {resolveDayPericopes} from "@/lib/pericopes";
+import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 
 const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
     const diffTime = date.getTime() - easter.getTime();
@@ -67,7 +70,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const calendarPromise = getCalendarItem(churchDate);
         // console.log(churchDate);
 
-        Promise.all<any>([triodicPromise, calendarPromise]).then<any, any>(([
+        const lang = (req.cookies?.[BIBLE_LANGUAGE_COOKIE] as string) || DEFAULT_BIBLE_LANGUAGE;
+
+        Promise.all<any>([triodicPromise, calendarPromise]).then<any, any>(async ([
             triodicDay,
             calendarDay,
         ]) => {
@@ -75,9 +80,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 res.status(404).end();
                 return;
             }
+            const client = await clientPromise;
+            const db = client.db("typikon");
             if (!calendarDay) {
                 res.status(200).json({
-                    day: triodicDay,
+                    day: await resolveDayPericopes(db, triodicDay, lang),
                     date: churchDate,
                     search: searchTriodion,
                 });
@@ -85,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
             if (!triodicDay) {
                 res.status(200).json({
-                    day: calendarDay,
+                    day: await resolveDayPericopes(db, calendarDay, lang),
                     date: churchDate,
                     search: searchTriodion,
                 });
@@ -132,7 +139,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             // merge days here, send only { day: ..., date: ..., search: ... }
             res.status(200).json({
-                day,
+                day: await resolveDayPericopes(db, day, lang),
                 date: churchDate,
                 search: searchTriodion,
             });

@@ -2,8 +2,10 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {aggregationDayWithMonth, aggregationTextWithBook, getAggregationAddField} from "@/utils/database";
+import {resolveDayPericopes} from "@/lib/pericopes";
+import {DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 
-export const getItem = async (date: Date) => {
+export const getItem = async (date: Date, lang: string = DEFAULT_BIBLE_LANGUAGE) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -33,6 +35,9 @@ export const getItem = async (date: Date) => {
                 getAggregationAddField(TextType.H3),
                 getAggregationAddField(TextType.H6),
                 getAggregationAddField(TextType.H9),
+                getAggregationAddField(TextType.GOSPEL_MATINS),
+                getAggregationAddField(TextType.APOSTLE_LITURGY),
+                getAggregationAddField(TextType.GOSPEL_LITURGY),
                 { $match: { "month.value": { $eq: month } }},
                 {
                     $addFields: {
@@ -42,7 +47,8 @@ export const getItem = async (date: Date) => {
                 { $project: { texts: 0, books: 0, months: 0, "month._id": 0, "month.days": 0, weekId: 0, _id: 0 }}
             ])
             .toArray();
-        return [days[0], null];
+        const resolved = await resolveDayPericopes(db, days[0], lang);
+        return [resolved, null];
     } catch (e) {
         console.error(e);
         return [null, { error: "Ошибка"}];

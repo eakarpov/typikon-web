@@ -199,13 +199,64 @@ const DayPartReading = ({
         return parts[statia] || "";
     };
 
+    const renderVerseMarkup = (text: string) => reactStringReplace(
+        reactStringReplace(
+            text,
+            /\{st\|(.+)}/g,
+            (results) => <Link href={`/saints/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
+        ),
+        /\{pl\|(.+)}/g,
+        (results) => <Link href={`/places/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
+    );
+
+    const renderPericopeItem = (item: any, index: number) => {
+        const versesByChapter: [number, any[]][] = [];
+        (item.pericope.verses || []).forEach((v: any) => {
+            const last = versesByChapter[versesByChapter.length - 1];
+            if (last && last[0] === v.chapter) last[1].push(v);
+            else versesByChapter.push([v.chapter, [v]]);
+        });
+
+        return (
+            <div key={item.pericope.id + index}>
+                <div className="flex flex-row items-center">
+                    {item.pericope.textId && (
+                        <Link href={`/reading/${item.pericope.textId}`}>
+                            <BookOpenIcon className="w-6 h-6" />
+                        </Link>
+                    )}
+                    <span className="font-serif text-red-600 pl-1">{item.pericope.label}</span>
+                </div>
+                {item.description && (
+                    <p className="font-serif text-red-600">{item.description}</p>
+                )}
+                {!item.pericope.verses ? (
+                    <p className="font-serif text-slate-400">
+                        Не удалось собрать стихи (книга ещё не размечена ни для одного языка)
+                    </p>
+                ) : (
+                    versesByChapter.map(([chapter, verses]) => (
+                        <p key={chapter} className="whitespace-pre-wrap text-justify text-lg font-serif">
+                            {verses.map((v: any) => (
+                                <span key={v.id}>
+                                    <sup className="text-red-600 font-bold">{v.verse}</sup>{" "}
+                                    {renderVerseMarkup(v.content)}{" "}
+                                </span>
+                            ))}
+                        </p>
+                    ))
+                )}
+            </div>
+        );
+    };
+
     return value?.items && (
             <section className="space-y-2" id={valueName}>
                 <p className="text-1xl font-bold font-serif text-red-600">
                     {valueTitle(valueName)}:
                 </p>
                 <StartPart part={valueName} firstText={value.items[0]} />
-                {value.items?.map((item: any, index: number) => item.text ? (
+                {value.items?.map((item: any, index: number) => item.pericope ? renderPericopeItem(item, index) : item.text ? (
                     <div key={item.text._id}>
                         <div className="flex flex-row">
                             <Link

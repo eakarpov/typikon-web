@@ -42,6 +42,9 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         <DayTitle value={item.h3} valueName={TextType.H3} />
                         <DayTitle value={item.h6} valueName={TextType.H6} />
                         <DayTitle value={item.h9} valueName={TextType.H9} />
+                        <DayTitle value={item.gospelMatins} valueName={TextType.GOSPEL_MATINS} />
+                        <DayTitle value={item.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} />
+                        <DayTitle value={item.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} />
                     </ul>
                 </div>
                 <div className="flex flex-col flex-1 space-y-4">
@@ -52,6 +55,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayPartReading value={item.before50} valueName={TextType.BEFORE_50} paschal />
                     <DayPartReading value={item.ipakoi} valueName={TextType.IPAKOI} paschal />
                     <DayPartReading value={item.polyeleos} valueName={TextType.POLYELEOS} paschal />
+                    <DayPartReading value={item.gospelMatins} valueName={TextType.GOSPEL_MATINS} paschal />
                     <DayPartReading value={item.song3} valueName={TextType.SONG_3} paschal />
                     <DayPartReading value={item.song6} valueName={TextType.SONG_6} paschal />
                     <DayPartReading value={item.before1h} valueName={TextType.BEFORE_1h} paschal />
@@ -60,6 +64,8 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayPartReading value={item.h3} valueName={TextType.H3} paschal />
                     <DayPartReading value={item.h6} valueName={TextType.H6} paschal />
                     <DayPartReading value={item.h9} valueName={TextType.H9} paschal />
+                    <DayPartReading value={item.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} paschal />
+                    <DayPartReading value={item.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} paschal />
                 </div>
             </div>
         </div>
