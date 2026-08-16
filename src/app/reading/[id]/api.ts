@@ -32,7 +32,12 @@ export const getItem = async (id: string, range?: string): Promise<[any, any, bo
                 .collection("verses")
                 .find({ textId: new ObjectId(res.id) })
                 .toArray();
-            const sorted = sortVerses(rawVerses.map(v => ({ ...(v as any), id: v._id.toString() })));
+            const sorted = sortVerses(rawVerses.map(v => ({
+                id: v._id.toString(),
+                chapter: v.chapter,
+                verse: v.verse,
+                content: v.content,
+            })));
             res.verses = filterVersesByRanges(sorted, parseVerseRanges(range));
         }
 
