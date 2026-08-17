@@ -43,6 +43,9 @@ const Content = async ({ itemPromise, id }: { itemPromise: Promise<[any, any]>, 
     return (
         <div className="pt-2">
             <h1 className="font-bold font-serif">
+                {item.bookName && (
+                    <span className="font-normal text-stone-500">{item.bookName}. </span>
+                )}
                 {item.name}
             </h1>
             {item.description && (

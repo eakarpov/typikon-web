@@ -46,6 +46,9 @@ const Content = async ({ itemsPromise }: IContent) => {
                             className="cursor-pointer font-bold font-serif"
                             href={`/texting/${item.id}`}
                         >
+                            {item.bookName && (
+                                <span className="font-normal text-stone-500">{item.bookName}. </span>
+                            )}
                             {item.name || item.id}
                         </Link>
                     </div>

@@ -12,8 +12,17 @@ export const getItem = async (id: string): Promise<[any, any]> => {
             .aggregate([
                 { $match: { _id: new ObjectId(id) } },
                 {
+                    $lookup: {
+                        from: "books",
+                        localField: "bookId",
+                        foreignField: "_id",
+                        as: "book",
+                    },
+                },
+                {
                     $addFields: {
                         id: { $toString: "$_id" },
+                        bookName: { $arrayElemAt: ["$book.name", 0] },
                     },
                 },
                 {
@@ -24,6 +33,7 @@ export const getItem = async (id: string): Promise<[any, any]> => {
                         description: 1,
                         link: 1,
                         readiness: 1,
+                        bookName: 1,
                     },
                 },
             ])

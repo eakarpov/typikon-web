@@ -17,8 +17,17 @@ export const getItems = async (): Promise<[any, any]> => {
                 },
                 { $sort: { textingPriority: 1, name: 1 } },
                 {
+                    $lookup: {
+                        from: "books",
+                        localField: "bookId",
+                        foreignField: "_id",
+                        as: "book",
+                    },
+                },
+                {
                     $addFields: {
                         id: { $toString: "$_id" },
+                        bookName: { $arrayElemAt: ["$book.name", 0] },
                     },
                 },
                 {
@@ -30,6 +39,7 @@ export const getItems = async (): Promise<[any, any]> => {
                         link: 1,
                         readiness: 1,
                         textingPriority: 1,
+                        bookName: 1,
                     },
                 },
             ])
