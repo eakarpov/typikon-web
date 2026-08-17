@@ -65,6 +65,9 @@ const Admin = () => {
                     <Link href="/admin/corrections">
                         Исправление ошибок
                     </Link>
+                    <Link href="/admin/texting">
+                        Предложения по отекстовке
+                    </Link>
                     <Link href="/admin/channel-posts">
                         Посты в Telegram/VK
                     </Link>
