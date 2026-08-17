@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     $set: {
                         source: data.source,
                         bookSlug: data.bookSlug,
-                        number: parseInt(data.number, 10),
+                        number: data.number ? parseInt(data.number, 10) : null,
                         variant: data.variant || null,
                         label: data.label || "",
                         occasions: Array.isArray(data.occasions) ? data.occasions : [],

@@ -6,9 +6,9 @@ import { parseVerseRanges, IVerseRange } from "@/utils/verses";
 
 interface IPericope {
     id: string;
-    source: "gospel" | "apostle";
+    source: "gospel" | "apostle" | "paremia";
     bookSlug: string;
-    number: number;
+    number: number | null;
     variant: string | null;
     label: string;
     occasions: string[];
@@ -30,7 +30,7 @@ interface IEditFormState {
 const toFormState = (p: IPericope): IEditFormState => ({
     label: p.label,
     bookSlug: p.bookSlug,
-    number: String(p.number),
+    number: p.number != null ? String(p.number) : "",
     variant: p.variant || "",
     occasions: p.occasions.join("; "),
     rangesText: formatRanges(p.ranges),
@@ -63,7 +63,7 @@ const PericopeRow = ({ pericope, onSaved, onDeleted }: {
             body: JSON.stringify({
                 source: pericope.source,
                 bookSlug: form.bookSlug,
-                number: parseInt(form.number, 10),
+                number: form.number ? parseInt(form.number, 10) : null,
                 variant: form.variant || null,
                 label: form.label,
                 occasions: form.occasions.split(";").map(s => s.trim()).filter(Boolean),
@@ -75,7 +75,7 @@ const PericopeRow = ({ pericope, onSaved, onDeleted }: {
             onSaved({
                 ...pericope,
                 bookSlug: form.bookSlug,
-                number: parseInt(form.number, 10),
+                number: form.number ? parseInt(form.number, 10) : null,
                 variant: form.variant || null,
                 label: form.label,
                 occasions: form.occasions.split(";").map(s => s.trim()).filter(Boolean),
@@ -135,7 +135,7 @@ const PericopeRow = ({ pericope, onSaved, onDeleted }: {
 };
 
 const PericopesContent = () => {
-    const [source, setSource] = useState<"gospel" | "apostle">("gospel");
+    const [source, setSource] = useState<"gospel" | "apostle" | "paremia">("gospel");
     const [bookSlug, setBookSlug] = useState("");
     const [pericopes, setPericopes] = useState<IPericope[]>([]);
     const [loading, setLoading] = useState(false);
@@ -178,9 +178,10 @@ const PericopesContent = () => {
             </p>
             <div className="flex flex-row items-center mb-2">
                 <label className="pr-2">Источник:</label>
-                <select className="border-2 mr-4" value={source} onChange={e => setSource(e.target.value as "gospel" | "apostle")}>
+                <select className="border-2 mr-4" value={source} onChange={e => setSource(e.target.value as "gospel" | "apostle" | "paremia")}>
                     <option value="gospel">Евангелие</option>
                     <option value="apostle">Апостол</option>
+                    <option value="paremia">Паремии</option>
                 </select>
                 <label className="pr-2">Книга:</label>
                 <input
