@@ -92,6 +92,7 @@ const Editor = () => {
                                 <DayTitle value={data.day?.kathisma3} valueName={TextType.KATHISMA_3} />
                                 <DayTitle value={data.day?.ipakoi} valueName={TextType.IPAKOI} />
                                 <DayTitle value={data.day?.polyeleos} valueName={TextType.POLYELEOS} />
+                                <DayTitle value={data.day?.gospelMatins} valueName={TextType.GOSPEL_MATINS} />
                                 <DayTitle value={data.day?.song3} valueName={TextType.SONG_3} />
                                 <DayTitle value={data.day?.song6} valueName={TextType.SONG_6} />
                                 <DayTitle value={data.day?.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
@@ -100,6 +101,8 @@ const Editor = () => {
                                 <DayTitle value={data.day?.h6} valueName={TextType.H6} />
                                 <DayTitle value={data.day?.h9} valueName={TextType.H9} />
                                 <DayTitle value={data.day?.panagia} valueName={TextType.PANAGIA} />
+                                <DayTitle value={data.day?.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} />
+                                <DayTitle value={data.day?.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} />
                             </ul>
                         </div>
                         <div className="flex flex-col flex-1 space-y-4">
@@ -109,6 +112,7 @@ const Editor = () => {
                             <DayPartReading value={data.day?.kathisma3} valueName={TextType.KATHISMA_3} paschal />
                             <DayPartReading value={data.day?.ipakoi} valueName={TextType.IPAKOI} paschal />
                             <DayPartReading value={data.day?.polyeleos} valueName={TextType.POLYELEOS} paschal />
+                            <DayPartReading value={data.day?.gospelMatins} valueName={TextType.GOSPEL_MATINS} paschal />
                             <DayPartReading value={data.day?.song3} valueName={TextType.SONG_3} paschal />
                             <DayPartReading value={data.day?.song6} valueName={TextType.SONG_6} paschal />
                             <DayPartReading value={data.day?.before1h} valueName={TextType.BEFORE_1h} paschal />
@@ -118,6 +122,8 @@ const Editor = () => {
                             <DayPartReading value={data.day?.h6} valueName={TextType.H6} paschal />
                             <DayPartReading value={data.day?.h9} valueName={TextType.H9} paschal />
                             <DayPartReading value={data.day?.panagia} valueName={TextType.PANAGIA} paschal />
+                            <DayPartReading value={data.day?.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} paschal />
+                            <DayPartReading value={data.day?.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} paschal />
                         </div>
                     </div>
                 </div>

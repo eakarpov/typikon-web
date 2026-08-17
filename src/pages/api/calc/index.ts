@@ -6,6 +6,11 @@ import {TextType} from "@/utils/texts";
 import clientPromise from "@/lib/mongodb";
 import {resolveDayPericopes} from "@/lib/pericopes";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
+import {computeLectionaryYear} from "@/utils/lectionaryCycle";
+
+// В "weeks" неделя 1 по Пятидесятнице хранится как type:"Penticostarion" (спецназвания
+// "День Святаго Духа"/"Неделя всех святых"), недели 2-33 — как type:"first".
+const typeForPenticostWeek = (week: number) => week === 1 ? "Penticostarion" : "first";
 
 const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
     const diffTime = date.getTime() - easter.getTime();
@@ -19,7 +24,9 @@ const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
             const realVal = Math.floor((49 + diffDays) % 7);
             return { week: Math.floor((49 + diffDays + 6) / 7), day: !realVal ? 7 : realVal, type: "Fast" };
         } else { // Previous Penticostarion
-            return { week: Math.floor((diffDaysPrevious - 50) / 7) + 1, day: Math.floor((diffDaysPrevious - 50) % 7) + 1, type: "Penticostarion" };
+            const week = Math.floor((diffDaysPrevious - 50) / 7) + 1;
+            const day = Math.floor((diffDaysPrevious - 50) % 7) + 1;
+            return { week, day, type: typeForPenticostWeek(week), pentecostAnchorYear: prevEaster.getFullYear() };
         }
     }
     if (diffDays <= 50) {
@@ -27,7 +34,9 @@ const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
         return { week: Math.floor(diffDays / 7) + 1, day: Math.floor(diffDays % 7), type: "Pascha" };
     } else {
         // count from Penticostarion, 1 - monday, 7 - sunday
-        return { week: Math.floor((diffDays - 50) / 7) + 1, day: Math.floor((diffDays - 50) % 7) + 1, type: "Penticostarion" };
+        const week = Math.floor((diffDays - 50) / 7) + 1;
+        const day = Math.floor((diffDays - 50) % 7) + 1;
+        return { week, day, type: typeForPenticostWeek(week), pentecostAnchorYear: easter.getFullYear() };
     }
 };
 
@@ -80,6 +89,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 res.status(404).end();
                 return;
             }
+
+            // Отступка/преступка: зачало Евангелия/Апостола на Литургии может относиться
+            // не к календарной позиции недели (searchTriodion.week), а к более ранней/поздней
+            // канонической неделе — см. src/utils/lectionaryCycle.ts. Остальные поля дня
+            // (кафизмы, тропари и т.п.) при этом продолжают браться из календарной позиции.
+            if (triodicDay && searchTriodion.pentecostAnchorYear) {
+                const lectionaryYear = computeLectionaryYear(searchTriodion.pentecostAnchorYear);
+                const effectiveGospelWeek = lectionaryYear.gospelWeekMap.get(searchTriodion.week);
+                const effectiveApostleWeek = lectionaryYear.apostleWeekMap.get(searchTriodion.week);
+
+                if (effectiveGospelWeek && effectiveGospelWeek !== searchTriodion.week) {
+                    const gospelSource = await getTriodicItem({
+                        week: effectiveGospelWeek, day: searchTriodion.day, type: typeForPenticostWeek(effectiveGospelWeek),
+                    });
+                    if (gospelSource?.gospelLiturgy) triodicDay.gospelLiturgy = gospelSource.gospelLiturgy;
+                }
+                if (effectiveApostleWeek && effectiveApostleWeek !== searchTriodion.week) {
+                    const apostleSource = await getTriodicItem({
+                        week: effectiveApostleWeek, day: searchTriodion.day, type: typeForPenticostWeek(effectiveApostleWeek),
+                    });
+                    if (apostleSource?.apostleLiturgy) triodicDay.apostleLiturgy = apostleSource.apostleLiturgy;
+                }
+            }
+
             const client = await clientPromise;
             const db = client.db("typikon");
             if (!calendarDay) {
