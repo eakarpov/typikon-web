@@ -184,6 +184,17 @@ export default function Home() {
               </div>
               <div className="flex flex-col flex-1 space-y-4">
                   <div className={myFont.variable}>
+                      <Link
+                          href="/texting"
+                          className="flex flex-row items-center justify-between gap-3 rounded border border-amber-300 bg-amber-50 px-4 py-3 font-serif hover:bg-amber-100"
+                      >
+                          <span>
+                              Если у вас есть немного свободного времени — присоединяйтесь к отекстовке уставных чтений: ваша помощь будет неоценима!
+                          </span>
+                          <ArrowSmallRightIcon className="w-6 h-6 shrink-0 text-amber-800" />
+                      </Link>
+                  </div>
+                  <div className={myFont.variable}>
                       <Suspense fallback={<div>Loading...</div>}>
                           {/* @ts-expect-error Async Server Component */}
                           <Content itemsPromise={itemsData} />
