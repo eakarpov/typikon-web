@@ -1,16 +1,15 @@
 "use client";
-import {useCallback, useEffect, useState} from "react";
+import {useState} from "react";
+import {SIGN} from "@/types/dto/days";
 
 const signs = [
-    { id: "compline", name: "Повечерие" },
-    { id: "hallelujah", name: "Аллилуия" },
-    { id: "no", name: "Без знака" },
-    { id: "sixth", name: "Шестеричная" },
-    { id: "doxology", name: "Славословие" },
-    { id: "polyeleos", name: "Полиелей" },
-    { id: "vigil", name: "Бдение" },
-    { id: "great-vigil", name: "Бдение (великий праздник)" },
-    { id: "great-feast", name: "Двунадесятый праздник" },
+    { id: SIGN.NO_SIGN, name: "Без знака" },
+    { id: SIGN.HALLELUJAH, name: "Аллилуйная" },
+    { id: SIGN.SIX_STICHERA, name: "Шестеричная" },
+    { id: SIGN.DOXOLOGIC, name: "Славословная" },
+    { id: SIGN.POLYELEOS, name: "Полиелейная" },
+    { id: SIGN.VIGIL, name: "Бденная" },
+    { id: SIGN.GREAT_VIGIL, name: "Бдение (двунадесятый праздник)" },
 ];
 
 const sources = [
@@ -22,8 +21,13 @@ const AdminEditor = ({ value }: any) => {
     const [name, setName] = useState(value.name || "");
     const [date, setDate] = useState(value.date || 0);
     const [month, setMonth] = useState(value.month || 0);
-    const [sign, setSign] = useState(value.sign || "");
+    const [sign, setSign] = useState(value.sign || SIGN.NO_SIGN);
     const [source, setSource] = useState(value.source || "");
+    const [isDefault, setIsDefault] = useState(!!value.isDefault);
+    const [signConditional, setSignConditional] = useState(!!value.signConditional);
+    const [order, setOrder] = useState(value.order || 0);
+    const [needsReview, setNeedsReview] = useState(!!value.needsReview);
+    const [sourceUrl, setSourceUrl] = useState(value.sourceUrl || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -40,6 +44,11 @@ const AdminEditor = ({ value }: any) => {
                 date: parseInt(date),
                 sign,
                 source,
+                isDefault,
+                signConditional,
+                order: parseInt(order),
+                needsReview,
+                sourceUrl,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -75,33 +84,80 @@ const AdminEditor = ({ value }: any) => {
                 onChange={e => setDate(e.target.value)}
             />
             <label>
+                Позиция среди памятей дня
+            </label>
+            <input
+                type="number"
+                className="border-2"
+                value={order}
+                onChange={e => setOrder(e.target.value)}
+            />
+            <label>
                 Знак
             </label>
-            <select>
+            <select
+                className="border-2"
+                value={sign}
+                onChange={e => setSign(e.target.value as SIGN)}
+            >
                 {signs.map((s) => (
                     <option
                         key={s.id}
                         value={s.id}
-                        selected={s.id === sign}
                     >
                         {s.name}
                     </option>
                 ))}
             </select>
             <label>
+                <input
+                    type="checkbox"
+                    checked={signConditional}
+                    onChange={e => setSignConditional(e.target.checked)}
+                />
+                {" "}Знак условный (зависит от Пасхалии)
+            </label>
+            <label>
                 Источник
             </label>
-            <select>
+            <select
+                className="border-2"
+                value={source}
+                onChange={e => setSource(e.target.value)}
+            >
                 {sources.map((s) => (
                     <option
                         key={s.id}
                         value={s.id}
-                        selected={s.id === source}
                     >
                         {s.name}
                     </option>
                 ))}
             </select>
+            <label>
+                Ссылка на источник
+            </label>
+            <input
+                className="border-2"
+                value={sourceUrl}
+                onChange={e => setSourceUrl(e.target.value)}
+            />
+            <label>
+                <input
+                    type="checkbox"
+                    checked={isDefault}
+                    onChange={e => setIsDefault(e.target.checked)}
+                />
+                {" "}Основная память дня (маркер дефолтности)
+            </label>
+            <label>
+                <input
+                    type="checkbox"
+                    checked={needsReview}
+                    onChange={e => setNeedsReview(e.target.checked)}
+                />
+                {" "}Требует проверки
+            </label>
         </div>
     );
 };

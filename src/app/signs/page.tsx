@@ -15,15 +15,25 @@ export const metadata: Metadata = {
     },
 };
 
-const RestReadings = () => {
-    const itemsData = getItems();
+interface ISearchParams {
+    page?: string;
+    q?: string;
+    month?: string;
+}
+
+const RestReadings = ({ searchParams }: { searchParams: ISearchParams }) => {
+    const itemsData = getItems({
+        page: searchParams.page ? parseInt(searchParams.page, 10) : 1,
+        q: searchParams.q || undefined,
+        month: searchParams.month ? parseInt(searchParams.month, 10) : undefined,
+    });
 
     return (
         <div>
             <div className={myFont.variable}>
                 <Suspense fallback={<div>Loading...</div>}>
                     {/* @ts-expect-error Async Server Component */}
-                    <Content itemsPromise={itemsData} />
+                    <Content itemsPromise={itemsData} searchParams={searchParams} />
                 </Suspense>
             </div>
         </div>

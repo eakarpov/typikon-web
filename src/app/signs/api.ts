@@ -1,29 +1,6 @@
-import clientPromise from "@/lib/mongodb";
+import {getSignsList, SignsListParams, SignsListResult} from "@/lib/signs/list";
 
-export const getItems = async () => {
-    try {
-        const client = await clientPromise;
-        const db = client.db("typikon");
-
-        const weeks = await db
-            .collection("signs")
-            .aggregate([
-                // { $match: { $and: [{penticostration: false}, {triodion: false}] }},
-                {
-                    $addFields: {
-                        id: { $toString: "$_id" },
-                    }
-                },
-                {
-                    $project: {
-                        _id: 0,
-                    },
-                },
-            ])
-            .toArray();
-        return [weeks, null];
-    } catch (e) {
-        console.error(e);
-        return [null, {error: "Ошибка при загрузке данных"}];
-    }
+export const getItems = async (params: SignsListParams = {}): Promise<[SignsListResult, null]> => {
+    const result = await getSignsList(params);
+    return [result, null];
 };

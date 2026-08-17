@@ -1,19 +1,20 @@
-import Editor from "@/app/admin/signs/Editor";
+import SignsListView from "@/app/admin/signs/SignsListView";
+import {SignsListResult} from "@/lib/signs/list";
 
-const AdminEditorManager = async ({ itemPromise }: any) => {
-    const [value, err] = await itemPromise;
+const AdminEditorManager = async ({ itemPromise, searchParams }: { itemPromise: Promise<[SignsListResult, null]>; searchParams: Record<string, string | undefined> }) => {
+    const [result] = await itemPromise;
 
-    if (!value) {
+    if (!result || result.error) {
         return (
             <div>
                 <p>
-                    Данные не получены. Редактирование недоступно.
+                    Данные не получены.
                 </p>
             </div>
         );
     }
 
-    return <Editor value={value} />;
+    return <SignsListView result={result} searchParams={searchParams} />;
 };
 
 export default AdminEditorManager;

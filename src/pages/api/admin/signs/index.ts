@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
-import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -10,32 +9,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     if (req.method === 'POST') {
         if (!(await checkRightsBack(req, res))) return;
-        const {bookId} = req.body;
-        if (!bookId) {
-            res.status(400).end();
-        }
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
-            const data = await db
+            await db
                 .collection("signs")
                 .insertOne({
                     name: "",
                     date: 0,
                     month: 0,
-                    sign: "no",
+                    sign: "NO_SIGN",
                     source: "typikon",
+                    isDefault: false,
+                    signConditional: false,
+                    order: 0,
+                    needsReview: false,
                     createdAt: new Date(),
                 });
-            await db.collection("books")
-                .updateOne(
-                    { _id : new ObjectId(bookId) },
-                    {
-                        $addToSet: {
-                            texts: data.insertedId,
-                        },
-                    },
-                );
 
             res.status(200).end();
         } catch (e) {
