@@ -18,6 +18,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
         <div className="flex flex-col pt-2 md:flex-row">
             <div className="w-1/4">
                 <ul className="space-y-2">
+                    <DayTitle value={item.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} />
                     <DayTitle value={item.vigil} valueName={TextType.VIGIL} />
                     <DayTitle value={item.kathisma1} valueName={TextType.KATHISMA_1} />
                     <DayTitle value={item.kathisma2} valueName={TextType.KATHISMA_2} />
@@ -35,6 +36,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                 </ul>
             </div>
             <div className="flex flex-col flex-1 space-y-4">
+                <DayPartReading value={item.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} />
                 <DayPartReading value={item.vigil} valueName={TextType.VIGIL} />
                 <DayPartReading value={item.kathisma1} valueName={TextType.KATHISMA_1} />
                 <DayPartReading value={item.kathisma2} valueName={TextType.KATHISMA_2} />

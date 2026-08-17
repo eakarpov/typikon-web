@@ -86,6 +86,7 @@ const Editor = () => {
                     <div className="flex flex-col pt-2 md:flex-row">
                         <div className="w-1/4">
                             <ul className="space-y-2">
+                                <DayTitle value={data.day?.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} />
                                 <DayTitle value={data.day?.vigil} valueName={TextType.VIGIL} />
                                 <DayTitle value={data.day?.kathisma1} valueName={TextType.KATHISMA_1} />
                                 <DayTitle value={data.day?.kathisma2} valueName={TextType.KATHISMA_2} />
@@ -106,6 +107,7 @@ const Editor = () => {
                             </ul>
                         </div>
                         <div className="flex flex-col flex-1 space-y-4">
+                            <DayPartReading value={data.day?.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} paschal />
                             <DayPartReading value={data.day?.vigil} valueName={TextType.VIGIL} paschal />
                             <DayPartReading value={data.day?.kathisma1} valueName={TextType.KATHISMA_1} paschal />
                             <DayPartReading value={data.day?.kathisma2} valueName={TextType.KATHISMA_2} paschal />
