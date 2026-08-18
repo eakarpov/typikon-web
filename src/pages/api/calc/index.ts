@@ -133,11 +133,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
             const day = triodicDay;
 
-            if (triodicDay.paschal === calendarDay.paschal) { // indeed triodic is for pascha circle not for triodic period itself...
-                // check in triodion from mytar and pharisey week <> week days except sunday ?
-                res.status(400).end();
-                return;
-            }
             Object.values(TextType).map((tType) => {
                 if (tType === TextType.SONG_6) {
                     // after 6-th song Prologue is read, that's it can be added to triodic readings or not
