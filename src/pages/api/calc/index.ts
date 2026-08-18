@@ -1,178 +1,26 @@
 import {NextApiRequest, NextApiResponse} from "next";
-import {orthodoxEaster} from "date-easter";
-import {getTriodicItem} from "@/pages/api/calc/getTriodion";
-import {getCalendarItem} from "@/pages/api/calc/getCalenar";
-import {TextType} from "@/utils/texts";
-import clientPromise from "@/lib/mongodb";
-import {resolveDayPericopes} from "@/lib/pericopes";
+import {calcDay} from "@/lib/calcDay";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
-import {computeLectionaryYear} from "@/utils/lectionaryCycle";
-
-// В "weeks" неделя 1 по Пятидесятнице хранится как type:"Penticostarion" (спецназвания
-// "День Святаго Духа"/"Неделя всех святых"), недели 2-33 — как type:"first".
-const typeForPenticostWeek = (week: number) => week === 1 ? "Penticostarion" : "first";
-
-const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
-    const diffTime = date.getTime() - easter.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    const diffTimePrevious = date.getTime() - prevEaster.getTime();
-    const diffDaysPrevious = Math.ceil(diffTimePrevious / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) {
-        if (diffDays >= -49) { // Great Lention (exclude preparational weeks)
-            const realVal = Math.floor((49 + diffDays) % 7);
-            return { week: Math.floor((49 + diffDays + 6) / 7), day: !realVal ? 7 : realVal, type: "Fast" };
-        } else { // Previous Penticostarion
-            const week = Math.floor((diffDaysPrevious - 50) / 7) + 1;
-            const day = Math.floor((diffDaysPrevious - 50) % 7) + 1;
-            return { week, day, type: typeForPenticostWeek(week), pentecostAnchorYear: prevEaster.getFullYear() };
-        }
-    }
-    if (diffDays <= 50) {
-        // count from Pascha, 0 - sunday, 6 - saturday
-        return { week: Math.floor(diffDays / 7) + 1, day: Math.floor(diffDays % 7), type: "Pascha" };
-    } else {
-        // count from Penticostarion, 1 - monday, 7 - sunday
-        const week = Math.floor((diffDays - 50) / 7) + 1;
-        const day = Math.floor((diffDays - 50) % 7) + 1;
-        return { week, day, type: typeForPenticostWeek(week), pentecostAnchorYear: easter.getFullYear() };
-    }
-};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
         const {date} = req.body;
         if (!date) {
             res.status(400).end();
+            return;
         }
-        const dateObj = new Date(date);
-        let easter = orthodoxEaster(dateObj);
-        const prevDateObj = new Date(date);
-        prevDateObj.setFullYear(prevDateObj.getFullYear() - 1);
-        let prevEaster = orthodoxEaster(prevDateObj);
-        let easterDate = new Date(
-            `${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`
-        );
-        let prevEasterDate = new Date(
-            `${prevEaster.year}-${prevEaster.month > 9 ? prevEaster.month : `0${prevEaster.month}`}-${prevEaster.day}`
-        );
-
-        // if (easterDate.getTime() > dateObj.getTime()) {
-        //     const prevYear = new Date(date);
-        //     prevYear.setFullYear(prevYear.getFullYear() - 1);
-        //     easter = orthodoxEaster(prevYear);
-        //     easterDate = new Date(`${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`);
-        // }
-
-        if (dateObj.getTime() - easterDate.getTime() > 1000 * 3600 * 24 * 56) { // only pentacostarion, check penticostarion
-            // res.status(400).end();
-            // return;
-        }
-
-        // check triodion
-
-        const searchTriodion = getWeekAndDay(dateObj, easterDate, prevEasterDate);
-        const triodicPromise = getTriodicItem(searchTriodion);
-
-        const churchDate = new Date(dateObj.getTime() - 13 * 24 * 3600 * 1000);
-        const calendarPromise = getCalendarItem(churchDate);
-        // console.log(churchDate);
 
         const lang = (req.cookies?.[BIBLE_LANGUAGE_COOKIE] as string) || DEFAULT_BIBLE_LANGUAGE;
 
-        Promise.all<any>([triodicPromise, calendarPromise]).then<any, any>(async ([
-            triodicDay,
-            calendarDay,
-        ]) => {
-            if (!triodicDay && !calendarDay) {
+        try {
+            const result = await calcDay(date, lang);
+            if (!result) {
                 res.status(404).end();
                 return;
             }
-
-            // Отступка/преступка: зачало Евангелия/Апостола на Литургии может относиться
-            // не к календарной позиции недели (searchTriodion.week), а к более ранней/поздней
-            // канонической неделе — см. src/utils/lectionaryCycle.ts. Остальные поля дня
-            // (кафизмы, тропари и т.п.) при этом продолжают браться из календарной позиции.
-            if (triodicDay && searchTriodion.pentecostAnchorYear) {
-                const lectionaryYear = computeLectionaryYear(searchTriodion.pentecostAnchorYear);
-                const effectiveGospelWeek = lectionaryYear.gospelWeekMap.get(searchTriodion.week);
-                const effectiveApostleWeek = lectionaryYear.apostleWeekMap.get(searchTriodion.week);
-
-                if (effectiveGospelWeek && effectiveGospelWeek !== searchTriodion.week) {
-                    const gospelSource = await getTriodicItem({
-                        week: effectiveGospelWeek, day: searchTriodion.day, type: typeForPenticostWeek(effectiveGospelWeek),
-                    });
-                    if (gospelSource?.gospelLiturgy) triodicDay.gospelLiturgy = gospelSource.gospelLiturgy;
-                }
-                if (effectiveApostleWeek && effectiveApostleWeek !== searchTriodion.week) {
-                    const apostleSource = await getTriodicItem({
-                        week: effectiveApostleWeek, day: searchTriodion.day, type: typeForPenticostWeek(effectiveApostleWeek),
-                    });
-                    if (apostleSource?.apostleLiturgy) triodicDay.apostleLiturgy = apostleSource.apostleLiturgy;
-                }
-            }
-
-            const client = await clientPromise;
-            const db = client.db("typikon");
-            if (!calendarDay) {
-                res.status(200).json({
-                    day: await resolveDayPericopes(db, triodicDay, lang),
-                    date: churchDate,
-                    search: searchTriodion,
-                });
-                return;
-            }
-            if (!triodicDay) {
-                res.status(200).json({
-                    day: await resolveDayPericopes(db, calendarDay, lang),
-                    date: churchDate,
-                    search: searchTriodion,
-                });
-                return;
-            }
-            const day = triodicDay;
-
-            Object.values(TextType).map((tType) => {
-                if (tType === TextType.SONG_6) {
-                    // after 6-th song Prologue is read, that's it can be added to triodic readings or not
-                    // console.log(day.song6);
-                    if (day.song6) {
-                        // day.song6.items = day.song6.items?.flatMap((el: any) => {
-                        //    if (!el.paschal && calendarDay.song6) {
-                        //        return calendarDay.song6?.items;
-                        //    }
-                        //    return el;
-                        // });
-                        day.song6.items = [
-                            ...(calendarDay.song6?.items || []),
-                            ...day.song6.items,
-                        ]
-                        // console.log(day.song6);
-                    } else if (calendarDay.song6) {
-                        day.song6 = {...calendarDay.song6};
-                        // console.log(day.song6);
-                    }
-                } else {
-                    // if polyeleos - 3-d song and polyeleos readings are replaced by readings of saint
-                    // in holidays - all triodic parts are replaced by holiday readings
-                    // P.S. are there some other cases?
-                    if (calendarDay[tType]?.items) {
-                        day[tType] = calendarDay[tType];
-                    }
-                }
-            });
-
-            // console.log(churchDate, searchTriodion, day)
-
-            // merge days here, send only { day: ..., date: ..., search: ... }
-            res.status(200).json({
-                day: await resolveDayPericopes(db, day, lang),
-                date: churchDate,
-                search: searchTriodion,
-            });
-        }).catch(() => {
+            res.status(200).json(result);
+        } catch (e) {
             res.status(500).end();
-        });
+        }
     }
 };

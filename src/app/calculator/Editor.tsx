@@ -2,10 +2,8 @@
 
 import {useMemo, useState} from "react";
 import {orthodoxEaster} from "date-easter";
-import DayTitle from "@/app/components/DayTitle";
-import {TextType} from "@/utils/texts";
 import {csFont, myFont} from "@/utils/font";
-import DayPartReading from "@/app/components/DayPartReading";
+import DayFullContent from "@/app/components/DayFullContent";
 
 const now = new Date();
 const currMonthStr = now.getMonth() + 1 > 9 ? now.getMonth() + 1 :  `0${now.getMonth() + 1}`;
@@ -14,7 +12,7 @@ const Editor = () => {
     const [value, setValue] = useState(
         `${now.getFullYear()}-${currMonthStr}-${now.getDate() >= 10 ? now.getDate() : `0${now.getDate()}`}`
     );
-    const [notImplemented, setNotImplemented] = useState(false);
+    const [status, setStatus] = useState<"idle" | "not_found" | "error">("idle");
 
     const date = useMemo(() => new Date(value), [value]);
     const easter = useMemo(() => orthodoxEaster(date),[date]);
@@ -24,6 +22,7 @@ const Editor = () => {
     const [data, setData] = useState<any>(null);
 
     const onCalculate = () => {
+      setData(null);
       fetch("/api/calc", {
           method: "POST",
           headers: {
@@ -33,14 +32,18 @@ const Editor = () => {
               date: value,
           }),
       }).then((res) => {
-          if (res.status === 400) {
-              setNotImplemented(true);
-          } else {
-              setNotImplemented(false);
-              return res.json();
+          if (res.status === 404) {
+              setStatus("not_found");
+              return null;
           }
+          if (!res.ok) {
+              setStatus("error");
+              return null;
+          }
+          setStatus("idle");
+          return res.json();
       }).then((res) => {
-          setData(res);
+          if (res) setData(res);
       });
     };
 
@@ -71,63 +74,22 @@ const Editor = () => {
             <button onClick={onCalculate} className="font-bold">
                 Получить чтения на выбранный день
             </button>
-            {notImplemented && (
+            {status === "not_found" && (
                 <div>
-                    Функционал пока не реализован (только Цветная триодь)
+                    Ничего не найдено на эту дату
+                </div>
+            )}
+            {status === "error" && (
+                <div>
+                    Не удалось получить чтения на эту дату
                 </div>
             )}
             {data && (
                 <div className={`${myFont.variable} ${csFont.variable}`}>
-                    <span>Ответ по триодному циклу получен. Cоединение с календарным днем пока в разработке.</span>
                     <p>
                         День - {data.day?.name}. Число (по старому стилю) - {new Date(data.date).toLocaleDateString()}
                     </p>
-                    {/*Дублирование страницы дня, не мержатся данные по календарному дню*/}
-                    <div className="flex flex-col pt-2 md:flex-row">
-                        <div className="w-1/4">
-                            <ul className="space-y-2">
-                                <DayTitle value={data.day?.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} />
-                                <DayTitle value={data.day?.vigil} valueName={TextType.VIGIL} />
-                                <DayTitle value={data.day?.kathisma1} valueName={TextType.KATHISMA_1} />
-                                <DayTitle value={data.day?.kathisma2} valueName={TextType.KATHISMA_2} />
-                                <DayTitle value={data.day?.kathisma3} valueName={TextType.KATHISMA_3} />
-                                <DayTitle value={data.day?.ipakoi} valueName={TextType.IPAKOI} />
-                                <DayTitle value={data.day?.polyeleos} valueName={TextType.POLYELEOS} />
-                                <DayTitle value={data.day?.gospelMatins} valueName={TextType.GOSPEL_MATINS} />
-                                <DayTitle value={data.day?.song3} valueName={TextType.SONG_3} />
-                                <DayTitle value={data.day?.song6} valueName={TextType.SONG_6} />
-                                <DayTitle value={data.day?.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
-                                <DayTitle value={data.day?.before1h} valueName={TextType.BEFORE_1h} />
-                                <DayTitle value={data.day?.h3} valueName={TextType.H3} />
-                                <DayTitle value={data.day?.h6} valueName={TextType.H6} />
-                                <DayTitle value={data.day?.h9} valueName={TextType.H9} />
-                                <DayTitle value={data.day?.panagia} valueName={TextType.PANAGIA} />
-                                <DayTitle value={data.day?.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} />
-                                <DayTitle value={data.day?.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} />
-                            </ul>
-                        </div>
-                        <div className="flex flex-col flex-1 space-y-4">
-                            <DayPartReading value={data.day?.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} paschal />
-                            <DayPartReading value={data.day?.vigil} valueName={TextType.VIGIL} paschal />
-                            <DayPartReading value={data.day?.kathisma1} valueName={TextType.KATHISMA_1} paschal />
-                            <DayPartReading value={data.day?.kathisma2} valueName={TextType.KATHISMA_2} paschal />
-                            <DayPartReading value={data.day?.kathisma3} valueName={TextType.KATHISMA_3} paschal />
-                            <DayPartReading value={data.day?.ipakoi} valueName={TextType.IPAKOI} paschal />
-                            <DayPartReading value={data.day?.polyeleos} valueName={TextType.POLYELEOS} paschal />
-                            <DayPartReading value={data.day?.gospelMatins} valueName={TextType.GOSPEL_MATINS} paschal />
-                            <DayPartReading value={data.day?.song3} valueName={TextType.SONG_3} paschal />
-                            <DayPartReading value={data.day?.song6} valueName={TextType.SONG_6} paschal />
-                            <DayPartReading value={data.day?.before1h} valueName={TextType.BEFORE_1h} paschal />
-                            <DayPartReading value={data.day?.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
-                            <DayPartReading value={data.day?.before1h} valueName={TextType.BEFORE_1h} paschal />
-                            <DayPartReading value={data.day?.h3} valueName={TextType.H3} paschal />
-                            <DayPartReading value={data.day?.h6} valueName={TextType.H6} paschal />
-                            <DayPartReading value={data.day?.h9} valueName={TextType.H9} paschal />
-                            <DayPartReading value={data.day?.panagia} valueName={TextType.PANAGIA} paschal />
-                            <DayPartReading value={data.day?.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} paschal />
-                            <DayPartReading value={data.day?.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} paschal />
-                        </div>
-                    </div>
+                    <DayFullContent item={data.day} paschal />
                 </div>
             )}
         </div>

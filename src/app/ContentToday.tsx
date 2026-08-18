@@ -3,8 +3,12 @@ import {Suspense, useEffect, useState} from "react";
 import {ArrowLongRightIcon, ArrowLongLeftIcon} from "@heroicons/react/20/solid";
 import {TextType, valueTitle} from "@/utils/texts";
 import Link from "next/link";
-import {getTodayDate, getZeroedNumber} from "@/utils/dates";
-import {getMonth} from "@/lib/common/date";
+import {formatDateISO, getZeroedNumber} from "@/utils/dates";
+
+// Виджет работает с "церковной" датой (today, уже сдвинута на -13 дней относительно
+// реальной, см. getTodayDate). Триодь и /calculator/[date] считаются от реальной
+// (григорианской) даты, поэтому для ссылок и запроса к /api/calc сдвиг возвращается обратно.
+const toRealDate = (churchDate: Date) => new Date(+churchDate + 1000 * 60 * 60 * 24 * 13);
 
 export interface IPartItemWithText {
     cite: string;
@@ -53,8 +57,9 @@ const ContentTodayResult = ({ item: textsToday, today }: IContentMeta) => {
 
     const month = today.getMonth() + 1;
 
-    const yesterday = new Date(+today - 1000 * 60 * 60 * 24);
-    const tomorrow = new Date(+today + 1000 * 60 * 60 * 24);
+    const realToday = toRealDate(today);
+    const realYesterday = new Date(+realToday - 1000 * 60 * 60 * 24);
+    const realTomorrow = new Date(+realToday + 1000 * 60 * 60 * 24);
 
     return (
         <div
@@ -64,23 +69,23 @@ const ContentTodayResult = ({ item: textsToday, today }: IContentMeta) => {
                 className="flex flex-row font-serif border-b border-slate-300"
             >
                 <div>
-                    <Link href={`/calendar/${getMonth(yesterday.getMonth() + 1)}-${getZeroedNumber(yesterday.getDate())}`}>
+                    <Link href={`/calculator/${formatDateISO(realYesterday)}`}>
                         <span className="flex flex-row items-center">
-                            <ArrowLongLeftIcon className="w-4 h-4" />&nbsp;<b>Вчера (только календарное)</b>
+                            <ArrowLongLeftIcon className="w-4 h-4" />&nbsp;<b>Вчера</b>
                         </span>
                     </Link>
                 </div>
                 <div className="flex flex-1">
                         <span className="flex flex-row flex-1 items-center justify-center">
-                             <Link href={`/calendar/today`}>
-                                <b>Сегодня (полное), {getZeroedNumber(today.getDate())}.{getZeroedNumber(month)}</b>
+                             <Link href={`/calculator/${formatDateISO(realToday)}`}>
+                                <b>Сегодня, {getZeroedNumber(today.getDate())}.{getZeroedNumber(month)}</b>
                               </Link>
                         </span>
                 </div>
                 <div>
-                    <Link href={`/calendar/${getMonth(tomorrow.getMonth() + 1)}-${getZeroedNumber(tomorrow.getDate())}`}>
+                    <Link href={`/calculator/${formatDateISO(realTomorrow)}`}>
                         <span className="flex flex-row items-center">
-                            <b>Завтра (только календарное)</b>&nbsp;<ArrowLongRightIcon className="w-4 h-4" />
+                            <b>Завтра</b>&nbsp;<ArrowLongRightIcon className="w-4 h-4" />
                         </span>
                     </Link>
                 </div>
@@ -107,9 +112,7 @@ const ContentToday = ({ today }: { today: Date; }) => {
   const [item, setItem] = useState<any|null>(null);
 
   useEffect(() => {
-      const now = new Date(+today +  1000 * 60 * 60 * 24 * 13);
-      const currMonthStr = now.getMonth() + 1 > 9 ? now.getMonth() + 1 :  `0${now.getMonth() + 1}`;
-      const value = `${now.getFullYear()}-${currMonthStr}-${now.getDate() >= 10 ? now.getDate() : `0${now.getDate()}`}`;
+      const value = formatDateISO(toRealDate(today));
     fetch(`/api/calc`, {
         method: "POST",
         headers: {

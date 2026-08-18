@@ -13,3 +13,7 @@ export const getTodayDate = (date?: string) => {
 export const getZeroedNumber = (val: number) => {
     return val >= 10 ? val.toString() : `0${val}`;
 }
+
+export const formatDateISO = (date: Date) => {
+    return `${date.getFullYear()}-${getZeroedNumber(date.getMonth() + 1)}-${getZeroedNumber(date.getDate())}`;
+}
