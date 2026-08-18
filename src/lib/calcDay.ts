@@ -5,6 +5,7 @@ import {TextType} from "@/utils/texts";
 import clientPromise from "@/lib/mongodb";
 import {resolveDayPericopes} from "@/lib/pericopes";
 import {computeLectionaryYear} from "@/utils/lectionaryCycle";
+import {getDayMemories, IDayMemories} from "@/lib/signs/dayMemories";
 
 // В "weeks" неделя 1 по Пятидесятнице хранится как type:"Penticostarion" (спецназвания
 // "День Святаго Духа"/"Неделя всех святых"), недели 2-33 — как type:"first".
@@ -42,6 +43,7 @@ export interface ICalcDayResult {
     day: any;
     date: Date;
     search: any;
+    memories: IDayMemories;
 }
 
 // Единая точка расчета "дня" (мердж подвижной Триоди и неподвижного календаря) —
@@ -65,8 +67,9 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
 
     const churchDate = new Date(dateObj.getTime() - 13 * 24 * 3600 * 1000);
     const calendarPromise = getCalendarItem(churchDate);
+    const memoriesPromise = getDayMemories(churchDate.getMonth() + 1, churchDate.getDate());
 
-    const [triodicDay, calendarDay] = await Promise.all<any>([triodicPromise, calendarPromise]);
+    const [triodicDay, calendarDay, memories] = await Promise.all([triodicPromise, calendarPromise, memoriesPromise]);
 
     if (!triodicDay && !calendarDay) {
         return null;
@@ -102,6 +105,7 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
             day: await resolveDayPericopes(db, triodicDay, lang),
             date: churchDate,
             search: searchTriodion,
+            memories,
         };
     }
     if (!triodicDay) {
@@ -109,6 +113,7 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
             day: await resolveDayPericopes(db, calendarDay, lang),
             date: churchDate,
             search: searchTriodion,
+            memories,
         };
     }
     const day = triodicDay;
@@ -138,5 +143,6 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
         day: await resolveDayPericopes(db, day, lang),
         date: churchDate,
         search: searchTriodion,
+        memories,
     };
 };

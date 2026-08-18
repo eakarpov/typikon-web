@@ -6,16 +6,7 @@ import {useRouter} from "next/navigation";
 import {SIGN} from "@/types/dto/days";
 import {SignsListResult} from "@/lib/signs/list";
 import {getMonthLabel} from "@/lib/common/date";
-
-const SIGN_LABELS: Record<string, string> = {
-    [SIGN.NO_SIGN]: "Без знака",
-    [SIGN.HALLELUJAH]: "Аллилуйная",
-    [SIGN.SIX_STICHERA]: "Шестеричная",
-    [SIGN.DOXOLOGIC]: "Славословная",
-    [SIGN.POLYELEOS]: "Полиелейная",
-    [SIGN.VIGIL]: "Бденная",
-    [SIGN.GREAT_VIGIL]: "Бдение (двунадесятый праздник)",
-};
+import {SIGN_LABELS} from "@/utils/signs";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: getMonthLabel(i) }));
 

@@ -1,4 +1,5 @@
 import DayFullContent from "@/app/components/DayFullContent";
+import DayMemories from "@/app/components/DayMemories";
 import {ICalcDayResult} from "@/lib/calcDay";
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
 import Link from "next/link";
@@ -40,7 +41,10 @@ const Content = async ({ date, resultPromise }: { date: string; resultPromise: P
             {!result ? (
                 <div>Ничего не нашлось на эту дату</div>
             ) : (
-                <DayFullContent item={result.day} paschal />
+                <>
+                    <DayMemories memories={result.memories} />
+                    <DayFullContent item={result.day} paschal />
+                </>
             )}
         </div>
     );

@@ -4,6 +4,7 @@ import {useMemo, useState} from "react";
 import {orthodoxEaster} from "date-easter";
 import {csFont, myFont} from "@/utils/font";
 import DayFullContent from "@/app/components/DayFullContent";
+import DayMemories from "@/app/components/DayMemories";
 
 const now = new Date();
 const currMonthStr = now.getMonth() + 1 > 9 ? now.getMonth() + 1 :  `0${now.getMonth() + 1}`;
@@ -89,6 +90,7 @@ const Editor = () => {
                     <p>
                         День - {data.day?.name}. Число (по старому стилю) - {new Date(data.date).toLocaleDateString()}
                     </p>
+                    <DayMemories memories={data.memories} />
                     <DayFullContent item={data.day} paschal />
                 </div>
             )}
