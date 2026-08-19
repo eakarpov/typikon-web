@@ -3,8 +3,9 @@ import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {aggregationDayWithMonth, aggregationTextWithBook, getAggregationAddField} from "@/utils/database";
 import {resolveDayPericopes} from "@/lib/pericopes";
+import {DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 
-export const getItem = async (id: string, lang: string) => {
+export const getItem = async (id: string, lang: string = DEFAULT_BIBLE_LANGUAGE) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");

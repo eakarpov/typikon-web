@@ -1,5 +1,6 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import {getItem} from "@/app/calendar/[id]/api";
+import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'GET') {
@@ -8,7 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(400).end();
             return;
         }
-        const [day, error] = await getItem(id);
+        const lang = (req.query.lang as string) || (req.cookies?.[BIBLE_LANGUAGE_COOKIE] as string) || DEFAULT_BIBLE_LANGUAGE;
+        const [day, error] = await getItem(id, lang);
         if (error) {
             res.status(400).end();
             return;
