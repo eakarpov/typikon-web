@@ -3,6 +3,8 @@ import {cookies} from "next/headers";
 import {decrypt} from "@/lib/authorize/sessions";
 import Link from "next/link";
 import Content from "@/app/profile/Content";
+import UserNotesList from "@/app/profile/UserNotesList";
+import {getAllUserNotes} from "@/app/api/user-notes/service";
 
 const ProfilePage = async () => {
     const cookie = (await cookies()).get('session')?.value;
@@ -27,6 +29,7 @@ const ProfilePage = async () => {
     }
 
     const [acceptedTextingCount] = await getAcceptedTextingCount(session!.userId as string);
+    const userNotes = await getAllUserNotes(session!.userId as string);
 
     return (
         <div>
@@ -42,6 +45,10 @@ const ProfilePage = async () => {
                 </Link>
             </p>
             <Content item={item} />
+            <div>
+                <h3 className="font-bold">Мои заметки</h3>
+                <UserNotesList items={userNotes as any} />
+            </div>
             {item.isAdmin && (
                 <div>
                     <p>

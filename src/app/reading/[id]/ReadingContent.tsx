@@ -36,11 +36,12 @@ const customStylesSmall = {
     },
 };
 
-// matchStart — офсет начала word внутри paragraph/verseText, только для
-// подсветки в модалке (slice+<mark>), на бекенд не отправляется.
+// matchStart — офсет начала phrase внутри paragraph/verseText, только для
+// подсветки (slice+<mark>), на бекенд не отправляется (кроме подсветки уже
+// сохранённых заметок в тексте — там phrase используется как ключ поиска).
 interface ISelection {
     type: 'paragraph' | 'verse';
-    word: string;
+    phrase: string;
     wordIndex: number;
     matchStart: number;
     paragraphIndex?: number;
@@ -48,6 +49,14 @@ interface ISelection {
     chapter?: number;
     verse?: number;
     verseText?: string;
+}
+
+interface IUserNote {
+    id: string;
+    selection: ISelection;
+    note: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 const ReadingContent = ({ item }: { item: any }) => {
@@ -68,6 +77,13 @@ const ReadingContent = ({ item }: { item: any }) => {
 
     const [notes, setNotes] = useState([]);
     const [isHovered, setIsHovered] = useState<number|null>(null);
+
+    // userNotes — приватные заметки текущего пользователя (typikon-users.userNotes),
+    // не путать с notes выше — это публичные редакторские сноски note_(\d+)# из typikon.notes.
+    const [userNotes, setUserNotes] = useState<IUserNote[]>([]);
+    const [activeNote, setActiveNote] = useState<IUserNote | null>(null);
+    const [noteModalIsOpen, setNoteModalIsOpen] = useState(false);
+    const [noteDraft, setNoteDraft] = useState("");
 
     const hash = useRouterHash();;
 
@@ -137,6 +153,108 @@ const ReadingContent = ({ item }: { item: any }) => {
         });
     }, [selection, correction, item.id, dispatch]);
 
+    const onAddNote = useCallback(() => {
+        setIsOpenContextMenuMobile(false);
+        setActiveNote(null);
+        setNoteDraft("");
+        setNoteModalIsOpen(true);
+    }, []);
+
+    const onClickNoteHighlight = useCallback((note: IUserNote) => {
+        setActiveNote(note);
+        setNoteDraft(note.note);
+        setNoteModalIsOpen(true);
+    }, []);
+
+    const closeNoteModal = useCallback(() => {
+        setNoteModalIsOpen(false);
+        setActiveNote(null);
+        setSelection(null);
+    }, []);
+
+    const onSaveNote = useCallback(() => {
+        if (!selection || !noteDraft.trim()) return;
+        const { matchStart, ...selectionPayload } = selection;
+        const payload = { textId: item.id, selection: selectionPayload, note: noteDraft };
+        setNoteModalIsOpen(false);
+        setSelection(null);
+        fetch("/api/user-notes", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }).then((res) => {
+            if (res.status === 401) {
+                dispatch(AuthSlice.actions.Logout());
+                alert("Сессия истекла — войдите заново, чтобы сохранить заметку.");
+                return null;
+            }
+            if (!res.ok) {
+                alert("Не удалось сохранить заметку");
+                return null;
+            }
+            return res.json();
+        }).then((data) => {
+            if (data?.id) {
+                const now = new Date().toISOString();
+                setUserNotes((prev) => [...prev, { id: data.id, selection: selectionPayload as ISelection, note: noteDraft, createdAt: now, updatedAt: now }]);
+            }
+        }).catch(() => {
+            alert("Не удалось сохранить заметку");
+        });
+        setNoteDraft("");
+    }, [selection, noteDraft, item.id, dispatch]);
+
+    const onUpdateNote = useCallback(() => {
+        if (!activeNote || !noteDraft.trim()) return;
+        const noteId = activeNote.id;
+        fetch(`/api/user-notes/${noteId}`, {
+            method: "PUT",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ note: noteDraft }),
+        }).then((res) => {
+            if (res.status === 401) {
+                dispatch(AuthSlice.actions.Logout());
+                alert("Сессия истекла — войдите заново.");
+                return;
+            }
+            if (!res.ok) {
+                alert("Не удалось сохранить изменения");
+                return;
+            }
+            setUserNotes((prev) => prev.map((n) => n.id === noteId ? { ...n, note: noteDraft } : n));
+        }).catch(() => {
+            alert("Не удалось сохранить изменения");
+        });
+        setNoteModalIsOpen(false);
+        setActiveNote(null);
+    }, [activeNote, noteDraft, dispatch]);
+
+    const onDeleteNote = useCallback(() => {
+        if (!activeNote) return;
+        const noteId = activeNote.id;
+        fetch(`/api/user-notes/${noteId}`, {
+            method: "DELETE",
+            credentials: "include",
+        }).then((res) => {
+            if (res.status === 401) {
+                dispatch(AuthSlice.actions.Logout());
+                alert("Сессия истекла — войдите заново.");
+                return;
+            }
+            if (!res.ok) {
+                alert("Не удалось удалить заметку");
+                return;
+            }
+            setUserNotes((prev) => prev.filter((n) => n.id !== noteId));
+        }).catch(() => {
+            alert("Не удалось удалить заметку");
+        });
+        setNoteModalIsOpen(false);
+        setActiveNote(null);
+    }, [activeNote, dispatch]);
+
     // Раньше офсеты/"предложение" вычислялись через анкор-офсет + разбиение
     // текста узла по точкам — ломалось на любой точке в выделении (даже не
     // на границе предложений — "т.д.", "Мф. 5:3" и т.п.), терялось при
@@ -151,12 +269,12 @@ const ReadingContent = ({ item }: { item: any }) => {
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
         const rawSelected = sel.toString();
-        const word = rawSelected.trim();
-        if (!word) return;
+        const phrase = rawSelected.trim();
+        if (!phrase) return;
         // Пользователь мог задеть пробел на границе (двойной клик + протяжка,
         // выделение с самого края слова) — selected.toString() это сохраняет,
-        // а matchStart должен указывать на начало word (без пробела), иначе
-        // подсветка в модалке съедет на длину этого пробела.
+        // а matchStart должен указывать на начало phrase (без пробела), иначе
+        // подсветка съедет на длину этого пробела.
         const leadingTrimmed = rawSelected.length - rawSelected.trimStart().length;
 
         const range = sel.getRangeAt(0);
@@ -177,7 +295,7 @@ const ReadingContent = ({ item }: { item: any }) => {
         if (container.dataset.chapter && container.dataset.verse) {
             setSelection({
                 type: 'verse',
-                word,
+                phrase,
                 wordIndex,
                 matchStart,
                 chapter: Number(container.dataset.chapter),
@@ -187,7 +305,7 @@ const ReadingContent = ({ item }: { item: any }) => {
         } else {
             setSelection({
                 type: 'paragraph',
-                word,
+                phrase,
                 wordIndex,
                 matchStart,
                 paragraphIndex: Number(container.dataset.paragraphIndex || 0),
@@ -235,6 +353,37 @@ const ReadingContent = ({ item }: { item: any }) => {
             </span>
         )
     ), [hash, item.footnotes]);
+
+    // Оборачивает уже отрендеренный renderMarkup(...) результат ещё одним
+    // проходом reactStringReplace, подсвечивая phrase каждой заметки этого
+    // контейнера. Важно: идёт ПОСЛЕДНИМ (снаружи), а не встроен в цепочку
+    // renderMarkup — reactStringReplace матчит только по строковым сегментам,
+    // не трогая уже сконвертированные React-узлы (ссылки/сноски), так что
+    // фраза, целиком попадающая в разметку, не задваивается. Обратная
+    // сторона: если phrase заметки сама пересекает границу разметки (сноску/
+    // ссылку), совпадение не найдётся ни в одном сегменте — такая заметка
+    // не подсветится в тексте (при этом сама заметка не теряется, её видно
+    // в профиле). Более длинные фразы match'атся раньше коротких.
+    const highlightUserNotes = useCallback((rendered: any, notesForContainer: IUserNote[]) => {
+        if (notesForContainer.length === 0) return rendered;
+        const sorted = [...notesForContainer].sort((a, b) => b.selection.phrase.length - a.selection.phrase.length);
+        const escaped = sorted.map((n) => n.selection.phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
+        if (escaped.length === 0) return rendered;
+        const combined = new RegExp(`(${escaped.join('|')})`, 'g');
+        return reactStringReplace(rendered, combined, (match: string, i: number) => {
+            const note = sorted.find((n) => n.selection.phrase === match);
+            return (
+                <mark
+                    key={`usernote-${i}`}
+                    className="bg-yellow-100 cursor-pointer"
+                    title="Ваша заметка — нажмите, чтобы посмотреть"
+                    onClick={() => note && onClickNoteHighlight(note)}
+                >
+                    {match}
+                </mark>
+            );
+        });
+    }, [onClickNoteHighlight]);
 
     const versesByChapter = React.useMemo(() => {
         if (!item.verses) return [];
@@ -286,6 +435,17 @@ const ReadingContent = ({ item }: { item: any }) => {
     }, [item.quotes, isHovered]);
 
     useEffect(() => {
+        if (!isAuthorized) {
+            setUserNotes([]);
+            return;
+        }
+        fetch(`/api/user-notes?textId=${item.id}`, { credentials: "include" })
+            .then((res) => res.ok ? res.json() : [])
+            .then(setUserNotes)
+            .catch(() => {});
+    }, [item.id, isAuthorized]);
+
+    useEffect(() => {
         fetch(`/api/notes?id=${item.id}`).then((res) => res.json()).then((data) => {
             setNotes(data);
         });
@@ -323,6 +483,7 @@ const ReadingContent = ({ item }: { item: any }) => {
             >
                 <ul>
                     <li onClick={onSendError}>Сообщить об ошибке</li>
+                    <li onClick={onAddNote}>Добавить заметку</li>
                 </ul>
             </div>
             {item.contentType === TextContentType.VERSES ? (
@@ -338,40 +499,50 @@ const ReadingContent = ({ item }: { item: any }) => {
                                 item.csSource ? "font-sans-serif" : "font-serif"
                             }`}
                         >
-                            {chapterVerses.map((verse: any) => (
-                                <span key={verse.id}>
-                                    <sup className="text-red-600 font-bold">
-                                        {verse.verse}
-                                    </sup>
-                                    {" "}
-                                    <span
-                                        data-report-container
-                                        data-chapter={chapter}
-                                        data-verse={verse.verse}
-                                    >
-                                        {renderMarkup(verse.content)}
+                            {chapterVerses.map((verse: any) => {
+                                const notesForVerse = userNotes.filter((n) =>
+                                    n.selection.type === 'verse' && n.selection.chapter === chapter && n.selection.verse === verse.verse
+                                );
+                                return (
+                                    <span key={verse.id}>
+                                        <sup className="text-red-600 font-bold">
+                                            {verse.verse}
+                                        </sup>
+                                        {" "}
+                                        <span
+                                            data-report-container
+                                            data-chapter={chapter}
+                                            data-verse={verse.verse}
+                                        >
+                                            {highlightUserNotes(renderMarkup(verse.content), notesForVerse)}
+                                        </span>
+                                        {" "}
                                     </span>
-                                    {" "}
-                                </span>
-                            ))}
+                                );
+                            })}
                         </p>
                     </div>
                 ))
             ) : (
-                item.content?.split("\n\n").map((paragraph: string, paragraphIndex: number) => (
-                    <p
-                        key={paragraph}
-                        data-report-container
-                        data-paragraph-index={paragraphIndex}
-                        className={`${
-                            item.csSource ? csFont.variable : ""
-                        } whitespace-pre-wrap text-justify text-lg ${
-                            item.csSource ? "font-sans-serif" : "font-serif"
-                        } first-letter:text-red-600`}
-                    >
-                        {renderMarkup(paragraph)}
-                    </p>
-                ))
+                item.content?.split("\n\n").map((paragraph: string, paragraphIndex: number) => {
+                    const notesForParagraph = userNotes.filter((n) =>
+                        n.selection.type === 'paragraph' && n.selection.paragraphIndex === paragraphIndex
+                    );
+                    return (
+                        <p
+                            key={paragraph}
+                            data-report-container
+                            data-paragraph-index={paragraphIndex}
+                            className={`${
+                                item.csSource ? csFont.variable : ""
+                            } whitespace-pre-wrap text-justify text-lg ${
+                                item.csSource ? "font-sans-serif" : "font-serif"
+                            } first-letter:text-red-600`}
+                        >
+                            {highlightUserNotes(renderMarkup(paragraph), notesForParagraph)}
+                        </p>
+                    );
+                })
             )}
             {notes.length > 0 && (
                 <div>
@@ -414,7 +585,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                     <h2>Отправить отчет об ошибке</h2>
                     {selection ? (
                         <>
-                            <span>Ошибка: <b>{selection.word}</b></span>
+                            <span>Ошибка: <b>{selection.phrase}</b></span>
                             <label>
                                 {selection.type === 'verse' ? `Стих ${selection.chapter}:${selection.verse}:` : 'Абзац:'}
                             </label>
@@ -422,7 +593,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                                 {(() => {
                                     const contextText = (selection.type === 'verse' ? selection.verseText : selection.paragraph) || "";
                                     const start = selection.matchStart;
-                                    const end = start + selection.word.length;
+                                    const end = start + selection.phrase.length;
                                     return <>
                                         {contextText.slice(0, start)}
                                         <mark className="bg-blue-200">{contextText.slice(start, end)}</mark>
@@ -447,6 +618,58 @@ const ReadingContent = ({ item }: { item: any }) => {
                     )}
                 </div>
             </Modal>
+            <Modal
+                isOpen={noteModalIsOpen}
+                onRequestClose={closeNoteModal}
+                style={customStyles}
+                contentLabel="Заметка"
+            >
+                <div className="flex flex-col">
+                    <button onClick={closeNoteModal}>Закрыть</button>
+                    <h2>{activeNote ? "Заметка" : "Новая заметка"}</h2>
+                    {(() => {
+                        const effectiveSelection = activeNote ? activeNote.selection : selection;
+                        if (!effectiveSelection) {
+                            return <span>Не выбран текст для заметки</span>;
+                        }
+                        const contextText = (effectiveSelection.type === 'verse' ? effectiveSelection.verseText : effectiveSelection.paragraph) || "";
+                        // matchStart не уходит на бекенд (как и у отчётов) — для
+                        // заметки, только что выделенной на этой же странице, он
+                        // есть в selection; для уже сохранённой (activeNote, пришла
+                        // с сервера) его нет — ищем phrase заново.
+                        const start = effectiveSelection.matchStart ?? contextText.indexOf(effectiveSelection.phrase);
+                        const end = start + effectiveSelection.phrase.length;
+                        return (
+                            <>
+                                <label>
+                                    {effectiveSelection.type === 'verse' ? `Стих ${effectiveSelection.chapter}:${effectiveSelection.verse}:` : 'Абзац:'}
+                                </label>
+                                <span>
+                                    {contextText.slice(0, start)}
+                                    <mark className="bg-yellow-200">{contextText.slice(start, end)}</mark>
+                                    {contextText.slice(end)}
+                                </span>
+                                <label>Ваша заметка:</label>
+                                <textarea
+                                    value={noteDraft}
+                                    onChange={(e) => setNoteDraft(e.target.value)}
+                                    className="border"
+                                />
+                                <div className="flex gap-2">
+                                    {activeNote ? (
+                                        <>
+                                            <button onClick={onUpdateNote}>Сохранить</button>
+                                            <button onClick={onDeleteNote}>Удалить</button>
+                                        </>
+                                    ) : (
+                                        <button onClick={onSaveNote}>Сохранить заметку</button>
+                                    )}
+                                </div>
+                            </>
+                        );
+                    })()}
+                </div>
+            </Modal>
             {isOpenContextMenuMobile && (
                 <div
                     className="context-menu"
@@ -463,6 +686,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                 >
                     <ul>
                         <li onClick={onSendError}>Сообщить об ошибке</li>
+                        <li onClick={onAddNote}>Добавить заметку</li>
                     </ul>
                 </div>
             )}
