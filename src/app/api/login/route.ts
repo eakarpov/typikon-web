@@ -5,6 +5,7 @@ import {
     registerNewUserWithVK
 } from "@/lib/authorize/users";
 import {createNewSession} from "@/lib/authorize/sessions";
+import {verifyGoogleIdToken} from "@/lib/authorize/verifyGoogleToken";
 import * as sha256 from "fast-sha256";
 import {NextRequest, NextResponse} from "next/server";
 
@@ -45,11 +46,19 @@ export async function POST(request: NextRequest) {
             }
         });
     } else if (body.type === "Google") {
-        let user = await getUserByGoogleId(body.data.user_id);
+        // data.access_token — это Google id_token (JWT), не OAuth access_token,
+        // несмотря на название поля в существующем контракте запроса. Раньше
+        // здесь напрямую доверяли body.data.user_id от клиента — подделать
+        // произвольный user_id и войти под чужим Google-аккаунтом было тривиально.
+        const payload = await verifyGoogleIdToken(body.data.access_token);
+        if (!payload?.sub) {
+            return new NextResponse(null, { status: 401 });
+        }
+        let user = await getUserByGoogleId(payload.sub);
         if (!user) {
             // register
-            await registerNewUserWithGoogle(body.data.user_id);
-            user = await getUserByGoogleId(body.data.user_id);
+            await registerNewUserWithGoogle(payload.sub);
+            user = await getUserByGoogleId(payload.sub);
         }
         // 3. Store the session in cookies for optimistic auth checks
         const expiresAt = await createNewSession(

@@ -101,9 +101,7 @@ export const getUserByVKId = async (id: string) => {
         const user = await db
             .collection("users")
             .findOne({
-                "auth.vk": {
-                    userId: id.toString(),
-                },
+                "auth.vk.userId": id.toString(),
             });
         return user;
     } catch (e) {
@@ -119,9 +117,7 @@ export const getUserByGoogleId = async (id: string) => {
         const user = await db
             .collection("users")
             .findOne({
-                "auth.google": {
-                    userId: id.toString(),
-                },
+                "auth.google.userId": id.toString(),
             });
         return user;
     } catch (e) {
@@ -137,9 +133,7 @@ export const getUserByTelegramId = async (id: string) => {
         const user = await db
             .collection("users")
             .findOne({
-                "auth.telegram": {
-                    userId: id.toString(),
-                },
+                "auth.telegram.userId": id.toString(),
             });
         return user;
     } catch (e) {

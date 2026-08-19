@@ -29,6 +29,7 @@
     "family-chart": "^0.9.0",
     "fast-sha256": "^1.3.0",
     "file-saver": "^2.0.5",
+    "google-auth-library": "^11.0.2",
     "html2pdf.js": "0.12.1",
     "jose": "^5.9.6",
     "mongodb": "^4.13.0",
