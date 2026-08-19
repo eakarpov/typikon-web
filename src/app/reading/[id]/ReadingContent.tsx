@@ -6,7 +6,8 @@ import './reading.scss';
 import "./highlight.css";
 import Modal from "react-modal";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
-import {useAppSelector} from "@/lib/hooks";
+import {useAppDispatch, useAppSelector} from "@/lib/hooks";
+import {AuthSlice} from "@/lib/store/auth";
 import TextNote from "@/app/reading/[id]/TextNote";
 import {useRouterHash} from "@/app/reading/[id]/useRouterHash";
 import {csFont, myFont} from "@/utils/font";
@@ -35,14 +36,18 @@ const customStylesSmall = {
     },
 };
 
+// matchStart — офсет начала word внутри paragraph/verseText, только для
+// подсветки в модалке (slice+<mark>), на бекенд не отправляется.
 interface ISelection {
-    rangeStart: number;
-    rangeEnd: number;
-    sentence: string;
-    selection: string;
-    text: string;
-    sentenceStart: number;
-    sentenceEnd: number;
+    type: 'paragraph' | 'verse';
+    word: string;
+    wordIndex: number;
+    matchStart: number;
+    paragraphIndex?: number;
+    paragraph?: string;
+    chapter?: number;
+    verse?: number;
+    verseText?: string;
 }
 
 const ReadingContent = ({ item }: { item: any }) => {
@@ -57,10 +62,9 @@ const ReadingContent = ({ item }: { item: any }) => {
         x: 0,
         y: 0,
     });
-    const sentenceRef = useRef<HTMLDivElement|null>(null);
 
+    const dispatch = useAppDispatch();
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
-    const userId = useAppSelector(state => state.auth.userId);
 
     const [notes, setNotes] = useState([]);
     const [isHovered, setIsHovered] = useState<number|null>(null);
@@ -93,87 +97,101 @@ const ReadingContent = ({ item }: { item: any }) => {
         setModalIsOpen(true);
     }, [selection]);
 
-    const afterOpenModal = useCallback(() => {
-        const sentenceNode = document.getElementById("sentence-modal");
-        const treeWalker = document.createTreeWalker(sentenceNode!, NodeFilter.SHOW_TEXT);
-        const allTextNodes = [];
-        let currentNode = treeWalker.nextNode();
-        while (currentNode) {
-            allTextNodes.push(currentNode);
-            currentNode = treeWalker.nextNode();
-        }
-        // @ts-ignore
-        if (!CSS.highlights) {
-            console.log("CSS highlight is not supported");
-            return;
-        }
-        // @ts-ignore
-        CSS.highlights.clear();
-
-        const ranges = allTextNodes
-            .map((el) => {
-                const range = new Range();
-                range.setStart(el, selection?.sentenceStart!);
-                range.setEnd(el, selection?.sentenceEnd!);
-                return range;
-            });
-        // @ts-ignore
-        const searchResultsHighlight = new Highlight(...ranges.flat());
-        // @ts-ignore
-        CSS.highlights.set("search-results", searchResultsHighlight);
-    }, [selection]);
-
     const closeModal = useCallback(() => {
         setModalIsOpen(false);
         setSelection(null);
     }, []);
 
+    // userId раньше слался в теле и ничем не проверялся — бекенд теперь сам
+    // берёт userId из сессии (см. typikon-web /api/report), так что поле
+    // убрано из payload вовсе. Статус ответа теперь реально проверяется:
+    // раньше .then() без проверки res.ok показывал "успешно" даже на 401
+    // (например, когда JWT сессии истёк за час, пока открыта вкладка) —
+    // теперь при 401 сбрасываем протухший isAuthorized в сторе и просим
+    // войти заново, вместо ложного "успешно".
     const onSendReport = useCallback(() => {
+        if (!selection) return;
+        const { matchStart, ...selectionPayload } = selection;
+        const payload = { selection: selectionPayload, correction, textId: item.id };
+        setModalIsOpen(false);
+        setSelection(null);
+        setCorrection("");
         fetch("/api/report", {
             method: "POST",
-            body: JSON.stringify({
-                userId,
-                selection,
-                correction,
-                textId: item.id,
-            })
-        }).then(() => {
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }).then((res) => {
+            if (res.status === 401) {
+                dispatch(AuthSlice.actions.Logout());
+                alert("Сессия истекла — войдите заново, чтобы отправить отчёт.");
+                return;
+            }
+            if (!res.ok) {
+                alert("Ошибка при отправлении отчета!");
+                return;
+            }
             alert("Отчет отправлен успешно!");
         }).catch(() => {
             alert("Ошибка при отправлении отчета!")
         });
-        setCorrection("");
-        setSelection(null);
-        setModalIsOpen(false);
-    }, [selection, correction]);
+    }, [selection, correction, item.id, dispatch]);
 
+    // Раньше офсеты/"предложение" вычислялись через анкор-офсет + разбиение
+    // текста узла по точкам — ломалось на любой точке в выделении (даже не
+    // на границе предложений — "т.д.", "Мф. 5:3" и т.п.), терялось при
+    // выделении в обратном направлении (anchor не всегда = начало Range) и
+    // не работало, если выделение задевало соседний узел разметки (сноска/
+    // ссылка на святого разбивает абзац на несколько текстовых узлов).
+    // Теперь — обычный Range (всегда в порядке документа, независимо от
+    // направления выделения) + ближайший размеченный контейнер
+    // (data-report-container на <p>/<span> стиха), а не эвристика по тексту.
     const onSelectionChange = () => {
         if (!isAuthorized) return;
-        const selected = window.getSelection() as Selection;
-        if (selected.toString() && !selected.toString().includes('.')) {
-            const rangeStart = selected.anchorOffset;
-            const rangeEnd = selected.anchorOffset + selected.toString().length;
-            let sentence = "";
-            let sentenceStart = 0;
-            let sentenceEnd = 0;
-            let acc = 0;
-            selected.anchorNode?.textContent?.split('.').reduce((p, c, index) => {
-                acc = acc + (c.length - c.trim().length);
-                if ((rangeStart > p) && (rangeEnd < (p + c.length))) { // single sentence
-                    sentence = c.trim();
-                    sentenceStart = rangeStart - p - acc - 1;
-                    sentenceEnd = rangeEnd - p - acc - 1;
-                }
-                return p + c.length;
-            }, 0);
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+        const rawSelected = sel.toString();
+        const word = rawSelected.trim();
+        if (!word) return;
+        // Пользователь мог задеть пробел на границе (двойной клик + протяжка,
+        // выделение с самого края слова) — selected.toString() это сохраняет,
+        // а matchStart должен указывать на начало word (без пробела), иначе
+        // подсветка в модалке съедет на длину этого пробела.
+        const leadingTrimmed = rawSelected.length - rawSelected.trimStart().length;
+
+        const range = sel.getRangeAt(0);
+        const anchorEl = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+            ? range.commonAncestorContainer.parentElement
+            : range.commonAncestorContainer as Element;
+        const container = anchorEl?.closest<HTMLElement>('[data-report-container]');
+        if (!container) return; // выделение вне абзаца/стиха или через несколько сразу — не репортим
+
+        const fullText = container.textContent || "";
+        const preRange = document.createRange();
+        preRange.selectNodeContents(container);
+        preRange.setEnd(range.startContainer, range.startOffset);
+        const matchStart = preRange.toString().length + leadingTrimmed;
+        const before = fullText.slice(0, matchStart).trim();
+        const wordIndex = before ? before.split(/\s+/).length : 0;
+
+        if (container.dataset.chapter && container.dataset.verse) {
             setSelection({
-                rangeStart,
-                rangeEnd,
-                sentence,
-                sentenceStart,
-                sentenceEnd,
-                selection: selected.toString(),
-                text: selected.anchorNode?.textContent!,
+                type: 'verse',
+                word,
+                wordIndex,
+                matchStart,
+                chapter: Number(container.dataset.chapter),
+                verse: Number(container.dataset.verse),
+                verseText: fullText,
+            });
+        } else {
+            setSelection({
+                type: 'paragraph',
+                word,
+                wordIndex,
+                matchStart,
+                paragraphIndex: Number(container.dataset.paragraphIndex || 0),
+                paragraph: fullText,
             });
         }
     };
@@ -326,7 +344,13 @@ const ReadingContent = ({ item }: { item: any }) => {
                                         {verse.verse}
                                     </sup>
                                     {" "}
-                                    {renderMarkup(verse.content)}
+                                    <span
+                                        data-report-container
+                                        data-chapter={chapter}
+                                        data-verse={verse.verse}
+                                    >
+                                        {renderMarkup(verse.content)}
+                                    </span>
                                     {" "}
                                 </span>
                             ))}
@@ -334,9 +358,11 @@ const ReadingContent = ({ item }: { item: any }) => {
                     </div>
                 ))
             ) : (
-                item.content?.split("\n\n").map((paragraph: string) => (
+                item.content?.split("\n\n").map((paragraph: string, paragraphIndex: number) => (
                     <p
                         key={paragraph}
+                        data-report-container
+                        data-paragraph-index={paragraphIndex}
                         className={`${
                             item.csSource ? csFont.variable : ""
                         } whitespace-pre-wrap text-justify text-lg ${
@@ -379,7 +405,6 @@ const ReadingContent = ({ item }: { item: any }) => {
             )}
             <Modal
                 isOpen={modalIsOpen}
-                onAfterOpen={afterOpenModal}
                 onRequestClose={closeModal}
                 style={customStyles}
                 contentLabel="Отчет об ошибке"
@@ -389,15 +414,21 @@ const ReadingContent = ({ item }: { item: any }) => {
                     <h2>Отправить отчет об ошибке</h2>
                     {selection ? (
                         <>
-                            <span>Ошибка: <b>{selection.selection}</b></span>
+                            <span>Ошибка: <b>{selection.word}</b></span>
                             <label>
-                                Предложение:
+                                {selection.type === 'verse' ? `Стих ${selection.chapter}:${selection.verse}:` : 'Абзац:'}
                             </label>
-                            <span
-                                id="sentence-modal"
-                                ref={sentenceRef}
-                            >
-                                {selection.sentence}
+                            <span>
+                                {(() => {
+                                    const contextText = (selection.type === 'verse' ? selection.verseText : selection.paragraph) || "";
+                                    const start = selection.matchStart;
+                                    const end = start + selection.word.length;
+                                    return <>
+                                        {contextText.slice(0, start)}
+                                        <mark className="bg-blue-200">{contextText.slice(start, end)}</mark>
+                                        {contextText.slice(end)}
+                                    </>;
+                                })()}
                             </span>
                             <label>
                                 Предлагаемый вариант исправления:
