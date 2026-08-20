@@ -15,6 +15,7 @@ romanian/
 contents/
 
 nobles.db
+*.db.bak.*
 
 NOTES.md
 

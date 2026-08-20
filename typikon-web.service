@@ -7,7 +7,7 @@ Environment=NODE_ENV=production
 
 ExecStart=/home/admin/.nvm/versions/node/v20.20.2/bin/npm start --prefix /var/www/typikon.su/typikon-web -- -p 80
 Environment=AUTH_TRUST_HOST=true
-Environment=NEXTAUTH_URL=https://www.interslavic-lexicon.com
+Environment=NEXTAUTH_URL=https://www.interslavic-lexicon.comо
 
 Restart=on-failure
 User=admin

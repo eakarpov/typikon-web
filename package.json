@@ -13,6 +13,8 @@
     "release-app": "bash release-app.sh",
     "channel-posts:generate": "tsx src/scripts/generate-channel-posts.ts",
     "channel-posts:publish": "tsx src/scripts/publish-channel-posts.ts",
+    "nobles:import-wikidata": "tsx src/scripts/import-nobles-wikidata.ts",
+    "nobles:import-wikidata-rules": "tsx src/scripts/import-nobles-wikidata-rules.ts",
     "release-meta": "bash meta-db-release.sh",
     "release-csl": "bash csl-db-release.sh",
     "sync:db": "bash download-db.sh",

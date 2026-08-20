@@ -58,6 +58,9 @@ const Admin = () => {
                     <Link href="/admin/nobles/nationalities">
                         База по князьям - национальности (sqlite)
                     </Link>
+                    <Link href="/admin/nobles/import">
+                        База по князьям - импорт из Wikidata (sqlite)
+                    </Link>
                 </div>
             </div>
             <div className="flex flex-row">
