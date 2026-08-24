@@ -187,7 +187,98 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 mergedRules++;
             }
 
-            return {mergedNobles: mergedThisBatch.length, mergedCouples, mergedFamilies, mergedRules};
+            // --- 6. Дубли персон — сливаем duplicate в canonical: дозаполняем пустые поля canonical
+            // из duplicate, перевешиваем все ссылки (father/motherId, rules.personId, couples,
+            // nationalities_nobles, и ожидающие пары того же батча — на случай цепочки A=B, B=C) на
+            // canonical, затем удаляем duplicate. Ничего руками введённое в canonical не перезаписываем.
+            const approvedDupIds = (db.prepare(`select id from staging_noble_duplicates where batchId = ? and status = 'approved'`).all(batchId) as any[]).map((r) => r.id);
+
+            let mergedDuplicates = 0;
+            for (const stagingId of approvedDupIds) {
+                const row = db.prepare(`select * from staging_noble_duplicates where id = ?`).get(stagingId) as any;
+                if (!row || row.status === "merged") continue;
+                const {canonicalNobleId, duplicateNobleId} = row;
+                if (canonicalNobleId === duplicateNobleId) {
+                    db.prepare(`update staging_noble_duplicates set status = 'merged' where id = ?`).run(stagingId);
+                    continue;
+                }
+                const dup = db.prepare(`select * from nobles where id = ?`).get(duplicateNobleId) as any;
+                if (!dup) {
+                    // уже удалена более ранней парой в этой же партии — просто закрываем строку
+                    db.prepare(`update staging_noble_duplicates set status = 'merged' where id = ?`).run(stagingId);
+                    continue;
+                }
+
+                // better-sqlite3 включает foreign_keys по умолчанию — прежде чем удалять duplicate,
+                // нужно перевесить ВСЕ ссылки на неё (иначе DELETE упадёт на FK), и только потом можно
+                // безопасно перенести её wikidataId и т.п. на canonical (перенос ДО удаления столкнул бы
+                // два wikidataId на разных строках и упал бы уже на UNIQUE-индексе).
+                db.prepare(`update nobles set fatherId = ? where fatherId = ?`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update nobles set motherId = ? where motherId = ?`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update rules set personId = ? where personId = ?`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update rules set heirId = ? where heirId = ?`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update rules set regentId = ? where regentId = ?`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update nationalities_nobles set personId = ? where personId = ?`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update staging_nobles set matchedNobleId = ? where matchedNobleId = ?`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update staging_dneslov_links set nobleId = ? where nobleId = ?`).run(canonicalNobleId, duplicateNobleId);
+
+                const dupCouples = db.prepare(`select * from couples where husbandId = ? or wifeId = ?`).all(duplicateNobleId, duplicateNobleId) as any[];
+                for (const c of dupCouples) {
+                    const newHusband = c.husbandId === duplicateNobleId ? canonicalNobleId : c.husbandId;
+                    const newWife = c.wifeId === duplicateNobleId ? canonicalNobleId : c.wifeId;
+                    const already = db
+                        .prepare(`select id from couples where id != ? and ((husbandId = ? and wifeId = ?) or (husbandId = ? and wifeId = ?))`)
+                        .get(c.id, newHusband, newWife, newWife, newHusband);
+                    if (already) db.prepare(`delete from couples where id = ?`).run(c.id);
+                    else db.prepare(`update couples set husbandId = ?, wifeId = ? where id = ?`).run(newHusband, newWife, c.id);
+                }
+
+                // Ожидающие пары этой же партии могли ссылаться на только что растворившуюся duplicate —
+                // перенаправляем на canonical, чтобы не потерять и не сломать цепочку (A=B, B=C).
+                db.prepare(`update staging_noble_duplicates set canonicalNobleId = ? where canonicalNobleId = ? and status != 'merged'`).run(canonicalNobleId, duplicateNobleId);
+                db.prepare(`update staging_noble_duplicates set duplicateNobleId = ? where duplicateNobleId = ? and status != 'merged'`).run(canonicalNobleId, duplicateNobleId);
+
+                // Все ссылки перевешены — теперь можно удалить duplicate без нарушения FK.
+                db.prepare(`delete from nobles where id = ?`).run(duplicateNobleId);
+
+                db.prepare(
+                    `update nobles set
+                        wikidataId = coalesce(wikidataId, ?),
+                        dneslovId = coalesce(dneslovId, ?),
+                        birthDate = case when birthDate is null or birthDate = '' then ? else birthDate end,
+                        deathDate = case when deathDate is null or deathDate = '' then ? else deathDate end,
+                        birthDateMarker = case when birthDateMarker is null then ? else birthDateMarker end,
+                        deathDateMarker = case when deathDateMarker is null then ? else deathDateMarker end,
+                        churchName = case when churchName is null or churchName = '' then ? else churchName end,
+                        csName = case when csName is null or csName = '' then ? else csName end,
+                        nickName = case when nickName is null or nickName = '' then ? else nickName end,
+                        info = case when info is null or info = '' then ? else info end,
+                        isSaintOrthodox = max(isSaintOrthodox, ?),
+                        isSaintCatholic = max(isSaintCatholic, ?)
+                     where id = ?`,
+                ).run(
+                    dup.wikidataId, dup.dneslovId, dup.birthDate, dup.deathDate, dup.birthDateMarker, dup.deathDateMarker,
+                    dup.churchName, dup.csName, dup.nickName, dup.info, dup.isSaintOrthodox, dup.isSaintCatholic,
+                    canonicalNobleId,
+                );
+
+                db.prepare(`update staging_noble_duplicates set status = 'merged' where id = ?`).run(stagingId);
+                mergedDuplicates++;
+            }
+
+            // --- 7. Связи со святыми (dneslov) — только одобренные, только если персона ещё существует
+            // (могла раствориться в дубль-мердже выше — тогда просто дозачтём на следующем прогоне).
+            const approvedDneslov = db.prepare(`select * from staging_dneslov_links where batchId = ? and status = 'approved'`).all(batchId) as any[];
+            let mergedDneslov = 0;
+            for (const l of approvedDneslov) {
+                const noble = db.prepare(`select id, dneslovId from nobles where id = ?`).get(l.nobleId) as any;
+                if (!noble) continue;
+                db.prepare(`update nobles set dneslovId = coalesce(dneslovId, ?) where id = ?`).run(l.dneslovId, l.nobleId);
+                db.prepare(`update staging_dneslov_links set status = 'merged' where id = ?`).run(l.id);
+                mergedDneslov++;
+            }
+
+            return {mergedNobles: mergedThisBatch.length, mergedCouples, mergedFamilies, mergedRules, mergedDuplicates, mergedDneslov};
         });
 
         const result = run();

@@ -9,6 +9,7 @@
 import "@/scripts/lib/env";
 import { init } from "@/lib/sqlite";
 import { formatWikidataDate, extractYearFromIso } from "@/scripts/lib/wikidataDate";
+import { normalizeName, extractYear } from "@/scripts/lib/textNormalize";
 
 const ENDPOINT = "https://query.wikidata.org/sparql";
 const UA = "typikon-web/1.0 (nobles import script, contact: georgecarpow@gmail.com)";
@@ -35,19 +36,6 @@ const qid = (uri?: string) => uri?.split("/").pop();
 const GENDER_MALE = "Q6581097";
 const GENDER_FEMALE = "Q6581072";
 
-const stripDisambiguation = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim();
-const normalizeName = (name: string) =>
-    stripDisambiguation(name)
-        .toLowerCase()
-        .replace(/ё/g, "е")
-        .replace(/[^a-zа-я0-9 ]/gi, "")
-        .replace(/\s+/g, " ")
-        .trim();
-const extractYear = (text?: string | null) => {
-    if (!text) return undefined;
-    const m = text.match(/\d{3,4}/);
-    return m ? Number(m[0]) : undefined;
-};
 
 type CorePerson = {
     id: string;

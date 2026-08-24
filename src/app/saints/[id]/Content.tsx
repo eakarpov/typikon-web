@@ -3,9 +3,10 @@ import SaintPage from "@/app/saints/[id]/SaintPage";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
-    const [first, second, third] = await itemPromise;
+    const [first, second, third, fourth] = await itemPromise;
     const [items] = first.value;
     const [mentions] = third.value;
+    const [linkedNoble] = fourth.status === "fulfilled" ? fourth.value : [null];
 
     if (!second.value) {
         return (
@@ -16,7 +17,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     }
 
     return (
-        <SaintPage item={second.value} items={items} mentions={mentions} />
+        <SaintPage item={second.value} items={items} mentions={mentions} linkedNoble={linkedNoble} />
     )
 };
 

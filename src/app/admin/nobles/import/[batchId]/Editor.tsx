@@ -42,6 +42,33 @@ type StagingRule = {
     matchedEndDate: string | null;
 };
 
+type StagingDuplicate = {
+    id: number;
+    canonicalNobleId: number;
+    duplicateNobleId: number;
+    canonicalName: string;
+    duplicateName: string;
+    canonicalBirthDate: string | null;
+    canonicalDeathDate: string | null;
+    duplicateBirthDate: string | null;
+    duplicateDeathDate: string | null;
+    confidence: "confirmed" | "name-only";
+    status: "pending" | "approved" | "rejected" | "merged";
+};
+
+type StagingDneslovLink = {
+    id: number;
+    nobleId: number;
+    dneslovId: string;
+    matchedName: string | null;
+    matchedYearDate: string | null;
+    confidence: "confirmed" | "name-only";
+    status: "pending" | "approved" | "rejected" | "merged";
+    nobleName: string;
+    nobleBirthDate: string | null;
+    nobleDeathDate: string | null;
+};
+
 const year = (v?: string | null) => (v ? v.slice(0, 4) : "?");
 
 const StatusPill = ({status}: {status: string}) => {
@@ -54,10 +81,26 @@ const StatusPill = ({status}: {status: string}) => {
     return <span className={`text-xs px-2 py-0.5 rounded ${colors[status] ?? ""}`}>{status}</span>;
 };
 
-const Editor = ({value}: {value: {batch: any; nobles: StagingNoble[]; families: any[]; couplesCount: number; rules: StagingRule[]}}) => {
+const Editor = ({
+    value,
+}: {
+    value: {
+        batch: any;
+        nobles: StagingNoble[];
+        families: any[];
+        couplesCount: number;
+        rules: StagingRule[];
+        duplicates: StagingDuplicate[];
+        dneslovLinks: StagingDneslovLink[];
+    };
+}) => {
     const [nobles, setNobles] = useState(value.nobles);
     const [rules, setRules] = useState(value.rules);
+    const [duplicates, setDuplicates] = useState(value.duplicates);
+    const [dneslovLinks, setDneslovLinks] = useState(value.dneslovLinks);
     const [rulesStatusFilter, setRulesStatusFilter] = useState<"all" | "pending" | "approved" | "rejected" | "merged">("pending");
+    const [dupStatusFilter, setDupStatusFilter] = useState<"all" | "pending" | "approved" | "rejected" | "merged">("pending");
+    const [dneslovStatusFilter, setDneslovStatusFilter] = useState<"all" | "pending" | "approved" | "rejected" | "merged">("pending");
     const [scopeFilter, setScopeFilter] = useState<"all" | "core" | "boundary">("all");
     const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected" | "merged">("pending");
     const [search, setSearch] = useState("");
@@ -110,6 +153,52 @@ const Editor = ({value}: {value: {batch: any; nobles: StagingNoble[]; families: 
         );
     };
 
+    const setDupStatus = async (id: number, status: "approved" | "rejected") => {
+        setDuplicates((prev) => prev.map((d) => (d.id === id ? {...d, status} : d)));
+        await fetch(`/api/admin/nobles/import/${value.batch.id}/duplicates/${id}`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({status}),
+        });
+    };
+
+    const bulkApproveDupsConfident = async () => {
+        const targets = filteredDuplicates.filter((d) => d.status === "pending" && d.confidence === "confirmed");
+        setDuplicates((prev) => prev.map((d) => (targets.some((t) => t.id === d.id) ? {...d, status: "approved"} : d)));
+        await Promise.all(
+            targets.map((d) =>
+                fetch(`/api/admin/nobles/import/${value.batch.id}/duplicates/${d.id}`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({status: "approved"}),
+                }),
+            ),
+        );
+    };
+
+    const setDneslovStatus = async (id: number, status: "approved" | "rejected") => {
+        setDneslovLinks((prev) => prev.map((l) => (l.id === id ? {...l, status} : l)));
+        await fetch(`/api/admin/nobles/import/${value.batch.id}/dneslov/${id}`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({status}),
+        });
+    };
+
+    const bulkApproveDneslovConfident = async () => {
+        const targets = filteredDneslov.filter((l) => l.status === "pending" && l.confidence === "confirmed");
+        setDneslovLinks((prev) => prev.map((l) => (targets.some((t) => t.id === l.id) ? {...l, status: "approved"} : l)));
+        await Promise.all(
+            targets.map((l) =>
+                fetch(`/api/admin/nobles/import/${value.batch.id}/dneslov/${l.id}`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({status: "approved"}),
+                }),
+            ),
+        );
+    };
+
     const runMerge = async () => {
         setMerging(true);
         setMergeResult(null);
@@ -120,10 +209,13 @@ const Editor = ({value}: {value: {batch: any; nobles: StagingNoble[]; families: 
                 setMergeResult(`Ошибка: ${data?.error ?? res.status}`);
             } else {
                 setMergeResult(
-                    `Смержено: ${data.mergedNobles} персон, ${data.mergedCouples} браков, ${data.mergedFamilies} родов, ${data.mergedRules ?? 0} правлений.`,
+                    `Смержено: ${data.mergedNobles} персон, ${data.mergedCouples} браков, ${data.mergedFamilies} родов, ` +
+                        `${data.mergedRules ?? 0} правлений, ${data.mergedDuplicates ?? 0} дублей, ${data.mergedDneslov ?? 0} связей со святыми.`,
                 );
                 setNobles((prev) => prev.map((n) => (n.status === "approved" ? {...n, status: "merged"} : n)));
                 setRules((prev) => prev.map((r) => (r.status === "approved" ? {...r, status: "merged"} : r)));
+                setDuplicates((prev) => prev.map((d) => (d.status === "approved" ? {...d, status: "merged"} : d)));
+                setDneslovLinks((prev) => prev.map((l) => (l.status === "approved" ? {...l, status: "merged"} : l)));
             }
         } finally {
             setMerging(false);
@@ -133,6 +225,14 @@ const Editor = ({value}: {value: {batch: any; nobles: StagingNoble[]; families: 
     const filteredRules = useMemo(() => {
         return rules.filter((r) => rulesStatusFilter === "all" || r.status === rulesStatusFilter);
     }, [rules, rulesStatusFilter]);
+
+    const filteredDuplicates = useMemo(() => {
+        return duplicates.filter((d) => dupStatusFilter === "all" || d.status === dupStatusFilter);
+    }, [duplicates, dupStatusFilter]);
+
+    const filteredDneslov = useMemo(() => {
+        return dneslovLinks.filter((l) => dneslovStatusFilter === "all" || l.status === dneslovStatusFilter);
+    }, [dneslovLinks, dneslovStatusFilter]);
 
     const filtered = useMemo(() => {
         return nobles.filter((n) => {
@@ -155,6 +255,16 @@ const Editor = ({value}: {value: {batch: any; nobles: StagingNoble[]; families: 
                 {rules.length > 0 && (
                     <button className="px-3 py-1 border rounded" onClick={bulkApproveRulesConfident}>
                         Одобрить видимые новые правления (без пересечения с существующими)
+                    </button>
+                )}
+                {duplicates.length > 0 && (
+                    <button className="px-3 py-1 border rounded" onClick={bulkApproveDupsConfident}>
+                        Одобрить подтверждённые дубли (отчество+годы совпали)
+                    </button>
+                )}
+                {dneslovLinks.length > 0 && (
+                    <button className="px-3 py-1 border rounded" onClick={bulkApproveDneslovConfident}>
+                        Одобрить подтверждённые связи со святыми (имя+год совпали)
                     </button>
                 )}
                 <button className="px-3 py-1 border rounded bg-blue-50" disabled={merging} onClick={runMerge}>
@@ -316,6 +426,133 @@ const Editor = ({value}: {value: {batch: any; nobles: StagingNoble[]; families: 
                                 )}
                                 {r.status !== "rejected" && r.status !== "merged" && (
                                     <button className="px-2 py-1 border rounded text-red-700" onClick={() => setRuleStatus(r.id, "rejected")}>
+                                        Отклонить
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {duplicates.length > 0 && (
+                <div className="flex flex-col mt-6">
+                    <p className="font-medium mb-2">Дубли персон</p>
+                    <div className="flex flex-row gap-1 mb-4 text-sm">
+                        {(["all", "pending", "approved", "rejected", "merged"] as const).map((s) => (
+                            <button
+                                key={s}
+                                className={`px-2 py-1 border rounded ${dupStatusFilter === s ? "bg-slate-200" : ""}`}
+                                onClick={() => setDupStatusFilter(s)}
+                            >
+                                {s}
+                            </button>
+                        ))}
+                        <p className="text-slate-400 ml-2">
+                            показано {filteredDuplicates.length} из {duplicates.length}
+                        </p>
+                    </div>
+                    {filteredDuplicates.map((d) => (
+                        <div key={d.id} className="flex flex-row items-start gap-3 border-b py-2 text-sm">
+                            <div className="w-64">
+                                <div className="text-slate-500 text-xs">останется (canonical):</div>
+                                <div className="font-medium">{d.canonicalName}</div>
+                                <div className="text-slate-400 text-xs">
+                                    {year(d.canonicalBirthDate)}–{year(d.canonicalDeathDate)}
+                                </div>
+                            </div>
+                            <div className="w-64">
+                                <div className="text-slate-500 text-xs">удалится (duplicate), станет:</div>
+                                <div className="font-medium">{d.duplicateName}</div>
+                                <div className="text-slate-400 text-xs">
+                                    {year(d.duplicateBirthDate)}–{year(d.duplicateDeathDate)}
+                                </div>
+                            </div>
+                            <div className="w-28">
+                                <span
+                                    className={`text-xs px-2 py-0.5 rounded ${
+                                        d.confidence === "confirmed" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                                    }`}
+                                >
+                                    {d.confidence === "confirmed" ? "подтверждено" : "по имени"}
+                                </span>
+                            </div>
+                            <div className="w-20">
+                                <StatusPill status={d.status} />
+                            </div>
+                            <div className="flex flex-row gap-2">
+                                {d.status !== "approved" && d.status !== "merged" && (
+                                    <button className="px-2 py-1 border rounded text-green-700" onClick={() => setDupStatus(d.id, "approved")}>
+                                        Одобрить
+                                    </button>
+                                )}
+                                {d.status !== "rejected" && d.status !== "merged" && (
+                                    <button className="px-2 py-1 border rounded text-red-700" onClick={() => setDupStatus(d.id, "rejected")}>
+                                        Отклонить
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {dneslovLinks.length > 0 && (
+                <div className="flex flex-col mt-6">
+                    <p className="font-medium mb-2">Связи со святыми (dneslov.org)</p>
+                    <div className="flex flex-row gap-1 mb-4 text-sm">
+                        {(["all", "pending", "approved", "rejected", "merged"] as const).map((s) => (
+                            <button
+                                key={s}
+                                className={`px-2 py-1 border rounded ${dneslovStatusFilter === s ? "bg-slate-200" : ""}`}
+                                onClick={() => setDneslovStatusFilter(s)}
+                            >
+                                {s}
+                            </button>
+                        ))}
+                        <p className="text-slate-400 ml-2">
+                            показано {filteredDneslov.length} из {dneslovLinks.length}
+                        </p>
+                    </div>
+                    {filteredDneslov.map((l) => (
+                        <div key={l.id} className="flex flex-row items-start gap-3 border-b py-2 text-sm">
+                            <div className="w-64">
+                                <div className="font-medium">{l.nobleName}</div>
+                                <div className="text-slate-400 text-xs">
+                                    {year(l.nobleBirthDate)}–{year(l.nobleDeathDate)}
+                                </div>
+                            </div>
+                            <div className="w-64">
+                                <a
+                                    href={`https://dneslov.org/api/v0/memories/${l.dneslovId}.json`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:underline"
+                                >
+                                    {l.matchedName ?? l.dneslovId}
+                                </a>
+                                <div className="text-slate-400 text-xs">год: {l.matchedYearDate ?? "?"}</div>
+                            </div>
+                            <div className="w-28">
+                                <span
+                                    className={`text-xs px-2 py-0.5 rounded ${
+                                        l.confidence === "confirmed" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                                    }`}
+                                >
+                                    {l.confidence === "confirmed" ? "подтверждено" : "по имени"}
+                                </span>
+                            </div>
+                            <div className="w-20">
+                                <StatusPill status={l.status} />
+                            </div>
+                            <div className="flex flex-row gap-2">
+                                {l.status !== "approved" && l.status !== "merged" && (
+                                    <button className="px-2 py-1 border rounded text-green-700" onClick={() => setDneslovStatus(l.id, "approved")}>
+                                        Одобрить
+                                    </button>
+                                )}
+                                {l.status !== "rejected" && l.status !== "merged" && (
+                                    <button className="px-2 py-1 border rounded text-red-700" onClick={() => setDneslovStatus(l.id, "rejected")}>
                                         Отклонить
                                     </button>
                                 )}

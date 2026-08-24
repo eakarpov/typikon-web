@@ -38,6 +38,11 @@ const NobleCard = ({ value, family }: { value: any; family: any}) => {
             <div>
                 <b>Прославлен в лике святых (Католичество):</b> {value.isSaintCatholic ? 'Да': 'Нет'}
             </div>
+            {value.dneslovId && (
+                <div>
+                    <b>Страница памяти:</b> <Link href={`/saints/${value.dneslovId}`}>перейти</Link>
+                </div>
+            )}
             <div>
                 <label><b>Ссылки</b></label>
                 {links.map((item) => (

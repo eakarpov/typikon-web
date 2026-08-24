@@ -37,7 +37,25 @@ export const getBatchDetail = async (batchId: string) => {
             order by n.name asc
         `).all(batchId);
 
-        return [{ batch, nobles, families, couplesCount: couplesCount.c, rules }, null];
+        const duplicates = await db.prepare(`
+            select sd.*, a.birthDate as canonicalBirthDate, a.deathDate as canonicalDeathDate,
+                   b.birthDate as duplicateBirthDate, b.deathDate as duplicateDeathDate
+            from staging_noble_duplicates sd
+            join nobles a on a.id = sd.canonicalNobleId
+            join nobles b on b.id = sd.duplicateNobleId
+            where sd.batchId = ?
+            order by sd.confidence desc, sd.canonicalName asc
+        `).all(batchId);
+
+        const dneslovLinks = await db.prepare(`
+            select sl.*, n.name as nobleName, n.birthDate as nobleBirthDate, n.deathDate as nobleDeathDate
+            from staging_dneslov_links sl
+            join nobles n on n.id = sl.nobleId
+            where sl.batchId = ?
+            order by sl.confidence desc, n.name asc
+        `).all(batchId);
+
+        return [{ batch, nobles, families, couplesCount: couplesCount.c, rules, duplicates, dneslovLinks }, null];
     } catch (e) {
         console.error(e);
         return [null, {error: e}];

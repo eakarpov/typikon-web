@@ -16,7 +16,7 @@ enum COLLECTION_TYPE {
     AUTHOR,
 }
 
-const SaintPage = ({ item, items, mentions }: {item: any, items: any[], mentions: any[] }) => {
+const SaintPage = ({ item, items, mentions, linkedNoble }: {item: any, items: any[], mentions: any[], linkedNoble?: {id: number; name: string} | null }) => {
     const authorItems = useMemo(() => items.filter(el => el.dneslovType === DneslovKind.AUTHOR), [items]);
     const bookItems = useMemo(() => items.filter(el => el.dneslovType !== DneslovKind.AUTHOR), [items]); // MEMORY
 
@@ -55,6 +55,11 @@ const SaintPage = ({ item, items, mentions }: {item: any, items: any[], mentions
                 <p className="font-serif">
                     Страница памяти: <strong>{lastMemo?.title}</strong>
                 </p>
+                {linkedNoble && (
+                    <p className="font-serif">
+                        В родословной: <Link className="text-blue-600 hover:underline" href={`/nobles/${linkedNoble.id}`}>{linkedNoble.name}</Link>
+                    </p>
+                )}
                 {lastMemo && (
                     <div className="font-serif">
                         <div className="max-h-80 overflow-auto">

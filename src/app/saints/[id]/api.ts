@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {init} from "@/lib/sqlite";
 
 export const getItems = async (id: string): Promise<[any, any]> => {
     try {
@@ -42,6 +43,19 @@ export const getMentions = async (id: string): Promise<[any, any]> => {
             ])
             .toArray();
         return [texts, null];
+    } catch (e) {
+        console.error(e);
+        return [null, e];
+    }
+};
+
+// Обратная связь родословная -> святой: если этот dneslovId сопоставлен с персоной в nobles.db
+// (см. /admin/nobles/import, скрипт link-nobles-dneslov), показываем ссылку на её страницу.
+export const getLinkedNoble = async (dneslovId: string): Promise<[any, any]> => {
+    try {
+        const db = await init();
+        const noble = await db.prepare(`select id, name from nobles where dneslovId = ?`).get(dneslovId);
+        return [noble ?? null, null];
     } catch (e) {
         console.error(e);
         return [null, e];
