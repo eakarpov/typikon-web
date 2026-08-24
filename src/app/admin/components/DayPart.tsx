@@ -70,16 +70,16 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
 
     useEffect(() => {
         if (!item.textId) return;
-        fetch(`/api/v1/texts/${item.textId}`).then((res) => res.json()).then((res) => {
-            setText(res);
-        });
+        fetch(`/api/v2/texts/${item.textId}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((res) => setText(res));
     }, []);
 
     useEffect(() => {
         if (!item.pericopeId) return;
-        fetch(`/api/v1/pericopes/${item.pericopeId}`).then((res) => res.json()).then((res) => {
-            setPericope(res);
-        });
+        fetch(`/api/v2/pericopes/${item.pericopeId}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((res) => setPericope(res));
     }, []);
 
   return (

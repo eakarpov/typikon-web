@@ -10,6 +10,19 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
     const pathname = usePathname();
     const [items, setItems] = useState(initial)
 
+    // Публичный API второй версии: список приходит в конверте {items, total, ...},
+    // поля те же, что отдаёт серверный поиск, — включая snippet.
+    const loadResults = useCallback((query: string) => {
+        fetch(`/api/v2/search?q=${encodeURIComponent(query)}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (Array.isArray(data?.items)) setItems(data.items);
+            })
+            .catch(() => {
+                // Пустая выдача лучше, чем оборванная страница.
+            });
+    }, []);
+
     const [value, setValue] = useState(searchParams?.get("query") || "");
 
     const onChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
@@ -22,11 +35,7 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
                 router.push(`/search?query=${value}`);
             } else {
                 router.replace(`/search?query=${value}`);
-                fetch(`/api/v1/search?query=${value}`).then((res) => res.json()).then((newItems) => {
-                    if (Array.isArray(newItems)) {
-                        setItems(newItems);
-                    }
-                });
+                loadResults(value);
             }
         }
     }, [value]);
@@ -34,11 +43,7 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
     useEffect(() => {
         const val = searchParams?.get("query");
         if (val) {
-            fetch(`/api/v1/search?query=${val}`).then((res) => res.json()).then((newItems) => {
-                if (Array.isArray(newItems)) {
-                    setItems(newItems);
-                }
-            });
+            loadResults(val);
         }
     }, []);
 

@@ -9,9 +9,14 @@ const ContentRandom = () => {
     const [item, setItem] = useState<any|null>(null);
 
     useEffect(() => {
-        fetch("/api/v1/library/random").then((res) => res.json()).then((res) => {
-            setItem(res);
-        })
+        fetch("/api/v2/texts/random")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((res) => {
+                if (res?.id) setItem(res);
+            })
+            .catch(() => {
+                // Блок на главной необязательный — молча не показываем.
+            });
     }, []);
 
     if (!item) return null;
@@ -27,7 +32,8 @@ const ContentRandom = () => {
                         >
                             <BookOpenIcon className="w-6 h-6" />
                         </Link>
-                        <Link href={`/reading/${item.id.toString()}`}>
+                        {/* По alias, если он есть: страница чтения иначе сама перенаправит. */}
+                        <Link href={`/reading/${item.alias || item.id}`}>
                             <DocumentTextIcon className="w-6 h-6" />
                         </Link>
                         <span className="pr-2 font-serif">

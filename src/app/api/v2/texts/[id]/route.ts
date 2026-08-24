@@ -9,6 +9,10 @@ import { cached, CacheTag } from "@/lib/cache";
 
 // Текст целиком. Принимает и alias, и идентификатор: alias — устойчивый адрес,
 // но у части текстов его нет.
+//
+// Особый случай — /texts/random: случайный текст с содержимым. Отдельным маршрутом
+// его не сделать, «random» всё равно попал бы сюда как идентификатор, поэтому
+// разбирается здесь явно. Кэшу такой ответ не подлежит по смыслу.
 export const revalidate = 3600;
 
 const loadText = cached(async (idOrAlias: string) => {
@@ -39,11 +43,28 @@ export async function OPTIONS() {
     return preflight();
 }
 
+const randomText = async () => {
+    const client = await clientPromise;
+    const docs = await client.db("typikon").collection("texts").aggregate([
+        // Только то, что действительно можно читать: заготовки без содержимого не берём.
+        { $match: { readiness: { $in: ["ready", "correcting", "texted"] }, content: { $nin: ["", null] } } },
+        { $sample: { size: 1 } },
+    ]).toArray();
+
+    return docs[0] ?? null;
+};
+
 export async function GET(request: Request, { params }: { params: { id: string } }) {
     const limited = limitOrFail(request);
     if (limited) return limited;
 
     try {
+        if (params.id === "random") {
+            const doc = await randomText();
+            if (!doc) return fail("not_found", "Не нашлось ни одного готового текста");
+            return respond(textDetail(doc), { maxAge: 0, headers: { "Cache-Control": "no-store" } });
+        }
+
         const doc = await loadText(params.id);
 
         if (!doc) {
