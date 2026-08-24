@@ -35,6 +35,32 @@ const NEW_WEEK = {
     triodion: true,
 };
 
+// Дни переезжают под новое имя недели, поэтому и называться должны по ней:
+// «Понедельник седмицы после Недели о мытаре и фарисее» -> «Понедельник 34-й седмицы
+// по Пятидесятнице». День недели в начале не трогаем — в разных седмицах он написан
+// по-разному («Четверг» против «Четверток»), и приводить это к одному виду — отдельный
+// разговор, не для миграции структуры.
+const OLD_TAIL = /\s*(седмицы\s+)?после Недели о мытаре и фарисее$/;
+const NEW_TAIL = " 34-й седмицы по Пятидесятнице";
+
+const renameWeekdays = async (days: any, weekId: any) => {
+    const inWeek = await days.find({ weekId }).project({ name: 1, weekIndex: 1 }).toArray();
+    const toRename = inWeek.filter((d: any) => OLD_TAIL.test(d.name ?? ""));
+
+    if (!toRename.length) {
+        note("названия дней уже приведены к новой неделе");
+        return;
+    }
+
+    for (const day of toRename.sort((a: any, b: any) => (a.weekIndex ?? 0) - (b.weekIndex ?? 0))) {
+        const next = day.name.replace(OLD_TAIL, NEW_TAIL);
+        note(`переименовать [${day.weekIndex}] «${day.name}» → «${next}»`);
+        if (APPLY) {
+            await days.updateOne({ _id: day._id }, { $set: { name: next, updatedAt: new Date() } });
+        }
+    }
+};
+
 const plan: string[] = [];
 const note = (line: string) => {
     plan.push(line);
@@ -58,12 +84,15 @@ async function main() {
     }
 
     const existingNew = await weeks.findOne({ alias: NEW_WEEK.alias });
-    if (existingNew && !bludnogo) {
-        console.log("Уже перестроено: 34-я седмица есть, неделя о блудном сыне расформирована.");
-        process.exit(0);
-    }
+    const alreadyRestructured = Boolean(existingNew) && !bludnogo;
 
     console.log("План перестройки:\n");
+
+    if (alreadyRestructured) {
+        note("недели уже перестроены — остаётся только проверить названия дней");
+        await renameWeekdays(days, existingNew!._id);
+        process.exit(0);
+    }
 
     // --- 1. 34-я седмица: будни из mytaria + воскресенье из bludnogo-syna
     const mytariaDays = await days.find({ _id: { $in: mytaria.days ?? [] } })
@@ -132,6 +161,8 @@ async function main() {
     if (bludnogo) {
         await weeks.deleteOne({ _id: bludnogo._id });
     }
+
+    await renameWeekdays(days, newWeekId);
 
     console.log(`Готово. Перенесено дней: ${movedIds.length}.`);
     console.log(`Проверить: /triodion и /calculator на даты подготовительного периода.`);
