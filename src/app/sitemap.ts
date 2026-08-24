@@ -30,6 +30,7 @@ const STATIC_ROUTES = [
     { path: "/calculator", priority: 0.6 },
     { path: "/resources", priority: 0.5 },
     { path: "/about", priority: 0.5 },
+    { path: "/license", priority: 0.4 },
     { path: "/contact", priority: 0.4 },
 ];
 
