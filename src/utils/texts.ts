@@ -178,6 +178,30 @@ export const fullTitle = (valueKind: TextKind, author: string, startString: stri
     }
 }
 
+// Порядок слотов службы — не порядок объявления в TextType, а порядок следования
+// богослужения (Евангелие на утрене читается до Литургии). Единый список для всего:
+// страницы дня, оглавления и публичного API, чтобы они не разъезжались.
+export const DAY_SLOT_ORDER: TextType[] = [
+    TextType.VESPERS_PROKIMENON,
+    TextType.VIGIL,
+    TextType.KATHISMA_1,
+    TextType.KATHISMA_2,
+    TextType.KATHISMA_3,
+    TextType.IPAKOI,
+    TextType.POLYELEOS,
+    TextType.GOSPEL_MATINS,
+    TextType.SONG_3,
+    TextType.SONG_6,
+    TextType.APOLUTIKA_TROPARIA,
+    TextType.BEFORE_1h,
+    TextType.H3,
+    TextType.H6,
+    TextType.H9,
+    TextType.PANAGIA,
+    TextType.APOSTLE_LITURGY,
+    TextType.GOSPEL_LITURGY,
+];
+
 export const valueTitle = (valueName: TextType) => {
   switch (valueName) {
       case TextType.VESPERS_PROKIMENON:

@@ -114,3 +114,58 @@ export const pericope = (doc: any) => ({
     ranges: doc.ranges ?? [],
     occasions: doc.occasions ?? [],
 });
+
+// --- День со слотами службы
+
+/** Один пункт слота: либо текст, либо зачало, иногда и то и другое. */
+const slotItem = (item: any) => ({
+    cite: item.cite || null,
+    description: item.description || null,
+    statia: item.statia ?? null,
+    paschal: Boolean(item.paschal),
+    text: item.text?._id || item.text?.id ? textSummary(item.text) : null,
+    pericope: item.pericope
+        ? {
+            ...pericope(item.pericope),
+            textId: id(item.pericope.textId),
+            textName: item.pericope.textName ?? null,
+            textAlias: item.pericope.textAlias ?? null,
+            resolvedLang: item.pericope.resolvedLang ?? null,
+            verses: (item.pericope.verses ?? []).map(verse),
+        }
+        : null,
+});
+
+/**
+ * Слоты дня приходят полями по имени типа чтения (song6, polyeleos, gospelLiturgy…).
+ * Наружу отдаём списком: клиенту не нужно знать имена полей заранее, а порядок
+ * следования службы сохраняется.
+ */
+export const daySlots = (day: any, order: readonly string[], title: (slot: string) => string) =>
+    order
+        .filter((slot) => day?.[slot]?.items?.length)
+        .map((slot) => ({
+            slot,
+            title: title(slot),
+            items: day[slot].items.map(slotItem),
+        }));
+
+export const dayDetail = (day: any, order: readonly string[], title: (slot: string) => string) => ({
+    id: id(day._id ?? day.id),
+    alias: day.alias || null,
+    name: day.name ?? "",
+    paschal: Boolean(day.paschal),
+    monthIndex: day.monthIndex ?? null,
+    weekIndex: day.weekIndex ?? null,
+    week: day.week ? week(day.week) : null,
+    month: day.month ? month(day.month) : null,
+    readings: daySlots(day, order, title),
+    updatedAt: iso(day.updatedAt),
+});
+
+export const memory = (item: any) => ({
+    id: item.id ?? null,
+    name: item.name ?? "",
+    sign: item.sign ?? null,
+    signConditional: Boolean(item.signConditional),
+});
