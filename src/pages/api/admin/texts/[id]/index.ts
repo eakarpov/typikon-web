@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
+import {buildSearchFields} from "@/lib/search";
 
 // Один alias — один документ: адрес /texts/{alias} разрешается в один документ, и если
 // alias занят, второй становится недостижим. В базе такие пары уже есть (следствие
@@ -68,6 +69,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             saintId: data.saintId,
                             contentType: data.contentType,
                             bibleBookSlug: data.bibleBookSlug,
+                            // Нормализованные копии для поиска — иначе выдача отстаёт
+                            // от правок до следующего прогона build-search-index.
+                            ...buildSearchFields(data),
                         },
                     },
                 );

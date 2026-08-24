@@ -9,7 +9,7 @@ const Search = (req: { searchParams: { query?: string; }}) => {
         return (
             <div className={myFont.variable}>
                 <span className="font-serif">
-                    Вы не задали никакого запроса. Поиск по названию текста.
+                    Вы не задали никакого запроса. Поиск по названию и содержимому текстов.
                 </span>
                 <div>
                     <Suspense>

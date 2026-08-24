@@ -54,10 +54,17 @@ const SearchForm = ({ initial = []}: {initial?: any[]}) => {
                 className="search-input"
             />
             {items.map(item => (
-                <div key={item.id}>
-                    <Link href={`/reading/${item.id}`} className="font-serif">
+                <div key={item.id} className="mb-2">
+                    {/* Ссылка по alias, если он есть: страница чтения иначе сама
+                        перенаправит с ObjectId на alias — лишний переход. */}
+                    <Link href={`/reading/${item.alias || item.id}`} className="font-serif">
                         {item.name}
                     </Link>
+                    {item.snippet && (
+                        <p className="font-serif text-sm text-slate-600">
+                            {item.snippet}
+                        </p>
+                    )}
                 </div>
             ))}
         </>

@@ -5,6 +5,7 @@ import { checkRightsBack } from "@/lib/admin/back";
 import { decrypt } from "@/lib/authorize/sessions";
 import { TextingProposalStatus } from "@/utils/texting";
 import { TextReadiness } from "@/utils/texts";
+import { buildSearchFields } from "@/lib/search";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -59,7 +60,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .collection("texts")
             .updateOne(
                 { _id: new ObjectId(proposal.textId) },
-                { $set: { content: proposal.content, readiness: nextReadiness, updatedAt: now } },
+                {
+                    $set: {
+                        content: proposal.content,
+                        readiness: nextReadiness,
+                        updatedAt: now,
+                        // Принятая отекстовка — это ровно тот момент, когда у текста
+                        // впервые появляется содержимое: без этого он остался бы
+                        // ненаходимым поиском до следующего прогона build-search-index.
+                        ...buildSearchFields({ ...text, content: proposal.content }),
+                    },
+                },
             );
 
         await usersDb
