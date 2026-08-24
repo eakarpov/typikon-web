@@ -205,7 +205,7 @@ const main = async () => {
 
     await db.collection("books").updateOne(
         { _id: BOOK_ID },
-        { $push: { texts: { $each: insertedTextIds } }, $set: { updatedAt: new Date() } }
+        { $push: { texts: { $each: insertedTextIds } } as any, $set: { updatedAt: new Date() } }
     );
 
     console.log(`\nГотово: добавлено книг — ${insertedTextIds.length}, стихов всего — ${totalVerses}`);

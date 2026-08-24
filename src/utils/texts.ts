@@ -1,4 +1,8 @@
-import {Nullable} from "mongodb/src/mongo_types";
+// Свой Nullable вместо импорта из mongodb/src/mongo_types: тот импорт лез прямо
+// в ИСХОДНИКИ драйвера (не в .d.ts), и tsc начинал проверять весь его src —
+// больше сотни чужих ошибок в отчёте, из-за которых проверку типов нельзя было
+// включить в CI.
+type Nullable<T> = T | null;
 import {DayDTO} from "@/types/dto/days";
 
 export enum TextReadiness {
@@ -340,3 +344,13 @@ export const findBookByCode = (code: string): { slug: string; abbreviation: stri
 export const BIBLE_BOOK_SLUG_OPTIONS = Object.entries(bookMap)
     .map(([abbreviation, { slug }]) => ({ slug, label: `${abbreviation} — ${slug}` }))
     .sort((a, b) => a.slug.localeCompare(b.slug));
+
+// Граница абзаца — ровно два перевода строки. В части импортированных текстов между
+// ними затесался пробельный символ («\n \n», а иногда неразрывный пробел U+00A0,
+// табуляция или U+2003), и такой абзац не распознаётся ни вебом (ReadingContent,
+// data-paragraph-index), ни мобильным приложением (text_page.dart, split("\n\n")) —
+// весь текст становится одним огромным «абзацем».
+//
+// Чиним в самих данных, а не в двух местах разбора на разных платформах.
+export const normalizeParagraphs = (content?: string | null): string =>
+    typeof content === "string" ? content.replace(/\n[^\S\n]+\n/g, "\n\n") : "";

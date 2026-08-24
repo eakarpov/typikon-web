@@ -97,8 +97,8 @@ const SPECS: Spec[] = [
       why: "личные заметки пользователя к тексту" },
 
     // --- typikon-meta
-    { db: "typikon-meta", collection: "logs", key: { ip: 1, url: 1 },
-      why: "счётчик просмотров ищет запись по паре ip+url на каждый просмотр страницы" },
+    { db: "typikon-meta", collection: "logs", key: { ipHash: 1, url: 1 },
+      why: "счётчик просмотров ищет запись по паре ipHash+url на каждый просмотр страницы" },
 ];
 
 const keyToString = (key: Record<string, number>) =>

@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import clientPromise from "@/lib/mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
 
@@ -72,63 +73,39 @@ const loadCount = async (): Promise<[any, any]> => {
 export const getLastItems = cachedTuple(loadLastItems, ["home-last-items"], [CacheTag.TEXTS], 300);
 export const getCount = cachedTuple(loadCount, ["home-text-count"], [CacheTag.TEXTS], 300);
 
+// Счётчик просмотров. Переписан по трём причинам:
+//
+// 1. Хранился сырой IP. Для метрики он не нужен: /api/meta считает только сумму
+//    просмотров и число РАЗЛИЧНЫХ посетителей, а для различения хватает хэша.
+//    Соль берётся из окружения, так что по базе адрес не восстановить.
+// 2. Массив wasAt рос без предела: на популярный URL документ пух с каждым просмотром,
+//    пока не упёрся бы в предел размера документа. Теперь храним последние отметки.
+// 3. Читали документ, потом писали целиком пересобранные массивы — гонка при
+//    параллельных просмотрах и лишний запрос. Теперь один атомарный upsert.
+const VISIT_TIMESTAMPS_KEPT = 50;
+
+const hashIp = (ip: unknown): string => {
+    const salt = process.env.META_HASH_SALT || process.env.SESSION_SECRET || "";
+    return createHash("sha256").update(`${salt}:${String(ip ?? "")}`).digest("hex").slice(0, 16);
+};
+
 export const writeMetaData = async (obj: any): Promise<any> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon-meta");
 
-        const log = await db
-            .collection("logs")
-            .aggregate([
-                {
-                    $match: {
-                        ip: obj.ip,
-                        url: obj.url,
-                    },
-                }
-            ]).limit(1).toArray();
-
-        const time = new Date();
-
-        if (log && log[0]) {
-            const userAgents = log[0].userAgents || [];
-            const hasUserAgent = userAgents.find((el: string) => el === obj.userAgent);
-            await db
-                .collection("logs")
-                .updateOne( { "_id" : log[0]._id },
-                    {
-                        $set: {
-                            ip: obj.ip,
-                            url: obj.url,
-                            count: log[0].count + 1,
-                            wasAt: [
-                                ...log[0].wasAt,
-                                time,
-                            ],
-                            userAgents: hasUserAgent
-                                ? userAgents
-                                : [
-                                    ...userAgents,
-                                    obj.userAgent,
-                            ],
-                        }
-                    });
-            return;
-        } else {
-            await db
-                .collection("logs")
-                .insertOne({
-                    ip: obj.ip,
-                    url: obj.url,
-                    count: 1,
-                    wasAt: [new Date()],
-                    userAgents: [obj.userAgent],
-                });
-            return;
-        }
+        await db.collection("logs").updateOne(
+            { ipHash: hashIp(obj.ip), url: obj.url },
+            {
+                $inc: { count: 1 },
+                $push: { wasAt: { $each: [new Date()], $slice: -VISIT_TIMESTAMPS_KEPT } } as any,
+                $addToSet: { userAgents: obj.userAgent },
+            },
+            { upsert: true },
+        );
     } catch (e) {
         console.error(e);
-      return e;
+        return e;
     }
 };
 

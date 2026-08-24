@@ -18,6 +18,7 @@
 //   npx tsx src/scripts/fix-duplicate-aliases.ts --apply   # переименовать
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
+import { revalidateContent } from "@/scripts/lib/revalidate";
 
 const APPLY = process.argv.includes("--apply");
 
@@ -103,6 +104,10 @@ async function main() {
                 { $set: { textAlias: r.to } },
             );
         }
+    }
+
+    if (APPLY && renames.length) {
+        await revalidateContent();
     }
 
     console.log(`\n=== Итого ===`);

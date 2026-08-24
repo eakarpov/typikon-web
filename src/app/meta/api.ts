@@ -14,9 +14,11 @@ export const getMeta = async (): Promise<[any, any]> => {
 
         const totalCount = logs.reduce((p, c) => p + c.count, 0);
 
+        // Различаем посетителей по хэшу адреса: смысл метрики тот же, сырой IP
+        // в базе больше не хранится (см. writeMetaData).
         const totalUsersObj = logs.reduce((p, c) => ({
             ...p,
-            [c.ip]: (p[c.ip] || 0) + c.count
+            [c.ipHash ?? c.ip]: (p[c.ipHash ?? c.ip] || 0) + c.count
         }), {});
 
         const totalUsers = Object.values(totalUsersObj).length;

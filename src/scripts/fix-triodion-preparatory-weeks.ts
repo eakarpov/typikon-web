@@ -23,6 +23,7 @@
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { revalidateContent } from "@/scripts/lib/revalidate";
 
 const APPLY = process.argv.includes("--apply");
 
@@ -91,6 +92,7 @@ async function main() {
     if (alreadyRestructured) {
         note("недели уже перестроены — остаётся только проверить названия дней");
         await renameWeekdays(days, existingNew!._id);
+        if (APPLY) await revalidateContent();
         process.exit(0);
     }
 
@@ -163,6 +165,8 @@ async function main() {
     }
 
     await renameWeekdays(days, newWeekId);
+
+    await revalidateContent();
 
     console.log(`Готово. Перенесено дней: ${movedIds.length}.`);
     console.log(`Проверить: /triodion и /calculator на даты подготовительного периода.`);

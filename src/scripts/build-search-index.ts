@@ -18,6 +18,7 @@
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { buildSearchFields } from "@/lib/search";
+import { revalidateContent } from "@/scripts/lib/revalidate";
 
 const APPLY = process.argv.includes("--apply");
 
@@ -98,6 +99,8 @@ async function main() {
     } else {
         console.log(`Индекс ${INDEX_NAME} уже есть`);
     }
+
+    await revalidateContent();
 
     process.exit(0);
 }

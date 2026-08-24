@@ -5,9 +5,13 @@ import {decrypt} from "@/lib/authorize/sessions";
 import {getItem} from "@/app/profile/api";
 import {CacheTag} from "@/lib/cache";
 
-// Сбрасывает кэш выборок после правки контента в админке. Вызывается из редакторов
-// (см. src/lib/admin/revalidate.ts): API админки живёт в pages-роутере, а
-// revalidateTag работает только в app-роутере, поэтому это отдельная ручка.
+// Сбрасывает кэш выборок после правки контента. Вызывается из двух мест:
+//   * редакторы админки (src/lib/admin/revalidate.ts) — по сессии администратора;
+//   * скрипты миграции данных (src/scripts/lib/revalidate.ts) — по токену.
+//
+// Отдельная ручка нужна потому, что API админки живёт в pages-роутере, а revalidateTag
+// работает только в app-роутере. Скриптам же сессия недоступна в принципе: они правят
+// базу мимо приложения, и без этого вызова сайт до часа отдаёт старое из кэша выборок.
 
 const ALLOWED_TAGS: string[] = Object.values(CacheTag);
 
@@ -24,8 +28,25 @@ const isAdmin = async () => {
     return Boolean(user?.isAdmin);
 };
 
+// Токен для скриптов. Пока REVALIDATE_TOKEN не задан в окружении, этот путь закрыт
+// полностью — не хватает переменной, а не «пустой токен подходит».
+const hasValidToken = (request: NextRequest) => {
+    const expected = process.env.REVALIDATE_TOKEN;
+    if (!expected) return false;
+
+    const provided = request.headers.get("x-revalidate-token");
+    if (!provided || provided.length !== expected.length) return false;
+
+    // Сравнение без раннего выхода: на длине токена это мелочь, но и стоит она мелочь.
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) {
+        diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+    }
+    return diff === 0;
+};
+
 export async function POST(request: NextRequest) {
-    if (!(await isAdmin())) {
+    if (!hasValidToken(request) && !(await isAdmin())) {
         return new NextResponse(null, { status: 404 });
     }
 
