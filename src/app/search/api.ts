@@ -1,5 +1,9 @@
 import clientPromise from "@/lib/mongodb";
 
+// Поиск идёт по названию текста (текстовый индекс), поэтому тело `content`
+// в выдаче не нужно — оно только раздувало ответ на несколько мегабайт.
+export const SEARCH_LIMIT = 100;
+
 export const searchData = async (query: string) => {
     try {
         const client = await clientPromise;
@@ -17,10 +21,18 @@ export const searchData = async (query: string) => {
                     $search: queryStr,
                     $language: "russian"
                 },
-            }).collation({ locale: "ru"})
+            }, {
+                projection: {
+                    content: 0,
+                    score: { $meta: "textScore" },
+                },
+            })
+            .sort({ score: { $meta: "textScore" } })
+            .limit(SEARCH_LIMIT)
+            .collation({ locale: "ru"})
             .map(e => ({
                 ...e,
-                bookId: e.bookId.toString(),
+                bookId: e.bookId?.toString(),
                 id: e._id.toString(),
             }))
             .toArray();

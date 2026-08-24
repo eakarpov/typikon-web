@@ -42,7 +42,7 @@ export default async function RootLayout({
     }
     // в корне приложения проверять авторизованы ли мы где-то, если да, подтягивать инфу в меню и разрешения давать на фичи
     return (
-    <html lang="en">
+    <html lang="ru">
       <body>
           <CommonMeta />
           <noscript>
