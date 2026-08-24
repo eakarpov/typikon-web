@@ -16,8 +16,8 @@ import ServiceWorkerRegistrar from "@/app/ServiceWorkerRegistrar";
 export const viewport: Viewport = {
     initialScale: 1,
     width: 'device-width',
-    // Цвет строки состояния в установленном приложении — тот же, что в манифесте.
-    themeColor: '#7c2d12',
+    // Цвет строки состояния в установленном приложении — фон иконки приложения.
+    themeColor: '#880015',
 }
 
 export const metadata: Metadata = {
