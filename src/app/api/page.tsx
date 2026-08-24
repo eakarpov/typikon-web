@@ -185,7 +185,10 @@ const ApiDocs = () => (
             </p>
             <p className="text-slate-600 text-sm">
                 Версия 1 (<code>/api/v1</code>) осталась для мобильного приложения и
-                постепенно выводится из обращения. Новым клиентам следует брать вторую.
+                выводится из обращения: её ответы помечены заголовками{" "}
+                <code>Deprecation</code>, <code>Sunset</code> и{" "}
+                <code>Link: rel=&quot;successor-version&quot;</code>. Новым клиентам следует
+                брать вторую.
             </p>
         </section>
 
