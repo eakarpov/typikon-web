@@ -3,9 +3,8 @@ import {cookies} from "next/headers";
 import {decrypt} from "@/lib/authorize/sessions";
 import Link from "next/link";
 import Content from "@/app/profile/Content";
-import UserNotesList from "@/app/profile/UserNotesList";
 import {getAllUserNotes} from "@/app/api/user-notes/service";
-import ApiTokens from "@/app/profile/ApiTokens";
+import SidePanel from "@/app/profile/SidePanel";
 import {listTokens} from "@/app/api/api-tokens/service";
 
 const ProfilePage = async () => {
@@ -34,37 +33,39 @@ const ProfilePage = async () => {
     const userNotes = await getAllUserNotes(session!.userId as string);
     const apiTokens = await listTokens(session!.userId as string);
 
+    // На широком экране — две колонки: слева свои данные, справа вкладки с длинными
+    // перечнями. До lg колонки складываются в одну и порядок остаётся прежним.
     return (
-        <div>
-            <p>
-                Пользователь {item.id}
-            </p>
-            <p>
-                Принято ваших отекстовок: {acceptedTextingCount}
-            </p>
-            <p>
-                <Link href="/texting">
-                    Помочь с отекстовкой
-                </Link>
-            </p>
-            <Content item={item} />
-            <div>
-                <h3 className="font-bold">Мои заметки</h3>
-                <UserNotesList items={userNotes as any} />
-            </div>
-            <ApiTokens items={apiTokens} />
-            {item.isAdmin && (
-                <div>
-                    <p>
-                        Вы админ.
-                    </p>
-                    <Link href="/admin/corrections">
-                        <span>
-                            Отчеты об ошибках
-                        </span>
+        <div className="flex flex-col lg:flex-row lg:items-start gap-8 py-4">
+            <div className="flex flex-col gap-2 lg:w-1/2">
+                <p>
+                    Пользователь {item.id}
+                </p>
+                <p>
+                    Принято ваших отекстовок: {acceptedTextingCount}
+                </p>
+                <p>
+                    <Link href="/texting">
+                        Помочь с отекстовкой
                     </Link>
-                </div>
-            )}
+                </p>
+                <Content item={item} />
+                {item.isAdmin && (
+                    <div>
+                        <p>
+                            Вы админ.
+                        </p>
+                        <Link href="/admin/corrections">
+                            <span>
+                                Отчеты об ошибках
+                            </span>
+                        </Link>
+                    </div>
+                )}
+            </div>
+            <div className="lg:w-1/2">
+                <SidePanel notes={userNotes as any} tokens={apiTokens} />
+            </div>
         </div>
     );
 };

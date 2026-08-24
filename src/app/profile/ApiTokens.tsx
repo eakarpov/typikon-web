@@ -2,7 +2,7 @@
 import React from "react";
 import type { TokenView } from "@/app/api/api-tokens/service";
 
-// Ключи доступа к API в профиле.
+// Ключи доступа к API — вкладка в правой колонке профиля (SidePanel).
 //
 // Главная особенность интерфейса: открытый ключ показывается один раз, сразу после
 // выпуска, и больше нигде — в базе лежит только его хэш. Поэтому выпущенный ключ
@@ -55,7 +55,6 @@ const ApiTokens = ({ items }: { items: TokenView[] }) => {
 
     return (
         <div className="flex flex-col gap-3">
-            <h3 className="font-bold">Ключи API</h3>
             <p className="text-sm text-slate-700">
                 Ключ нужен, чтобы обращаться к{" "}
                 <a href="/api" className="text-amber-800 underline underline-offset-4">API</a>{" "}
