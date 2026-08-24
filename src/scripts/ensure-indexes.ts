@@ -99,6 +99,8 @@ const SPECS: Spec[] = [
     // --- typikon-meta
     { db: "typikon-meta", collection: "logs", key: { ipHash: 1, url: 1 },
       why: "счётчик просмотров ищет запись по паре ipHash+url на каждый просмотр страницы" },
+    { db: "typikon-meta", collection: "logs", key: { kind: 1 },
+      why: "метрика отделяет подробные записи от помесячных итогов" },
 ];
 
 const keyToString = (key: Record<string, number>) =>

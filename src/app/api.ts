@@ -1,5 +1,5 @@
-import {createHash} from "node:crypto";
 import clientPromise from "@/lib/mongodb";
+import {hashIp, normalizeUrl, LOGS, VISITORS, VISITS_DB, VISIT_TIMESTAMPS_KEPT} from "@/lib/meta/visits";
 import {cachedTuple, CacheTag} from "@/lib/cache";
 
 export const getRandomProlog = async () => {
@@ -73,36 +73,37 @@ const loadCount = async (): Promise<[any, any]> => {
 export const getLastItems = cachedTuple(loadLastItems, ["home-last-items"], [CacheTag.TEXTS], 300);
 export const getCount = cachedTuple(loadCount, ["home-text-count"], [CacheTag.TEXTS], 300);
 
-// Счётчик просмотров. Переписан по трём причинам:
-//
-// 1. Хранился сырой IP. Для метрики он не нужен: /api/meta считает только сумму
-//    просмотров и число РАЗЛИЧНЫХ посетителей, а для различения хватает хэша.
-//    Соль берётся из окружения, так что по базе адрес не восстановить.
-// 2. Массив wasAt рос без предела: на популярный URL документ пух с каждым просмотром,
-//    пока не упёрся бы в предел размера документа. Теперь храним последние отметки.
-// 3. Читали документ, потом писали целиком пересобранные массивы — гонка при
-//    параллельных просмотрах и лишний запрос. Теперь один атомарный upsert.
-const VISIT_TIMESTAMPS_KEPT = 50;
-
-const hashIp = (ip: unknown): string => {
-    const salt = process.env.META_HASH_SALT || process.env.SESSION_SECRET || "";
-    return createHash("sha256").update(`${salt}:${String(ip ?? "")}`).digest("hex").slice(0, 16);
-};
-
+// Счётчик просмотров. Пишет в две коллекции:
+//   * logs     — подробность по паре (посетитель, адрес): её можно чистить и сворачивать;
+//   * visitors — по документу на посетителя, чтобы «сколько всего посетителей» осталось
+//                точным даже после чистки logs.
+// Подробности об устройстве — в @/lib/meta/visits.
 export const writeMetaData = async (obj: any): Promise<any> => {
     try {
         const client = await clientPromise;
-        const db = client.db("typikon-meta");
+        const db = client.db(VISITS_DB);
 
-        await db.collection("logs").updateOne(
-            { ipHash: hashIp(obj.ip), url: obj.url },
-            {
-                $inc: { count: 1 },
-                $push: { wasAt: { $each: [new Date()], $slice: -VISIT_TIMESTAMPS_KEPT } } as any,
-                $addToSet: { userAgents: obj.userAgent },
-            },
-            { upsert: true },
-        );
+        const ipHash = hashIp(obj.ip);
+        const url = normalizeUrl(obj.url);
+        const now = new Date();
+
+        await Promise.all([
+            db.collection(LOGS).updateOne(
+                { ipHash, url },
+                {
+                    $inc: { count: 1 },
+                    // Массив рос без предела: в одном документе накопилось 1897 отметок.
+                    $push: { wasAt: { $each: [now], $slice: -VISIT_TIMESTAMPS_KEPT } } as any,
+                    $addToSet: { userAgents: obj.userAgent },
+                },
+                { upsert: true },
+            ),
+            db.collection(VISITORS).updateOne(
+                { _id: ipHash as any },
+                { $setOnInsert: { firstSeen: now }, $set: { lastSeen: now } },
+                { upsert: true },
+            ),
+        ]);
     } catch (e) {
         console.error(e);
         return e;
