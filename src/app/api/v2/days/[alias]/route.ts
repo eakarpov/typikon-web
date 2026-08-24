@@ -1,5 +1,5 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { getItem } from "@/app/calendar/[id]/api";
 import { dayDetail } from "@/lib/api/v2/serialize";
 import { DAY_SLOT_ORDER, TextType, valueTitle } from "@/utils/texts";
@@ -15,8 +15,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request, { params }: { params: { alias: string } }) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "calendar");
+    if (access.denied) return access.denied;
 
     try {
         const [day, error] = await getItem(params.alias, readLang(new URL(request.url)));
@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: { alias: strin
         if (error) return fail("internal", "Не удалось получить день");
         if (!day) return fail("not_found", `День «${params.alias}» не найден`);
 
-        return respond(dayDetail(day, DAY_SLOT_ORDER as readonly string[], (slot) => valueTitle(slot as TextType)));
+        return respond(dayDetail(day, DAY_SLOT_ORDER as readonly string[], (slot) => valueTitle(slot as TextType)), { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить день");

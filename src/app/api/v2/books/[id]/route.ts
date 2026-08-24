@@ -1,7 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
 import { book, textSummary } from "@/lib/api/v2/serialize";
 
@@ -14,8 +14,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "texts");
+    if (access.denied) return access.denied;
 
     if (!ObjectId.isValid(params.id)) {
         return fail("bad_request", "Идентификатор книги указан неверно");
@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
         return respond({
             ...book(doc),
             texts: { items: texts.map(textSummary), total, limit, offset },
-        });
+        }, { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить книгу");

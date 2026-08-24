@@ -1,5 +1,5 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { calcDayCached, calendarResponse, readLang } from "@/lib/api/v2/calendar";
 
 // Что читается в конкретный день. Дата — гражданская (YYYY-MM-DD), всё остальное
@@ -14,8 +14,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request, { params }: { params: { date: string } }) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "calendar");
+    if (access.denied) return access.denied;
 
     if (!DATE.test(params.date) || isNaN(new Date(params.date).getTime())) {
         return fail("bad_request", "Дата указывается в виде ГГГГ-ММ-ДД");
@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: { params: { date: string
             return fail("not_found", `На ${params.date} чтений не найдено`);
         }
 
-        return respond(calendarResponse(params.date, result));
+        return respond(calendarResponse(params.date, result), { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось рассчитать день");

@@ -16,7 +16,7 @@ const baseHeaders = (maxAge: number): Record<string, string> => ({
     // API публичный и рассчитан на браузерные клиенты — иначе им к нему не подступиться.
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Api-Key",
     "Access-Control-Max-Age": "86400",
     // Условия использования видны прямо в ответе, без похода на сайт.
     "Link": `<${LICENSE_URL}>; rel="license"`,
@@ -24,35 +24,72 @@ const baseHeaders = (maxAge: number): Record<string, string> => ({
     "Cache-Control": `public, max-age=${maxAge}, s-maxage=${maxAge}`,
 });
 
+/**
+ * Право на запрос: что выдал слой доступа (src/lib/api/v2/access.ts). Ответы носят
+ * заголовки об остатке лимита, а ответ по ключу вдобавок помечается как непубличный —
+ * иначе общий кэш отдал бы чужой остаток другому клиенту.
+ */
+export interface RespondAccess {
+    headers: Record<string, string>;
+    kind: "site" | "token" | "anonymous";
+}
+
 export interface CollectionMeta {
     total: number;
     limit: number;
     offset: number;
 }
 
+export interface RespondOptions {
+    maxAge?: number;
+    headers?: Record<string, string>;
+    access?: RespondAccess;
+}
+
+/**
+ * Тело ответа для одного и того же адреса одинаково для всех — корпус публичный, —
+ * поэтому кэшировать его можно. А вот заголовки об остатке лимита у каждого свои,
+ * и ради них ответ по ключу становится private с Vary по Authorization.
+ */
+const accessHeaders = (access?: RespondAccess): Record<string, string> => {
+    if (!access) return {};
+    if (access.kind !== "token") return access.headers;
+
+    return { ...access.headers, "Cache-Control": "private, no-store", "Vary": "Authorization" };
+};
+
 /** Одиночный ресурс — объектом, без обёртки. */
 export const respond = (
     body: unknown,
-    { maxAge = DEFAULT_MAX_AGE, headers = {} }: { maxAge?: number; headers?: Record<string, string> } = {},
-) => NextResponse.json(body, { headers: { ...baseHeaders(maxAge), ...headers } });
+    { maxAge = DEFAULT_MAX_AGE, headers = {}, access }: RespondOptions = {},
+) => NextResponse.json(body, { headers: { ...baseHeaders(maxAge), ...accessHeaders(access), ...headers } });
 
 /** Коллекция — всегда в одном конверте, чтобы клиент не гадал, где считать total. */
 export const respondCollection = <T>(
     items: T[],
     meta: CollectionMeta,
-    options?: { maxAge?: number; headers?: Record<string, string> },
+    options?: RespondOptions,
 ) => respond({ items, ...meta }, options);
 
 export type ErrorCode =
     | "not_found"
     | "bad_request"
+    | "unauthorized"
+    | "forbidden"
     | "rate_limited"
+    | "quota_exceeded"
     | "internal";
 
 const STATUS: Record<ErrorCode, number> = {
     not_found: 404,
     bad_request: 400,
+    // Ключа нет, он не признан, отозван или просрочен.
+    unauthorized: 401,
+    // Ключ настоящий, но этого раздела не даёт.
+    forbidden: 403,
     rate_limited: 429,
+    // Суточная квота — тоже «слишком много», отсюда общий с частотой код состояния.
+    quota_exceeded: 429,
     internal: 500,
 };
 

@@ -1,6 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
 import { textSummary } from "@/lib/api/v2/serialize";
 import { MIN_QUERY_LENGTH } from "@/app/search/api";
@@ -15,9 +15,10 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-    // Поиск дороже прочих ручек, поэтому и счётчик у него свой.
-    const limited = limitOrFail(request, "api-v2-search");
-    if (limited) return limited;
+    // Поиск идёт по всему корпусу и стоит на порядок дороже прочих ручек — поэтому
+    // он выделен в отдельный раздел доступа: без ключа сюда не пускают вовсе.
+    const access = await authorize(request, "search");
+    if (access.denied) return access.denied;
 
     const url = new URL(request.url);
     const { limit, offset } = readPage(url);
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
             snippet: snippetFor(content, query),
         }));
 
-        return respondCollection(items, { total, limit, offset }, { maxAge: 300 });
+        return respondCollection(items, { total, limit, offset }, { maxAge: 300, access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Поиск не удался");

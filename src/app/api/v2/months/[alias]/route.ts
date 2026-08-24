@@ -1,5 +1,5 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { getItem } from "@/app/months/[id]/api";
 import { month } from "@/lib/api/v2/serialize";
 
@@ -11,8 +11,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request, { params }: { params: { alias: string } }) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "calendar");
+    if (access.denied) return access.denied;
 
     try {
         const [doc, error] = await getItem(params.alias);
@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: { params: { alias: strin
                 name: day.name ?? "",
                 monthIndex: day.monthIndex ?? null,
             })),
-        });
+        }, { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить месяц");

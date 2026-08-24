@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
+import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 import { cached, CacheTag } from "@/lib/cache";
 
 // Описание сервиса: с чего начинает знакомство любой клиент. Здесь же — условия
@@ -27,8 +28,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "texts");
+    if (access.denied) return access.denied;
 
     try {
         return respond({
@@ -56,9 +57,17 @@ export async function GET(request: Request) {
                 signs: "/api/v2/signs",
                 documentation: "https://typikon.su/api",
             },
+            // Первое, что хочет знать клиент после «что тут есть» — «сколько мне можно».
+            access: {
+                anonymous: `${ANONYMOUS_ALLOWANCE.limit} запросов в час с адреса, без поиска`,
+                withKey: `${TIERS.free.limit} запросов в минуту и ${TIERS.free.perDay} в сутки, все разделы`,
+                header: "Authorization: Bearer {ключ}",
+                obtain: "https://typikon.su/profile",
+                documentation: "https://typikon.su/api",
+            },
             stability:
                 "В версии 2 поля только добавляются. Несовместимые изменения выйдут отдельной версией.",
-        });
+        }, { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось собрать описание сервиса");

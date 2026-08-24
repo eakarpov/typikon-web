@@ -1,6 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { textSummary } from "@/lib/api/v2/serialize";
 import { cached, CacheTag } from "@/lib/cache";
 
@@ -33,8 +33,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "calendar");
+    if (access.denied) return access.denied;
 
     if (!/^\d+$/.test(params.id)) {
         return fail("bad_request", "Идентификатор святого — число из святцев dneslov.org");
@@ -52,7 +52,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             dneslovUrl: `https://dneslov.org/api/v0/memories/${params.id}.json`,
             texts: about.map(textSummary),
             mentions: mentions.map(textSummary),
-        });
+        }, { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить тексты святого");

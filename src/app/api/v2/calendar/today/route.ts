@@ -1,5 +1,5 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { calcDayCached, calendarResponse, readLang } from "@/lib/api/v2/calendar";
 import { formatDateISO } from "@/utils/dates";
 
@@ -12,8 +12,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "calendar");
+    if (access.denied) return access.denied;
 
     const today = formatDateISO(new Date());
 
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
             return fail("not_found", `На ${today} чтений не найдено`);
         }
 
-        return respond(calendarResponse(today, result), { maxAge: 300 });
+        return respond(calendarResponse(today, result), { maxAge: 300, access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось рассчитать день");

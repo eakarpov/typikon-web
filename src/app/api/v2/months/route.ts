@@ -1,6 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { month } from "@/lib/api/v2/serialize";
 
 // Месяцы неподвижного круга. Их всегда двенадцать, поэтому без постраничности.
@@ -11,8 +11,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "calendar");
+    if (access.denied) return access.denied;
 
     try {
         const client = await clientPromise;
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
             .find({}, { projection: { alias: 1, value: 1, updatedAt: 1 } })
             .sort({ value: 1 }).toArray();
 
-        return respondCollection(items.map(month), { total: items.length, limit: items.length, offset: 0 });
+        return respondCollection(items.map(month), { total: items.length, limit: items.length, offset: 0 }, { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить месяцы");

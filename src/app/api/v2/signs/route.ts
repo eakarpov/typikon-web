@@ -1,6 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
 import { sign } from "@/lib/api/v2/serialize";
 
@@ -12,8 +12,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "calendar");
+    if (access.denied) return access.denied;
 
     const url = new URL(request.url);
     const { limit, offset } = readPage(url);
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
             signs.countDocuments(filter),
         ]);
 
-        return respondCollection(items.map(sign), { total, limit, offset });
+        return respondCollection(items.map(sign), { total, limit, offset }, { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить знаки");

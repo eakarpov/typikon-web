@@ -1,5 +1,6 @@
 import { LICENSE_ID, LICENSE_URL } from "@/lib/api/v2/http";
 import { DEFAULT_LIMIT, MAX_LIMIT } from "@/lib/api/v2/params";
+import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 
 // Машинное описание API. Держим его рядом с кодом, а не отдельным файлом в репозитории:
 // пределы постраничности и адрес лицензии берутся из тех же констант, что и в ручках,
@@ -50,11 +51,18 @@ export const openapi = () => ({
             "Корпус доступен по лицензии CC BY 4.0 — пользуйтесь свободно, указывая источник. " +
             "Оригиналы памятников находятся в общественном достоянии. Сканы, переводы и данные " +
             "святцев принадлежат их владельцам.\n\n" +
-            "Ограничение частоты: 120 запросов в минуту с адреса, поиск считается отдельно.",
+            `Доступ отмерен. Без ключа — ${ANONYMOUS_ALLOWANCE.limit} запросов в час с адреса и без ` +
+            "поиска: этого хватает попробовать. С ключом — " +
+            `${TIERS.free.limit} запросов в минуту и ${TIERS.free.perDay} в сутки, включая поиск. ` +
+            "Ключ заводится в профиле на typikon.su и передаётся заголовком Authorization: Bearer. " +
+            "Остаток виден в заголовках X-RateLimit-Remaining и X-Quota-Remaining.",
         license: { name: LICENSE_ID, url: LICENSE_URL },
         contact: { url: "https://typikon.su/contact" },
     },
     servers: [{ url: "https://typikon.su", description: "Основной сервер" }],
+    // Ключ не обязателен: без него ручки тоже отвечают, только скупее и без поиска.
+    // Поэтому security на уровне документа, а не в каждой операции.
+    security: [{ apiKey: [] }, {}],
     tags: [
         { name: "Календарь", description: "Что читается в конкретный день" },
         { name: "Тексты", description: "Корпус текстов и книги" },
@@ -214,6 +222,15 @@ export const openapi = () => ({
         },
     },
     components: {
+        securitySchemes: {
+            apiKey: {
+                type: "http",
+                scheme: "bearer",
+                description:
+                    "Ключ доступа, выпускается в профиле на typikon.su. Даёт больший лимит и " +
+                    "открывает поиск. Запасной вид — заголовок X-Api-Key с тем же значением.",
+            },
+        },
         schemas: {
             Error: {
                 type: "object",

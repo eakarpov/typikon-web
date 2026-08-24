@@ -1,7 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { textDetail } from "@/lib/api/v2/serialize";
 import { TextContentType } from "@/utils/texts";
 import { sortVerses } from "@/utils/verses";
@@ -55,14 +55,14 @@ const randomText = async () => {
 };
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "texts");
+    if (access.denied) return access.denied;
 
     try {
         if (params.id === "random") {
             const doc = await randomText();
             if (!doc) return fail("not_found", "Не нашлось ни одного готового текста");
-            return respond(textDetail(doc), { maxAge: 0, headers: { "Cache-Control": "no-store" } });
+            return respond(textDetail(doc), { maxAge: 0, headers: { "Cache-Control": "no-store" }, access });
         }
 
         const doc = await loadText(params.id);
@@ -71,7 +71,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             return fail("not_found", `Текст «${params.id}» не найден`);
         }
 
-        return respond(textDetail(doc));
+        return respond(textDetail(doc), { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить текст");

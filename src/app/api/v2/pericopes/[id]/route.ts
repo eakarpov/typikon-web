@@ -1,7 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
-import { limitOrFail } from "@/lib/api/v2/rateLimit";
+import { authorize } from "@/lib/api/v2/access";
 import { pericope, verse } from "@/lib/api/v2/serialize";
 import { resolvePericopeVersesWithFallback } from "@/lib/pericopes";
 import { readLang } from "@/lib/api/v2/calendar";
@@ -29,8 +29,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-    const limited = limitOrFail(request);
-    if (limited) return limited;
+    const access = await authorize(request, "pericopes");
+    if (access.denied) return access.denied;
 
     if (!ObjectId.isValid(params.id)) {
         return fail("bad_request", "Идентификатор зачала указан неверно");
@@ -50,7 +50,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             textAlias: resolved?.textAlias ?? null,
             resolvedLang: resolved?.resolvedLang ?? null,
             verses: (resolved?.verses ?? []).map(verse),
-        });
+        }, { access });
     } catch (e) {
         console.error(e);
         return fail("internal", "Не удалось получить зачало");
