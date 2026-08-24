@@ -11,16 +11,28 @@ import AuthorizeChecker from "@/app/AuthorizeChecker";
 import Script from "next/script";
 import TelegramLoginRemover from "@/app/TelegramLoginRemover";
 import SessionLoader from "@/app/SessionLoader";
+import ServiceWorkerRegistrar from "@/app/ServiceWorkerRegistrar";
 
 export const viewport: Viewport = {
     initialScale: 1,
-    width: 'device-width'
+    width: 'device-width',
+    // Цвет строки состояния в установленном приложении — тот же, что в манифесте.
+    themeColor: '#7c2d12',
 }
 
 export const metadata: Metadata = {
     title: "Уставные чтения",
     description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',
     keywords: "уставные чтения, устав, типикон, богослужебные указания, триодь, минея, пролог, златоуст, торжественник, учительное евангелие, толковый апостол",
+    // iOS манифест не читает — иконку домашнего экрана берёт отсюда.
+    appleWebApp: {
+        capable: true,
+        title: "Чтения",
+        statusBarStyle: "default",
+    },
+    icons: {
+        apple: "/icons/icon-180.png",
+    },
     openGraph: {
         title: 'Уставные чтения',
         description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',
@@ -47,6 +59,7 @@ export default function RootLayout({
               </div>
           </noscript>
           <CountMeta />
+          <ServiceWorkerRegistrar />
           <InitiateUserSettings />
           <TelegramLoginRemover />
           <StoreProvider>
