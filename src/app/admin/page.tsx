@@ -74,6 +74,9 @@ const Admin = () => {
                     <Link href="/admin/channel-posts">
                         Посты в Telegram/VK
                     </Link>
+                    <Link href="/admin/mentions">
+                        Упоминания святых в чтениях
+                    </Link>
                 </div>
             </div>
         </div>

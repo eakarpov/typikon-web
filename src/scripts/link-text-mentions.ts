@@ -28,6 +28,7 @@
 // Запуск:
 //   npx tsx src/scripts/link-text-mentions.ts --fetch-names   # выкачать имена с dneslov (долго)
 //   npx tsx src/scripts/link-text-mentions.ts --sample 20     # отчёт с примерами в контексте
+//   npx tsx src/scripts/link-text-mentions.ts --save          # выложить кандидатов на ревью
 import "@/scripts/lib/env";
 import fs from "node:fs";
 import path from "node:path";
@@ -36,6 +37,8 @@ import { normalizeChurchSlavonic } from "@/scripts/lib/textNormalize";
 import { getDneslovMemory } from "@/scripts/lib/dneslov";
 
 const APPLY = process.argv.includes("--apply");
+// Складывает кандидатов в mentionCandidates под ревью в /admin/mentions.
+const SAVE = process.argv.includes("--save");
 // Разбор собственных названий даёт имя автора чаще, чем имя святого дня ("Слово Иоанна
 // Златоустаго" в память Прокла), и загрязняет словарь. По умолчанию выключен.
 const TITLES_FALLBACK = process.argv.includes("--titles-fallback");
@@ -521,8 +524,44 @@ async function main() {
         show("Слабые", weak);
     }
 
+    if (SAVE) {
+        const collection = db.collection("mentionCandidates");
+        // Пары, которые уже смотрели, повторно на ревью не выкладываем — иначе каждый
+        // прогон возвращает отклонённое обратно в очередь.
+        const seen = new Set(
+            (await collection.find({}, { projection: { textId: 1, dneslovId: 1 } }).toArray())
+                .map((c) => `${c.textId}:${c.dneslovId}`),
+        );
+        const batchId = new Date().toISOString().slice(0, 19);
+        const fresh = strong.filter((h) => !seen.has(`${h.textId}:${h.dneslovId}`));
+
+        if (!fresh.length) {
+            console.log(`\nНовых кандидатов нет — все ${strong.length} уже на ревью или разобраны.`);
+            process.exit(0);
+        }
+
+        const { ObjectId: OID } = await import("mongodb");
+        await collection.insertMany(fresh.map((h) => ({
+            batchId,
+            textId: new OID(h.textId),
+            textName: h.textName,
+            textAlias: h.alias ?? null,
+            dneslovId: h.dneslovId,
+            saintTitle: saints.get(h.dneslovId)?.titles[0] ?? "",
+            word: h.word,
+            context: h.context,
+            tier: h.tier,
+            status: "pending",
+            createdAt: new Date(),
+        })));
+
+        console.log(`\nВыложено на ревью: ${fresh.length} кандидатов, партия ${batchId}`);
+        console.log(`Дальше — /admin/mentions`);
+        process.exit(0);
+    }
+
     if (!APPLY) {
-        console.log(`\nНичего не записано. Для записи уверенного яруса: --apply`);
+        console.log(`\nНичего не записано. Кандидаты на ревью: --save`);
         process.exit(0);
     }
 
