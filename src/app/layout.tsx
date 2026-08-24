@@ -7,11 +7,10 @@ import CommonMeta from "@/app/components/CommonMeta";
 import {myFont} from "@/utils/font";
 import NavMenu from "@/app/NavMenu";
 import StoreProvider from "@/app/StoreProvider";
-import {verifySession} from "@/lib/authorize/authorization";
 import AuthorizeChecker from "@/app/AuthorizeChecker";
-import {getItem} from "@/app/profile/api";
 import Script from "next/script";
 import TelegramLoginRemover from "@/app/TelegramLoginRemover";
+import SessionLoader from "@/app/SessionLoader";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -30,19 +29,16 @@ export const metadata: Metadata = {
     },
 }
 
-export default async function RootLayout({
+// Layout сознательно не читает cookies и не ходит в базу: любое обращение к
+// сессии здесь делает динамическим рендер всех страниц сайта. Сессию забирает
+// SessionLoader отдельным запросом уже на клиенте.
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-    const session = await verifySession();
-    let item;
-    if (session.isAuth) {
-       [item] = await getItem(session.userId as string);
-    }
-    // в корне приложения проверять авторизованы ли мы где-то, если да, подтягивать инфу в меню и разрешения давать на фичи
     return (
-    <html lang="en">
+    <html lang="ru">
       <body>
           <CommonMeta />
           <noscript>
@@ -55,6 +51,7 @@ export default async function RootLayout({
           <TelegramLoginRemover />
           <StoreProvider>
               <>
+                  <SessionLoader />
                   <AuthorizeChecker
                       vkApp={parseInt(process.env.VK_APP!)}
                       codeVerifier={process.env.CODE_VERIFIER!}
@@ -65,8 +62,6 @@ export default async function RootLayout({
                               showButton={process.env.SHOW_LOGIN_BUTTON}
                               showAdmin={process.env.SHOW_ADMIN}
                               isDevelopment={process.env.NODE_ENV === "development"}
-                              session={session}
-                              user={item}
                           />
                       </div>
                   </nav>

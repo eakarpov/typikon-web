@@ -189,8 +189,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 foreign key (predessorId) references rules(id)
             )`);
 
-            await db.close();
-
             res.status(200).end();
         } catch (error) {
             console.log(error);

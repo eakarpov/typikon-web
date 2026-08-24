@@ -13,8 +13,10 @@ import ContentToday from "@/app/ContentToday";
 import Image from "next/image";
 import Link from "next/link";
 import {getTodayDate} from "@/utils/dates";
-import {verifySession} from "@/lib/authorize/authorization";
-import SessionChecker from "@/app/SessionChecker";
+
+// Главная показывает дату церковного дня и последние обновлённые тексты —
+// поэтому кэш на 5 минут, а не на час.
+export const revalidate = 300;
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,13 +25,9 @@ export default function Home() {
     const itemsData = getLastItems();
     const textCount = getCount();
     setMeta();
-    const session = verifySession();
 
     return (
       <div>
-          <Suspense fallback={null}>
-              <SessionChecker session={session} />
-          </Suspense>
           <div className="flex flex-col pt-2 md:flex-row">
               <div className="md:w-1/4">
                 <div className={myFont.variable}>

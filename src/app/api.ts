@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {cachedTuple, CacheTag} from "@/lib/cache";
 
 export const getRandomProlog = async () => {
     try {
@@ -24,7 +25,7 @@ export const getRandomProlog = async () => {
     }
 }
 
-export const getLastItems = async (): Promise<[any, any]> => {
+const loadLastItems = async (): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -50,7 +51,7 @@ export const getLastItems = async (): Promise<[any, any]> => {
     }
 };
 
-export const getCount = async (): Promise<[any, any]> => {
+const loadCount = async (): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -66,6 +67,10 @@ export const getCount = async (): Promise<[any, any]> => {
         return [null, e];
     }
 };
+
+// Обе выборки нужны только главной, которая и так лежит в ISR-кэше на 5 минут.
+export const getLastItems = cachedTuple(loadLastItems, ["home-last-items"], [CacheTag.TEXTS], 300);
+export const getCount = cachedTuple(loadCount, ["home-text-count"], [CacheTag.TEXTS], 300);
 
 export const writeMetaData = async (obj: any): Promise<any> => {
     try {

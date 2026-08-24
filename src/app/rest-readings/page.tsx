@@ -4,6 +4,9 @@ import {Suspense} from "react";
 import Content from "@/app/rest-readings/Content";
 import {getItems} from "@/app/rest-readings/api";
 
+// Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
     title: "Чтения на год",
     description: "Уставные чтения вне триодных периодов Постной и Цветной Триодей.",

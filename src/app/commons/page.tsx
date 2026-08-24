@@ -4,6 +4,9 @@ import {Suspense} from "react";
 import Content from "@/app/commons/Content";
 import {getItems} from "@/app/commons/api";
 
+// Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
     title: "Общие службы",
     description: "Чтения общие по чину святого — используются при отсутствии собственных чтений дня.",

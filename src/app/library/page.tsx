@@ -6,6 +6,9 @@ import {Metadata} from "next";
 import {myFont} from "@/utils/font";
 import Link from "next/link";
 
+// Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
     title: "Библиотека текстов",
     description: 'Уставные чтения, объединенные в книги для полного прочтения.',
