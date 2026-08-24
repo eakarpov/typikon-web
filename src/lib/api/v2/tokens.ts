@@ -19,11 +19,11 @@ export const TOKENS_DB = "typikon-users";
 export const TOKENS_COLLECTION = "apiTokens";
 
 /** Разделы API, которые можно выдавать по отдельности. */
-export const SCOPES = ["texts", "calendar", "pericopes", "search"] as const;
+export const SCOPES = ["texts", "calendar", "pericopes", "news", "search"] as const;
 export type Scope = (typeof SCOPES)[number];
 
 /** Поиск идёт по 12 млн символов и стоит на порядок дороже прочего — его выдаём отдельно. */
-export const FREE_SCOPES: readonly Scope[] = ["texts", "calendar", "pericopes"];
+export const FREE_SCOPES: readonly Scope[] = ["texts", "calendar", "pericopes", "news"];
 export const ALL_SCOPES: readonly Scope[] = SCOPES;
 
 export type Tier = "free" | "app" | "partner";

@@ -67,6 +67,7 @@ export const openapi = () => ({
         { name: "Календарь", description: "Что читается в конкретный день" },
         { name: "Тексты", description: "Корпус текстов и книги" },
         { name: "Справочники", description: "Зачала, знаки, месяцы, седмицы, святые" },
+        { name: "Новости", description: "Что нового в корпусе и на сайте" },
     ],
     paths: {
         "/api/v2": {
@@ -209,6 +210,23 @@ export const openapi = () => ({
                     ...pageParams,
                 ],
                 responses: { "200": ok("#/components/schemas/SignList"), "400": errorResponse("Неверный месяц или число") },
+            },
+        },
+        "/api/v2/news": {
+            get: {
+                tags: ["Новости"],
+                summary: "Новости сайта",
+                description: "Что пополнилось в корпусе и что изменилось. Тело записи — markdown.",
+                parameters: pageParams,
+                responses: { "200": ok("#/components/schemas/NewsList") },
+            },
+        },
+        "/api/v2/news/{alias}": {
+            get: {
+                tags: ["Новости"],
+                summary: "Отдельная новость",
+                parameters: [{ name: "alias", in: "path", required: true, schema: { type: "string" } }],
+                responses: { "200": ok("#/components/schemas/News"), "404": errorResponse("Новость не найдена") },
             },
         },
         "/api/v2/saints/{id}": {
@@ -434,6 +452,21 @@ export const openapi = () => ({
                     mentions: { type: "array", items: { $ref: "#/components/schemas/Text" }, description: "Тексты, где он упоминается" },
                 },
             },
+            News: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    alias: { type: "string", description: "Постоянный адрес: /news/{alias}" },
+                    title: { type: "string" },
+                    summary: { type: "string", description: "Короткое изложение; оно же уходит в RSS" },
+                    body: { type: "string", description: "Текст в markdown" },
+                    type: { type: "string", enum: ["update", "announcement"] },
+                    version: { type: ["string", "null"], description: "Версия сайта или приложения, если новость про выпуск" },
+                    publishedAt: { type: "string", format: "date-time" },
+                    updatedAt: { type: "string", format: "date-time" },
+                },
+            },
+            NewsList: collection("#/components/schemas/News"),
             TextList: collection("#/components/schemas/Text"),
             SearchList: collection("#/components/schemas/SearchResult"),
             BookList: collection("#/components/schemas/Book"),

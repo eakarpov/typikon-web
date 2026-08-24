@@ -118,6 +118,8 @@ test("без ключа поиск не выдаётся", () => {
     // по которой анонимная порция его не включает.
     assert.ok(!ANONYMOUS_ALLOWANCE.scopes.includes("search"));
     assert.ok(ANONYMOUS_ALLOWANCE.scopes.includes("texts"));
+    // Новости — объявления сайта; закрывать их ключом было бы странно.
+    assert.ok(ANONYMOUS_ALLOWANCE.scopes.includes("news"));
 });
 
 test("свой запрос узнаётся по заголовку браузера", () => {

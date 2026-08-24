@@ -43,3 +43,5 @@ export const revalidateTags = async (tags: string[]) => {
 export const revalidateContent = () => revalidateTags([
     CacheTag.TEXTS, CacheTag.DAYS, CacheTag.WEEKS, CacheTag.MONTHS, CacheTag.BOOKS, CacheTag.SIGNS,
 ]);
+
+export const revalidateNews = () => revalidateTags([CacheTag.NEWS]);

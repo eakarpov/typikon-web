@@ -77,6 +77,9 @@ const Admin = () => {
                     <Link href="/admin/mentions">
                         Упоминания святых в чтениях
                     </Link>
+                    <Link href="/admin/news">
+                        Новости
+                    </Link>
                     <Link href="/admin/api-tokens">
                         Ключи API
                     </Link>

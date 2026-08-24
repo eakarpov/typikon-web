@@ -8,6 +8,8 @@
 // Не отдаём никогда: adminInfo (заметки редактора), searchName/searchContent
 // (служебные копии текста), textingPriority (очередь отекстовки), newUi, fileId.
 
+import type { NewsPostDTO } from "@/types/dto/news";
+
 const id = (value: any): string | null =>
     value == null ? null : (typeof value === "string" ? value : value.toString());
 
@@ -168,4 +170,20 @@ export const memory = (item: any) => ({
     name: item.name ?? "",
     sign: item.sign ?? null,
     signConditional: Boolean(item.signConditional),
+});
+
+/**
+ * Новость наружу. Черновиков сюда не попадает — выборка их не отдаёт, — поэтому
+ * состояние в ответе не нужно: всё, что видно снаружи, опубликовано.
+ */
+export const newsItem = (post: NewsPostDTO) => ({
+    id: post.id,
+    alias: post.alias,
+    title: post.title,
+    summary: post.summary,
+    body: post.body,
+    type: post.type,
+    version: post.version,
+    publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt,
 });

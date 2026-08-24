@@ -55,6 +55,7 @@ export async function GET(request: Request) {
                 search: "/api/v2/search?q=",
                 pericopes: "/api/v2/pericopes",
                 signs: "/api/v2/signs",
+                news: "/api/v2/news",
                 documentation: "https://typikon.su/api",
             },
             // Первое, что хочет знать клиент после «что тут есть» — «сколько мне можно».

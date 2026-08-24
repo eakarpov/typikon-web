@@ -75,6 +75,12 @@ const SPECS: Spec[] = [
     { db: "typikon", collection: "channelPosts", key: { status: 1, scheduledAt: 1 },
       why: "публикатор выбирает готовые посты с наступившим временем" },
 
+    // --- typikon-news: новости об обновлениях
+    { db: "typikon-news", collection: "posts", key: { alias: 1 }, options: { unique: true },
+      why: "/news/{alias} и /api/v2/news/{alias}; уникальность разводит новости с похожими заголовками" },
+    { db: "typikon-news", collection: "posts", key: { status: 1, publishedAt: -1 },
+      why: "лента, RSS и точка «новое» в меню — все три берут последние выложенные" },
+
     // --- typikon-users: ключи публичного API
     { db: "typikon-users", collection: "apiTokens", key: { hash: 1 }, options: { unique: true },
       why: "проверка ключа на каждом запросе к /api/v2; уникальность — страховка от двойного выпуска" },

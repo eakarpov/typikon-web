@@ -92,7 +92,7 @@ const ApiDocs = () => (
                 <li>
                     <b>С ключом</b> — 30 запросов в минуту и 10 000 в сутки, все разделы,
                     включая поиск. Ключ выпускается в{" "}
-                    <Link href="/profile" className="text-amber-800 underline underline-offset-4">
+                    <Link href="/profile#tokens" className="text-amber-800 underline underline-offset-4">
                         профиле
                     </Link>{" "}
                     после входа на сайт; их может быть до пяти.
@@ -189,7 +189,12 @@ const ApiDocs = () => (
             <Endpoint path="/api/v2/weeks">
                 Седмицы Триоди, <code>cycle=triodion|penticostarion</code>.
             </Endpoint>
-            <Endpoint path="/api/v2/saints/{id}">
+            <Endpoint path="/api/v2/news">
+                Новости сайта: что пополнилось в корпусе и что изменилось. Тело записи —
+                markdown. Отдельная новость — <code>/api/v2/news/{"{alias}"}</code>,
+                для читалок — <a href="/rss.xml" className="text-amber-800 underline underline-offset-4">RSS</a>.
+            </Endpoint>
+                        <Endpoint path="/api/v2/saints/{id}">
                 Тексты памяти святого и тексты, где он упоминается. Идентификатор — из
                 святцев dneslov.org.
             </Endpoint>

@@ -14,6 +14,7 @@ import {useCallback, useEffect, useState} from "react";
 import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
 import {WithRights} from "@/lib/admin/client";
+import NewsLink from "@/app/NewsLink";
 import {BIBLE_LANGUAGE_OPTIONS, DEFAULT_BIBLE_LANGUAGE, getClientBibleLanguage, setClientBibleLanguage} from "@/utils/bibleLanguage";
 
 const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
@@ -97,6 +98,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 >
                     Отекстовка
                 </Link>
+                <NewsLink />
                 <WithRights
                     session={isAuth}
                     user={userStore}

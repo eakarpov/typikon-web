@@ -23,6 +23,7 @@
     "db:optimize-logs": "tsx src/scripts/optimize-meta-logs.ts",
     "mentions:find": "tsx src/scripts/link-text-mentions.ts",
     "api:token": "tsx src/scripts/api-token.ts",
+    "news:import-about": "tsx src/scripts/import-about-news.ts",
     "nobles:import-wikidata": "tsx src/scripts/import-nobles-wikidata.ts",
     "nobles:import-wikidata-rules": "tsx src/scripts/import-nobles-wikidata-rules.ts",
     "nobles:link-dneslov": "tsx src/scripts/link-nobles-dneslov.ts",
