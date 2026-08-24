@@ -15,9 +15,23 @@ export const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
     const diffDaysPrevious = Math.ceil(diffTimePrevious / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-        if (diffDays >= -49) { // Great Lention (exclude preparational weeks)
+        if (diffDays >= -48) { // Великий пост: с Чистого понедельника (-48) по Страстную субботу (-1)
             const realVal = Math.floor((49 + diffDays) % 7);
             return { week: Math.floor((49 + diffDays + 6) / 7), day: !realVal ? 7 : realVal, type: "Fast" };
+        } else if (diffDays >= -70) {
+            // Подготовительный период Триоди: от Недели о мытаре и фарисее (ровно за 70 дней
+            // до Пасхи) до Недели сыропустной (-49). Раскладка недель — та же, что в базе
+            // после fix-triodion-preparatory-weeks:
+            //   0 — Неделя о мытаре и фарисее (одна),
+            //   1 — 34-я седмица по Пятидесятнице + Неделя о блудном сыне,
+            //   2 — мясопустная седмица, 3 — сырная.
+            // Дни: понедельник 1 … суббота 6, воскресенье 7 — как в седмицах поста.
+            const offset = diffDays + 70;
+            if (offset === 0) {
+                return { week: 0, day: 7, type: "Triodion" };
+            }
+            const week = Math.ceil(offset / 7);
+            return { week, day: offset - 7 * (week - 1), type: "Triodion" };
         } else { // Previous Penticostarion
             const week = Math.floor((diffDaysPrevious - 50) / 7) + 1;
             const day = Math.floor((diffDaysPrevious - 50) % 7) + 1;

@@ -58,6 +58,13 @@ const loadTriodionWeeks = async (): Promise<[any, any]> => {
                 },
             ])
             .toArray();
+
+        // Порядок задаём явно, а не полагаемся на порядок вставки: подготовительный период
+        // (Triodion 0–3) идёт перед Великим постом (Fast 1–7), а 34-я седмица заведена
+        // позже остальных и в естественном порядке оказалась бы в конце списка.
+        const rank = (week: any) => (week.type === "Triodion" ? 0 : 1) * 100 + (week.value ?? 0);
+        weeks.sort((a, b) => rank(a) - rank(b));
+
         return [weeks, null];
     } catch (e) {
         console.error(e);
