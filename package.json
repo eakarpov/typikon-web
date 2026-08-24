@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "find src -name '*.test.ts' -print0 | xargs -0 node --import tsx --test",
     "release": "bash release.sh",
     "release:db": "bash release-db.sh",
     "release:common": "npm run release && npm run release:db",

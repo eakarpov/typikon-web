@@ -1,0 +1,29 @@
+name: CI
+
+# Гоняем только то, что не требует базы: тесты — на чистых функциях, линтер — на коде.
+# `next build` сюда сознательно не добавлен: сборка пререндерит карту сайта и календарную
+# ленту, а для этого нужен доступ к Mongo, которого у CI нет. Сборка проверяется при
+# выкладке (см. rebuild-remote.sh).
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Та же версия, что на сервере (см. PATH в typikon-web.service).
+          node-version: '20'
+
+      # Не npm ci: package-lock.json намеренно не в репозитории (.gitignore),
+      # так что ставим по package.json.
+      - run: npm install --no-audit --no-fund
+
+      - run: npm test
+
+      - run: npm run lint

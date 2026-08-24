@@ -1,0 +1,87 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { buildSearchFields, normalizeQuery, snippetFor } from "@/lib/search";
+import { normalizeChurchSlavonic } from "@/utils/churchSlavonic";
+
+test("ударение внутри слова снимается", () => {
+    // Ради этого поиск и переписан: «стра́жи» — это с,т,р,а,U+0301,ж,и,
+    // и без нормализации запрос «стражи» с ним не совпадает.
+    assert.equal(normalizeChurchSlavonic("На стра́жи мое́й ста́ну"), "на стражи моеи стану");
+});
+
+test("ЦС-графика приводится к гражданской", () => {
+    assert.equal(normalizeChurchSlavonic("і҆ѡа́нна"), "иоанна");
+    assert.equal(normalizeChurchSlavonic("вкра́тцѣ"), "вкратце");
+    assert.equal(normalizeChurchSlavonic("и҆гꙋ́мена"), "игумена");
+    assert.equal(normalizeChurchSlavonic("ст҃ы́ѧ"), "стыя");
+    assert.equal(normalizeChurchSlavonic("ѿ"), "от");
+});
+
+test("ё и регистр не мешают совпадению", () => {
+    assert.equal(normalizeQuery("Всё"), "все");
+    assert.equal(normalizeQuery("  ПаСха   Христова "), "пасха христова");
+});
+
+test("запрос и текст сходятся после нормализации", () => {
+    const fields = buildSearchFields({ name: "Ме́сяца ма́рта", content: "На стра́жи мое́й ста́ну" });
+    assert.ok(fields.searchContent.includes(normalizeQuery("стражи")));
+    assert.ok(fields.searchName.includes(normalizeQuery("месяца")));
+});
+
+test("в поисковые поля попадает не только тело", () => {
+    const fields = buildSearchFields({
+        name: "Название",
+        description: "Описание",
+        content: "Тело",
+        author: "Иоанн Златоуст",
+        poems: "Стихи",
+    });
+    assert.ok(fields.searchName.includes("описание"), "описание ищется вместе с названием");
+    assert.ok(fields.searchContent.includes("иоанн златоуст"), "автор ищется вместе с телом");
+    assert.ok(fields.searchContent.includes("стихи"));
+});
+
+test("фрагмент вырезается из исходного текста, а не из нормализованного", () => {
+    const content = "И҆ речѐ на стра́жи мое́й ста́ну, глаго́лет чу́дный Авваку́м, и аз с ним днесь";
+    const snippet = snippetFor(content, "стражи");
+
+    assert.ok(snippet, "фрагмент должен найтись");
+    // Ищем по нормализованному, показываем — как написано, с ударением.
+    assert.ok(snippet!.includes("стра́жи"), `в фрагменте нет исходного написания: ${snippet}`);
+});
+
+test("фрагмент находится и в тексте ЦС-графики", () => {
+    const content = "Житїѐ вкра́тцѣ а҆́ввы і҆ѡа́нна и҆гꙋ́мена ст҃ы́ѧ горы̀ сїна́йскїѧ";
+    const snippet = snippetFor(content, "игумена");
+
+    assert.ok(snippet, "фрагмент должен найтись по гражданскому написанию");
+    assert.ok(snippet!.includes("и҆гꙋ́мена"), `в фрагменте нет исходного написания: ${snippet}`);
+});
+
+test("фрагмента нет, если слова в тексте нет", () => {
+    assert.equal(snippetFor("Совсем другой текст", "аввакум"), null);
+    assert.equal(snippetFor("", "аввакум"), null);
+    assert.equal(snippetFor(null, "аввакум"), null);
+});
+
+test("короткие слова во фрагменте игнорируются", () => {
+    // Иначе предлог «на» вырезал бы фрагмент в первом попавшемся месте.
+    assert.equal(snippetFor("На стра́жи мое́й", "на"), null);
+});
+
+test("длинный текст обрезается с многоточиями", () => {
+    const content = `${"слово ".repeat(60)}Авваку́м${" слово".repeat(60)}`;
+    const snippet = snippetFor(content, "аввакум");
+
+    assert.ok(snippet);
+    assert.ok(snippet!.startsWith("…"), "слева должно быть многоточие");
+    assert.ok(snippet!.endsWith("…"), "справа должно быть многоточие");
+    assert.ok(snippet!.length < 260, `фрагмент слишком длинный: ${snippet!.length}`);
+});
+
+test("спецсимволы в запросе не роняют поиск фрагмента", () => {
+    // Запрос попадает в регулярку — если не экранировать, скобки и звёздочки бросают
+    // исключение и поиск падает целиком.
+    assert.doesNotThrow(() => snippetFor("текст", "(*+["));
+    assert.doesNotThrow(() => snippetFor("текст", "\\"));
+});
