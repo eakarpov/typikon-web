@@ -46,6 +46,46 @@ export interface RateLimitOptions {
     name?: string;
 }
 
+export interface RateVerdict {
+    allowed: boolean;
+    limit: number;
+    remaining: number;
+    retryAfter: number;
+}
+
+/**
+ * Ядро без привязки к виду запроса: pages-роутер и app-роутер устроены по-разному,
+ * а счётчик у них должен быть один.
+ */
+export const consume = (key: string, limit: number, windowSeconds: number): RateVerdict => {
+    const now = Date.now();
+    sweep(now);
+
+    const bucket = buckets.get(key);
+
+    if (!bucket || bucket.resetAt <= now) {
+        buckets.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
+        return { allowed: true, limit, remaining: limit - 1, retryAfter: 0 };
+    }
+
+    bucket.count++;
+
+    if (bucket.count > limit) {
+        return {
+            allowed: false,
+            limit,
+            remaining: 0,
+            retryAfter: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
+        };
+    }
+
+    return { allowed: true, limit, remaining: Math.max(0, limit - bucket.count), retryAfter: 0 };
+};
+
+/** Адрес клиента из обычного Request (app-роутер). */
+export const clientIpFromHeaders = (headers: Headers): string =>
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
 /**
  * Возвращает true, если запрос пропущен. Если лимит исчерпан — сам отвечает 429
  * и возвращает false: вызывающему остаётся просто выйти.
@@ -55,32 +95,17 @@ export const rateLimit = (
     res: NextApiResponse,
     { limit, windowSeconds, name = "default" }: RateLimitOptions,
 ): boolean => {
-    const now = Date.now();
-    sweep(now);
+    const verdict = consume(`${name}:${clientIp(req)}`, limit, windowSeconds);
 
-    const key = `${name}:${clientIp(req)}`;
-    const bucket = buckets.get(key);
+    res.setHeader("X-RateLimit-Limit", verdict.limit);
+    res.setHeader("X-RateLimit-Remaining", verdict.remaining);
 
-    if (!bucket || bucket.resetAt <= now) {
-        buckets.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
-        res.setHeader("X-RateLimit-Limit", limit);
-        res.setHeader("X-RateLimit-Remaining", limit - 1);
-        return true;
-    }
-
-    bucket.count++;
-
-    if (bucket.count > limit) {
-        const retryAfter = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000));
-        res.setHeader("Retry-After", retryAfter);
-        res.setHeader("X-RateLimit-Limit", limit);
-        res.setHeader("X-RateLimit-Remaining", 0);
-        res.status(429).json({ error: `Слишком часто. Повторите через ${retryAfter} с.` });
+    if (!verdict.allowed) {
+        res.setHeader("Retry-After", verdict.retryAfter);
+        res.status(429).json({ error: `Слишком часто. Повторите через ${verdict.retryAfter} с.` });
         return false;
     }
 
-    res.setHeader("X-RateLimit-Limit", limit);
-    res.setHeader("X-RateLimit-Remaining", Math.max(0, limit - bucket.count));
     return true;
 };
 
