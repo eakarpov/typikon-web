@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import DayPart from "@/app/admin/components/DayPart";
 import {TextType} from "@/utils/texts";
 import {ISaintPartItem, SaintPart} from "@/app/admin/components/SaintPart";
+import {revalidateDays} from "@/lib/admin/revalidate";
 
 interface IAdminEditor {
     value: any;
@@ -197,7 +198,8 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(body),
-        }).then(() => {
+        }).then(async () => {
+            await revalidateDays();
             setIsSaved(true);
         });
     };

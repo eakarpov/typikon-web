@@ -1,7 +1,8 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {cachedTuple, CacheTag} from "@/lib/cache";
 
-export const getItem = async (id: string) => {
+const loadMonth = async (id: string): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -58,3 +59,5 @@ export const getItem = async (id: string) => {
         return [null, {error: "Ошибка при загрузке данных"}];
     }
 };
+
+export const getItem = cachedTuple(loadMonth, ["month"], [CacheTag.MONTHS, CacheTag.DAYS]);

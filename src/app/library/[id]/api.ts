@@ -1,7 +1,8 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {cachedTuple, CacheTag} from "@/lib/cache";
 
-export const getItem = async (id: string): Promise<[any, any]> => {
+const loadBook = async (id: string): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -42,3 +43,5 @@ export const getItem = async (id: string): Promise<[any, any]> => {
         return [null, e];
     }
 };
+
+export const getItem = cachedTuple(loadBook, ["library-book"], [CacheTag.BOOKS, CacheTag.TEXTS]);

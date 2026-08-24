@@ -6,6 +6,14 @@ import {Metadata} from "next";
 import {myFont} from "@/utils/font";
 import {getMonthLabel} from "@/lib/common/date";
 
+// Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
+export const revalidate = 3600;
+
+// Пустой список + dynamicParams по умолчанию: страницы генерируются по первому
+// запросу и после этого лежат в ISR-кэше. Без generateStaticParams Next считает
+// сегмент полностью динамическим и не кэширует результат вовсе.
+export const generateStaticParams = async () => [] as { id: string }[];
+
 type Props = {
     params: { id: string }
 }

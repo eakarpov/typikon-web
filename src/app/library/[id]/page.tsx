@@ -5,6 +5,14 @@ import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 
+// Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
+export const revalidate = 3600;
+
+// Пустой список + dynamicParams по умолчанию: страницы книг генерируются по первому
+// запросу и после этого лежат в ISR-кэше. Без generateStaticParams Next считает
+// сегмент полностью динамическим и результат не кэширует вовсе.
+export const generateStaticParams = async () => [] as { id: string }[];
+
 type Props = {
     params: { id: string }
 }

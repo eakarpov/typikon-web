@@ -24,7 +24,7 @@ const Content = async ({ itemsPromise }: IContent) => {
                         {item.name}
                     </Link>
                     <span className="font-normal">
-                        &nbsp;(Обновлено {item.updatedAt.toLocaleDateString()})
+                        &nbsp;(Обновлено {new Date(item.updatedAt).toLocaleDateString("ru-RU")})
                     </span>
                 </div>
             ))}

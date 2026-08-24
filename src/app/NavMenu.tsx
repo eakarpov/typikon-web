@@ -16,27 +16,20 @@ import {AuthSlice} from "@/lib/store/auth";
 import {WithRights} from "@/lib/admin/client";
 import {BIBLE_LANGUAGE_OPTIONS, DEFAULT_BIBLE_LANGUAGE, getClientBibleLanguage, setClientBibleLanguage} from "@/utils/bibleLanguage";
 
-const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
+const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
     showAdmin?: string;
-    session: any|null;
     showButton?: string;
     isDevelopment?: boolean;
-    user?: any;
 }) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
     const router = useRouter();
 
     const isAuth = useAppSelector(state => state.auth.isAuthorized);
+    const isSessionResolved = useAppSelector(state => state.auth.isResolved);
     const userStore =  useAppSelector(state => state.auth.user);
 
     const [bibleLang, setBibleLang] = useState(DEFAULT_BIBLE_LANGUAGE);
-
-    useEffect(() => {
-        if (session) {
-            dispatch(AuthSlice.actions.SetAuthorized({ ...session, user }));
-        }
-    }, [session]);
 
     useEffect(() => {
         setBibleLang(getClientBibleLanguage());
@@ -173,7 +166,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment, session, user }: {
                         <UserCircleIcon className="w-4 h-4" />
                     </Link>
                 )}
-                {showButton === Boolean(true).toString() && (!isAuth ? (
+                {showButton === Boolean(true).toString() && isSessionResolved && (!isAuth ? (
                     <Link
                         href="/login"
                         title="Войти"

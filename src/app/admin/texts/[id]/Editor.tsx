@@ -16,6 +16,7 @@ import React, {KeyboardEventHandler, useCallback, useEffect, useMemo, useState} 
 import Markdown from "react-markdown";
 import Modal from "react-modal";
 import "./highlight.css";
+import {revalidateTexts} from "@/lib/admin/revalidate";
 
 interface IEditorVerse {
     id: string;
@@ -337,7 +338,10 @@ const AdminEditor = ({ value }: any) => {
             body: JSON.stringify(notes),
         });
 
-        Promise.allSettled([mainProcess, notesProcess]).then(() => {
+        Promise.allSettled([mainProcess, notesProcess]).then(async () => {
+            // Публичные страницы и выборки кэшируются — сбрасываем теги,
+            // иначе правка появилась бы на сайте только по таймауту.
+            await revalidateTexts();
             setIsSaved(true);
         });
     };
