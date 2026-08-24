@@ -338,7 +338,14 @@ const AdminEditor = ({ value }: any) => {
             body: JSON.stringify(notes),
         });
 
-        Promise.allSettled([mainProcess, notesProcess]).then(async () => {
+        Promise.allSettled([mainProcess, notesProcess]).then(async ([main]) => {
+            // Отказ сервера (например, занятый alias) раньше проглатывался, и правка
+            // выглядела сохранённой — показываем причину.
+            if (main.status === "fulfilled" && !main.value.ok) {
+                const body = await main.value.json().catch(() => null);
+                alert(body?.error || `Не сохранено: сервер ответил ${main.value.status}`);
+                return;
+            }
             // Публичные страницы и выборки кэшируются — сбрасываем теги,
             // иначе правка появилась бы на сайте только по таймауту.
             await revalidateTexts();

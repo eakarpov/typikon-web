@@ -198,7 +198,12 @@ const AdminEditor = ({ value, id }: IAdminEditor) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(body),
-        }).then(async () => {
+        }).then(async (res) => {
+            if (!res.ok) {
+                const body = await res.json().catch(() => null);
+                alert(body?.error || `Не сохранено: сервер ответил ${res.status}`);
+                return;
+            }
             await revalidateDays();
             setIsSaved(true);
         });

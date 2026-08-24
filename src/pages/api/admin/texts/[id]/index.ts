@@ -3,6 +3,16 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 
+// Один alias — один документ: адрес /texts/{alias} разрешается в один документ, и если
+// alias занят, второй становится недостижим. В базе такие пары уже есть (следствие
+// копирования при заведении), поэтому здесь хотя бы не даём заводить новые.
+const aliasTaken = async (db: any, collection: string, alias: string, id: string) => {
+    if (!alias) return false;
+    const other = await db.collection(collection).findOne({ alias, _id: { $ne: new ObjectId(id) } });
+    return Boolean(other);
+};
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
         res.status(404).end();
@@ -15,6 +25,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
+            if (await aliasTaken(db, "texts", data.alias, id)) {
+                res.status(409).json({ error: `Alias «${data.alias}» уже занят другим документом` });
+                return;
+            }
             await db
                 .collection("texts")
                 .updateOne(

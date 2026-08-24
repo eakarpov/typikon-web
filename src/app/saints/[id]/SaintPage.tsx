@@ -86,28 +86,44 @@ const SaintPage = ({ item, items, mentions, linkedNoble }: {item: any, items: an
                     ))}
                 </div>
             </div>
-            <div className="flex flex-row border rounded border-slate-300 p-1" style={{ width: "fit-content"}}>
-                <div
+            {/* Вкладки — кнопки, а не div с onClick: иначе переключить подборку нельзя ни
+                с клавиатуры, ни скринридером, а раздел как раз про доступность чтений. */}
+            <div
+                role="tablist"
+                aria-label="Подборки текстов святого"
+                className="flex flex-row border rounded border-slate-300 p-1"
+                style={{ width: "fit-content"}}
+            >
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={collectionType === COLLECTION_TYPE.BOOK}
                     className="pr-2 cursor-pointer font-serif border-r mr-1"
                     onClick={onPick(COLLECTION_TYPE.BOOK)}
                     style={{ fontWeight: collectionType === COLLECTION_TYPE.BOOK ? 'bold' : 'normal' }}
                 >
                     Тексты памяти
-                </div>
-                <div
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={collectionType === COLLECTION_TYPE.MENTION}
                     className="pr-2 cursor-pointer font-serif border-r mr-1"
                     onClick={onPick(COLLECTION_TYPE.MENTION)}
                     style={{ fontWeight: collectionType === COLLECTION_TYPE.MENTION ? 'bold' : 'normal' }}
                 >
                     Тексты с упоминанием памяти
-                </div>
-                <div
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={collectionType === COLLECTION_TYPE.AUTHOR}
                     className="pr-2 cursor-pointer font-serif"
                     onClick={onPick(COLLECTION_TYPE.AUTHOR)}
                     style={{ fontWeight: collectionType === COLLECTION_TYPE.AUTHOR ? 'bold' : 'normal' }}
                 >
                     Тексты авторства святого
-                </div>
+                </button>
             </div>
             <div className="mt-4">
                 {collection.map((item) => (
