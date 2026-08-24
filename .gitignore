@@ -35,6 +35,9 @@ db-download.*
 /meta-db/
 meta-db.*
 
+/news-db/
+news-db.*
+
 /csl-db/
 csl-db.*
 
