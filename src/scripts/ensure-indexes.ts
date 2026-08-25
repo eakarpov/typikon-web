@@ -109,6 +109,10 @@ const SPECS: Spec[] = [
       why: "очередь предложений в админке и счётчик принятых" },
     { db: "typikon-users", collection: "userNotes", key: { userId: 1, textId: 1 },
       why: "личные заметки пользователя к тексту" },
+    { db: "typikon-users", collection: "favourites", key: { userId: 1, textId: 1 }, options: { unique: true },
+      why: "избранное: уникальность держит повторное добавление идемпотентным, она же обслуживает удаление по паре" },
+    { db: "typikon-users", collection: "favourites", key: { userId: 1, createdAt: -1 },
+      why: "выдача избранного списком, новые сверху" },
 
     // --- typikon-meta
     { db: "typikon-meta", collection: "logs", key: { ipHash: 1, url: 1 },
