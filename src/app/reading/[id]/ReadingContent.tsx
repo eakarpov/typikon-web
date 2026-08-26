@@ -1,6 +1,7 @@
 'use client';
 import React, {memo, MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import reactStringReplace from "react-string-replace";
+import Markdown from "react-markdown";
 import Link from "next/link";
 import './reading.scss';
 import "./highlight.css";
@@ -323,12 +324,38 @@ const ReadingContent = ({ item }: { item: any }) => {
             reactStringReplace(
                 reactStringReplace(
                     reactStringReplace(
-                        text,
-                        /note_(\d+)#/g,
-                        (results) => <TextNote value={results} hash={hash} />
+                        reactStringReplace(
+                            reactStringReplace(
+                                reactStringReplace(
+                                    text,
+                                    /note_(\d+)#/g,
+                                    (results, i, offset) => <TextNote key={`note-${i}-${offset}`} value={results} hash={hash} />
+                                ),
+                                // Якорь правила: /reading/<раздел>#p-82 ведёт к 82-му правилу.
+                                /\{a\|(\d+)}/g,
+                                (rule, i, offset) => <span key={`rule-${i}-${offset}`} id={`p-${rule}`} className="scroll-mt-20" />,
+                            ),
+                            // Колонтитул печатного издания: привязка к листу оригинала.
+                            /\{p\|([^}]+)}/g,
+                            (page, i, offset) => (
+                                <span key={`page-${i}-${offset}`} className="text-xs text-stone-400 align-super select-none px-1">
+                                    {page}
+                                </span>
+                            ),
+                        ),
+                        // Ссылка на другой текст: так оглавление книги ведёт в её главы.
+                        /\{t\|([^}]+)}/g,
+                        (link, i, offset) => <Link
+                            key={`text-${i}-${offset}`}
+                            href={`/reading/${link.split('|')[0]}`}
+                            className="text-blue-800"
+                        >
+                            {link.split('|')[1]}
+                        </Link>,
                     ),
                     /\{st\|(.+)}/g,
-                    (results) => <Link
+                    (results, i, offset) => <Link
+                        key={`saint-${i}-${offset}`}
                         href={`/saints/${results.split('|')[0]}`}
                         className="text-blue-800"
                     >
@@ -336,7 +363,8 @@ const ReadingContent = ({ item }: { item: any }) => {
                     </Link>,
                 ),
                 /\{pl\|(.+)}/g,
-                (results) => <Link
+                (results, i, offset) => <Link
+                    key={`place-${i}-${offset}`}
                     href={`/places/${results.split('|')[0]}`}
                     className="text-blue-800"
                 >
@@ -344,11 +372,11 @@ const ReadingContent = ({ item }: { item: any }) => {
                 </Link>,
             ),
             /\{(\d+)}/g,
-            (footnote) => <FootnoteLinkNew footnotes={item.footnotes} value={footnote} />,
+            (footnote, i, offset) => <FootnoteLinkNew key={`fn-${i}-${offset}`} footnotes={item.footnotes} value={footnote} />,
         ),
         /\{k\|(.+)}/,
-        (red) => (
-            <span className="text-red-600">
+        (red, i, offset) => (
+            <span key={`red-${i}-${offset}`} className="text-red-600">
                 {red}
             </span>
         )
@@ -384,6 +412,38 @@ const ReadingContent = ({ item }: { item: any }) => {
             );
         });
     }, [onClickNoteHighlight]);
+
+    // Тексты с newUi размечены markdown: он отвечает за начертание (жирный,
+    // курсив), наши метки — за сноски, ссылки, колонтитулы и якоря. Поэтому
+    // строковые куски, которые markdown отдаёт внутрь своих узлов, прогоняются
+    // через ту же пару renderMarkup + подсветка заметок, что и обычные абзацы.
+    const renderInline = useCallback((children: React.ReactNode, notesForContainer: IUserNote[]) =>
+        React.Children.map(children, (child) =>
+            typeof child === "string"
+                ? highlightUserNotes(renderMarkup(child), notesForContainer)
+                : child,
+        ), [renderMarkup, highlightUserNotes]);
+
+    // Абзац остаётся нашим контейнером (в нём data-paragraph-index, по которому
+    // работают заметки и «сообщить об ошибке»), поэтому markdown-абзац рендерится
+    // фрагментом, без вложенного <p>.
+    // У церковнославянского Monomakh только одно начертание: ни жирного, ни курсива
+    // в шрифте нет, и браузер рисует их синтетически — почти неразличимо. Поэтому
+    // в церковнославянских текстах выделение делается рубрикацией, как в самих
+    // богослужебных книгах: заголовок киноварью, подрубрика — приглушённым цветом.
+    const markdownComponents = useCallback((notesForContainer: IUserNote[]) => ({
+        p: ({ children }: any) => <>{renderInline(children, notesForContainer)}</>,
+        strong: ({ children }: any) => (
+            <strong className={item.csSource ? "font-normal text-red-800" : "font-bold"}>
+                {renderInline(children, notesForContainer)}
+            </strong>
+        ),
+        em: ({ children }: any) => (
+            <em className={item.csSource ? "not-italic text-stone-500" : "italic"}>
+                {renderInline(children, notesForContainer)}
+            </em>
+        ),
+    }), [renderInline, item.csSource]);
 
     const versesByChapter = React.useMemo(() => {
         if (!item.verses) return [];
@@ -449,14 +509,22 @@ const ReadingContent = ({ item }: { item: any }) => {
         fetch(`/api/notes?id=${item.id}`).then((res) => res.json()).then((data) => {
             setNotes(data);
         });
-        const hash = typeof window !== "undefined" ? window.location.hash : "";
-        if (hash) {
-            const scrollToEl = document.getElementById(hash);
-            if (scrollToEl) {
-                scrollToEl.scrollIntoView(true);
-            }
-        }
     }, []);
+
+    // Прокрутка к якорю (#p-82 — правило, #note_3 — заметка). Браузер делает её до
+    // гидратации, а потом содержимое над якорем меняет высоту — догружается
+    // церковнославянский шрифт, приходят заметки. Поэтому доводим сами: на монтировании,
+    // после загрузки шрифтов и после каждого прихода данных.
+    const scrollToHash = useCallback(() => {
+        const target = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+        if (!target) return;
+        document.getElementById(target)?.scrollIntoView(true);
+    }, []);
+
+    useEffect(() => {
+        scrollToHash();
+        document.fonts?.ready.then(scrollToHash);
+    }, [scrollToHash, notes, userNotes]);
 
     useEffect(() => {
         Modal.setAppElement('#text-reading');
@@ -528,19 +596,26 @@ const ReadingContent = ({ item }: { item: any }) => {
                     const notesForParagraph = userNotes.filter((n) =>
                         n.selection.type === 'paragraph' && n.selection.paragraphIndex === paragraphIndex
                     );
+                    const Container = item.newUi ? "div" : "p";
                     return (
-                        <p
-                            key={paragraph}
+                        <Container
+                            key={`paragraph-${paragraphIndex}`}
                             data-report-container
                             data-paragraph-index={paragraphIndex}
                             className={`${
                                 item.csSource ? csFont.variable : ""
-                            } whitespace-pre-wrap text-justify text-lg ${
+                            } ${item.newUi ? "" : "whitespace-pre-wrap"} text-justify text-lg ${
                                 item.csSource ? "font-sans-serif" : "font-serif"
                             } first-letter:text-red-600`}
                         >
-                            {highlightUserNotes(renderMarkup(paragraph), notesForParagraph)}
-                        </p>
+                            {item.newUi ? (
+                                <Markdown components={markdownComponents(notesForParagraph)}>
+                                    {paragraph}
+                                </Markdown>
+                            ) : (
+                                highlightUserNotes(renderMarkup(paragraph), notesForParagraph)
+                            )}
+                        </Container>
                     );
                 })
             )}

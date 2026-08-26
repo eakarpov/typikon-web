@@ -135,7 +135,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     {item.footnotes?.map((footnote: string, index: number) => {
                         const { isBook } = isFootnoteBook(footnote);
                         return isBook ? null : (
-                            <p key={footnote} id={`footnotes-${index + 1}`}>
+                            <p key={`footnote-${index}`} id={`footnotes-${index + 1}`}>
                                 {index + 1} {footnote}
                             </p>
                         );
