@@ -171,6 +171,19 @@ const anchorRules = (chunk: Chunk) => {
     });
 };
 
+// Сноски у книги общие, но разделу нужны только его: иначе внизу каждой главы
+// печатается аппарат всей книги (в Ифике это 434 сноски на главу, из которых
+// используется пять-шесть). Ссылки при этом перенумеровываются подряд.
+const sliceFootnotes = (content: string, all: string[]) => {
+    const used = [...new Set([...content.matchAll(/\{(\d+)\}/g)].map((m) => Number(m[1])))]
+        .sort((a, b) => a - b);
+    const renumbered = new Map(used.map((old, i) => [old, i + 1]));
+    return {
+        content: content.replace(/\{(\d+)\}/g, (m, n) => `{${renumbered.get(Number(n)) ?? n}}`),
+        footnotes: used.map((n) => all[n - 1] ?? ""),
+    };
+};
+
 const titleOf = (raw: string) =>
     raw.replace(/\{\d+\}/g, "").replace(/\{p\|[^}]*\}/g, "").replace(/\s+/g, " ").replace(/[.,;:]+$/, "").trim();
 
@@ -288,20 +301,29 @@ async function main() {
             if (APPLY) {
                 await texts.updateOne(
                     { _id: doc._id },
-                    { $set: isRerun ? { content: whole } : { bookIndex, content: whole } },
+                    {
+                        $set: {
+                            ...(isRerun ? {} : { bookIndex }),
+                            content: whole,
+                            footnotes: sliceFootnotes(whole, doc.footnotes ?? []).footnotes,
+                        },
+                    },
                 );
             }
             continue;
         }
 
-        const planned: { alias: string; title: string; content: string; size: number; rules: number[] }[] = [];
+        const planned: {
+            alias: string; title: string; content: string; footnotes: string[]; size: number; rules: number[];
+        }[] = [];
         for (const chunk of chunks) {
-            const content = [chunk.title, ...chunk.paragraphs].join("\n\n");
+            const sliced = sliceFootnotes([chunk.title, ...chunk.paragraphs].join("\n\n"), doc.footnotes ?? []);
             planned.push({
                 alias: `${prefix}-${nextNumber++}`,
                 title: `${profile.titlePrefix ?? ""}${titleOf(chunk.title)}`,
-                content,
-                size: content.length,
+                content: sliced.content,
+                footnotes: sliced.footnotes,
+                size: sliced.content.length,
                 rules: chunk.rules,
             });
         }
@@ -342,7 +364,7 @@ async function main() {
                     ruLink: null,
                     bookId: doc.bookId,
                     bookIndex,
-                    footnotes: doc.footnotes ?? [],
+                    footnotes: p.footnotes,
                     // Признаки подачи наследуются от исходного текста: без newUi
                     // разделы показывали бы звёздочки markdown вместо выделения.
                     csSource: Boolean(doc.csSource),
@@ -366,6 +388,7 @@ async function main() {
                     $set: {
                         name: `${String(doc.name).replace(/ — оглавление$/, "")} — оглавление`,
                         content: toc,
+                        footnotes: sliceFootnotes(toc, doc.footnotes ?? []).footnotes,
                         bookIndex: bookIndex - planned.length,
                         updatedAt: new Date(),
                         ...buildSearchFields({ name: doc.name, content: toc } as any),
