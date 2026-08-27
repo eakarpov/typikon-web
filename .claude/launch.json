@@ -24,6 +24,15 @@
         "3101"
       ],
       "port": 3101
+    },
+    {
+      "name": "typikon-ordo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "../typikon-rules/src/ordo_service.py",
+        "8767"
+      ],
+      "port": 8767
     }
   ]
 }
