@@ -67,6 +67,7 @@ export const openapi = () => ({
         { name: "Календарь", description: "Что читается в конкретный день" },
         { name: "Тексты", description: "Корпус текстов и книги" },
         { name: "Справочники", description: "Зачала, знаки, месяцы, седмицы, святые" },
+        { name: "Песнопения", description: "Стихиры, тропари и каноны книг по местам службы" },
         { name: "Новости", description: "Что нового в корпусе и на сайте" },
     ],
     paths: {
@@ -150,6 +151,37 @@ export const openapi = () => ({
                     ...pageParams,
                 ],
                 responses: { "200": ok("#/components/schemas/SearchList"), "400": errorResponse("Запрос слишком короткий") },
+            },
+        },
+        "/api/v2/chants": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Поиск по певческим текстам книг",
+                description:
+                    "Стихиры, седальны, тропари, ирмосы и прочие песнопения Октоиха, Миней, " +
+                    "Триодей и Ирмология — каждое на своём месте службы, с памятью, знаком и " +
+                    "гласом. Это другой корпус, нежели /api/v2/search: там книги целиком, " +
+                    "здесь службы, разобранные по позициям.\n\n" +
+                    "Ударения и церковнославянское написание набирать не нужно: «услыши» " +
+                    "находит «услы́ши», «ᲂу҆слы́ши» — тоже. Фрагмент приходит кусками, и " +
+                    "найденное в нём помечено полем hit, а не разметкой внутри строки.",
+                parameters: [
+                    { name: "q", in: "query", required: true, schema: { type: "string", minLength: 3 }, example: "воззвах" },
+                    { name: "book", in: "query", required: false, schema: { type: "string", enum: ["menaion", "octoechos", "triod-postnaya", "triod-tsvetnaya", "obshaya-mineya"] } },
+                    { name: "month", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 12 }, description: "Месяц церковного месяцеслова" },
+                    { name: "day", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 31 } },
+                    { name: "tone", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 8 }, description: "Глас" },
+                    { name: "sign", in: "query", required: false, schema: { type: "string" }, example: "polieley", description: "Знак службы по Типикону" },
+                    { name: "memory", in: "query", required: false, schema: { type: "string" }, description: "Память, которой поётся песнопение" },
+                    { name: "service", in: "query", required: false, schema: { type: "string", enum: ["vespers", "matins", "liturgy", "hours", "compline", "midnight"] } },
+                    { name: "unit", in: "query", required: false, schema: { type: "string" }, example: "stichera", description: "Род песнопения" },
+                    ...pageParams,
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/ChantList"),
+                    "400": errorResponse("Запрос слишком короткий"),
+                    "500": errorResponse("Корпус песнопений на сервере недоступен"),
+                },
             },
         },
         "/api/v2/days/{alias}": {
@@ -468,6 +500,33 @@ export const openapi = () => ({
             },
             NewsList: collection("#/components/schemas/News"),
             TextList: collection("#/components/schemas/Text"),
+            SnippetPart: {
+                type: "object",
+                description: "Кусок фрагмента; hit — попал ли он под запрос",
+                properties: { text: { type: "string" }, hit: { type: "boolean" } },
+            },
+            Chant: {
+                type: "object",
+                description: "Песнопение книги на своём месте службы",
+                properties: {
+                    id: { type: "integer" },
+                    snippet: { type: "array", items: { $ref: "#/components/schemas/SnippetPart" } },
+                    unit: { type: ["string", "null"], description: "Род: stichera, sedalen, troparion, irmos…" },
+                    ode: { type: ["integer", "null"], description: "Песнь канона, если это канон" },
+                    marker: { type: ["string", "null"], description: "Жанр напечатанного: богородичен, троичен, мученичен…" },
+                    placement: { type: ["string", "null"], description: "Место в группе: slava, i-nyne, slava-i-nyne" },
+                    memoryId: { type: ["string", "null"] },
+                    memory: { type: ["string", "null"], description: "Память, которой это поётся" },
+                    book: { type: ["string", "null"] },
+                    month: { type: ["integer", "null"] },
+                    day: { type: ["integer", "null"] },
+                    service: { type: ["string", "null"] },
+                    position: { type: ["string", "null"], description: "Место службы: «Стихиры на Господи воззвах» и т.п." },
+                    tone: { type: ["integer", "null"] },
+                    sign: { type: ["string", "null"] },
+                },
+            },
+            ChantList: collection("#/components/schemas/Chant"),
             SearchList: collection("#/components/schemas/SearchResult"),
             BookList: collection("#/components/schemas/Book"),
             MonthList: collection("#/components/schemas/Month"),

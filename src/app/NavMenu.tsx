@@ -93,6 +93,12 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     Библиотека
                 </Link>
                 <Link
+                    href="/chants"
+                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/chants`) && `text-red-600`}`}
+                >
+                    Песнопения
+                </Link>
+                <Link
                     href="/texting"
                     className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/texting`) && `text-red-600`}`}
                 >

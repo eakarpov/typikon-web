@@ -19,6 +19,30 @@ const iso = (value: any): string | null => {
     return isNaN(date.getTime()) ? null : date.toISOString();
 };
 
+/**
+ * Найденное песнопение. Белый список здесь не лишний, хотя @/lib/chants и так
+ * складывает ответ по именованным полям: стоит однажды добавить туда что-то
+ * для нужд страницы — и оно молча уйдёт наружу. Здесь этого не случится.
+ */
+export const chantSummary = (hit: any) => ({
+    id: hit.id,
+    // Фрагмент кусками: найденное отмечено флагом, а не разметкой внутри строки.
+    snippet: (hit.snippet ?? []).map((part: any) => ({ text: part.text, hit: part.hit })),
+    unit: hit.unit ?? null,
+    ode: hit.ode ?? null,
+    marker: hit.marker ?? null,
+    placement: hit.placement ?? null,
+    memoryId: hit.memoryId ?? null,
+    memory: hit.memory ?? null,
+    book: hit.book ?? null,
+    month: hit.month ?? null,
+    day: hit.day ?? null,
+    service: hit.service ?? null,
+    position: hit.position ?? null,
+    tone: hit.tone ?? null,
+    sign: hit.sign ?? null,
+});
+
 /** Текст в списке — без тела: именно оно раздувало ответы v1 до сотни килобайт. */
 export const textSummary = (doc: any) => ({
     id: id(doc._id ?? doc.id),

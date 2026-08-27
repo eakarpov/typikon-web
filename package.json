@@ -35,7 +35,8 @@
     "release-meta": "bash meta-db-release.sh",
     "release-csl": "bash csl-db-release.sh",
     "sync:db": "bash download-db.sh",
-    "script": "node src/scripts"
+    "script": "node src/scripts",
+    "release:rules-db": "bash rules-db-release.sh"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",
