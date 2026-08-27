@@ -28,8 +28,33 @@ fi
 sshpass -f <(printf '%s\n' $PASSWORD) scp .env.production \
     $USERNAME@$HOST:/var/www/typikon.su/typikon-web/.env.production
 
+# Снимок Псалтири едет вместе со службой, хотя raw/ вообще-то не ездит.
+#
+# Причина: Псалтирь мы не разбирали своим парсером и берём готовой — из Монги
+# либо из этого снимка. На сервере Монга есть, но драйвера к ней нет (pymongo
+# не установлен, и ставить его ради одного файла незачем), поэтому остаётся
+# снимок. Без него галочка «тексты псалмов» молча даёт пустые места.
+#
+# Снимка может не быть и локально — тогда просто не поедет: службу это не
+# ломает, псалмы останутся пустыми ровно как сейчас.
+# Список — МАССИВОМ, а не строкой. Строку из нескольких путей bash разбил бы
+# по пробелам, zsh не разбил бы вовсе, и в одном из шеллов всё уехало бы одним
+# аргументом с переводом строки внутри: zip такого файла не найдёт и промолчит,
+# а на сервере это выглядело бы как «псалмы почему-то пустые».
+PSALTER=()
+for f in "$RULES_SRC"/raw/psaltir-*.json; do
+    [ -e "$f" ] && PSALTER+=("raw/$(basename "$f")")
+done
+
+if [ ${#PSALTER[@]} -gt 0 ]; then
+    echo "  Псалтирь: ${PSALTER[*]}"
+else
+    echo "  Псалтири нет в raw/ — «тексты псалмов» на сервере останутся пустыми"
+fi
+
 rm -f ordo.zip
-(cd "$RULES_SRC" && zip -rX - src rules --exclude 'src/__pycache__/*' 'src/data.db' 'src/viewer/*') > ordo.zip
+(cd "$RULES_SRC" && zip -rX - src rules "${PSALTER[@]}" \
+    --exclude 'src/__pycache__/*' 'src/data.db' 'src/viewer/*') > ordo.zip
 echo "поехало: $(du -h ordo.zip | cut -f1)"
 
 sshpass -f <(printf '%s\n' $PASSWORD) scp ordo.zip $USERNAME@$HOST:~/ordo.zip

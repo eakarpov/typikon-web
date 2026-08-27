@@ -91,6 +91,16 @@ const Ustav = async ({ searchParams }: { searchParams: Record<string, string | u
                 {result.memories.map(m => (
                     <div key={m.memoryId} className="text-slate-700">{m.label}</div>
                 ))}
+                {result.typikonWould && (
+                    // Канву выбрали руками, и устав с этим выбором не согласен.
+                    // Показываем обе стороны: слушаемся человека, но не прячем,
+                    // что положено на этот день.
+                    <div className="text-xs text-slate-500">
+                        Выбрано вручную. Устав на этот день назначил бы
+                        «{nameOf(result.typikonWould)}»
+                        {result.feastLabel && ` — ${result.feastLabel}`}
+                    </div>
+                )}
                 {result.switchedFrom && (
                     // Подмену канвы надо ВИДЕТЬ: иначе выдача выглядит ответом
                     // не на тот вопрос, который задали. Называем службы так же,

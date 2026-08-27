@@ -36,6 +36,8 @@ export interface OrdoResult {
     ordo: string;
     requestedOrdo: string;
     switchedFrom: string | null;
+    /** Что назначил бы устав, если бы канву не выбрали руками. */
+    typikonWould: string | null;
     feast: string | null;
     feastLabel: string | null;
     memories: { memoryId: string; label: string }[];
@@ -131,6 +133,7 @@ export const buildOrdo = async (query: OrdoQuery): Promise<OrdoResult | null> =>
         ordo: raw.ordo,
         requestedOrdo: raw.requested_ordo,
         switchedFrom: raw.switched_from ?? null,
+        typikonWould: raw.typikon_would ?? null,
         feast: raw.feast ?? null,
         feastLabel: raw.feast_label ?? null,
         memories: (raw.memories ?? []).map((m: any) => ({ memoryId: m.memory_id, label: m.label })),
