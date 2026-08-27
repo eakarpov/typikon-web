@@ -12,7 +12,10 @@
 export $(grep -v '^#' .env.release | xargs)
 
 RULES_SRC=${RULES_SRC:-../typikon-rules}
-REMOTE_DIR=/home/admin/typikon-ordo
+# Рядом с сайтом и корпусом, а не в домашнем каталоге: служба системная, и
+# принадлежать одному человеку ей незачем. Рядом, а не внутри typikon-web —
+# там своё рабочее дерево git со своей сборкой.
+REMOTE_DIR=/var/www/typikon.su/typikon-ordo
 
 if [ ! -f "$RULES_SRC/src/ordo_service.py" ]; then
     echo "нет $RULES_SRC/src/ordo_service.py — не найден проект typikon-rules"
