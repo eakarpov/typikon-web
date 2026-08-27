@@ -5,6 +5,7 @@ import {
     EnvelopeIcon,
     InformationCircleIcon,
     MagnifyingGlassIcon,
+    PencilSquareIcon,
     ArrowLeftOnRectangleIcon,
     ArrowRightOnRectangleIcon,
     UserCircleIcon,
@@ -55,7 +56,15 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
             <Link href="/" className={`text-lg mr-3 font-bold min-w-fit font-serif ${pathname === `/` && `text-red-900`}`}>
                 Уставные чтения
             </Link>
-            <div className="flex flex-row space-x-4">
+            {/* Шапка делится надвое: слева разделы, ради которых сюда приходят,
+                справа служебное — значками и прижатое к краю (ml-auto ниже).
+                Так длина шапки перестаёт расти от каждого нового инструмента:
+                разделов немного и они называются словами, инструменты же
+                узнаются по значку и места почти не занимают. */}
+            {/* gap-4, а не space-x-4: последний задаёт детям margin-left более
+                частным селектором и перебивает ml-auto у служебной половины —
+                та переставала прижиматься вправо, причём молча. */}
+            <div className="flex flex-row gap-4 grow">
                 <Link
                     href="/penticostarion"
                     className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/penticostarion`) && `text-red-600`}`}
@@ -84,7 +93,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     href="/calculator"
                     className={`cursor-pointer min-w-fit font-serif ${pathname === `/calculator` && `text-red-600`}`}
                 >
-                    Чтения на конкретный день
+                    Чтения на день
                 </Link>
                 <Link
                     href="/library"
@@ -93,24 +102,11 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     Библиотека
                 </Link>
                 <Link
-                    href="/ustav"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/ustav`) && `text-red-600`}`}
-                >
-                    Последование
-                </Link>
-                <Link
                     href="/chants"
                     className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/chants`) && `text-red-600`}`}
                 >
                     Песнопения
                 </Link>
-                <Link
-                    href="/texting"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/texting`) && `text-red-600`}`}
-                >
-                    Отекстовка
-                </Link>
-                <NewsLink />
                 <WithRights
                     session={isAuth}
                     user={userStore}
@@ -125,6 +121,16 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         </Link>
                     )}
                 />
+                {/* Отсюда начинается служебная половина: она прижата вправо,
+                    и всё в ней — значками. */}
+                <Link
+                    href="/texting"
+                    title="Отекстовка"
+                    className={`ml-auto cursor-pointer min-w-fit flex items-center ${pathname?.includes(`/texting`) && `text-red-600`}`}
+                >
+                    <PencilSquareIcon className="w-4 h-4" />
+                </Link>
+                <NewsLink icon />
                 <Link
                     href="/search"
                     title="Поиск"

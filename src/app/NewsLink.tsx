@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { MegaphoneIcon } from "@heroicons/react/20/solid";
 import { hasUnread } from "@/lib/news/format";
 import {
     CHECK_INTERVAL_MS,
@@ -24,7 +25,7 @@ import {
 //   * сервер спрашивается не чаще раза в полчаса, а не на каждой странице: узнаём мы
 //     этим запросом одну дату.
 
-const NewsLink = () => {
+const NewsLink = ({ icon = false }: { icon?: boolean }) => {
     const pathname = usePathname();
     const [unread, setUnread] = useState(false);
 
@@ -71,18 +72,40 @@ const NewsLink = () => {
         return () => window.removeEventListener(NEWS_SEEN_EVENT, onSeen);
     }, []);
 
+    // Точка «новое» одна на оба вида: она и есть то, ради чего пункт виден
+    // издалека, и в значке нужна даже больше — подписи, которая позвала бы
+    // читателя, рядом уже нет.
+    const dot = unread && (
+        <span
+            title="Есть новое"
+            className={icon
+                ? "absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-red-600"
+                : "inline-block align-super ml-0.5 w-1.5 h-1.5 rounded-full bg-red-600"}
+        />
+    );
+
+    const active = pathname?.includes("/news");
+
+    if (icon) {
+        return (
+            <Link
+                href="/news"
+                title="Новости"
+                className={`cursor-pointer min-w-fit flex items-center relative ${active && "text-red-600"}`}
+            >
+                <MegaphoneIcon className="w-4 h-4" />
+                {dot}
+            </Link>
+        );
+    }
+
     return (
         <Link
             href="/news"
-            className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/news`) && `text-red-600`}`}
+            className={`cursor-pointer min-w-fit font-serif ${active && "text-red-600"}`}
         >
             Новости
-            {unread && (
-                <span
-                    title="Есть новое"
-                    className="inline-block align-super ml-0.5 w-1.5 h-1.5 rounded-full bg-red-600"
-                />
-            )}
+            {dot}
         </Link>
     );
 };

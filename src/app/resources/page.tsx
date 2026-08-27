@@ -19,13 +19,6 @@ const Resources = () => {
                 </div>
                 <ul>
                     <li>
-                        <Link href="/dictionary">
-                            <span>
-                                Склонение/спряжение церковнославянских слов
-                            </span>
-                        </Link>
-                    </li>
-                    <li>
                         <Link href="/signs">
                             <span>
                                 Список памятей по знаку Типикона
@@ -33,16 +26,17 @@ const Resources = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link href="/nobles">
+                        <Link href="/places/common">
                             <span>
-                                Древо князей и царей
+                                Карта славянских поселений
                             </span>
                         </Link>
                     </li>
                     <li>
-                        <Link href="/places/common">
+                        <Link href="/opyty">
                             <span>
-                                Карта славянских поселений
+                                <b>Опыты</b> — разделы, которые ещё делаются:
+                                последование службы, словарь, древо князей
                             </span>
                         </Link>
                     </li>

@@ -52,6 +52,11 @@ export default function Home() {
                               Полезные ресурсы
                           </Link>
                       </li>
+                      <li>
+                          <Link href="/opyty" className="underline underline-offset-4 font-serif">
+                              Опыты
+                          </Link>
+                      </li>
                       <li
                           className="border-t border-slate-300 pt-4"
                       >
