@@ -37,7 +37,8 @@
     "sync:db": "bash download-db.sh",
     "script": "node src/scripts",
     "release:rules-db": "bash rules-db-release.sh",
-    "release:ordo": "bash release-ordo.sh"
+    "release:ordo": "bash release-ordo.sh",
+    "release:ustav": "bash release-ustav.sh"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",
