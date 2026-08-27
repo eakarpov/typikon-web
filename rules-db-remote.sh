@@ -13,7 +13,13 @@ cd ~
 CAN_SUDO=no
 if sudo -n true 2>/dev/null; then CAN_SUDO=yes; fi
 
+# Корпус кладётся РЯДОМ с каталогом сайта, а не внутрь него. Внутри идут
+# git pull, npm i и сборка, и git clean -fdx — обычный приём, когда сборка
+# сломалась, — снёс бы 91 МБ разом у обоих разделов, которые его читают.
+# По той же причине не годится и домашний каталог: у файла два читателя, и
+# оба — службы, а не человек.
 RULES_DIR=$(dirname "$RULES_DB_REMOTE")
+
 if [ ! -d "$RULES_DIR" ]; then
     if [ "$CAN_SUDO" = yes ]; then
         sudo -n mkdir -p "$RULES_DIR"
@@ -23,14 +29,18 @@ if [ ! -d "$RULES_DIR" ]; then
         echo "нет каталога $RULES_DIR, и завести его отсюда нечем."
         echo "Один раз, из-под root на сервере:"
         echo "    mkdir -p $RULES_DIR && chown $(id -un):$(id -gn) $RULES_DIR"
+        echo
+        echo "Либо укажи в .env.production такой RULES_DB, чей каталог уже"
+        echo "принадлежит $(id -un) — лишь бы не внутри рабочего дерева git."
         exit 1
     fi
 fi
 
 if [ ! -w "$RULES_DIR" ]; then
-    echo "в $RULES_DIR нельзя писать пользователем $(id -un)."
-    echo "Один раз, из-под root на сервере:"
-    echo "    chown $(id -un):$(id -gn) $RULES_DIR"
+    echo "каталог $RULES_DIR есть, но писать в него пользователем $(id -un) нельзя."
+    echo "Один раз, из-под root на сервере, что-то одно:"
+    echo "    chown $(id -un) $RULES_DIR          # отдать каталог целиком"
+    echo "    setfacl -m u:$(id -un):rwx $RULES_DIR   # или только право записи"
     exit 1
 fi
 
