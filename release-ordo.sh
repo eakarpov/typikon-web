@@ -19,6 +19,12 @@ if [ ! -f "$RULES_SRC/src/ordo_service.py" ]; then
     exit 1
 fi
 
+# Окружение — вместе со службой: сайт узнаёт адрес службы из ORDO_SERVICE_URL,
+# и без него раздел последования скажет, что сборка недоступна, хотя она уже
+# поднята.
+sshpass -f <(printf '%s\n' $PASSWORD) scp .env.production \
+    $USERNAME@$HOST:/var/www/typikon.su/typikon-web/.env.production
+
 rm -f ordo.zip
 (cd "$RULES_SRC" && zip -rX - src rules --exclude 'src/__pycache__/*' 'src/data.db' 'src/viewer/*') > ordo.zip
 echo "поехало: $(du -h ordo.zip | cut -f1)"

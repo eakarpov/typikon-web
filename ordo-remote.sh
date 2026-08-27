@@ -38,6 +38,11 @@ sleep 2
 # как «раздел не выложен», и разбираться пришлось бы долго.
 if curl -sf -m 5 http://127.0.0.1:8767/services > /dev/null; then
     echo "служба устава отвечает"
+    # Сайт читает окружение при запуске, а мы его только что заменили:
+    # без перезапуска он не увидит ORDO_SERVICE_URL и будет считать, что
+    # службы нет.
+    sudo -n systemctl restart typikon-web
+    echo "сайт перезапущен"
 else
     echo "служба устава НЕ отвечает — смотри journalctl -u typikon-ordo"
     exit 1

@@ -25,6 +25,12 @@ if ! sqlite3 "$RULES_DB_LOCAL" "SELECT count(*) FROM content_items_fts LIMIT 1" 
     exit 1
 fi
 
+# Окружение везём вместе с корпусом, как и все прочие release-скрипты.
+# Без этого получается тихая ловушка: файл лежит там, где надо, а сайт про
+# RULES_DB не знает и честно сообщает, что корпус не выложен.
+sshpass -f <(printf '%s\n' $PASSWORD) scp .env.production \
+    $USERNAME@$HOST:/var/www/typikon.su/typikon-web/.env.production
+
 echo "корпус: $RULES_DB_LOCAL -> $USERNAME@$HOST:$RULES_DB_REMOTE"
 sqlite3 "$RULES_DB_LOCAL" "SELECT '  песнопений: ' || count(*) FROM content_items_fts"
 
