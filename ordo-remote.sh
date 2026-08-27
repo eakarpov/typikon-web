@@ -1,6 +1,18 @@
 set -e
 cd ~
 
+# Пути в правиле sudoers должны совпасть с тем, как sudo найдёт команду по
+# своему secure_path, а не с тем, как её находит наш PATH. На системах с
+# usr-merge это /bin/systemctl и /usr/bin/systemctl — один и тот же файл под
+# двумя именами, и какое из них подставит sudo, заранее не угадать.
+# Поэтому перечисляем оба: лишнее правило безвредно, несовпавшее — нет.
+sudoers_paths() {
+    for p in /bin/systemctl /usr/bin/systemctl; do
+        [ -e "$p" ] && printf '%s restart typikon-web, %s restart typikon-ordo, ' "$p" "$p"
+    done | sed 's/, $//'
+}
+
+
 # Права не выясняем заранее, а пробуем сами команды — почему именно так,
 # сказано в rules-db-remote.sh.
 
@@ -38,7 +50,7 @@ if ! sudo -n systemctl restart typikon-ordo 2>/dev/null; then
     echo "    sudo systemctl restart typikon-ordo && sudo systemctl restart typikon-web"
     echo
     echo "Чтобы это делалось само, одно правило (из-под root, /etc/sudoers.d/typikon):"
-    echo "    $(id -un) ALL=(root) NOPASSWD: $SYSTEMCTL restart typikon-web, $SYSTEMCTL restart typikon-ordo"
+    echo "    $(id -un) ALL=(root) NOPASSWD: $(sudoers_paths)"
     exit 1
 fi
 
