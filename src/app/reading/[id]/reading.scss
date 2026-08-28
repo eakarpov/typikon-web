@@ -1,7 +1,10 @@
 .context-menu {
     position: absolute;
     width: 200px;
-    background-color: white;
+    /* Фон страницы, а не белый: при тёмной раскраске белая плашка слепит. */
+    background-color: var(--page-bg);
+    color: var(--page-fg);
+    border: 1px solid rgb(203 213 225 / 60%);
     border-radius: 5px;
     box-sizing: border-box;
 
@@ -20,7 +23,7 @@
     /* hover */
     & > ul li:hover {
         cursor: pointer;
-        background-color: #fcfaf2;
+        background-color: rgb(120 113 108 / 18%);
     }
 }
 

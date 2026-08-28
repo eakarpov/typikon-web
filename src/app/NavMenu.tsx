@@ -107,6 +107,12 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 >
                     Песнопения
                 </Link>
+                <Link
+                    href="/saints"
+                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/saints`) && `text-red-600`}`}
+                >
+                    Святые
+                </Link>
                 <WithRights
                     session={isAuth}
                     user={userStore}

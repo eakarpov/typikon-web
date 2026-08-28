@@ -21,13 +21,13 @@ export async function generateMetadata(
     const lastMemo = Array.isArray(item?.memoes) && item.memoes[0];
 
     return {
-        title: `Страница святого - ${lastMemo?.title || id}`,
-        description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || id}`,
+        title: `Страница святого - ${lastMemo?.title || item?.title || id}`,
+        description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || item?.title || id}`,
         openGraph: {
             type: "website",
             url: `//www.typikon.su/saints/${id}`,
-            title: `Страница святого - ${lastMemo?.title || id}`,
-            description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || id}`,
+            title: `Страница святого - ${lastMemo?.title || item?.title || id}`,
+            description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || item?.title || id}`,
         },
     }
 }
@@ -40,7 +40,7 @@ const SaintItem = ({ params: { id }}: { params: { id: string }}) => {
         <div className={myFont.variable}>
             <Suspense fallback={<div>Loading...</div>}>
                 {/* @ts-expect-error Async Server Component */}
-                <Content itemPromise={itemPromise} />
+                <Content id={id} itemPromise={itemPromise} />
             </Suspense>
         </div>
     )

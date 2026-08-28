@@ -16,6 +16,7 @@ export const CacheTag = {
     WEEKS: "weeks",
     SIGNS: "signs",
     NEWS: "news",
+    SAINTS: "saints",
 } as const;
 
 export type CacheTagValue = typeof CacheTag[keyof typeof CacheTag];

@@ -2,8 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Настройки чтения (см. src/lib/settings/reading.ts и /settings). Значения по
+ * умолчанию описаны здесь; выбранное пользователем перекрывает их на <html>
+ * скриптом, который отрабатывает до первой отрисовки.
+ */
+:root {
+    --page-bg: #fcfaf2;
+    --page-fg: #1c1917;
+    --reading-font-size: 1.125rem;
+    --reading-line-height: 1.5;
+    --reading-measure: 100%;
+    --reading-align: justify;
+}
+
 body {
-    background: #fcfaf2;
+    background: var(--page-bg);
+    color: var(--page-fg);
+}
+
+/*
+ * Само чтение. Размер и интервал стоят на абзацах, а не на контейнере: у абзацев
+ * свои классы Tailwind (text-lg, text-justify), и перебить их можно только более
+ * частным селектором — отсюда два класса в цепочке.
+ */
+.reading-column {
+    max-width: var(--reading-measure);
+}
+
+.reading-column .reading-text {
+    font-size: var(--reading-font-size);
+    line-height: var(--reading-line-height);
+    text-align: var(--reading-align);
+}
+
+/*
+ * Всплывающее меню и модальные окна берут фон страницы: при тёмном фоне белая
+ * плашка с чёрным текстом иначе выжигает глаз ровно в тот момент, когда человек
+ * хочет что-то пометить в тексте.
+ */
+.reading-surface {
+    background: var(--page-bg);
+    color: var(--page-fg);
 }
 
 ::-webkit-scrollbar {

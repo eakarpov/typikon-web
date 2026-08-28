@@ -1,7 +1,11 @@
 import clientPromise from "@/lib/mongodb";
 import {init} from "@/lib/sqlite";
+import {cachedTuple} from "@/lib/cache";
+import {CacheTag} from "@/lib/cache";
+import {saintMemory} from "@/lib/dneslov";
 
-export const getItems = async (id: string): Promise<[any, any]> => {
+// Тексты, написанные к памяти святого (или им самим — см. dneslovType).
+export const getItems = cachedTuple(async (id: string): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -23,9 +27,12 @@ export const getItems = async (id: string): Promise<[any, any]> => {
         console.error(e);
         return [null, e];
     }
-};
+}, ["saint-texts"], [CacheTag.TEXTS]);
 
-export const getMentions = async (id: string): Promise<[any, any]> => {
+// Тексты, в которых святой упомянут, — обратная сторона mentionIds. Вместе с текстом
+// отдаём и сам фрагмент (texts.mentions[].context): ради него ревью в /admin/mentions
+// и затевалось, а список одних заголовков читать нечем.
+export const getMentions = cachedTuple(async (id: string): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
@@ -37,6 +44,15 @@ export const getMentions = async (id: string): Promise<[any, any]> => {
                 {
                     $addFields: {
                         id: { $toString: "$_id" },
+                        mention: {
+                            $first: {
+                                $filter: {
+                                    input: { $ifNull: ["$mentions", []] },
+                                    as: "m",
+                                    cond: { $eq: ["$$m.dneslovId", id] },
+                                },
+                            },
+                        },
                     },
                 },
                 { $project: { _id: 0, createdAt: false, updatedAt: false }}
@@ -47,7 +63,7 @@ export const getMentions = async (id: string): Promise<[any, any]> => {
         console.error(e);
         return [null, e];
     }
-};
+}, ["saint-mentions"], [CacheTag.TEXTS]);
 
 // Обратная связь родословная -> святой: если этот dneslovId сопоставлен с персоной в nobles.db
 // (см. /admin/nobles/import, скрипт link-nobles-dneslov), показываем ссылку на её страницу.
@@ -62,14 +78,6 @@ export const getLinkedNoble = async (dneslovId: string): Promise<[any, any]> => 
     }
 };
 
-export const getDneslovObject = async (id: string): Promise<any> => {
-    try {
-        return fetch(`${process.env.NODE_ENV ? `http` : `https`}://dneslov.org/api/v0/memories/${id}.json`)
-            .then(res => res.json()).then((data) => {
-            return fetch(`http://dneslov.org/${data.slug}.json`).then((res => res.json()));
-        });
-    } catch (e) {
-        console.error(e);
-        return null;
-    }
-}
+// Карточка памяти со святцев. Кэш, таймаут и деградация — в src/lib/dneslov.ts;
+// раньше этот запрос ходил наружу на каждый рендер и в двух шагах.
+export const getDneslovObject = async (id: string): Promise<any> => saintMemory(id);

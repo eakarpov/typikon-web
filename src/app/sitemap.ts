@@ -22,6 +22,7 @@ const STATIC_ROUTES = [
     { path: "/calendar", priority: 0.9 },
     { path: "/calendar/today", priority: 0.9 },
     { path: "/library", priority: 0.9 },
+    { path: "/saints", priority: 0.8 },
     { path: "/triodion", priority: 0.8 },
     { path: "/penticostarion", priority: 0.8 },
     { path: "/rest-readings", priority: 0.8 },
@@ -99,6 +100,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             });
         });
 
+        // Страницы святых: адрес — идентификатор из святцев, дата правки — самая
+        // свежая среди наших текстов этой памяти. Имена со святцев здесь не нужны,
+        // в карту идут одни адреса, так что наружу за ней никто не ходит.
+        const saints = await db.collection("texts").aggregate([
+            {
+                $match: {
+                    readiness: { $in: READABLE_TEXTS },
+                    $or: [
+                        { dneslovId: { $nin: [null, ""] } },
+                        { mentionIds: { $exists: true, $ne: [] } },
+                    ],
+                },
+            },
+            {
+                $project: {
+                    updatedAt: 1,
+                    saintIds: {
+                        $setUnion: [
+                            { $cond: [{ $in: ["$dneslovId", [null, ""]] }, [], ["$dneslovId"]] },
+                            { $ifNull: ["$mentionIds", []] },
+                        ],
+                    },
+                },
+            },
+            { $unwind: "$saintIds" },
+            { $group: { _id: "$saintIds", updatedAt: { $max: "$updatedAt" } } },
+        ]).toArray();
+
         const days = await db.collection("days")
             .find({ alias: { $nin: ["", null] } }, { projection: { alias: 1, updatedAt: 1, paschal: 1 } })
             .toArray();
@@ -130,6 +159,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 entry(`/months/${month.alias}`, month.updatedAt, 0.6, "monthly")),
             ...books.map((book) =>
                 entry(`/library/${book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
+            ...saints.map((saint) =>
+                entry(`/saints/${saint._id}`, saint.updatedAt, 0.6, "monthly")),
         ]);
     } catch (e) {
         console.error(e);

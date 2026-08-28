@@ -1,14 +1,23 @@
 import React from "react";
 import SaintPage from "@/app/saints/[id]/SaintPage";
 
-const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
+// Значение из Promise.allSettled: отклонённое обещание — это "не смогли получить",
+// а не повод уронить всю страницу.
+const settled = <T,>(result: PromiseSettledResult<T> | undefined, fallback: T): T =>
+    result?.status === "fulfilled" ? result.value : fallback;
 
-    const [first, second, third, fourth] = await itemPromise;
-    const [items] = first.value;
-    const [mentions] = third.value;
-    const [linkedNoble] = fourth.status === "fulfilled" ? fourth.value : [null];
+const Content = async ({ id, itemPromise }: { id: string, itemPromise: Promise<any> }) => {
 
-    if (!second.value) {
+    const [textsResult, memoryResult, mentionsResult, nobleResult] = await itemPromise;
+
+    const [items] = settled<[any[], any]>(textsResult, [[], null]);
+    const [mentions] = settled<[any[], any]>(mentionsResult, [[], null]);
+    const [linkedNoble] = settled<[any, any]>(nobleResult, [null, null]);
+    const memory = settled<any>(memoryResult, null);
+
+    // Страница держится на наших текстах, а не на святцах: если dneslov.org молчит,
+    // показываем то, что есть у нас. Пусто — только когда пусто с обеих сторон.
+    if (!memory && !items?.length && !mentions?.length) {
         return (
             <div>
                 Ничего не нашлось
@@ -17,7 +26,13 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
     }
 
     return (
-        <SaintPage item={second.value} items={items} mentions={mentions} linkedNoble={linkedNoble} />
+        <SaintPage
+            id={id}
+            item={memory}
+            items={items || []}
+            mentions={mentions || []}
+            linkedNoble={linkedNoble}
+        />
     )
 };
 

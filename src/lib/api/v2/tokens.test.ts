@@ -117,6 +117,8 @@ test("без ключа поиск не выдаётся", () => {
     // Поиск идёт по всему корпусу и стоит дороже прочего — это и есть причина,
     // по которой анонимная порция его не включает.
     assert.ok(!ANONYMOUS_ALLOWANCE.scopes.includes("search"));
+    // Словарь ударений — самая дешёвая ручка, её пробуют без ключа.
+    assert.ok(ANONYMOUS_ALLOWANCE.scopes.includes("accents"));
     assert.ok(ANONYMOUS_ALLOWANCE.scopes.includes("texts"));
     // Новости — объявления сайта; закрывать их ключом было бы странно.
     assert.ok(ANONYMOUS_ALLOWANCE.scopes.includes("news"));

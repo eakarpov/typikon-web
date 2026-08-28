@@ -561,7 +561,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                             Глава {chapter}
                         </p>
                         <p
-                            className={`${
+                            className={`reading-text ${
                                 item.csSource ? csFont.variable : ""
                             } text-justify text-lg ${
                                 item.csSource ? "font-sans-serif" : "font-serif"
@@ -602,7 +602,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                             key={`paragraph-${paragraphIndex}`}
                             data-report-container
                             data-paragraph-index={paragraphIndex}
-                            className={`${
+                            className={`reading-text ${
                                 item.csSource ? csFont.variable : ""
                             } ${item.newUi ? "" : "whitespace-pre-wrap"} text-justify text-lg ${
                                 item.csSource ? "font-sans-serif" : "font-serif"

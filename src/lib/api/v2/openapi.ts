@@ -69,6 +69,7 @@ export const openapi = () => ({
         { name: "Справочники", description: "Зачала, знаки, месяцы, седмицы, святые" },
         { name: "Песнопения", description: "Стихиры, тропари и каноны книг по местам службы" },
         { name: "Новости", description: "Что нового в корпусе и на сайте" },
+        { name: "Ударения", description: "Где в церковнославянском слове стоит ударение" },
     ],
     paths: {
         "/api/v2": {
@@ -137,6 +138,49 @@ export const openapi = () => ({
                 summary: "Книга и её тексты",
                 parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }, ...pageParams],
                 responses: { "200": ok("#/components/schemas/BookDetail"), "404": errorResponse("Книга не найдена") },
+            },
+        },
+        "/api/v2/accents": {
+            get: {
+                tags: ["Ударения"],
+                summary: "Словарь ударений: сводка или поиск пачкой",
+                description:
+                    "Без параметров — что это за словарь, из чего собран и где скачать целиком.\n\n" +
+                    "С параметром words — до 200 слов за раз; ответ идёт в том же порядке, что и запрос.\n\n" +
+                    "Слово можно слать как есть: с ударениями, звательцем, в церковнославянской " +
+                    "графике — ключ снимается той же нормализацией, которой собран словарь, поэтому " +
+                    "«а҆́ще», «аще» и «А́ЩЕ» — один и тот же запрос.\n\n" +
+                    "Постраничного обхода нет намеренно: 260 тысяч записей по двести за раз — больше " +
+                    "тысячи запросов ради того, что отдаётся одним файлом.",
+                parameters: [
+                    {
+                        name: "words", in: "query", required: false,
+                        schema: { type: "string" },
+                        example: "аще,земли,зело",
+                        description: "Слова через запятую, не больше 200",
+                    },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/AccentBatch"),
+                    "400": errorResponse("Пустой список или больше 200 слов"),
+                },
+            },
+        },
+        "/api/v2/accents/{word}": {
+            get: {
+                tags: ["Ударения"],
+                summary: "Ударение одного слова",
+                description:
+                    "Слова, которого нет в словаре, — это 200 с known: false, а не 404. " +
+                    "Имён собственных, редких форм и опечаток исходника в словаре нет и не будет; " +
+                    "для потребителя это рабочий ответ, а не сбой.",
+                parameters: [
+                    { name: "word", in: "path", required: true, schema: { type: "string" }, example: "земли" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/Accent"),
+                    "400": errorResponse("Не указано слово"),
+                },
             },
         },
         "/api/v2/search": {
@@ -295,6 +339,64 @@ export const openapi = () => ({
                 },
             },
             Service: { type: "object", description: "Описание сервиса, счётчики и условия использования" },
+            AccentVariant: {
+                type: "object",
+                description: "Одно положение ударения в слове",
+                properties: {
+                    vowel: {
+                        type: "integer",
+                        description:
+                            "Номер ударной гласной, считая с нуля. Не позиция символа: та зависит "
+                            + "от того, разложены ли ї и й, а номер гласной не зависит.",
+                    },
+                    mark: { type: "string", description: "Сам знак: U+0301 оксия, U+0300 вария, U+0311 камора" },
+                    markName: { type: "string", enum: ["оксия", "вария", "камора"] },
+                    spelling: { type: "string", description: "Как это написано", example: "землѝ" },
+                    count: { type: "integer", description: "Сколько раз так написано — в своём источнике" },
+                    share: { type: "number", description: "Доля среди написаний этого слова внутри того же источника" },
+                    lexeme: { type: "string", description: "Только у словарных вариантов: словарная форма", example: "земля́" },
+                    properties: { type: "string", description: "Только у словарных вариантов: грамматические пометы", example: "sg,gen/dat/loc" },
+                    forms: { type: "integer", description: "Только у словарных вариантов: сколько форм парадигмы дали это положение" },
+                },
+            },
+            Accent: {
+                type: "object",
+                description:
+                    "Ударение слова из трёх источников. corpus — употребление в книжных чтениях "
+                    + "с частотами; chants — в гимнографии (Октоих, Минеи, Триоди, Часослов), тоже "
+                    + "с частотами; lexicon — порождённые парадигмы словаря церковнославянского "
+                    + "с грамматикой. Источники пересекаются лишь частично, поэтому пустой corpus "
+                    + "при непустом chants (и любое другое сочетание) — обычное дело.\n\n"
+                    + "Частоты corpus и chants НЕ складываются: жанр переворачивает большинство. "
+                    + "«Спасе» в чтениях — аорист «спасе́» (50 раз), в песнопениях — звательный "
+                    + "«спа́се» (2024). Берите источник, отвечающий вашему тексту.\n\n"
+                    + "Словарь описательный, а не нормативный: он говорит, как слово размечено "
+                    + "в этих собраниях, а не как правильно.",
+                properties: {
+                    word: { type: "string", description: "Слово, как его прислали" },
+                    known: { type: "boolean" },
+                    agree: {
+                        type: ["boolean", "null"],
+                        description:
+                            "Ставят ли все знающие слово источники ударение на одну гласную; "
+                            + "null — знает только один, спорить не с чем. "
+                            + "false не обязательно означает ошибку: «зе́мли» (мн. им.) и «землѝ» (ед. род.) "
+                            + "оба верны и пишутся одинаково без знаков.",
+                    },
+                    corpus: { type: "array", items: { $ref: "#/components/schemas/AccentVariant" } },
+                    chants: { type: "array", items: { $ref: "#/components/schemas/AccentVariant" } },
+                    lexicon: { type: "array", items: { $ref: "#/components/schemas/AccentVariant" } },
+                },
+            },
+            AccentBatch: {
+                type: "object",
+                description: "Ответ пачкой либо сводка по словарю, если words не задан",
+                properties: {
+                    items: { type: "array", items: { $ref: "#/components/schemas/Accent" } },
+                    total: { type: "integer" },
+                    known: { type: "integer", description: "Сколько из них нашлось" },
+                },
+            },
             Text: {
                 type: "object",
                 description: "Текст в списке — без содержимого",

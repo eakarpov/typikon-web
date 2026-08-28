@@ -3,6 +3,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 import { cached, CacheTag } from "@/lib/cache";
+import { ACCENTS_COLLECTION, ACCENTS_DB } from "@/lib/accents/store";
 
 // Описание сервиса: с чего начинает знакомство любой клиент. Здесь же — условия
 // использования, чтобы их нельзя было не заметить.
@@ -12,15 +13,18 @@ const counts = cached(async () => {
     const client = await clientPromise;
     const db = client.db("typikon");
 
-    const [texts, books, days, pericopes, verses] = await Promise.all([
+    const [texts, books, days, pericopes, verses, accents] = await Promise.all([
         db.collection("texts").countDocuments({ readiness: { $in: ["ready", "correcting", "texted"] } }),
         db.collection("books").countDocuments({ public: { $ne: false } }),
         db.collection("days").countDocuments(),
         db.collection("pericopes").countDocuments(),
         db.collection("verses").countDocuments(),
+        // Словарь ударений живёт в соседней базе — рядом со словарём
+        // церковнославянского, из которого он частью и собран.
+        client.db(ACCENTS_DB).collection(ACCENTS_COLLECTION).countDocuments(),
     ]);
 
-    return { texts, books, days, pericopes, verses };
+    return { texts, books, days, pericopes, verses, accents };
 }, ["api-v2-counts"], [CacheTag.TEXTS, CacheTag.BOOKS, CacheTag.DAYS]);
 
 export async function OPTIONS() {
@@ -53,6 +57,8 @@ export async function GET(request: Request) {
                 calendar: "/api/v2/calendar/{YYYY-MM-DD}",
                 today: "/api/v2/calendar/today",
                 search: "/api/v2/search?q=",
+                accents: "/api/v2/accents",
+                accent: "/api/v2/accents/{слово}",
                 pericopes: "/api/v2/pericopes",
                 signs: "/api/v2/signs",
                 news: "/api/v2/news",

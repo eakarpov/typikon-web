@@ -5,6 +5,7 @@ import {getAggregationFindIdInField} from "@/utils/database";
 import {filterVersesByRanges, parseVerseRanges, sortVerses} from "@/utils/verses";
 import {TextContentType} from "@/utils/texts";
 import {cached, CacheTag} from "@/lib/cache";
+import {saintTitles} from "@/lib/dneslov";
 
 // Сам текст и его стихи кэшируются целиком; фильтрация по ?range идёт уже
 // поверх кэша, иначе каждый диапазон занимал бы отдельную запись.
@@ -128,5 +129,86 @@ export const getDayByText = async (id: string): Promise<[DayDTO|null, boolean]> 
     } catch (e) {
         console.error(e);
         return [null, true];
+    }
+};
+
+// --- Связи текста -------------------------------------------------------------
+//
+// Граф уже лежит в базе, но до читателя доходил только одной стороной: со страницы
+// святого было видно его тексты, а со страницы текста — ничего, кроме одинокой
+// ссылки "Страница святого" в шапке. Здесь собираем обе стороны разом:
+//   * память — чей это текст (texts.dneslovId) и что ещё написано к той же памяти;
+//   * упоминания — кто помянут внутри (texts.mentionIds, ревью в /admin/mentions).
+//
+// Имена святых берём отдельно, через кэш src/lib/dneslov.ts: они чужие и в базе
+// не хранятся, поэтому в один запрос с текстами их не собрать.
+
+// Заготовки без содержимого в соседи не годятся: ссылка на пустую страницу —
+// не связь, а тупик. Тот же отбор, что и в карте сайта.
+const LINKABLE = ["ready", "correcting", "texted"];
+
+export interface TextLink {
+    id: string;
+    name: string;
+}
+
+export interface TextLinks {
+    memory: { dneslovId: string; title: string; siblings: TextLink[]; total: number } | null;
+    mentions: { dneslovId: string; title: string }[];
+}
+
+const loadSiblings = cached(async (dneslovId: string, selfId: string) => {
+    const client = await clientPromise;
+    const db = client.db("typikon");
+
+    const texts = await db
+        .collection("texts")
+        .find(
+            {
+                dneslovId,
+                _id: { $ne: new ObjectId(selfId) },
+                readiness: { $in: LINKABLE },
+                name: { $nin: ["", null] },
+            },
+            { projection: { alias: 1, name: 1 } },
+        )
+        .toArray();
+
+    return texts.map((text) => ({
+        id: (text.alias as string) || text._id.toString(),
+        name: text.name as string,
+    }));
+}, ["reading-saint-siblings"], [CacheTag.TEXTS]);
+
+export const getTextLinks = async (item: any): Promise<TextLinks> => {
+    const dneslovId: string = item?.dneslovId || "";
+    const mentionIds: string[] = Array.isArray(item?.mentionIds) ? item.mentionIds.filter(Boolean) : [];
+
+    if (!dneslovId && !mentionIds.length) {
+        return { memory: null, mentions: [] };
+    }
+
+    try {
+        const [siblings, titles] = await Promise.all([
+            dneslovId && item?.id ? loadSiblings(dneslovId, item.id) : Promise.resolve([]),
+            saintTitles([dneslovId, ...mentionIds]),
+        ]);
+
+        return {
+            memory: dneslovId
+                ? {
+                    dneslovId,
+                    title: titles[dneslovId],
+                    // Показываем горсть, а не весь список: у самых представленных
+                    // памятей текстов под два десятка, и это уже не связь, а оглавление.
+                    siblings: siblings.slice(0, 5),
+                    total: siblings.length,
+                }
+                : null,
+            mentions: mentionIds.map((id) => ({ dneslovId: id, title: titles[id] })),
+        };
+    } catch (e) {
+        console.error(e);
+        return { memory: null, mentions: [] };
     }
 };

@@ -16,7 +16,7 @@ enum COLLECTION_TYPE {
     AUTHOR,
 }
 
-const SaintPage = ({ item, items, mentions, linkedNoble }: {item: any, items: any[], mentions: any[], linkedNoble?: {id: number; name: string} | null }) => {
+const SaintPage = ({ id, item, items, mentions, linkedNoble }: {id: string, item: any, items: any[], mentions: any[], linkedNoble?: {id: number; name: string} | null }) => {
     const authorItems = useMemo(() => items.filter(el => el.dneslovType === DneslovKind.AUTHOR), [items]);
     const bookItems = useMemo(() => items.filter(el => el.dneslovType !== DneslovKind.AUTHOR), [items]); // MEMORY
 
@@ -40,6 +40,9 @@ const SaintPage = ({ item, items, mentions, linkedNoble }: {item: any, items: an
     }, []);
 
     const lastMemo = Array.isArray(item?.memoes) && item.memoes[0];
+    // Имя приходит со святцев, а тексты — наши. Когда dneslov.org недоступен,
+    // страница остаётся на месте: подписываем память номером и идём дальше.
+    const heading = lastMemo?.title || item?.title || item?.short_name || `Память №${id}`;
 
     return (
         <>
@@ -53,8 +56,13 @@ const SaintPage = ({ item, items, mentions, linkedNoble }: {item: any, items: an
                         </span>
                 )}
                 <p className="font-serif">
-                    Страница памяти: <strong>{lastMemo?.title}</strong>
+                    Страница памяти: <strong>{heading}</strong>
                 </p>
+                {!item && (
+                    <p className="font-serif text-sm text-slate-500">
+                        Сведения о святом со святцев dneslov.org сейчас недоступны — показаны только наши тексты.
+                    </p>
+                )}
                 {linkedNoble && (
                     <p className="font-serif">
                         В родословной: <Link className="text-blue-600 hover:underline" href={`/nobles/${linkedNoble.id}`}>{linkedNoble.name}</Link>
@@ -69,9 +77,11 @@ const SaintPage = ({ item, items, mentions, linkedNoble }: {item: any, items: an
                         </div>
                     </div>
                 )}
-                <p className="font-serif font-bold">
-                    Ссылки
-                </p>
+                {!!item?.links?.length && (
+                    <p className="font-serif font-bold">
+                        Ссылки
+                    </p>
+                )}
                 <div className="flex flex-row flex-wrap gap-4">
                     {item?.links?.map((link: any) => (
                         <div
@@ -126,11 +136,23 @@ const SaintPage = ({ item, items, mentions, linkedNoble }: {item: any, items: an
                 </button>
             </div>
             <div className="mt-4">
-                {collection.map((item) => (
-                    <div className="font-serif" key={item.id}>
-                        <Link href={`/reading/${item.id}`}>
-                            {item.name}
+                {!collection.length && (
+                    <p className="font-serif text-slate-500">
+                        В этой подборке пока пусто.
+                    </p>
+                )}
+                {collection.map((text) => (
+                    <div className="font-serif mb-2" key={text.id}>
+                        <Link href={`/reading/${text.alias || text.id}`}>
+                            {text.name}
                         </Link>
+                        {/* Ради этой строки и затевалось ревью упоминаний: видно не только
+                            где помянут святой, но и какими словами. */}
+                        {collectionType === COLLECTION_TYPE.MENTION && text.mention?.context && (
+                            <p className="text-sm text-slate-600 italic">
+                                …{text.mention.context}…
+                            </p>
+                        )}
                     </div>
                 ))}
             </div>

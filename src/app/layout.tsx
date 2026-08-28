@@ -1,7 +1,7 @@
 import '../styles/globals.css';
 import React from "react";
 import CountMeta from "@/app/meta/CountMeta";
-import InitiateUserSettings from './components/settings/InitiateUserSettings';
+import {settingsBootScript} from "@/lib/settings/reading";
 import {Metadata, Viewport} from "next";
 import CommonMeta from "@/app/components/CommonMeta";
 import {myFont} from "@/utils/font";
@@ -51,6 +51,16 @@ export default function RootLayout({
 }) {
     return (
     <html lang="ru">
+      <head>
+          {/*
+            * Настройки чтения раскладываются по CSS-переменным до первой отрисовки.
+            * Раньше это делал useEffect уже после гидратации, и выбравший тёмный фон
+            * на каждой полной загрузке видел светлую вспышку. beforeInteractive здесь
+            * не годится: Next выносит такой Script в конец <head> уже после стилей,
+            * но выполняет его сам — обычный тег надёжнее и короче.
+            */}
+          <script dangerouslySetInnerHTML={{ __html: settingsBootScript }} />
+      </head>
       <body>
           <CommonMeta />
           <noscript>
@@ -60,7 +70,6 @@ export default function RootLayout({
           </noscript>
           <CountMeta />
           <ServiceWorkerRegistrar />
-          <InitiateUserSettings />
           <TelegramLoginRemover />
           <StoreProvider>
               <>

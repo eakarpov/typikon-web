@@ -1,11 +1,11 @@
 import { ReadinessButton } from "@/app/components/DayPart";
 import {isFootnoteBook} from "@/utils/texts";
-import {ArrowTopRightOnSquareIcon, BookOpenIcon, UserCircleIcon} from "@heroicons/react/24/outline";
+import {ArrowTopRightOnSquareIcon, BookOpenIcon} from "@heroicons/react/24/outline";
 import TextImages from "@/app/reading/TextImages";
 import DneslovImages from "@/app/reading/DneslovImages";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
-import TextToDate from "@/app/reading/[id]/TextToDate";
+import TextLinks from "@/app/reading/[id]/TextLinks";
 import TextSave from "@/app/components/save/TextSave";
 import ReadingContent from "@/app/reading/[id]/ReadingContent";
 import Redirector from "@/app/reading/[id]/Redirector";
@@ -34,7 +34,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     return (
         <div className="flex flex-col md:flex-row">
-        <div id="text-reading-container" className={`${myFont.variable} flex flex-col pt-2 flex-1`}>
+        <div id="text-reading-container" className={`reading-column ${myFont.variable} flex flex-col pt-2 flex-1`}>
             <div className="text-1xl font-bold font-serif">
                 <div className="flex flex-row items-center overflow-scroll no-pdf">
                     <EditButton
@@ -64,15 +64,6 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                                 Книга&nbsp;
                             </Link>
                             <BookOpenIcon className="w-4 h-4" />
-                        </span>
-                    )}
-                    <TextToDate id={item.id} />
-                    {item.dneslovId && (
-                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
-                            <Link href={`/saints/${item.dneslovId}`}>
-                                Страница святого&nbsp;
-                            </Link>
-                            <UserCircleIcon className="w-4 h-4" />
                         </span>
                     )}
                     <TextSave text={item} canDownloadPdf={process.env.CAN_DOWNLOAD_PDF} />
@@ -142,6 +133,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     })}
                 </div>
             )}
+            <TextLinks item={item} />
         </div>
         {!!item.images?.length && (
             <TextImages images={item.images} />
