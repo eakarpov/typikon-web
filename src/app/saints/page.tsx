@@ -86,7 +86,7 @@ const Saints = ({ searchParams }: { searchParams?: { page?: string } }) => {
             <div className={myFont.variable}>
                 <p className="font-serif">
                     Святые, чьи памяти и упоминания встречаются в чтениях собрания. На странице памяти
-                    собраны написанные к ней тексты и те чтения, где о святом говорится по ходу.
+                    собраны написанные к ней тексты и те чтения, где о святом говорится в теле текста.
                 </p>
                 <p className="font-serif text-sm text-slate-500 mb-4">
                     Сведения о самих святых — со святцев <Link className="text-amber-800" href="https://dneslov.org" target="_blank" rel="noreferrer">dneslov.org</Link>.
