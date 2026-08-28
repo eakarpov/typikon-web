@@ -8,6 +8,7 @@ import {cached, CacheTag} from "@/lib/cache";
 import {saintTitles} from "@/lib/dneslov";
 import {coverageFor} from "@/lib/accents/store";
 import {markText} from "@/lib/accents/service";
+import {libFondCipher, libFondUrl, type LibFondSource} from "@/lib/libFond";
 
 // Сам текст и его стихи кэшируются целиком; фильтрация по ?range идёт уже
 // поверх кэша, иначе каждый диапазон занимал бы отдельную запись.
@@ -181,6 +182,32 @@ const loadSiblings = cached(async (dneslovId: string, selfId: string) => {
         name: text.name as string,
     }));
 }, ["reading-saint-siblings"], [CacheTag.TEXTS]);
+
+/**
+ * Опись источника, на скан которого ссылается текст.
+ *
+ * Ходим в свою коллекцию `sources`, а не на lib-fond: одна опись стоит
+ * источником у десятков текстов, и держать рендер страницы в ожидании чужого
+ * сайта незачем — тем более такого, который отвечает через раз (см.
+ * src/scripts/fetch-lib-fond.ts, там на две описи из тридцати пяти не хватило
+ * десятисекундного срока связи).
+ *
+ * Не забранная опись — не повод молчать: шифр («Ф.7 №13») читается прямо из
+ * адреса ссылки, и он честнее пустоты.
+ */
+export const getTextSource = cached(async (link: string | null): Promise<LibFondSource | null> => {
+    const url = libFondUrl(link);
+    if (!url) return null;
+    const cipher = libFondCipher(url);
+    try {
+        const client = await clientPromise;
+        const doc = await client.db("typikon").collection("sources").findOne({ url });
+        return { url, title: doc?.title || null, cipher: doc?.cipher || cipher };
+    } catch (e) {
+        console.error(e);
+        return { url, title: null, cipher };
+    }
+}, ["text-source"], [CacheTag.TEXTS]);
 
 export const getTextLinks = async (item: any): Promise<TextLinks> => {
     const dneslovId: string = item?.dneslovId || "";

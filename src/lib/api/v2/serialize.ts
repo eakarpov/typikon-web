@@ -1,3 +1,4 @@
+import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
 // Что именно уходит наружу.
 //
 // Здесь белые списки, а не чёрные, и это принципиально: в v1 наружу утекали
@@ -41,6 +42,11 @@ export const chantSummary = (hit: any) => ({
     position: hit.position ?? null,
     tone: hit.tone ?? null,
     sign: hit.sign ?? null,
+    // У строфы акафиста нет ни книги, ни дня: её адрес — имя произведения и
+    // номер строфы. Без этих полей ответ про неё был бы почти пустым.
+    akathist: hit.akathist ?? null,
+    stanza: hit.stanza ?? null,
+    stanzaKind: hit.stanzaKind ?? null,
 });
 
 /** Текст в списке — без тела: именно оно раздувало ответы v1 до сотни килобайт. */
@@ -98,6 +104,9 @@ export const book = (doc: any) => ({
     translator: doc.translator || null,
     description: doc.description || null,
     order: doc.order ?? null,
+    // Язык, на котором книга набрана. Коды общие с корпусом typikon-rules,
+    // см. @/utils/bookLanguages.
+    language: doc.language || DEFAULT_BOOK_LANGUAGE,
     textCount: Array.isArray(doc.texts) ? doc.texts.length : null,
     updatedAt: iso(doc.updatedAt),
 });

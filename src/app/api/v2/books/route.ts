@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
         const [items, total] = await Promise.all([
             // texts[] нужен только чтобы посчитать длину — наружу уходит textCount.
-            books.find(filter, { projection: { name: 1, author: 1, translator: 1, description: 1, order: 1, texts: 1, updatedAt: 1 } })
+            books.find(filter, { projection: { name: 1, author: 1, translator: 1, description: 1, order: 1, texts: 1, updatedAt: 1, language: 1 } })
                 .sort({ order: 1, name: 1 }).skip(offset).limit(limit).toArray(),
             books.countDocuments(filter),
         ]);

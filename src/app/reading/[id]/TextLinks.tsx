@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { CalendarIcon, UserCircleIcon } from "@heroicons/react/24/outline";
-import { getDayByText, getTextLinks } from "@/app/reading/[id]/api";
+import { getDayByText, getTextLinks, getTextSource } from "@/app/reading/[id]/api";
+import { sourceLabel } from "@/lib/libFond";
 import { DayDTO } from "@/types/dto/days";
 
 // Связи текста — под самим чтением, а не в шапке: это то, куда идут, дочитав,
@@ -25,14 +26,16 @@ const Row = ({ label, children }: { label: string; children: React.ReactNode }) 
 );
 
 const TextLinksContent = async ({ item }: { item: any }) => {
-    const [links, [day]] = await Promise.all([
+    const [links, [day], source] = await Promise.all([
         getTextLinks(item),
         getDayByText(item.id),
+        getTextSource(item.link || null),
     ]);
 
     const href = day ? dayHref(day) : null;
+    const origin = sourceLabel(source);
 
-    if (!links.memory && !links.mentions.length && !href) return null;
+    if (!links.memory && !links.mentions.length && !href && !origin) return null;
 
     return (
         <div className="mt-6 pt-3 border-t border-slate-300 flex flex-col gap-2 no-pdf">
@@ -79,6 +82,24 @@ const TextLinksContent = async ({ item }: { item: any }) => {
                             {mention.title}
                         </Link>
                     ))}
+                </Row>
+            )}
+
+            {origin && source && (
+                // Откуда набран текст — рукопись или старопечатная книга в
+                // описи РГБ. Стоит здесь, а не в шапке, по той же причине, что
+                // и прочие связи: это то, куда идут, дочитав, а не то, чем
+                // перебивают чтение. Ссылка ведёт в опись, а не на лист: лист
+                // у каждого текста свой и уже стоит наверху («Скан текста»).
+                <Row label="Источник:">
+                    <a
+                        className="font-serif text-amber-800 hover:underline"
+                        href={source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        {origin}
+                    </a>
                 </Row>
             )}
 

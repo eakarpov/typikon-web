@@ -38,34 +38,38 @@ const NavGroup = ({ title, items }: { title: string; items: NavItem[] }) => {
 
     const active = items.some((item) => pathname?.includes(item.match ?? item.href));
 
-    // Ставит панель под кнопку. Если кнопку увезли из видимой части — закрываем:
-    // висеть в пустоте ей незачем.
+    // Ставит панель под кнопку в координатах СТРАНИЦЫ, а не окна. Шапка не липкая:
+    // при прокрутке она уезжает вверх, и панель обязана уехать с ней. Привязка к
+    // окну этого не даёт — панель повисала над текстом, и поправить это слушателем
+    // прокрутки нельзя: события scroll здесь не приходят вовсе (проверено).
     const place = useCallback(() => {
         const rect = button.current?.getBoundingClientRect();
         if (!rect) return;
 
-        const offscreen = rect.bottom < 0 || rect.top > window.innerHeight
-            || rect.right < 0 || rect.left > window.innerWidth;
-        if (offscreen) { setOpen(false); return; }
-
-        setAt({ top: rect.bottom + GAP, left: rect.left });
+        setAt({
+            top: rect.bottom + window.scrollY + GAP,
+            left: rect.left + window.scrollX,
+        });
     }, []);
 
+    // Положение считаем ДО setOpen, а не внутри его апдейтера: апдейтер обязан быть
+    // чистым, и setState из него React вправе отбросить. Отброшенный setAt оставил бы
+    // панель в точке (0, 0) — под шапкой, где её не видно.
     const toggle = useCallback(() => {
-        setOpen((wasOpen) => {
-            if (!wasOpen) place();
-            return !wasOpen;
-        });
-    }, [place]);
+        if (open) { setOpen(false); return; }
+        place();
+        setOpen(true);
+    }, [open, place]);
 
-    // Ширину панели заранее не знаем, поэтому прижимаем её к окну уже после
-    // отрисовки. Прижим с обеих сторон: шапка прокручивается вбок, и кнопка
+    // Ширину панели заранее не знаем, поэтому прижимаем её к видимой части уже
+    // после отрисовки. Прижим с обеих сторон: шапка прокручивается вбок, и кнопка
     // группы может оказаться у любого края.
     useLayoutEffect(() => {
         if (!open || !panel.current) return;
         const width = panel.current.offsetWidth;
-        const max = Math.max(EDGE, window.innerWidth - width - EDGE);
-        const fitted = Math.min(Math.max(at.left, EDGE), max);
+        const min = window.scrollX + EDGE;
+        const max = Math.max(min, window.scrollX + window.innerWidth - width - EDGE);
+        const fitted = Math.min(Math.max(at.left, min), max);
         if (fitted !== at.left) setAt((old) => ({ ...old, left: fitted }));
     }, [open, at.left]);
 
@@ -81,20 +85,15 @@ const NavGroup = ({ title, items }: { title: string; items: NavItem[] }) => {
         const onKey = (event: KeyboardEvent) => {
             if (event.key === "Escape") setOpen(false);
         };
-        // Панель привязана к окну, а не к кнопке, поэтому при прокрутке её надо
-        // переставлять. Закрывать нельзя: щелчок по кнопке в прокручиваемой шапке
-        // сам заставляет браузер подкрутить её в видимую часть, и панель схлопывалась
-        // ровно в момент открытия — снаружи это выглядело как «кнопка не работает».
-        // Слушаем с capture: прокрутка шапки не всплывает до window.
+        // Прокрутку не слушаем: панель стоит в координатах страницы и едет вместе
+        // с ней сама. От изменения размера окна — переставляем.
         document.addEventListener("mousedown", onOutside);
         document.addEventListener("keydown", onKey);
-        window.addEventListener("scroll", place, true);
         window.addEventListener("resize", place);
 
         return () => {
             document.removeEventListener("mousedown", onOutside);
             document.removeEventListener("keydown", onKey);
-            window.removeEventListener("scroll", place, true);
             window.removeEventListener("resize", place);
         };
     }, [open, place]);
@@ -120,7 +119,7 @@ const NavGroup = ({ title, items }: { title: string; items: NavItem[] }) => {
                 <div
                     ref={panel}
                     style={{ top: at.top, left: at.left }}
-                    className="fixed z-50 flex flex-col border border-slate-300 rounded bg-white shadow min-w-max py-1"
+                    className="absolute z-50 flex flex-col border border-slate-300 rounded bg-white shadow min-w-max py-1"
                 >
                     {items.map((item) => (
                         <Link
