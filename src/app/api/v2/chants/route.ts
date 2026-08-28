@@ -40,6 +40,7 @@ export async function GET(request: Request) {
 
     try {
         const found = searchChants(query, {
+            source: url.searchParams.get("source"),
             book: url.searchParams.get("book"),
             month: numeric(url, "month"),
             day: numeric(url, "day"),

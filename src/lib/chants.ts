@@ -36,8 +36,32 @@ const HIT_SPLIT = /[\u0002\u0003]/;
  * операторами, и любая строка из поля ввода остаётся допустимым выражением,
  * а не ошибкой разбора.
  */
+// «й» прячем от нормализации и возвращаем на место после неё.
+//
+// normalizeQuery() снимает ударения через NFD, а NFD разбирает и «й» — на «и»
+// с кратким (U+0306), и краткое стирается вместе с ударениями: они в одном
+// диапазоне. Поиску по библиотеке это не вредит, там нормализована и хранимая
+// копия — обе стороны становятся «радуися» и сходятся. Здесь второй стороны
+// нет: в индексе лежит сам текст книги, а токенизатор FTS5 «й» не разбирает
+// (сверено на корпусе: «радуйся» — 3586 совпадений, «радуися» — ноль).
+//
+// Цена промаха — две трети корпуса: «й» стоит в 59 638 строках из 94 700, и
+// «радуйся», «взбранной», «святый» не находили ничего вообще.
+//
+// «ё» защищать не нужно и не стоит: в корпусе оно всего в девяти строках, а
+// нормализация приводит его к «е», как книги его и печатают.
+const SHORT_I = /[йЙ]/g;
+const SHORT_I_MASK = "\uE000";
+
+/** Нормализация запроса для FTS5: ЦС-графику приводим, ударения оставляем
+ *  токенизатору, «й» сохраняем. */
+export const normalizeChantQuery = (query: string): string => {
+    const masked = query.replace(SHORT_I, SHORT_I_MASK);
+    return normalizeQuery(masked).split(SHORT_I_MASK).join("й");
+};
+
 export const matchExpression = (query: string): string =>
-    `"${normalizeQuery(query).replace(/"/g, '""')}"*`;
+    `"${normalizeChantQuery(query).replace(/"/g, '""')}"*`;
 
 export interface SnippetPart {
     text: string;
@@ -55,6 +79,21 @@ export const splitSnippet = (snippet: string | null | undefined): SnippetPart[] 
 };
 
 export interface ChantFilters {
+    /**
+     * Откуда строка: 'book' | 'canon' | 'akathist'.
+     *
+     * Это не книга и не жанр, а ВЛАДЕЛЕЦ строки в корпусе — тот самый, что
+     * задан в схеме: строка принадлежит ровно одному из трёх (group_id,
+     * canon_id, akathist_id). Отсюда и три значения, и то, что они не
+     * пересекаются: 35 626 строк на местах служб, 59 049 в канонах, 15 086 в
+     * акафистах.
+     *
+     * Нужен фасет прежде всего из-за акафистов: их 15 тысяч строф, и по
+     * частым словам («ра́дуйся», «Богоро́дице») они забивают книги. Разделять
+     * их надо не по достоинству и не по книге, а именно по тому, чем строка
+     * является в корпусе.
+     */
+    source?: string | null;
     book?: string | null;
     month?: number | null;
     day?: number | null;
@@ -81,12 +120,28 @@ export interface ChantHit {
     position: string | null;
     tone: number | null;
     sign: string | null;
+    // Откуда строка, когда она не из книги: у акафиста нет ни памяти, ни
+    // места службы, и без этих трёх полей он выводился бы безымянным —
+    // фрагмент есть, а чей он, не сказано.
+    akathist: string | null;
+    stanza: number | null;
+    stanzaKind: string | null;
 }
 
 export interface Condition {
     sql: string;
-    value: string | number;
+    /** Условию не всегда нужно значение: отбор по владельцу строки — это
+     *  проверка на NULL, плейсхолдера у неё нет. */
+    value?: string | number;
 }
+
+// Владелец строки -> условие. Держим таблицей, а не склейкой на месте: имя
+// приходит из адреса страницы, и подставлять оттуда что-либо в SQL нельзя.
+const SOURCE_CONDITION: Record<string, string> = {
+    book: "ci.group_id IS NOT NULL",
+    canon: "ci.canon_id IS NOT NULL",
+    akathist: "ci.akathist_id IS NOT NULL",
+};
 
 /**
  * Условия отбора. Все — через плейсхолдеры: в этом самом месте, но в поиске по
@@ -98,6 +153,8 @@ export const conditionsFor = (filters: ChantFilters): Condition[] => {
     const add = (sql: string, value: string | number | null | undefined) => {
         if (value !== null && value !== undefined && value !== "") out.push({ sql, value });
     };
+    const source = filters.source && SOURCE_CONDITION[filters.source];
+    if (source) out.push({ sql: source });
     add("m.book = ?", filters.book);
     add("m.month = ?", filters.month);
     add("m.day = ?", filters.day);
@@ -112,11 +169,23 @@ export const conditionsFor = (filters: ChantFilters): Condition[] => {
 // Соединения нужны только под фильтры; без них отбор идёт по одному индексу.
 // Знак живёт во вью (memory_signs разрешает его по трём источникам), поэтому
 // подключается лишь тогда, когда по нему действительно фильтруют.
+//
+// memories соединяется ВНЕШНЕ, и это не мелочь. Строка корпуса принадлежит
+// одному из трёх владельцев — группе службы, канону или акафисту, — и памяти
+// нет только у третьего: акафист не день книги, у него нет ни числа
+// месяцеслова, ни отступа от Пасхи, ни гласа. Пока соединение было внутренним,
+// оно отсекало акафист от ЛЮБОГО фильтра, включая те, что памяти не касаются
+// вовсе: «показать все икосы» — это ci.content_unit, но отбор всё равно шёл
+// через memories и терял 25 строф молча.
+//
+// Фильтры по самой памяти (книга, месяц, число, знак) акафист по-прежнему не
+// выбирают — и правильно: у него этих признаков нет, а NULL под равенство не
+// подходит. Разница в том, что теперь это следствие условия, а не соединения.
 const joinsFor = (needsSign: boolean) => `
     JOIN content_items ci ON ci.item_id = f.rowid
     LEFT JOIN groups g ON g.group_id = ci.group_id
     LEFT JOIN canons c ON c.canon_id = ci.canon_id
-    JOIN memories m ON m.memory_id = COALESCE(g.memory_id, c.memory_id)
+    LEFT JOIN memories m ON m.memory_id = COALESCE(g.memory_id, c.memory_id)
     ${needsSign ? "LEFT JOIN memory_signs s ON s.memory_id = m.memory_id" : ""}`;
 
 export interface ChantSearchResult {
@@ -145,7 +214,9 @@ export const searchChants = (
     const conditions = conditionsFor(filters);
     const needsSign = conditions.some(c => c.sql.startsWith("s."));
     const where = conditions.map(c => c.sql).join(" AND ");
-    const values = conditions.map(c => c.value);
+    // Значения — только у условий с плейсхолдером, и порядок при этом
+    // сохраняется: отбор по владельцу вставляется в SQL как есть.
+    const values = conditions.flatMap(c => (c.value === undefined ? [] : [c.value]));
     const match = matchExpression(query);
 
     const from = `FROM content_items_fts f ${conditions.length ? joinsFor(needsSign) : ""}
@@ -168,11 +239,13 @@ export const searchChants = (
                COALESCE(g.service, c.service) AS service,
                COALESCE(g.tone, c.tone) AS tone,
                p.label AS position_label,
-               s.default_sign AS sign
+               s.default_sign AS sign,
+               a.title AS akathist_title, ci.stanza, ci.stanza_kind
         FROM hits h
         JOIN content_items ci ON ci.item_id = h.item_id
         LEFT JOIN groups g ON g.group_id = ci.group_id
         LEFT JOIN canons c ON c.canon_id = ci.canon_id
+        LEFT JOIN akathists a ON a.akathist_id = ci.akathist_id
         LEFT JOIN memories m ON m.memory_id = COALESCE(g.memory_id, c.memory_id)
         LEFT JOIN positions p ON p.position_id = COALESCE(g.position_id, c.position_id)
         LEFT JOIN memory_signs s ON s.memory_id = m.memory_id
@@ -197,11 +270,15 @@ export const searchChants = (
             position: r.position_label ?? null,
             tone: r.tone ?? null,
             sign: r.sign ?? null,
+            akathist: r.akathist_title ?? null,
+            stanza: r.stanza ?? null,
+            stanzaKind: r.stanza_kind ?? null,
         })),
     };
 };
 
 export interface ChantFacets {
+    sources: string[];
     books: string[];
     months: number[];
     tones: number[];
@@ -223,6 +300,13 @@ export const chantFacets = (): ChantFacets | null => {
         (db.prepare(sql).all() as any[]).map(r => Object.values(r)[0]).filter(v => v !== null) as T[];
 
     return {
+        // Какие владельцы в корпусе вообще есть: акафистов может не быть
+        // вовсе, и предлагать по ним отбор было бы обманом.
+        sources: ["book", "canon", "akathist"].filter((s, i) =>
+            (db.prepare(
+                `SELECT count(*) AS n FROM content_items WHERE ${
+                    ["group_id", "canon_id", "akathist_id"][i]} IS NOT NULL LIMIT 1`,
+            ).get() as { n: number }).n > 0),
         books: column<string>("SELECT DISTINCT book FROM memories ORDER BY book"),
         months: column<number>("SELECT DISTINCT month FROM memories WHERE month IS NOT NULL ORDER BY month"),
         tones: column<number>("SELECT DISTINCT tone FROM memories WHERE tone IS NOT NULL ORDER BY tone"),

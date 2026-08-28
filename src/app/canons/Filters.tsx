@@ -1,18 +1,17 @@
 'use client';
 import React, { useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import type { ChantFacets } from "@/lib/chants";
+import type { CanonFacets } from "@/lib/canons";
 import {
-    BOOK_LABELS, SERVICE_LABELS, SIGN_LABELS, SOURCE_LABELS, UNIT_LABELS,
-    labelOf, monthLabel,
+    BOOK_LABELS, CANON_ROLE_LABELS, SERVICE_LABELS, labelOf,
 } from "@/utils/chantLabels";
 
-// Форма поиска и сужения. Состояние держим не в компоненте, а в адресе
-// страницы: тогда найденное можно переслать ссылкой, а «назад» возвращает к
+// Как и у песнопений, состояние формы живёт в адресе страницы, а не в
+// компоненте: найденное можно переслать ссылкой, а «назад» возвращает к
 // прежней выдаче, а не к пустой форме.
 
 interface Props {
-    facets: ChantFacets | null;
+    facets: CanonFacets | null;
     params: Record<string, string | undefined>;
 }
 
@@ -28,16 +27,13 @@ const Filters = ({ facets, params }: Props) => {
         for (const [k, v] of Object.entries(changes)) {
             if (v) next.set(k, v); else next.delete(k);
         }
-        // Любая правка отбрасывает на первую страницу: третьей страницы у
-        // новой выдачи может попросту не быть.
         next.delete("page");
         router.push(`${pathname}?${next.toString()}`);
     }, [params, pathname, router]);
 
     const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const form = new FormData(e.currentTarget);
-        push({ q: String(form.get("q") || "") });
+        push({ q: String(new FormData(e.currentTarget).get("q") || "") });
     }, [push]);
 
     const select = (name: string, empty: string, options: (string | number)[],
@@ -48,21 +44,24 @@ const Filters = ({ facets, params }: Props) => {
             onChange={e => push({ [name]: e.target.value })}
         >
             <option value="">{empty}</option>
-            {options.map(v => (
-                <option key={v} value={String(v)}>{label(v)}</option>
-            ))}
+            {options.map(v => <option key={v} value={String(v)}>{label(v)}</option>)}
         </select>
     );
+
+    const dirty = Object.keys(params).some(k => k !== "page" && params[k]);
 
     return (
         <div className="flex flex-col gap-2">
             <form onSubmit={onSubmit} className="flex gap-2 items-baseline">
-                <label className="font-serif">Поиск:</label>
+                {/* «Имя», а не «кому»: книга подписывает память в родительном
+                    падеже («Па́мять… Никола́я»), и поле, обещающее дательный,
+                    заставляло бы набирать «Николаю» — чего в корпусе нет. */}
+                <label className="font-serif">Имя или творец:</label>
                 <input
                     name="q"
                     defaultValue={params.q || ""}
                     className="border rounded px-2 py-1 font-serif grow max-w-md"
-                    placeholder="воззвах"
+                    placeholder="Николая, Дамаскина, Богородицы"
                 />
                 <button type="submit" className="font-serif border rounded px-3 py-1 bg-slate-50">
                     Найти
@@ -71,18 +70,13 @@ const Filters = ({ facets, params }: Props) => {
 
             {facets && (
                 <div className="flex flex-wrap gap-2 items-baseline">
-                    {/* Первым: он режет выдачу крупнее всех прочих вместе взятых. */}
-                    {select("source", "книги, каноны и акафисты", facets.sources,
-                            v => labelOf(SOURCE_LABELS, v))}
                     {select("book", "любая книга", facets.books, v => labelOf(BOOK_LABELS, v))}
-                    {select("month", "любой месяц", facets.months, v => monthLabel(Number(v)))}
                     {select("tone", "любой глас", facets.tones, v => `глас ${v}`)}
-                    {select("sign", "любой знак", facets.signs, v => labelOf(SIGN_LABELS, v))}
                     {select("service", "любая служба", facets.services, v => labelOf(SERVICE_LABELS, v))}
-                    {select("unit", "любой род", facets.units, v => labelOf(UNIT_LABELS, v))}
-                    {Object.keys(params).some(k => k !== "q" && k !== "page" && params[k]) && (
+                    {select("role", "любая роль", facets.roles, v => labelOf(CANON_ROLE_LABELS, v))}
+                    {dirty && (
                         <button
-                            onClick={() => push({ source: "", book: "", month: "", tone: "", sign: "", service: "", unit: "", memory: "" })}
+                            onClick={() => push({ q: "", book: "", tone: "", service: "", role: "" })}
                             className="font-serif text-sm text-red-900 underline"
                         >
                             сбросить

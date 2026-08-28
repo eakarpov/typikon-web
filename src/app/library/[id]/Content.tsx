@@ -3,6 +3,7 @@ import CountMeta from "@/app/meta/CountMeta";
 import DneslovRoundImage from "@/lib/common/DneslovRoundImage";
 import {UserCircleIcon} from "@heroicons/react/24/outline";
 import {TextReadiness} from "@/utils/texts";
+import {bookLanguageLabel} from "@/utils/bookLanguages";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -35,6 +36,15 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
             {item.translator && (
                 <p className="font-serif">
                     <strong>Переводчик: </strong>{item.translator}
+                </p>
+            )}
+            {/* На странице книги язык стоит всегда, даже когда он обычный:
+                здесь он одна строка среди автора и переводчика, а не значок
+                в ряду сорока восьми, и «чего не написано» тут читается как
+                «неизвестно», а не как «как у всех». */}
+            {item.language && (
+                <p className="font-serif">
+                    <strong>Язык: </strong>{bookLanguageLabel(item.language)}
                 </p>
             )}
             <h2 className="font-serif">Содержание:</h2>

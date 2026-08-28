@@ -5,7 +5,7 @@ import { PAGE_SIZE } from "./api";
 import Filters from "./Filters";
 import {
     BOOK_LABELS, MARKER_LABELS, PLACEMENT_LABELS, SERVICE_LABELS,
-    SIGN_LABELS, UNIT_LABELS, dayOfMonth, labelOf, shortPosition,
+    SIGN_LABELS, UNIT_LABELS, dayOfMonth, labelOf, shortPosition, stanzaLabel,
 } from "@/utils/chantLabels";
 
 /**
@@ -23,16 +23,25 @@ const Snippet = ({ parts }: { parts: ChantHit["snippet"] }) => (
     </p>
 );
 
-/** Откуда это песнопение: книга, число месяцеслова, служба, место, глас, знак. */
+/**
+ * Откуда это песнопение: книга, число месяцеслова, служба, место, глас, знак.
+ *
+ * У строфы акафиста ничего этого нет — он не день книги и не место службы, —
+ * и подпись у неё своя: имя произведения и номер строфы. Без отдельной ветки
+ * здесь оставалась бы пустая строка: полей много, а заполнено ни одно.
+ */
 const Origin = ({ hit }: { hit: ChantHit }) => {
-    const parts = [
-        labelOf(BOOK_LABELS, hit.book),
-        dayOfMonth(hit.day, hit.month) || null,
-        labelOf(SERVICE_LABELS, hit.service),
-        shortPosition(hit.position) || null,
-        hit.tone ? `глас ${hit.tone}` : null,
-        hit.ode ? `песнь ${hit.ode}` : null,
-    ].filter(Boolean);
+    const parts = hit.akathist
+        ? [hit.akathist, stanzaLabel(hit.unit, hit.stanza, hit.stanzaKind) || null]
+            .filter(Boolean)
+        : [
+            labelOf(BOOK_LABELS, hit.book),
+            dayOfMonth(hit.day, hit.month) || null,
+            labelOf(SERVICE_LABELS, hit.service),
+            shortPosition(hit.position) || null,
+            hit.tone ? `глас ${hit.tone}` : null,
+            hit.ode ? `песнь ${hit.ode}` : null,
+        ].filter(Boolean);
 
     return (
         // Полная подпись места — в title: сокращаем показ, а не сведения.

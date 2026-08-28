@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {useState} from "react";
 import {TextReadiness} from "@/utils/texts";
+import {BOOK_LANGUAGES, DEFAULT_BOOK_LANGUAGE} from "@/utils/bookLanguages";
 
 const AdminEditor = ({ value }: any) => {
     const [name, setName] = useState(value.name || "");
@@ -12,6 +13,8 @@ const AdminEditor = ({ value }: any) => {
     const [order, setOrder] = useState(value.order || "");
     const [isPublic, setIsPublic] = useState(value.public !== false);
     const [bibleLanguageCode, setBibleLanguageCode] = useState(value.bibleLanguageCode || "");
+    // Пустого языка у книги не бывает: см. @/utils/bookLanguages.
+    const [language, setLanguage] = useState(value.language || DEFAULT_BOOK_LANGUAGE);
 
     const [saved, setIsSaved] = useState(false);
 
@@ -38,6 +41,7 @@ const AdminEditor = ({ value }: any) => {
                 order: parseInt(order),
                 public: isPublic,
                 bibleLanguageCode: bibleLanguageCode || null,
+                language,
             }),
         }).then(() => {
             setIsSaved(true);
@@ -101,6 +105,18 @@ const AdminEditor = ({ value }: any) => {
                     onChange={() => setIsPublic(!isPublic)}
                 />
             </div>
+            <label>
+                Язык книги
+            </label>
+            <select
+                className="border-2"
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+            >
+                {BOOK_LANGUAGES.map(l => (
+                    <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+            </select>
             <label>
                 Язык Библии (только для изданий Библии — используется для резолюции зачал; пусто для обычных сборников)
             </label>

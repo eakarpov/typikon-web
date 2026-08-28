@@ -25,6 +25,7 @@ const numeric = (raw: string | undefined): number | null => {
 };
 
 export const filtersFrom = (params: Record<string, string | undefined>): ChantFilters => ({
+    source: params.source || null,
     book: params.book || null,
     month: numeric(params.month),
     day: numeric(params.day),

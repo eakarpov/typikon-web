@@ -1,0 +1,48 @@
+// Язык книги библиотеки.
+//
+// Заводится, пока ответ известен на все книги разом: сегодня их 48 и все
+// церковнославянские гражданским шрифтом. Когда приедет первая иная, отличать
+// её будет уже не от чего — непроставленное поле станет неотличимо от
+// «не успели проставить». Поэтому поле есть у каждой книги и пустым не бывает.
+//
+// ПЕРВЫЕ ТРИ КОДА — НЕ НАШИ. Это словарь корпуса typikon-rules
+// (`src/languages.py`), и совпадать они должны буква в букву: по этим же кодам
+// там помечен каждый текст богослужебной книги (`content_items.language`), и
+// разойдись они — одна и та же книга называлась бы в двух половинах проекта
+// по-разному. Правя здесь, правь и там.
+//
+// `ru` добавлен сверх словаря корпуса: библиотека шире богослужебных книг, в
+// ней есть и переводы. Греческий и прочие завести — одна строка здесь; в
+// корпус их дописывать надо только если на них появится богослужебный текст.
+export interface BookLanguage {
+    code: string;
+    label: string;
+    short: string;
+    // Церковнославянское начертание обычным шрифтом не показать: в нём нет ни
+    // титла, ни юса, и текст осыплется квадратами. Помечаем, чтобы показ знал.
+    needsChurchFont: boolean;
+}
+
+export const BOOK_LANGUAGES: BookLanguage[] = [
+    { code: "cu_gr", label: "церковнославянский (гражданским шрифтом)", short: "цс гражд.", needsChurchFont: false },
+    { code: "cu", label: "церковнославянский (уставное начертание)", short: "цс", needsChurchFont: true },
+    { code: "ro_cyr", label: "румынский (кириллица)", short: "рум.", needsChurchFont: true },
+    { code: "ru", label: "русский", short: "рус.", needsChurchFont: false },
+];
+
+// Язык, на котором набрано всё, что в библиотеке уже лежит. Он же — значение
+// по умолчанию у новой книги: почти всякая следующая тоже будет на нём, а
+// ошибиться в одну сторону дешевле, чем оставить пустым.
+export const DEFAULT_BOOK_LANGUAGE = "cu_gr";
+
+const BY_CODE = new Map(BOOK_LANGUAGES.map(l => [l.code, l]));
+
+/** Незнакомый код показываем как есть, а не прячем: так видно, что он завёлся. */
+export const bookLanguageLabel = (code: string | null | undefined): string =>
+    BY_CODE.get(code || "")?.label || code || "";
+
+export const bookLanguageShort = (code: string | null | undefined): string =>
+    BY_CODE.get(code || "")?.short || code || "";
+
+export const needsChurchFont = (code: string | null | undefined): boolean =>
+    BY_CODE.get(code || "")?.needsChurchFont ?? false;

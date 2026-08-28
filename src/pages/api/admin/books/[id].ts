@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
+import {DEFAULT_BOOK_LANGUAGE} from "@/utils/bookLanguages";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -31,6 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             order: data.order,
                             public: data.public,
                             bibleLanguageCode: data.bibleLanguageCode || null,
+                            // Язык книги, а не издания Библии: bibleLanguageCode
+                            // выше — про резолюцию зачал и стоит лишь у двух книг.
+                            language: data.language || DEFAULT_BOOK_LANGUAGE,
                         },
                     },
                 );
