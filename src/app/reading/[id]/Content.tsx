@@ -14,7 +14,10 @@ import TextSaveLocal from "@/app/components/save/TextSaveLocal";
 import {myFont} from "@/utils/font";
 import {TextReadiness} from "@/utils/texts";
 
-const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
+import AccentedSwitch from "@/app/reading/[id]/AccentedSwitch";
+import {getAccentedView} from "@/app/reading/[id]/api";
+
+const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Promise<any>, showAccents?: boolean }) => {
 
     const [item, err, shouldRedirect] = await itemPromise;
 
@@ -107,7 +110,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     ))}
                 </div>
             )}
-            <ReadingContent item={item} />
+            <AccentedReading item={item} showAccents={showAccents} />
             {item.info && (
                 <div className="font-serif">
                     <p>
@@ -145,6 +148,35 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
             />
         )}
         </div>
+    );
+};
+
+// Текст и, если он размечен не полностью, переключатель показа с машинными
+// ударениями. Сам корпус при этом не трогается — подменяется только то, что видно.
+const AccentedReading = async ({ item, showAccents }: { item: any, showAccents: boolean }) => {
+    const view = await getAccentedView(item, showAccents);
+
+    if (!view) return <ReadingContent item={item} />;
+
+    const shown = showAccents && view.content ? { ...item, content: view.content } : item;
+
+    return (
+        <>
+            <AccentedSwitch
+                alias={item.alias}
+                showAccents={showAccents}
+                marked={view.marked}
+                expected={view.expected}
+            />
+            <ReadingContent item={shown} />
+            {showAccents && (
+                <p className="font-serif text-sm text-slate-600 mt-2 no-pdf">
+                    Ударения расставлены машинно по словарю собрания: {view.marked} из {view.expected} слов,
+                    которым знак положен. Спорные места оставлены без знака. В самом тексте ударений нет —
+                    это подсказка для чтения вслух, а не книга.
+                </p>
+            )}
+        </>
     );
 };
 

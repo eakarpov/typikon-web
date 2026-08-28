@@ -51,8 +51,10 @@ import {
     hasAccent,
     isAbbreviated,
     isAccentExpected,
+    isInRubric,
     lookup,
     placeAccent,
+    rubricRanges,
     stripAccents,
     syllables,
     WORD_PATTERN,
@@ -75,20 +77,6 @@ const MIN_SUPPORT = 3;
 const NEIGHBOURS = 4;
 const NEIGHBOUR_SHARE = 0.5;
 const MIN_NEIGHBOURS = 2;
-
-// Киноварь: от «{k|» до ближайшей закрывающей скобки.
-const rubricRanges = (content: string): [number, number][] => {
-    const ranges: [number, number][] = [];
-    const opener = /\{k\|/g;
-    let match: RegExpExecArray | null;
-
-    while ((match = opener.exec(content))) {
-        const close = content.indexOf("}", match.index);
-        ranges.push([match.index, close < 0 ? content.length : close]);
-    }
-
-    return ranges;
-};
 
 interface Candidate {
     word: string;
@@ -138,7 +126,7 @@ async function main() {
         if (has / need < MIN_DENSITY) { skipped.thin++; continue; }
 
         const ranges = rubricRanges(doc.content);
-        const inRubric = (at: number) => ranges.some(([from, to]) => at >= from && at <= to);
+        const inRubric = (at: number) => isInRubric(ranges, at);
 
         // Все слова текста, которым знак положен, по порядку — чтобы у каждого
         // кандидата можно было спросить, размечены ли соседи.

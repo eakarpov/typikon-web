@@ -1,5 +1,14 @@
 import clientPromise from "@/lib/mongodb";
-import { accentKey, KAMORA, OXIA, VARIA } from "@/lib/accents/core";
+import {
+    accentKey,
+    MARK_NAMES,
+    type AccentAnswer,
+    type CorpusVariant,
+    type LexiconVariant,
+} from "@/lib/accents/core";
+
+export { MARK_NAMES };
+export type { AccentAnswer, CorpusVariant, LexiconVariant };
 
 // Доступ к словарю ударений. Данные лежат в typikon-csl — там же, где словарь
 // церковнославянского языка: у обеих баз одно пространство ключей (наш accentKey
@@ -15,13 +24,6 @@ import { accentKey, KAMORA, OXIA, VARIA } from "@/lib/accents/core";
 export const ACCENTS_DB = "typikon-csl";
 export const ACCENTS_COLLECTION = "accents";
 
-/** Как называется знак — для ответов наружу; внутри хранится сам символ. */
-export const MARK_NAMES: Record<string, string> = {
-    [OXIA]: "оксия",
-    [VARIA]: "вария",
-    [KAMORA]: "камора",
-};
-
 // Имена полей в хранении короткие: записей 260 тысяч, и в каждой по нескольку
 // вариантов, так что имена полей весят больше самих данных. При длинных именах
 // коллекция занимала 53,6 МБ и раздувала typikon-csl с 8 МБ до 70 — а базу возят
@@ -32,7 +34,14 @@ export const MARK_NAMES: Record<string, string> = {
 //   n — сколько раз (в корпусе и песнопениях — вхождений, в словаре — форм),
 //   l — лексема, p — грамматические пометы.
 //
-//   c — корпус книг, h — корпус песнопений, x — словарь, a — согласие источников.
+//   c — корпус книг, h — корпус песнопений, x — словарь, a — согласие источников,
+//   u — сколько раз слово встретилось БЕЗ знака.
+//
+// Зачем считать безударные (u). Чтобы расставить ударения в присланном тексте, мало
+// знать, где знак стоит: надо знать, положен ли он этому слову вообще. В
+// церковнославянском наборе «и», «не», «же», «бо», «на» знака не несут, и без этого
+// счётчика инструмент принялся бы лепить ударения на предлоги. Правило то же, что в
+// core: слову знак положен, если оно размечено не реже чем в девяти случаях из десяти.
 
 interface StoredCorpusVariant { v: number; m: string; s: string; n: number }
 interface StoredLexiconVariant { v: number; m: string; s: string; l: string; p: string; n: number }
@@ -45,27 +54,9 @@ export interface AccentRecord {
     /** Совпадает ли ударная гласная у всех источников, которые знают слово;
      *  null — знает только один, спорить не с кем. */
     a: boolean | null;
-}
-
-/** Засвидетельствовано в корпусе: где стоит знак и сколько раз так написано. */
-export interface CorpusVariant {
-    /** Номер ударной гласной с нуля — не позиция символа: та зависит от того,
-     *  разложены ли ї и й, а номер гласной не зависит. */
-    vowel: number;
-    mark: string;
-    spelling: string;
-    count: number;
-}
-
-/** Порождено словарём: та же позиция плюс грамматика. */
-export interface LexiconVariant {
-    vowel: number;
-    mark: string;
-    spelling: string;
-    lexeme: string;
-    properties: string;
-    /** Сколько форм словаря дали это положение ударения. */
-    forms: number;
+    /** Сколько раз слово встретилось без знака (книги и песнопения вместе:
+     *  клитика от жанра не зависит). */
+    u?: number;
 }
 
 export const toStoredCorpus = (variant: CorpusVariant): StoredCorpusVariant =>
@@ -74,22 +65,13 @@ export const toStoredCorpus = (variant: CorpusVariant): StoredCorpusVariant =>
 export const toStoredLexicon = (variant: LexiconVariant): StoredLexiconVariant =>
     ({ v: variant.vowel, m: variant.mark, s: variant.spelling, l: variant.lexeme, p: variant.properties, n: variant.forms });
 
-export interface AccentAnswer {
-    word: string;
-    known: boolean;
-    agree: boolean | null;
-    corpus: (CorpusVariant & { markName: string; share: number })[];
-    chants: (CorpusVariant & { markName: string; share: number })[];
-    lexicon: (LexiconVariant & { markName: string })[];
-}
-
 const collection = async () => {
     const client = await clientPromise;
     return client.db(ACCENTS_DB).collection<AccentRecord>(ACCENTS_COLLECTION);
 };
 
 const missing = (word: string): AccentAnswer =>
-    ({ word, known: false, agree: null, corpus: [], chants: [], lexicon: [] });
+    ({ word, known: false, agree: null, corpus: [], chants: [], lexicon: [], accentedShare: null });
 
 // Доля считается внутри источника, а не по всем сразу: у книг и у гимнографии
 // распределение разное («спасе́» — аорист в чтениях, «спа́се» — звательный в
@@ -109,11 +91,15 @@ const withShares = (variants: StoredCorpusVariant[]) => {
 
 const dress = (word: string, record: AccentRecord): AccentAnswer => {
     const lexicon = record.x ?? [];
+    const accented = [...(record.c ?? []), ...(record.h ?? [])]
+        .reduce((sum, variant) => sum + variant.n, 0);
+    const plain = record.u ?? 0;
 
     return {
         word,
         known: true,
         agree: record.a,
+        accentedShare: accented + plain ? Number((accented / (accented + plain)).toFixed(4)) : null,
         corpus: withShares(record.c ?? []),
         chants: withShares(record.h ?? []),
         lexicon: lexicon.map((variant) => ({
@@ -176,4 +162,37 @@ export const summarize = async (): Promise<AccentSummary> => {
     ]);
 
     return { words, fromCorpus, fromChants, fromLexicon, compared, agree, disagree };
+};
+
+// --- покрытие текстов ---------------------------------------------------------
+//
+// Какие тексты собрания размечены не полностью. Список нужен странице чтения: только
+// там имеет смысл предлагать показ с машинными ударениями. Считается тем же проходом,
+// что и словарь (см. load-accents.ts), и лежит рядом с ним, а не в самом корпусе:
+// это производные данные, и корпус ради них трогать незачем.
+
+export const COVERAGE_COLLECTION = "accentCoverage";
+
+export interface AccentCoverage {
+    /** Алиас текста. */
+    _id: string;
+    /** Слов, которым знак положен. */
+    need: number;
+    /** Из них размечено. */
+    has: number;
+}
+
+export const coverageFor = async (alias: string | null | undefined): Promise<AccentCoverage | null> => {
+    if (!alias) return null;
+    try {
+        const client = await clientPromise;
+        return await client.db(ACCENTS_DB)
+            .collection<AccentCoverage>(COVERAGE_COLLECTION)
+            .findOne({ _id: alias });
+    } catch (e) {
+        // Словарь мог не доехать на этот сервер — страница чтения от этого
+        // не должна ломаться, просто не предложит показ.
+        console.error("accents: не удалось прочитать покрытие", e);
+        return null;
+    }
 };

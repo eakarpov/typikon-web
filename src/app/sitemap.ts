@@ -23,6 +23,7 @@ const STATIC_ROUTES = [
     { path: "/calendar/today", priority: 0.9 },
     { path: "/library", priority: 0.9 },
     { path: "/saints", priority: 0.8 },
+    { path: "/accents", priority: 0.7 },
     { path: "/triodion", priority: 0.8 },
     { path: "/penticostarion", priority: 0.8 },
     { path: "/rest-readings", priority: 0.8 },

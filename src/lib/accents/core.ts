@@ -260,6 +260,51 @@ export type Confidence = "sure" | "likely" | "unsure";
 
 export const DOMINANCE = 10;
 
+// --- словарная запись --------------------------------------------------------
+//
+// Форма ответа словаря. Живёт в ядре, а не рядом с доступом к базе: на неё
+// смотрит и разметка текста, которой база не нужна вовсе.
+
+/** Как называется знак — для показа человеку; внутри везде сам символ. */
+export const MARK_NAMES: Record<string, string> = {
+    [OXIA]: "оксия",
+    [VARIA]: "вария",
+    [KAMORA]: "камора",
+};
+
+/** Засвидетельствовано в собрании: где стоит знак и сколько раз так написано. */
+export interface CorpusVariant {
+    /** Номер ударной гласной с нуля — не позиция символа: та зависит от того,
+     *  разложены ли ї и й, а номер гласной не зависит. */
+    vowel: number;
+    mark: string;
+    spelling: string;
+    count: number;
+}
+
+/** Порождено словарём: та же позиция плюс грамматика. */
+export interface LexiconVariant {
+    vowel: number;
+    mark: string;
+    spelling: string;
+    lexeme: string;
+    properties: string;
+    /** Сколько форм словаря дали это положение ударения. */
+    forms: number;
+}
+
+export interface AccentAnswer {
+    word: string;
+    known: boolean;
+    agree: boolean | null;
+    corpus: (CorpusVariant & { markName: string; share: number })[];
+    chants: (CorpusVariant & { markName: string; share: number })[];
+    lexicon: (LexiconVariant & { markName: string })[];
+    /** Положен ли этому слову знак вообще: доля размеченных написаний в собраниях.
+     *  Предлоги и частицы держатся у нуля, знаменательные слова — у единицы. */
+    accentedShare: number | null;
+}
+
 // --- ставится ли слову ударение вообще ---------------------------------------
 //
 // В церковнославянском наборе знак несут не все слова: предлоги и частицы («и»,
@@ -305,6 +350,25 @@ export const isAccentExpected = (rates: AccentRates, key: string) => {
     if (!stats || stats.accented < MIN_EVIDENCE) return false;
     return stats.accented / (stats.accented + stats.plain) >= EXPECTED_SHARE;
 };
+
+// Киноварь: от «{k|» до ближайшей закрывающей скобки. Внутри неё — уставные пометы,
+// которые страница чтения печатает красным; в богослужебных книгах их не размечают
+// (знак стоит у 39% слов против 98% снаружи), и ставить ударения туда нельзя.
+export const rubricRanges = (content: string): [number, number][] => {
+    const ranges: [number, number][] = [];
+    const opener = /\{k\|/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = opener.exec(content))) {
+        const close = content.indexOf("}", match.index);
+        ranges.push([match.index, close < 0 ? content.length : close]);
+    }
+
+    return ranges;
+};
+
+export const isInRubric = (ranges: [number, number][], at: number) =>
+    ranges.some(([from, to]) => at >= from && at <= to);
 
 // --- постановка знака --------------------------------------------------------
 
