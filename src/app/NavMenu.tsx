@@ -16,6 +16,7 @@ import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
 import {WithRights} from "@/lib/admin/client";
 import NewsLink from "@/app/NewsLink";
+import NavGroup from "@/app/NavGroup";
 import {BIBLE_LANGUAGE_OPTIONS, DEFAULT_BIBLE_LANGUAGE, getClientBibleLanguage, setClientBibleLanguage} from "@/utils/bibleLanguage";
 
 const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
@@ -95,18 +96,23 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 >
                     Чтения на день
                 </Link>
-                <Link
-                    href="/library"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/library`) && `text-red-600`}`}
-                >
-                    Библиотека
-                </Link>
-                <Link
-                    href="/chants"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/chants`) && `text-red-600`}`}
-                >
-                    Песнопения
-                </Link>
+                {/* Книги собрания — одной группой: их две, и обе про то, что читают
+                    и поют, а не про то, когда. */}
+                <NavGroup
+                    title="Собрание"
+                    items={[
+                        { href: "/library", label: "Библиотека" },
+                        { href: "/chants", label: "Песнопения" },
+                    ]}
+                />
+                {/* Вспомогательное при чтении. Сюда же со временем переедут словарь
+                    церковнославянского и родословная — сейчас они в «Опытах». */}
+                <NavGroup
+                    title="Пособия"
+                    items={[
+                        { href: "/accents", label: "Ударения" },
+                    ]}
+                />
                 <Link
                     href="/saints"
                     className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/saints`) && `text-red-600`}`}

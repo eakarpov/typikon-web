@@ -7,7 +7,7 @@ import {Metadata} from "next";
 
 type Props = {
     params: { id: string }
-    searchParams: { range?: string }
+    searchParams: { range?: string; accents?: string }
 }
 
 export async function generateMetadata(
@@ -31,7 +31,7 @@ export async function generateMetadata(
     }
 }
 
-const ReadingItem = ({ params: { id }, searchParams: { range } }: Props) => {
+const ReadingItem = ({ params: { id }, searchParams: { range, accents } }: Props) => {
     setMeta();
     const itemPromise = getItem(id, range);
 
@@ -39,7 +39,7 @@ const ReadingItem = ({ params: { id }, searchParams: { range } }: Props) => {
       <div className={myFont.variable}>
           <Suspense fallback={<div>Loading...</div>}>
               {/* @ts-expect-error Async Server Component */}
-              <Content itemPromise={itemPromise} />
+              <Content itemPromise={itemPromise} showAccents={accents === "1"} />
           </Suspense>
       </div>
     );

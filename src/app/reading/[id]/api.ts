@@ -6,6 +6,8 @@ import {filterVersesByRanges, parseVerseRanges, sortVerses} from "@/utils/verses
 import {TextContentType} from "@/utils/texts";
 import {cached, CacheTag} from "@/lib/cache";
 import {saintTitles} from "@/lib/dneslov";
+import {coverageFor} from "@/lib/accents/store";
+import {markText} from "@/lib/accents/service";
 
 // Сам текст и его стихи кэшируются целиком; фильтрация по ?range идёт уже
 // поверх кэша, иначе каждый диапазон занимал бы отдельную запись.
@@ -210,5 +212,52 @@ export const getTextLinks = async (item: any): Promise<TextLinks> => {
     } catch (e) {
         console.error(e);
         return { memory: null, mentions: [] };
+    }
+};
+
+// --- показ с машинными ударениями ---------------------------------------------
+//
+// 65 с лишним текстов собрания не размечены вовсе или размечены наполовину: ПВЛ,
+// службы, акафисты, Маргарит, Часослов. Вслух их не прочесть, а писать машинные
+// ударения в корпус нельзя — это была бы уже не вычитанная книга.
+//
+// Поэтому ударения предлагаются КАК ВИД: текст в базе остаётся как есть, а читателю
+// показывается размеченная копия с прямой пометкой, что знаки поставила машина.
+
+export interface AccentedView {
+    content: string;
+    /** Сколько знаков поставлено и сколько слов их ждали. */
+    marked: number;
+    expected: number;
+}
+
+// ПВЛ — 55 тысяч слов, и разметка её каждый раз заново обошлась бы дороже самой
+// страницы. Кэш по тому же тегу, что и текст: правят текст — пересчитается и вид.
+const buildAccentedView = cached(async (id: string, content: string): Promise<AccentedView> => {
+    const result = await markText(content, "reading");
+
+    return {
+        content: result.tokens.map((token) => token.text).join(""),
+        marked: result.marked,
+        expected: result.expected,
+    };
+}, ["reading-accented-view"], [CacheTag.TEXTS]);
+
+/**
+ * Стоит ли предлагать показ с ударениями и как он выглядит. null — текст размечен,
+ * предлагать нечего.
+ */
+export const getAccentedView = async (item: any, wanted: boolean): Promise<AccentedView | null> => {
+    if (!item?.alias || typeof item.content !== "string" || !item.content.trim()) return null;
+
+    try {
+        const coverage = await coverageFor(item.alias);
+        if (!coverage) return null;
+        if (!wanted) return { content: "", marked: 0, expected: coverage.need - coverage.has };
+
+        return await buildAccentedView(item.alias, item.content);
+    } catch (e) {
+        console.error(e);
+        return null;
     }
 };

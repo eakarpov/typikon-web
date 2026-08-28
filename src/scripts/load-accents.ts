@@ -40,19 +40,24 @@ import {
     accentedVowel,
     accentKey,
     addContent,
+    addRates,
     createDraft,
+    createRates,
     finalize,
     findAccentIssues,
     hasAccent,
     isAbbreviated,
+    isAccentExpected,
     syllables,
     WORD_PATTERN,
 } from "@/lib/accents/core";
 import {
     ACCENTS_COLLECTION,
     ACCENTS_DB,
+    COVERAGE_COLLECTION,
     toStoredCorpus,
     toStoredLexicon,
+    type AccentCoverage,
     type AccentRecord,
     type CorpusVariant,
     type LexiconVariant,
@@ -125,7 +130,12 @@ async function main() {
     const corpus = await readChurchSlavonicCorpus(client.db("typikon"));
 
     const draft = createDraft();
-    for (const doc of corpus.docs) addContent(draft, doc.content);
+    // Заодно копим безударные вхождения: без них не ответить, положен ли слову знак.
+    const rates = createRates();
+    for (const doc of corpus.docs) {
+        addContent(draft, doc.content);
+        addRates(rates, doc.content);
+    }
     const dictionary = finalize(draft);
     console.log(`  основ из корпуса книг: ${dictionary.size}`);
 
@@ -133,7 +143,10 @@ async function main() {
     const chantSource = readChants();
     const chantDraft = createDraft();
     if (chantSource) {
-        for (const text of chantSource.texts) addContent(chantDraft, text);
+        for (const text of chantSource.texts) {
+            addContent(chantDraft, text);
+            addRates(rates, text);
+        }
     }
     const chantDictionary = finalize(chantDraft);
     if (chantSource) {
@@ -191,7 +204,7 @@ async function main() {
     const records: AccentRecord[] = [];
     const stats = {
         fromCorpus: 0, fromChants: 0, fromLexicon: 0,
-        compared: 0, agree: 0, disagree: 0,
+        compared: 0, agree: 0, disagree: 0, withPlain: 0,
     };
 
     const asCorpusVariants = (list: ReturnType<typeof finalize> extends Map<string, infer V> ? V : never): CorpusVariant[] =>
@@ -225,7 +238,10 @@ async function main() {
             if (agree) stats.agree++; else stats.disagree++;
         }
 
-        // Пустые массивы не пишем вовсе: у большинства записей часть источников
+        const plain = rates.get(key)?.plain ?? 0;
+        if (plain) stats.withPlain++;
+
+        // Пустые массивы и нули не пишем вовсе: у большинства записей часть источников
         // молчит, и на четверти миллиона документов это заметная разница в объёме.
         records.push({
             _id: key,
@@ -233,6 +249,7 @@ async function main() {
             ...(chantVariants.length ? { h: chantVariants.map(toStoredCorpus) } : {}),
             ...(lexiconVariants.length ? { x: lexiconVariants.map(toStoredLexicon) } : {}),
             a: agree,
+            ...(plain ? { u: plain } : {}),
         });
     }
 
@@ -241,6 +258,28 @@ async function main() {
     console.log(`  знают песнопения: ${stats.fromChants}`);
     console.log(`  знает словарь: ${stats.fromLexicon}`);
     console.log(`  знают хотя бы двое: ${stats.compared} (согласны ${stats.agree}, расходятся ${stats.disagree})`);
+    console.log(`  встречались и без знака: ${stats.withPlain}`);
+
+    // --- покрытие текстов ---
+    //
+    // Где разметка неполная. Считаем только по словам, которым знак положен: иначе
+    // предлоги и частицы, которые знака и не несут, занижали бы долю у всех подряд.
+    const coverage: AccentCoverage[] = [];
+    for (const doc of corpus.docs) {
+        if (doc.collection !== "texts" || !doc.label) continue;
+        let need = 0;
+        let has = 0;
+        for (const word of doc.content.match(WORD_PATTERN) ?? []) {
+            if (isAbbreviated(word) || syllables(word) === 0) continue;
+            if (!isAccentExpected(rates, accentKey(word))) continue;
+            need++;
+            if (hasAccent(word)) has++;
+        }
+        if (need >= 30 && has / need < 0.9) coverage.push({ _id: doc.label, need, has });
+    }
+    coverage.sort((a, b) => (b.need - b.has) - (a.need - a.has));
+    console.log(`\nТекстов с неполной разметкой: ${coverage.length}, слов ждут знака: `
+        + `${coverage.reduce((sum, row) => sum + row.need - row.has, 0)}`);
 
     if (DUMP) {
         // Наружу — читаемые имена полей, а не короткие складские: файл читают люди
@@ -295,6 +334,11 @@ async function main() {
     // Поиск идёт по _id, отдельного индекса не нужно.
     const written = await accents.countDocuments({});
     console.log(`Записано: ${written}`);
+
+    const coverageCollection = client.db(ACCENTS_DB).collection<AccentCoverage>(COVERAGE_COLLECTION);
+    await coverageCollection.deleteMany({});
+    if (coverage.length) await coverageCollection.insertMany(coverage, { ordered: false });
+    console.log(`Покрытие: ${coverage.length} текстов`);
 
     process.exit(0);
 }
