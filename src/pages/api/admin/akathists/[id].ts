@@ -3,7 +3,10 @@ import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 
-// Решение по одной связи «акафист — святой».
+// Решение по одной связи со святым — акафиста или памяти книги.
+//
+// Коллекцию выбирает параметр target: работа глазами у них одна и та же, и
+// разводить её по двум ручкам значило бы держать две одинаковые.
 //
 // Вместе со статусом принимаем dneslovId: в ревью можно не только согласиться
 // с предложенным, но и выбрать другого из альтернатив, и тогда сохранять надо
@@ -13,7 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method !== "POST") { res.status(405).end(); return; }
     if (!(await checkRightsBack(req, res))) return;
 
-    const { id } = req.query;
+    const { id, target } = req.query;
+    const collection = target === "memory" ? "memory_saint_links" : "akathist_saint_links";
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const status = body?.status;
 
@@ -24,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
         const client = await clientPromise;
-        const col = client.db("typikon").collection("akathist_saint_links");
+        const col = client.db("typikon").collection(collection);
 
         const update: Record<string, unknown> = { status, decidedAt: new Date() };
         // Подтверждая, записываем ИМЕННО ТО, что человек видел на экране:

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { LinksData, LinkStatus, SaintLink } from "./api";
+import type { LinksData, LinkStatus, LinkTarget, SaintLink } from "./api";
 
 // Просмотр связей «акафист — святой».
 //
@@ -31,6 +31,14 @@ const KIND_LABELS: Record<string, string> = {
 
 const dneslovHref = (id: string) => `https://dneslov.org/api/v0/memories/${id}.json`;
 
+// Куда ведёт наша сторона связи. У памяти книги своей страницы нет — она
+// живёт внутри службы, — поэтому ведём в поиск по песнопениям этой памяти:
+// увидеть, что за служба, всё равно надо.
+const subjectHref = (link: SaintLink) =>
+    link.target === "akathist"
+        ? `/akathists/${link.subjectId}`
+        : `/chants?memory=${encodeURIComponent(link.subjectId)}&q=господи`;
+
 const Row = ({ link, onDecide }: {
     link: SaintLink;
     onDecide: (id: string, status: LinkStatus, dneslovId?: string, saintName?: string) => void;
@@ -46,7 +54,8 @@ const Row = ({ link, onDecide }: {
                     {KIND_LABELS[link.kind] ?? link.kind}
                 </span>
                 <span className="text-xs text-slate-400">{Math.round(link.score * 100)}%</span>
-                <Link href={`/akathists/${link.akathistId}`} target="_blank"
+                {link.date && <span className="text-xs text-slate-400">{link.date}</span>}
+                <Link href={subjectHref(link)} target="_blank"
                       className="font-serif text-red-900 hover:underline">
                     {link.title}
                 </Link>
@@ -100,7 +109,7 @@ const Row = ({ link, onDecide }: {
     );
 };
 
-const Editor = ({ data, status }: { data: LinksData; status: string }) => {
+const Editor = ({ data, status, target }: { data: LinksData; status: string; target: LinkTarget }) => {
     const [items, setItems] = useState(data.items);
     const [busy, setBusy] = useState(false);
 
@@ -109,7 +118,7 @@ const Editor = ({ data, status }: { data: LinksData; status: string }) => {
         // сеть на каждой строке — значит сделать его невыносимым. Ошибку
         // покажем, если она случится.
         setItems(prev => prev.map(i => (i.id === id ? { ...i, status: next } : i)));
-        const res = await fetch(`/api/admin/akathists/${id}`, {
+        const res = await fetch(`/api/admin/akathists/${id}?target=${target}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: next, dneslovId, saintName }),
@@ -139,17 +148,29 @@ const Editor = ({ data, status }: { data: LinksData; status: string }) => {
 
     return (
         <div className="flex flex-col gap-2">
-            <h1 className="font-bold">Акафисты и святые</h1>
+            <h1 className="font-bold">Связи со святыми</h1>
+
+            <div className="flex flex-row gap-2 items-baseline">
+                {(["akathist", "memory"] as LinkTarget[]).map(t => (
+                    <a key={t} href={`/admin/akathists?target=${t}&status=${status}`}
+                       className={`text-sm px-2 py-0.5 rounded border ${
+                           target === t ? "bg-slate-200" : "hover:bg-slate-50"}`}>
+                        {t === "akathist" ? "акафисты" : "памяти книг"}
+                    </a>
+                ))}
+            </div>
             <p className="text-sm text-slate-600">
                 Сопоставитель предложил святого — от вас нужно подтверждение или поправка.
                 Подтверждённое выгружается в правила корпуса командой{" "}
-                <code>npm run export:akathist-saints</code>, и уже оттуда сборка проставляет
-                <code> akathists.dneslov_id</code>. Прямо в базу не пишем: она пересобирается с нуля.
+                <code>{target === "akathist" ? "npm run export:akathist-saints" : "npm run export:memory-saints"}</code>,
+                и уже оттуда сборка проставляет{" "}
+                <code>{target === "akathist" ? "akathists.dneslov_id" : "memories.dneslov_id"}</code>.
+                Прямо в базу не пишем: она пересобирается с нуля.
             </p>
 
             <div className="flex flex-row flex-wrap gap-2 items-baseline">
                 {["pending", "approved", "rejected", "all"].map(s => (
-                    <a key={s} href={`/admin/akathists?status=${s}`}
+                    <a key={s} href={`/admin/akathists?target=${target}&status=${s}`}
                        className={`text-sm px-2 py-0.5 rounded border ${
                            status === s ? "bg-slate-200" : "hover:bg-slate-50"}`}>
                         {STATUS_LABELS[s]} {data.counts[s] !== undefined ? `(${data.counts[s]})` : ""}
