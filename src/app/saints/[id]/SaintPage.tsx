@@ -16,7 +16,7 @@ enum COLLECTION_TYPE {
     AUTHOR,
 }
 
-const SaintPage = ({ id, item, items, mentions, linkedNoble }: {id: string, item: any, items: any[], mentions: any[], linkedNoble?: {id: number; name: string} | null }) => {
+const SaintPage = ({ id, item, items, mentions, linkedNoble, akathists = [] }: {id: string, item: any, items: any[], mentions: any[], linkedNoble?: {id: number; name: string} | null, akathists?: {id: string; title: string; stanzas: number}[] }) => {
     const authorItems = useMemo(() => items.filter(el => el.dneslovType === DneslovKind.AUTHOR), [items]);
     const bookItems = useMemo(() => items.filter(el => el.dneslovType !== DneslovKind.AUTHOR), [items]); // MEMORY
 
@@ -66,6 +66,23 @@ const SaintPage = ({ id, item, items, mentions, linkedNoble }: {id: string, item
                 {linkedNoble && (
                     <p className="font-serif">
                         В родословной: <Link className="text-blue-600 hover:underline" href={`/nobles/${linkedNoble.id}`}>{linkedNoble.name}</Link>
+                    </p>
+                )}
+                {!!akathists.length && (
+                    // Связь ставится не автоматом: сопоставитель предлагает,
+                    // человек подтверждает в админке (/admin/akathists). Ошибка
+                    // в проставленной связи тише отсутствующей — она выглядит
+                    // как факт, и на этой странице её никто не заподозрит.
+                    <p className="font-serif">
+                        {akathists.length > 1 ? "Акафисты: " : "Акафист: "}
+                        {akathists.map((a, i) => (
+                            <React.Fragment key={a.id}>
+                                {i > 0 && ", "}
+                                <Link className="text-amber-800 hover:underline" href={`/akathists/${a.id}`}>
+                                    {a.title}
+                                </Link>
+                            </React.Fragment>
+                        ))}
                     </p>
                 )}
                 {lastMemo && (

@@ -109,6 +109,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         // со всеми песнями или строфами.
                         { href: "/canons", label: "Каноны" },
                         { href: "/akathists", label: "Акафисты" },
+                        { href: "/prayers", label: "Молитвы" },
                     ]}
                 />
                 {/* Вспомогательное при чтении. Сюда же со временем переедут словарь

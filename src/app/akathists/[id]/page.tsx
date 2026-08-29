@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAkathist } from "@/lib/akathists";
+import { prayersOfAkathist } from "@/lib/prayers";
 import { myFont } from "@/utils/font";
 import {
-    AKATHIST_STATUS_LABELS, SUBJECT_KIND_LABELS, UNIT_LABELS, labelOf, stanzaLabel,
+    AKATHIST_STATUS_LABELS, BOOK_LABELS, SUBJECT_KIND_LABELS, UNIT_LABELS,
+    labelOf, stanzaLabel,
 } from "@/utils/chantLabels";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +25,7 @@ export async function generateMetadata(
 const AkathistPage = ({ params }: { params: { id: string } }) => {
     const a = getAkathist(params.id);
     if (!a) notFound();
+    const prayers = prayersOfAkathist(params.id);
 
     return (
         <div className={`${myFont.variable} pt-2`}>
@@ -75,12 +78,29 @@ const AkathistPage = ({ params }: { params: { id: string } }) => {
                 </section>
             ))}
 
+            {prayers.length > 0 && (
+                // Молитва при акафисте — не строфа: у неё нет ни номера, ни
+                // места в акростихе, и живёт она своей сущностью (prayers).
+                // Но печатается она здесь же, и читателю нужна здесь же.
+                <div className="mt-6 pt-3 border-t border-slate-300">
+                    <h2 className="font-serif font-bold">Молитвы</h2>
+                    {prayers.map(p => (
+                        <p key={p.id} className="mt-2">
+                            <Link href={`/prayers/${p.id}`} className="font-serif text-red-900">
+                                {p.title || "Молитва"}
+                            </Link>
+                            <span className="font-serif text-slate-700"> — {p.incipit}…</span>
+                        </p>
+                    ))}
+                </div>
+            )}
+
             {a.sourceBook && (
                 // Адрес есть не у всякого источника, и его отсутствие — не
                 // повод молчать об источнике вовсе: у Великого акафиста это
                 // печатная Триодь, у которой адреса нет и быть не может.
                 <p className="font-serif text-xs text-slate-500 mt-6">
-                    Источник: {a.sourceBook}
+                    Источник: {labelOf(BOOK_LABELS, a.sourceBook)}
                     {a.sourceUrl && (
                         <>
                             {" · "}

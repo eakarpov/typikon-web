@@ -1,5 +1,6 @@
 import React from "react";
 import SaintPage from "@/app/saints/[id]/SaintPage";
+import { akathistsOfSaint } from "@/lib/akathists";
 
 // Значение из Promise.allSettled: отклонённое обещание — это "не смогли получить",
 // а не повод уронить всю страницу.
@@ -15,9 +16,13 @@ const Content = async ({ id, itemPromise }: { id: string, itemPromise: Promise<a
     const [linkedNoble] = settled<[any, any]>(nobleResult, [null, null]);
     const memory = settled<any>(memoryResult, null);
 
+    // Акафисты этому святому — из корпуса песнопений, синхронно: он лежит в
+    // файле SQLite рядом с приложением, и ждать его нечего.
+    const akathists = akathistsOfSaint(id);
+
     // Страница держится на наших текстах, а не на святцах: если dneslov.org молчит,
     // показываем то, что есть у нас. Пусто — только когда пусто с обеих сторон.
-    if (!memory && !items?.length && !mentions?.length) {
+    if (!memory && !items?.length && !mentions?.length && !akathists.length) {
         return (
             <div>
                 Ничего не нашлось
@@ -32,6 +37,7 @@ const Content = async ({ id, itemPromise }: { id: string, itemPromise: Promise<a
             items={items || []}
             mentions={mentions || []}
             linkedNoble={linkedNoble}
+            akathists={akathists}
         />
     )
 };

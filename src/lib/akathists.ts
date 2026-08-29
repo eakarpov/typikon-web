@@ -161,3 +161,26 @@ export const getAkathist = (id: string): AkathistDetail | null => {
         })),
     };
 };
+
+/**
+ * Акафисты этому святому — для страницы святого.
+ *
+ * Связь ставится не здесь, а ревью в админке, и выгружается в правила корпуса
+ * (typikon-web/src/scripts/export-akathist-saints.ts): dneslov_id живёт в
+ * data.db, а она пересобирается с нуля, и записанное в неё руками не пережило
+ * бы следующей сборки.
+ */
+export const akathistsOfSaint = (dneslovId: string): AkathistRow[] => {
+    const db = rulesDb();
+    if (!db || !dneslovId) return [];
+    return (db.prepare(`
+        SELECT a.akathist_id, a.title, a.subject_kind, a.dneslov_id, a.status,
+               a.memory_id, m.label AS memory,
+               count(ci.item_id) AS stanzas,
+               sum(CASE WHEN ci.stanza_kind = 'prooimion' THEN 1 ELSE 0 END) AS prooimia
+        FROM akathists a
+        LEFT JOIN memories m ON m.memory_id = a.memory_id
+        LEFT JOIN content_items ci ON ci.akathist_id = a.akathist_id
+        WHERE a.dneslov_id = ?
+        GROUP BY a.akathist_id ORDER BY a.title`).all(dneslovId) as any[]).map(rowOf);
+};
