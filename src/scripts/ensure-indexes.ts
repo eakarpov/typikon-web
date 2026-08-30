@@ -44,9 +44,6 @@ const SPECS: Spec[] = [
     { db: "typikon", collection: "texts", key: { updatedAt: -1 },
       why: "последние обновления на главной и lastmod в карте сайта" },
 
-    { db: "typikon", collection: "verses", key: { textId: 1, chapter: 1, verse: 1 },
-      why: "стихи библейской книги: 73 тысячи документов, до этого перебор на каждый показ" },
-
     // --- typikon: Библия (@/lib/bible/schema)
     //
     // Те же 73 тысячи стихов, но спрашивают их иначе. Зачало ищет отрезок канона

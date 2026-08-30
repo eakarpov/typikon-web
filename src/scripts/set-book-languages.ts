@@ -20,10 +20,9 @@
 // церковнославянский шрифт не нужен, а 12.4% у «Бесед на Бытие» — настоящее
 // уставное начертание.
 //
-// Издания Библии не измеряем: у них уже стоит bibleLanguageCode, и он
-// авторитетнее замера — это сведение об издании, а не догадка о наборе.
-// Соответствие кодов держится в корпусе (typikon-rules/src/languages.py,
-// BIBLE_CODE); здесь его обратная сторона, на два значения.
+// Издания Библии не измеряем: у них язык записан в самом издании
+// (bible_editions.language), и он авторитетнее замера — это сведение об издании,
+// а не догадка о наборе. Раньше он брался из снятого поля books.bibleLanguageCode.
 //
 // Идемпотентен: книги с уже проставленным языком не трогает, если не --force.
 // Запуск:  npm run db:book-languages  [-- --force]
@@ -31,7 +30,6 @@ import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { BOOK_LANGUAGES, DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
 
-const FROM_BIBLE_CODE: Record<string, string> = { cs: "cu", ro: "ro_cyr" };
 
 // Буквы, которых в гражданской азбуке нет вовсе, и надстрочные знаки
 // (U+0483–U+0489: титло, звательце, кендема). Перечень тот же, что в
@@ -51,8 +49,17 @@ const main = async () => {
     const texts = db.collection("texts");
 
     const known = new Set(BOOK_LANGUAGES.map(l => l.code));
-    const all = await books.find({}, { projection: { name: 1, language: 1, bibleLanguageCode: 1 } })
+    const all = await books.find({}, { projection: { name: 1, language: 1 } })
         .sort({ name: 1 }).toArray();
+
+    // Карточка книги ↔ издание Библии: у изданий язык берём оттуда, не измеряя.
+    const bibleLanguage = new Map<string, string>(
+        (await db.collection("bible_editions")
+            .find({}, { projection: { bookId: 1, language: 1 } })
+            .toArray())
+            .filter((edition) => edition.bookId)
+            .map((edition) => [edition.bookId.toString(), edition.language as string]),
+    );
 
     let set = 0, kept = 0;
     const empty: string[] = [];
@@ -69,9 +76,10 @@ const main = async () => {
         let language: string;
         let note: string;
 
-        if (FROM_BIBLE_CODE[b.bibleLanguageCode]) {
-            language = FROM_BIBLE_CODE[b.bibleLanguageCode];
-            note = `издание Библии, bibleLanguageCode=${b.bibleLanguageCode}`;
+        const fromEdition = bibleLanguage.get(b._id.toString());
+        if (fromEdition) {
+            language = fromEdition;
+            note = "издание Библии, язык взят из bible_editions";
         } else {
             const sample = await texts
                 .find({ bookId: b._id, content: { $type: "string", $ne: "" } }, { projection: { content: 1 } })

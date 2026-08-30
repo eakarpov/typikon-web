@@ -2,8 +2,6 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {DayDTO} from "@/types/dto/days";
 import {getAggregationFindIdInField} from "@/utils/database";
-import {filterVersesByRanges, parseVerseRanges, sortVerses} from "@/utils/verses";
-import {TextContentType} from "@/utils/texts";
 import {cached, CacheTag} from "@/lib/cache";
 import {saintTitles} from "@/lib/dneslov";
 import {coverageFor} from "@/lib/accents/store";
@@ -11,8 +9,9 @@ import {markText} from "@/lib/accents/service";
 import {libFondCipher, libFondUrl, type LibFondSource} from "@/lib/libFond";
 import {bibleRedirectTarget} from "@/lib/bible/query";
 
-// Сам текст и его стихи кэшируются целиком; фильтрация по ?range идёт уже
-// поверх кэша, иначе каждый диапазон занимал бы отдельную запись.
+// Библейские книги здесь больше не живут: они переехали в собственные коллекции
+// (@/lib/bible/schema), а прежние адреса отвечают редиректом — см. getBibleRedirect
+// ниже. Вместе с ними ушёл и параметр ?range: диапазон стихов был нужен только им.
 const loadText = cached(async (id: string) => {
     const client = await clientPromise;
     const db = client.db("typikon");
@@ -31,24 +30,7 @@ const loadText = cached(async (id: string) => {
             { $project: { _id: 0 }}
         ])
         .toArray();
-    const res = texts[0];
-
-    if (!res) return null;
-
-    if (res.contentType === TextContentType.VERSES) {
-        const rawVerses = await db
-            .collection("verses")
-            .find({ textId: new ObjectId(res.id) })
-            .toArray();
-        res.verses = sortVerses(rawVerses.map(v => ({
-            id: v._id.toString(),
-            chapter: v.chapter,
-            verse: v.verse,
-            content: v.content,
-        })));
-    }
-
-    return res;
+    return texts[0] ?? null;
 }, ["reading-text"], [CacheTag.TEXTS]);
 
 /**
@@ -70,21 +52,13 @@ export const getBibleRedirect = cached(async (id: string): Promise<string | null
     return `/bible/${target.canonId}/${target.chapter}${suffix}`;
 }, ["reading-bible-redirect"], [CacheTag.BIBLE]);
 
-export const getItem = async (id: string, range?: string): Promise<[any, any, boolean]> => {
+export const getItem = async (id: string): Promise<[any, any, boolean]> => {
     try {
         const shouldRedirect = ObjectId.isValid(id);
         const res = await loadText(id);
 
         if (!res) {
             return [undefined, null, false];
-        }
-
-        if (res.contentType === TextContentType.VERSES) {
-            return [
-                { ...res, verses: filterVersesByRanges(res.verses || [], parseVerseRanges(range)) },
-                null,
-                shouldRedirect && res.alias,
-            ];
         }
 
         return [res, null, shouldRedirect && res.alias];

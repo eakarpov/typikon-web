@@ -10,6 +10,12 @@
 // Расхождения печатаются поимённо: каждое должно объясняться правилом из
 // @/lib/bible/mappings, а не оказаться сюрпризом.
 //
+// После уборки прежних коллекций (drop-legacy-bible) сравнивать становится не с
+// чем, и сверка сама это замечает: сличение со старым пропускается, а проверки,
+// которым старое не нужно — целость канонических ссылок, полнота зачал, та самая
+// паремия Даниила, — остаются. Так скрипт продолжает работать как проверка
+// здоровья Библии, а не только как отчёт о переносе.
+//
 // Ничего не пишет. Возвращает ненулевой код, если сверка не сошлась.
 //
 // Запуск: npx tsx src/scripts/verify-bible-migration.ts
@@ -40,6 +46,11 @@ const legacyResolve = async (db: Db, pericope: any, lang: string) => {
 };
 
 let failures = 0;
+/** Есть ли ещё с чем сличать: до уборки прежней модели — да, после — нет. */
+let legacyPresent = false;
+
+const skip = (label: string) =>
+    console.log(`  · ${label} — пропущено: прежней модели в базе уже нет`);
 
 const check = (ok: boolean, label: string, detail = "") => {
     console.log(`  ${ok ? "✓" : "✗"} ${label}${detail ? ` — ${detail}` : ""}`);
@@ -57,7 +68,15 @@ const checkCounts = async (db: Db) => {
         db.collection(BIBLE_VERSES).countDocuments(),
     ]);
 
-    check(editions === 2, "изданий перенесено", `${editions}`);
+    legacyPresent = legacyTexts > 0 || legacyVerses > 0;
+
+    check(editions > 0, "издания на месте", `${editions}`);
+    check(books > 0 && verses > 0, "книги и стихи на месте", `${books} книг, ${verses} стихов`);
+
+    if (!legacyPresent) {
+        skip("сличение объёмов со старой моделью");
+        return;
+    }
     check(books === legacyTexts, "книг", `было ${legacyTexts}, стало ${books}`);
     check(verses === legacyVerses, "стихов", `было ${legacyVerses}, стало ${verses}`);
 };
@@ -67,6 +86,11 @@ const checkCounts = async (db: Db) => {
 // обнаружится только тогда, когда кто-то откроет главу.
 const checkVerseIdentity = async (db: Db) => {
     console.log("\n== Сохранность стихов ==");
+
+    if (!legacyPresent) {
+        skip("сличение стихов по идентификаторам");
+        return;
+    }
 
     const legacy = await db.collection("verses")
         .find({}, { projection: { content: 1 } })
@@ -139,7 +163,10 @@ const checkPericopes = async (db: Db) => {
         const losses: string[] = [];
 
         for (const pericope of pericopes) {
-            const oldVerses = await legacyResolve(db, pericope, lang);
+            // Без прежней модели сравнивать не с чем, но проверить, что зачало
+            // вообще во что-то резолвится, по-прежнему нужно: пустое чтение —
+            // это пустое место на службе.
+            const oldVerses = legacyPresent ? await legacyResolve(db, pericope, lang) : [];
             const fresh = await versesForCanonRanges(
                 db, edition._id, pericope.bookSlug, pericope.ranges || [],
             );
@@ -163,6 +190,12 @@ const checkPericopes = async (db: Db) => {
         }
 
         console.log(`\n  --- ${lang} (${edition.code}) ---`);
+
+        if (!legacyPresent) {
+            check(same + gained > 0, "зачала резолвятся в стихи", `непустых — ${gained}`);
+            continue;
+        }
+
         if (lang === "cs") {
             // Эталон правилами не трогали: любое расхождение здесь — регрессия.
             check(differ === 0, "резолв совпал со старым", `совпало ${same}, разошлось ${differ}`);

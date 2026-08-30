@@ -114,8 +114,8 @@ const EditionForm = ({ edition }: { edition: AdminEdition }) => {
                         каждое. Здесь они только показаны: правка через форму разошлась
                         бы с тем, что уже посчитано в canonRef у стихов. */}
                     <p className="text-stone-500">
-                        Правятся в коде (<code>src/lib/bible/mappings.ts</code>), затем перезапускается
-                        перенос: <code>npx tsx src/scripts/migrate-bible.ts --apply</code>
+                        Правятся в коде (<code>src/lib/bible/mappings.ts</code>), затем пересчитывается
+                        канон: <code>npx tsx src/scripts/recompute-bible-canon.ts --apply</code>
                     </p>
                     <ul className="mt-1 space-y-0.5">
                         {form.mapping.map((rule, index) => (

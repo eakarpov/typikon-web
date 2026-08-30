@@ -3,8 +3,6 @@ import { ObjectId } from "mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { textDetail } from "@/lib/api/v2/serialize";
-import { TextContentType } from "@/utils/texts";
-import { sortVerses } from "@/utils/verses";
 import { cached, CacheTag } from "@/lib/cache";
 
 // Текст целиком. Принимает и alias, и идентификатор: alias — устойчивый адрес,
@@ -25,16 +23,6 @@ const loadText = cached(async (idOrAlias: string) => {
 
     const doc = await db.collection("texts").findOne(matcher);
     if (!doc) return null;
-
-    if (doc.contentType === TextContentType.VERSES) {
-        const raw = await db.collection("verses").find({ textId: doc._id }).toArray();
-        doc.verses = sortVerses(raw.map((v) => ({
-            id: v._id.toString(),
-            chapter: v.chapter,
-            verse: v.verse,
-            content: v.content,
-        })));
-    }
 
     return doc;
 }, ["api-v2-text"], [CacheTag.TEXTS]);

@@ -37,15 +37,8 @@ export const readChurchSlavonicCorpus = async (db: Db): Promise<Corpus> => {
         .toArray();
     const editionIds = slavonicEditions.map((edition) => edition._id);
 
-    // Книги Библии остаются документами в `texts` до уборки старой модели, но текста
-    // в них нет — он в стихах. Исключаем их целиком, чтобы пустые строки не попадали
-    // в отчёты как «тексты без ударений».
-    const bibleTextIds = (await db.collection("texts")
-        .find({ contentType: "verses" }, { projection: { _id: 1 } })
-        .toArray()).map((text) => text._id);
-
     const texts: CorpusDoc[] = (await db.collection("texts")
-        .find({ content: { $type: "string" }, _id: { $nin: bibleTextIds } },
+        .find({ content: { $type: "string" } },
               { projection: { content: 1, alias: 1, name: 1 } })
         .toArray())
         .map((text) => ({

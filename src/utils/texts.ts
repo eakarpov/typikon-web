@@ -46,20 +46,15 @@ export const textReadinessClassname = (readiness: TextReadiness) => {
     }
 }
 
+// Стихами набрана только Библия, а она с некоторых пор живёт своей моделью
+// (@/lib/bible/schema) — поэтому у текста собрания остался один вид содержимого.
+// Тип оставлен, а не выброшен: он записан в трёх тысячах документов, и снимать
+// его оттуда ради одного значения — работа без выгоды.
 export enum TextContentType {
     PARAGRAPHS= "paragraphs",
-    VERSES= "verses",
 }
 
-export const printTextContentType = (contentType: TextContentType) => {
-    switch (contentType) {
-        case TextContentType.VERSES:
-            return "Стихи (Библия и т.п.)";
-        case TextContentType.PARAGRAPHS:
-        default:
-            return "Абзацы";
-    }
-};
+export const printTextContentType = (_contentType: TextContentType) => "Абзацы";
 
 export enum TextKind {
     TEACHIND= "Teaching",

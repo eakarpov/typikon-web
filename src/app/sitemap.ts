@@ -79,10 +79,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     alias: { $nin: ["", null] },
                     name: { $nin: ["", null] },
                     readiness: { $in: READABLE_TEXTS },
-                    // Книги Библии живут в своём разделе, а их прежние адреса
-                    // /reading/biblia-* отвечают постоянным редиректом. В карте
-                    // им делать нечего: ниже вместо них идут главы.
-                    contentType: { $ne: "verses" },
                 }, { projection: { alias: 1, updatedAt: 1 } })
                 .toArray(),
             db.collection("months")
@@ -155,7 +151,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             );
         }).filter(Boolean) as MetadataRoute.Sitemap;
 
-        // Главы Библии — по эталонной версификации, а не запросом: она и есть
+        // Библейских книг в `texts` больше нет — они в своих коллекциях, а прежние
+        // адреса /reading/biblia-* отвечают постоянным редиректом. В карту вместо
+        // них идут главы.
+        //
+        // Список глав — по эталонной версификации, а не запросом: она и есть
         // список глав церковнославянского издания, лежит прямо в коде и стоит нуля
         // обращений к базе. Главы с нулём стихов пропускаем: в издании их нет
         // (в Исходе так с 37-й по 39-ю — в источнике текст без стиховой разбивки).

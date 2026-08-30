@@ -84,10 +84,8 @@ export const textDetail = (doc: any) => ({
     dneslovType: doc.dneslovType || null,
     dneslovEventId: doc.dneslovEventId || null,
     mentionIds: doc.mentionIds ?? [],
-    bibleBookSlug: doc.bibleBookSlug || null,
     csSource: Boolean(doc.csSource),
     createdAt: iso(doc.createdAt),
-    ...(doc.verses ? { verses: doc.verses.map(verse) } : {}),
 });
 
 export const verse = (doc: any) => ({

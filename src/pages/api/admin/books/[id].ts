@@ -31,7 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             updatedAt: new Date(),
                             order: data.order,
                             public: data.public,
-                            bibleLanguageCode: data.bibleLanguageCode || null,
                             // Язык книги, а не издания Библии: bibleLanguageCode
                             // выше — про резолюцию зачал и стоит лишь у двух книг.
                             language: data.language || DEFAULT_BOOK_LANGUAGE,

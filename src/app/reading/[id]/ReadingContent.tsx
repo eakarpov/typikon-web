@@ -12,7 +12,6 @@ import {AuthSlice} from "@/lib/store/auth";
 import TextNote from "@/app/reading/[id]/TextNote";
 import {useRouterHash} from "@/app/reading/[id]/useRouterHash";
 import {csFont, myFont} from "@/utils/font";
-import {TextContentType} from "@/utils/texts";
 
 const customStyles = {
     content: {
@@ -445,16 +444,6 @@ const ReadingContent = ({ item }: { item: any }) => {
         ),
     }), [renderInline, item.csSource]);
 
-    const versesByChapter = React.useMemo(() => {
-        if (!item.verses) return [];
-        const groups = new Map<number, any[]>();
-        item.verses.forEach((v: any) => {
-            const chapterVerses = groups.get(v.chapter) || [];
-            chapterVerses.push(v);
-            groups.set(v.chapter, chapterVerses);
-        });
-        return [...groups.entries()].sort(([a], [b]) => a - b);
-    }, [item.verses]);
 
     useEffect(() => {
         const paragraph = document.getElementById("text-reading")
@@ -554,44 +543,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                     <li onClick={onAddNote}>Добавить заметку</li>
                 </ul>
             </div>
-            {item.contentType === TextContentType.VERSES ? (
-                versesByChapter.map(([chapter, chapterVerses]) => (
-                    <div key={chapter} className="space-y-1">
-                        <p className="font-bold font-serif">
-                            Глава {chapter}
-                        </p>
-                        <p
-                            className={`reading-text ${
-                                item.csSource ? csFont.variable : ""
-                            } text-justify text-lg ${
-                                item.csSource ? "font-sans-serif" : "font-serif"
-                            }`}
-                        >
-                            {chapterVerses.map((verse: any) => {
-                                const notesForVerse = userNotes.filter((n) =>
-                                    n.selection.type === 'verse' && n.selection.chapter === chapter && n.selection.verse === verse.verse
-                                );
-                                return (
-                                    <span key={verse.id}>
-                                        <sup className="text-red-600 font-bold">
-                                            {verse.verse}
-                                        </sup>
-                                        {" "}
-                                        <span
-                                            data-report-container
-                                            data-chapter={chapter}
-                                            data-verse={verse.verse}
-                                        >
-                                            {highlightUserNotes(renderMarkup(verse.content), notesForVerse)}
-                                        </span>
-                                        {" "}
-                                    </span>
-                                );
-                            })}
-                        </p>
-                    </div>
-                ))
-            ) : (
+            {
                 item.content?.split("\n\n").map((paragraph: string, paragraphIndex: number) => {
                     const notesForParagraph = userNotes.filter((n) =>
                         n.selection.type === 'paragraph' && n.selection.paragraphIndex === paragraphIndex
@@ -618,7 +570,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                         </Container>
                     );
                 })
-            )}
+            }
             {notes.length > 0 && (
                 <div>
                     <h3 className="font-bold">Заметки:</h3>

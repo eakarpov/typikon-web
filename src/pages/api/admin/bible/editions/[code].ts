@@ -8,7 +8,7 @@ import { BIBLE_EDITIONS } from "@/lib/bible/schema";
 //
 // Правила приведения к канону (mapping) здесь не редактируются намеренно. Они
 // живут в @/lib/bible/mappings, в гите, с объяснением и тестами на каждое — а
-// применяются при переносе, ко всем стихам разом. Правка их через форму
+// применяются скриптом ко всем стихам разом (recompute-bible-canon). Правка через форму
 // разошлась бы с тем, что уже посчитано в canonRef, и издание стало бы
 // показывать одно, а искать по другому.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
