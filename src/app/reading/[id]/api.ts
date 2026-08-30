@@ -9,6 +9,7 @@ import {saintTitles} from "@/lib/dneslov";
 import {coverageFor} from "@/lib/accents/store";
 import {markText} from "@/lib/accents/service";
 import {libFondCipher, libFondUrl, type LibFondSource} from "@/lib/libFond";
+import {bibleRedirectTarget} from "@/lib/bible/query";
 
 // Сам текст и его стихи кэшируются целиком; фильтрация по ?range идёт уже
 // поверх кэша, иначе каждый диапазон занимал бы отдельную запись.
@@ -49,6 +50,25 @@ const loadText = cached(async (id: string) => {
 
     return res;
 }, ["reading-text"], [CacheTag.TEXTS]);
+
+/**
+ * Куда вести со старого адреса библейской книги.
+ *
+ * Книги Библии жили в общем чтении под адресами вида `/reading/biblia-cs-bytie-1`,
+ * и эти адреса в карте сайта и в чужих ссылках. Раздел Библии устроен по канону, а
+ * не по книгам издания, поэтому цель считается по данным, а не собирается из алиаса:
+ * у «Истории Сусанны» она — тринадцатая глава Даниила, а не первая глава Сусанны.
+ *
+ * null означает, что адрес к Библии отношения не имеет, — обычное чтение.
+ */
+export const getBibleRedirect = cached(async (id: string): Promise<string | null> => {
+    const client = await clientPromise;
+    const target = await bibleRedirectTarget(client.db("typikon"), id);
+    if (!target) return null;
+
+    const suffix = target.editionCode ? `?v=${target.editionCode}` : "";
+    return `/bible/${target.canonId}/${target.chapter}${suffix}`;
+}, ["reading-bible-redirect"], [CacheTag.BIBLE]);
 
 export const getItem = async (id: string, range?: string): Promise<[any, any, boolean]> => {
     try {

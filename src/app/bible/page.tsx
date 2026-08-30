@@ -4,7 +4,7 @@ import Link from "next/link";
 import { myFont } from "@/utils/font";
 import { getBibleIndex } from "@/app/bible/api";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
     title: "Библия — Уставные чтения",
@@ -19,10 +19,15 @@ export const metadata: Metadata = {
     },
 };
 
-const Index = async () => {
+const Index = async ({ selected }: { selected: string }) => {
     const { editions, sections } = await getBibleIndex();
     // Все издания разом — по такой ссылке раздел и открывается параллельным видом.
     const all = editions.map((edition) => edition.code).join(",");
+
+    // Пришли из библиотеки или по ссылке на конкретное издание — пусть и оглавление
+    // ведёт в него же, а не в то, что стоит по умолчанию.
+    const known = selected.split(",").filter((code) => editions.some((e) => e.code === code));
+    const suffix = known.length ? `?v=${known.join(",")}` : "";
 
     return (
         <div className="pt-2 space-y-4">
@@ -59,7 +64,7 @@ const Index = async () => {
                     <ul className="mt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4">
                         {section.books.map((book) => (
                             <li key={book.id}>
-                                <Link href={`/bible/${book.id}/1`} className="hover:text-red-900">
+                                <Link href={`/bible/${book.id}/1${suffix}`} className="hover:text-red-900">
                                     {book.name}
                                 </Link>
                                 {book.chapters > 0 && (
@@ -74,10 +79,10 @@ const Index = async () => {
     );
 };
 
-const BiblePage = () => (
+const BiblePage = ({ searchParams }: { searchParams: { v?: string } }) => (
     <div className={myFont.variable}>
         <Suspense fallback={<div>Loading...</div>}>
-            <Index />
+            <Index selected={searchParams.v || ""} />
         </Suspense>
     </div>
 );

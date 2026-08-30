@@ -173,3 +173,38 @@ export const parallelChapter = async (
             cells: editionIds.map((id) => row.cells.get(id.toString()) ?? null),
         }));
 };
+
+/**
+ * Книга издания по её прежнему адресу чтения, вместе с первой канонической главой.
+ *
+ * Нужно для постоянного редиректа со старых `/reading/biblia-*`: адрес называет
+ * книгу издания, а раздел Библии устроен по канону, и для «Истории Сусанны»
+ * правильная цель — не первая глава, а тринадцатая глава Даниила.
+ */
+export const bibleRedirectTarget = async (
+    db: Db,
+    idOrAlias: string,
+): Promise<{ canonId: string; chapter: number; editionCode: string } | null> => {
+    const filter = ObjectId.isValid(idOrAlias)
+        ? { _id: new ObjectId(idOrAlias) }
+        : { alias: idOrAlias };
+
+    const book = await db.collection(BIBLE_BOOKS).findOne(filter) as BibleBook | null;
+    if (!book) return null;
+
+    const first = await db.collection(BIBLE_VERSES).findOne(
+        { bookId: book._id },
+        { sort: { canonSort: 1 }, projection: { canonChapter: 1 } },
+    );
+
+    const edition = await db.collection(BIBLE_EDITIONS).findOne(
+        { _id: book.editionId },
+        { projection: { code: 1 } },
+    );
+
+    return {
+        canonId: book.canonId,
+        chapter: (first?.canonChapter as number) ?? 1,
+        editionCode: (edition?.code as string) ?? "",
+    };
+};

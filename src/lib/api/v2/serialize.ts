@@ -220,3 +220,32 @@ export const newsItem = (post: NewsPostDTO) => ({
     publishedAt: post.publishedAt,
     updatedAt: post.updatedAt,
 });
+
+// --- Библия ------------------------------------------------------------------
+//
+// Наружу отдаём обе нумерации: каноническую (по ней стих сходится с другими
+// изданиями и по ней названо зачало) и родную (по ней стих ищут в самой книге).
+// Клиенту, читающему одно издание, вторая не мешает; клиенту, сводящему издания,
+// без первой не обойтись.
+
+export const bibleEdition = (doc: any) => ({
+    code: doc.code,
+    title: doc.title,
+    shortTitle: doc.shortTitle,
+    language: doc.language,
+    languageCode: doc.langCode,
+    versification: doc.versification,
+    year: doc.year ?? null,
+    sourceUrl: doc.sourceLink || null,
+});
+
+export const bibleVerse = (doc: any) => ({
+    id: id(doc._id ?? doc.id),
+    canonRef: doc.canonRef,
+    chapter: doc.canonChapter ?? doc.chapter,
+    verse: doc.canonVerse ?? doc.verse,
+    // Как этот же стих пронумерован в самом издании.
+    editionChapter: doc.chapter,
+    editionVerse: doc.verse,
+    content: doc.content ?? "",
+});

@@ -220,8 +220,11 @@ const DayPartReading = ({
         return (
             <div key={item.pericope.id + index}>
                 <div className="flex flex-row items-center">
-                    {item.pericope.textId && (
-                        <Link href={`/reading/${item.pericope.textId}`}>
+                    {/* В книгу — сразу на ту главу, с которой чтение начинается:
+                        адрес канонический, поэтому ведёт в нужное место в любом
+                        издании, а не только в том, откуда стихи взяты сейчас. */}
+                    {item.pericope.bookSlug && (
+                        <Link href={`/bible/${item.pericope.bookSlug}/${item.pericope.ranges?.[0]?.chapterFrom ?? 1}`}>
                             <BookOpenIcon className="w-6 h-6" />
                         </Link>
                     )}
