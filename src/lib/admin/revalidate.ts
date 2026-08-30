@@ -13,3 +13,6 @@ export const revalidateTags = (tags: CacheTagValue[]) =>
 
 export const revalidateTexts = () => revalidateTags([CacheTag.TEXTS]);
 export const revalidateDays = () => revalidateTags([CacheTag.DAYS]);
+
+// Библия правится не редактором текста, а редактором издания, поэтому и тег у неё свой.
+export const revalidateBible = () => revalidateTags([CacheTag.BIBLE]);

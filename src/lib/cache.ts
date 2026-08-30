@@ -17,6 +17,9 @@ export const CacheTag = {
     SIGNS: "signs",
     NEWS: "news",
     SAINTS: "saints",
+    // Библия отделена от TEXTS: её правят не редактором текста, а редактором
+    // издания, и сбрасывать вместе с ней три тысячи богослужебных текстов незачем.
+    BIBLE: "bible",
 } as const;
 
 export type CacheTagValue = typeof CacheTag[keyof typeof CacheTag];

@@ -13,7 +13,11 @@ export interface IVerseRange {
     verseTo: number;
 }
 
-const verseOrder = (chapter: number, verse: number) => chapter * 100000 + verse;
+// Единственная в проекте свёртка «глава:стих» в сортируемое число. Экспортируется
+// потому, что тем же числом Библия хранит canonSort (@/lib/bible/refs) и по нему же
+// запрашивает диапазоны в Mongo: разойдись эти две формулы — стихи в базе легли бы
+// в одном порядке, а искались в другом.
+export const verseOrder = (chapter: number, verse: number) => chapter * 100000 + verse;
 
 export const parseVerseRanges = (param?: string | null): IVerseRange[] => {
     if (!param) return [];

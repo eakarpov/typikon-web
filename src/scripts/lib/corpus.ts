@@ -1,23 +1,28 @@
 // Чтение корпуса для работы с ударениями: тексты и стихи в одном виде.
 //
 // Два места, где легко ошибиться, и оба закрыты здесь:
-//   * содержимое лежит в ДВУХ коллекциях — у библейских книг текст не в
-//     texts.content, а построчно в verses; половина ударной разметки собрания
-//     живёт именно там;
-//   * из 73 241 стиха 36 280 принадлежат «Сфънта Скриптура» — Библии на
-//     валашской кириллице 1688 года. Это другой язык и другой набор надстрочных
-//     знаков, и в церковнославянском словаре ему делать нечего.
+//   * содержимое лежит в ДВУХ коллекциях — у Библии текст не в texts.content,
+//     а построчно в bible_verses; половина ударной разметки собрания живёт именно там;
+//   * из 73 241 стиха 36 280 принадлежат «Сфънта Скриптура» — Библии на валашской
+//     кириллице 1688 года. Это другой язык и другой набор надстрочных знаков, и в
+//     церковнославянском словаре ему делать нечего.
+//
+// Издания отбираются по языку начертания, а не по идентификатору книги, как было
+// раньше: изданий станет больше, и список исключений пришлось бы дописывать руками
+// при каждом новом — а забытая строка тихо втащила бы чужие знаки в словарь.
 import { Db, ObjectId } from "mongodb";
+import { BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
 
-// См. src/scripts/import-bible-cyrillic.ts — там этот идентификатор и заводится.
-export const ROMANIAN_BOOK_ID = new ObjectId("6989959c169656dfeafaa36a");
+/** Начертание церковнославянских изданий — код из @/utils/bookLanguages. */
+const CHURCH_SLAVONIC = "cu";
 
 export interface CorpusDoc {
     _id: ObjectId;
     content: string;
-    // Для отчётов: алиас текста или «стих 3:16».
+    // Для отчётов: алиас текста или «daniila 3:16».
     label: string;
-    collection: "texts" | "verses";
+    /** Коллекция, в которую писать правку: правки идут по _id. */
+    collection: "texts" | typeof BIBLE_VERSES;
 }
 
 export interface Corpus {
@@ -27,12 +32,20 @@ export interface Corpus {
 }
 
 export const readChurchSlavonicCorpus = async (db: Db): Promise<Corpus> => {
-    const romanianTextIds = (await db.collection("texts")
-        .find({ bookId: ROMANIAN_BOOK_ID }, { projection: { _id: 1 } })
+    const slavonicEditions = await db.collection(BIBLE_EDITIONS)
+        .find({ language: CHURCH_SLAVONIC }, { projection: { _id: 1 } })
+        .toArray();
+    const editionIds = slavonicEditions.map((edition) => edition._id);
+
+    // Книги Библии остаются документами в `texts` до уборки старой модели, но текста
+    // в них нет — он в стихах. Исключаем их целиком, чтобы пустые строки не попадали
+    // в отчёты как «тексты без ударений».
+    const bibleTextIds = (await db.collection("texts")
+        .find({ contentType: "verses" }, { projection: { _id: 1 } })
         .toArray()).map((text) => text._id);
 
     const texts: CorpusDoc[] = (await db.collection("texts")
-        .find({ content: { $type: "string" }, bookId: { $ne: ROMANIAN_BOOK_ID } },
+        .find({ content: { $type: "string" }, _id: { $nin: bibleTextIds } },
               { projection: { content: 1, alias: 1, name: 1 } })
         .toArray())
         .map((text) => ({
@@ -42,15 +55,15 @@ export const readChurchSlavonicCorpus = async (db: Db): Promise<Corpus> => {
             collection: "texts" as const,
         }));
 
-    const verses: CorpusDoc[] = (await db.collection("verses")
-        .find({ textId: { $nin: romanianTextIds } },
-              { projection: { content: 1, chapter: 1, verse: 1 } })
+    const verses: CorpusDoc[] = (await db.collection(BIBLE_VERSES)
+        .find({ editionId: { $in: editionIds } },
+              { projection: { content: 1, canonId: 1, chapter: 1, verse: 1 } })
         .toArray())
         .map((verse) => ({
             _id: verse._id,
             content: verse.content as string,
-            label: `стих ${verse.chapter}:${verse.verse}`,
-            collection: "verses" as const,
+            label: `${verse.canonId} ${verse.chapter}:${verse.verse}`,
+            collection: BIBLE_VERSES,
         }));
 
     return { docs: [...texts, ...verses], texts: texts.length, verses: verses.length };
