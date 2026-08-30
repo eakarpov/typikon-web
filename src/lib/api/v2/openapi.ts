@@ -70,6 +70,7 @@ export const openapi = () => ({
         { name: "Песнопения", description: "Стихиры, тропари и каноны книг по местам службы" },
         { name: "Новости", description: "Что нового в корпусе и на сайте" },
         { name: "Ударения", description: "Где в церковнославянском слове стоит ударение" },
+        { name: "Библия", description: "Книги Библии по главам; издания читаются рядом, стих против стиха" },
     ],
     paths: {
         "/api/v2": {
@@ -275,6 +276,39 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/PericopeList") },
             },
         },
+        "/api/v2/bible/editions": {
+            get: {
+                tags: ["Библия"],
+                summary: "Издания Библии",
+                description: "Что можно подставить в параметр editions у главы.",
+                responses: { "200": ok("#/components/schemas/BibleEditionList") },
+            },
+        },
+        "/api/v2/bible/{book}/{chapter}": {
+            get: {
+                tags: ["Библия"],
+                summary: "Глава Библии, при желании — в нескольких изданиях сразу",
+                description:
+                    "Стихи сводятся по каноническому месту, а не по номеру строки: у изданий " +
+                    "своя разбивка, и на месте стиха, которого в издании нет, стоит null, а не " +
+                    "сдвинутый соседний. Поля chapter/verse — каноническая нумерация (ею названы " +
+                    "зачала), editionChapter/editionVerse — как стих напечатан в самом издании.",
+                parameters: [
+                    { name: "book", in: "path", required: true, schema: { type: "string" }, example: "daniila", description: "Идентификатор книги канона" },
+                    { name: "chapter", in: "path", required: true, schema: { type: "integer", minimum: 1 }, example: 3 },
+                    {
+                        name: "editions", in: "query", required: false,
+                        schema: { type: "string" }, example: "cs-eliz,ro-1688",
+                        description: "Коды изданий через запятую; порядок задаёт порядок колонок. По умолчанию — все публичные",
+                    },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/BibleChapter"),
+                    "400": errorResponse("Неверный номер главы"),
+                    "404": errorResponse("Книги, издания или главы нет"),
+                },
+            },
+        },
         "/api/v2/signs": {
             get: {
                 tags: ["Справочники"],
@@ -408,7 +442,6 @@ export const openapi = () => ({
                     author: { type: ["string", "null"] },
                     translator: { type: ["string", "null"] },
                     type: { type: ["string", "null"] },
-                    contentType: { type: ["string", "null"], description: "verses — текст из стихов (библейская книга)" },
                     readiness: { type: ["string", "null"], description: "ready — вычитан; presence — есть только скан" },
                     bookId: { type: ["string", "null"] },
                     bookIndex: { type: ["integer", "null"] },
@@ -429,7 +462,6 @@ export const openapi = () => ({
                             russianUrl: { type: ["string", "null"], description: "Ссылка на русский перевод — чужой материал" },
                             note: { type: ["string", "null"] },
                             mentionIds: { type: "array", items: { type: "string" } },
-                            verses: { type: "array", items: { $ref: "#/components/schemas/Verse" } },
                         },
                     },
                 ],
@@ -441,6 +473,69 @@ export const openapi = () => ({
                     chapter: { type: "integer" },
                     verse: { type: "integer" },
                     content: { type: "string" },
+                },
+            },
+            BibleEdition: {
+                type: "object",
+                properties: {
+                    code: { type: "string", description: "Устойчивый код издания: cs-eliz, ro-1688" },
+                    title: { type: "string" },
+                    shortTitle: { type: "string", description: "Подпись колонки: ЦС, РУМ" },
+                    language: { type: "string", description: "Начертание: cu — церковнославянское, ro_cyr — валашская кириллица" },
+                    languageCode: { type: "string", enum: ["cs", "ro"], description: "Язык выбора зачал" },
+                    versification: { type: "string", description: "Традиция нумерации; sla-lxx — эталон" },
+                    year: { type: ["integer", "null"] },
+                    sourceUrl: { type: ["string", "null"] },
+                },
+            },
+            BibleEditionList: {
+                type: "object",
+                properties: {
+                    items: { type: "array", items: { $ref: "#/components/schemas/BibleEdition" } },
+                    total: { type: "integer" },
+                },
+            },
+            BibleVerse: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    canonRef: { type: "string", example: "daniila.3.24" },
+                    chapter: { type: "integer", description: "Каноническая нумерация" },
+                    verse: { type: "integer", description: "Каноническая нумерация" },
+                    editionChapter: { type: "integer", description: "Как напечатано в издании" },
+                    editionVerse: { type: "integer", description: "Как напечатано в издании" },
+                    content: { type: "string" },
+                },
+            },
+            BibleChapter: {
+                type: "object",
+                properties: {
+                    book: {
+                        type: "object",
+                        properties: {
+                            id: { type: "string" },
+                            name: { type: "string" },
+                            abbr: { type: "string" },
+                            section: { type: "string" },
+                        },
+                    },
+                    chapter: { type: "integer" },
+                    editions: { type: "array", items: { $ref: "#/components/schemas/BibleEdition" } },
+                    verses: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                canonRef: { type: "string" },
+                                verse: { type: "integer", description: "Каноническая нумерация" },
+                                editions: {
+                                    type: "array",
+                                    description: "По ячейке на издание, в порядке поля editions; null — стиха в издании нет",
+                                    items: { oneOf: [{ $ref: "#/components/schemas/BibleVerse" }, { type: "null" }] },
+                                },
+                            },
+                        },
+                    },
                 },
             },
             SearchResult: {

@@ -1,6 +1,8 @@
 import {MetadataRoute} from "next";
 import clientPromise from "@/lib/mongodb";
 import {TextReadiness} from "@/utils/texts";
+import {BIBLE_CANON} from "@/utils/bibleCanon";
+import {REFERENCE_VERSIFICATION} from "@/utils/bibleVersification";
 
 // Карта сайта строится из базы, а не лежит статикой в public/: раньше файл
 // генерировался внешним сервисом и с 2024 года не обновлялся, поэтому новые
@@ -22,6 +24,7 @@ const STATIC_ROUTES = [
     { path: "/calendar", priority: 0.9 },
     { path: "/calendar/today", priority: 0.9 },
     { path: "/library", priority: 0.9 },
+    { path: "/bible", priority: 0.9 },
     { path: "/saints", priority: 0.8 },
     { path: "/accents", priority: 0.7 },
     { path: "/triodion", priority: 0.8 },
@@ -148,6 +151,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             );
         }).filter(Boolean) as MetadataRoute.Sitemap;
 
+        // Библейских книг в `texts` больше нет — они в своих коллекциях, а прежние
+        // адреса /reading/biblia-* отвечают постоянным редиректом. В карту вместо
+        // них идут главы.
+        //
+        // Список глав — по эталонной версификации, а не запросом: она и есть
+        // список глав церковнославянского издания, лежит прямо в коде и стоит нуля
+        // обращений к базе. Главы с нулём стихов пропускаем: в издании их нет
+        // (в Исходе так с 37-й по 39-ю — в источнике текст без стиховой разбивки).
+        const bibleUpdatedAt = (await db.collection("bible_editions")
+            .findOne({}, { sort: { updatedAt: -1 }, projection: { updatedAt: 1 } }))?.updatedAt;
+
+        const bibleChapters = BIBLE_CANON.flatMap((book) =>
+            (REFERENCE_VERSIFICATION[book.id] || [])
+                .map((verses, index) => (verses > 0 ? index + 1 : 0))
+                .filter(Boolean)
+                .map((chapter) => entry(`/bible/${book.id}/${chapter}`, bibleUpdatedAt, 0.6, "yearly")));
+
         // В базе встречаются документы с одинаковым alias — в карте один адрес
         // должен быть ровно один раз.
         return dedupe([
@@ -162,6 +182,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 entry(`/library/${book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
             ...saints.map((saint) =>
                 entry(`/saints/${saint._id}`, saint.updatedAt, 0.6, "monthly")),
+            ...bibleChapters,
         ]);
     } catch (e) {
         console.error(e);

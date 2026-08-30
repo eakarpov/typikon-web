@@ -44,8 +44,32 @@ const SPECS: Spec[] = [
     { db: "typikon", collection: "texts", key: { updatedAt: -1 },
       why: "последние обновления на главной и lastmod в карте сайта" },
 
-    { db: "typikon", collection: "verses", key: { textId: 1, chapter: 1, verse: 1 },
-      why: "стихи библейской книги: 73 тысячи документов, до этого перебор на каждый показ" },
+    // --- typikon: Библия (@/lib/bible/schema)
+    //
+    // Те же 73 тысячи стихов, но спрашивают их иначе. Зачало ищет отрезок канона
+    // внутри одного издания — это первый ключ. Параллельный вид ищет один стих
+    // сразу во всех изданиях — это второй. Третий держит уникальность: два стиха
+    // с одним номером в одной книге издания — это сбой переноса, и упасть на записи
+    // дешевле, чем показывать читателю двоящийся стих.
+    { db: "typikon", collection: "bible_verses", key: { editionId: 1, canonId: 1, canonSort: 1 },
+      why: "зачало и глава: отрезок канонической нумерации внутри издания" },
+    { db: "typikon", collection: "bible_verses", key: { canonRef: 1, editionId: 1 },
+      why: "параллельный вид: один стих канона сразу во всех изданиях" },
+    { db: "typikon", collection: "bible_verses", key: { editionId: 1, bookId: 1, chapter: 1, verse: 1 },
+      options: { unique: true },
+      why: "родная нумерация издания: показ книги и защита от двойного переноса" },
+
+    { db: "typikon", collection: "bible_books", key: { editionId: 1, slug: 1 }, options: { unique: true },
+      why: "книга издания по её слугу; уникальность — та же защита от двойного переноса" },
+    { db: "typikon", collection: "bible_books", key: { editionId: 1, canonId: 1 },
+      why: "какие книги издания легли в книгу канона (у румынского Даниила их четыре)" },
+    { db: "typikon", collection: "bible_books", key: { alias: 1 }, options: NON_EMPTY_ALIAS,
+      why: "постоянный редирект со старых адресов /reading/biblia-*" },
+
+    { db: "typikon", collection: "bible_editions", key: { code: 1 }, options: { unique: true },
+      why: "издание по коду — основной способ его найти" },
+    { db: "typikon", collection: "bible_editions", key: { langCode: 1, isDefaultForLang: -1 },
+      why: "издание по умолчанию для выбранного языка (cookie bibleLang)" },
 
     { db: "typikon", collection: "days", key: { alias: 1 }, options: NON_EMPTY_ALIAS,
       why: "/calendar/{alias}, /triodion/{alias}, /penticostarion/{alias}" },

@@ -12,7 +12,6 @@ const AdminEditor = ({ value }: any) => {
     const [translator, setTranslator] = useState(value.translator || "");
     const [order, setOrder] = useState(value.order || "");
     const [isPublic, setIsPublic] = useState(value.public !== false);
-    const [bibleLanguageCode, setBibleLanguageCode] = useState(value.bibleLanguageCode || "");
     // Пустого языка у книги не бывает: см. @/utils/bookLanguages.
     const [language, setLanguage] = useState(value.language || DEFAULT_BOOK_LANGUAGE);
 
@@ -40,7 +39,6 @@ const AdminEditor = ({ value }: any) => {
                 translator,
                 order: parseInt(order),
                 public: isPublic,
-                bibleLanguageCode: bibleLanguageCode || null,
                 language,
             }),
         }).then(() => {
@@ -117,15 +115,6 @@ const AdminEditor = ({ value }: any) => {
                     <option key={l.code} value={l.code}>{l.label}</option>
                 ))}
             </select>
-            <label>
-                Язык Библии (только для изданий Библии — используется для резолюции зачал; пусто для обычных сборников)
-            </label>
-            <input
-                className="border-2"
-                placeholder="cs, ro..."
-                value={bibleLanguageCode}
-                onChange={e => setBibleLanguageCode(e.target.value)}
-            />
             <p onClick={onSubmitAdd} className="cursor-pointer mb-2">
                 <b>Добавить текст</b>
             </p>

@@ -39,6 +39,17 @@ const splitIntoBooks = (raw: string): string[] => {
     return [...raw.matchAll(headerPattern)].map(m => m[1]);
 };
 
+
+// ОТРАБОТАВШИЙ СКРИПТ. Он писал в прежнюю модель (books/texts/verses), которой
+// больше нет: Библия живёт в bible_editions/bible_books/bible_verses
+// (@/lib/bible/schema). Оставлен ради разбора источника — это единственное место,
+// где записано, как из него добывались стихи, а корпус ещё придётся дочищать
+// (в церковнославянском Исходе нет глав 37–39: в источнике они без стиховой
+// разбивки). Прежде чем запускать снова, перепишите запись под новые коллекции.
+//
+// Пока этого не сделано, скрипт отказывается работать: молча залить корпус в
+// мёртвые коллекции хуже, чем не залить вовсе.
+
 const main = async () => {
     const raw = fs.readFileSync(FILE_PATH, "utf-8");
     const titles = splitIntoBooks(raw); // titles[0] = Бытие ... titles[78] = Откровение
@@ -129,6 +140,14 @@ const main = async () => {
         needsReview.forEach(n => console.log(`  - ${n}`));
     }
 };
+
+if (!process.argv.includes("--i-rewrote-it")) {
+    console.error(
+        "Скрипт отработал и писал в прежнюю модель Библии (books/texts/verses), которой больше нет. " +
+        "Перепишите запись под bible_editions/bible_books/bible_verses — см. шапку файла."
+    );
+    process.exit(1);
+}
 
 main().then(() => process.exit(0)).catch(e => {
     console.error(e);

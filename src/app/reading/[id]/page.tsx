@@ -1,13 +1,14 @@
-import {getItem} from "@/app/reading/[id]/api";
+import {getBibleRedirect, getItem} from "@/app/reading/[id]/api";
 import Content from "@/app/reading/[id]/Content";
 import {Suspense} from "react";
+import {permanentRedirect} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 
 type Props = {
     params: { id: string }
-    searchParams: { range?: string; accents?: string }
+    searchParams: { accents?: string }
 }
 
 export async function generateMetadata(
@@ -31,9 +32,15 @@ export async function generateMetadata(
     }
 }
 
-const ReadingItem = ({ params: { id }, searchParams: { range, accents } }: Props) => {
+const ReadingItem = async ({ params: { id }, searchParams: { accents } }: Props) => {
+    // Библия переехала в собственный раздел, а её прежние адреса остались в карте
+    // сайта и в чужих ссылках. Постоянный редирект, а не временный: адрес сменился
+    // насовсем, и поисковикам надо об этом сказать прямо.
+    const bible = await getBibleRedirect(id);
+    if (bible) permanentRedirect(bible);
+
     setMeta();
-    const itemPromise = getItem(id, range);
+    const itemPromise = getItem(id);
 
     return (
       <div className={myFont.variable}>

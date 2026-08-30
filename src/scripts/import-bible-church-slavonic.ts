@@ -11,7 +11,7 @@
 import "@/scripts/lib/env";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
-import { TextContentType, TextKind } from "@/utils/texts";
+import { TextKind } from "@/utils/texts";
 
 const SOURCE_BASE = "https://bible.by/elzs";
 const USER_AGENT = "Mozilla/5.0 (compatible; typikon.su-importer/1.0; +https://typikon.su)";
@@ -156,6 +156,17 @@ const getChapterVerses = async (bibleById: number, chapter: number): Promise<Arr
     })).filter(v => v.content.length > 0);
 };
 
+
+// ОТРАБОТАВШИЙ СКРИПТ. Он писал в прежнюю модель (books/texts/verses), которой
+// больше нет: Библия живёт в bible_editions/bible_books/bible_verses
+// (@/lib/bible/schema). Оставлен ради разбора источника — это единственное место,
+// где записано, как из него добывались стихи, а корпус ещё придётся дочищать
+// (в церковнославянском Исходе нет глав 37–39: в источнике они без стиховой
+// разбивки). Прежде чем запускать снова, перепишите запись под новые коллекции.
+//
+// Пока этого не сделано, скрипт отказывается работать: молча залить корпус в
+// мёртвые коллекции хуже, чем не залить вовсе.
+
 const main = async () => {
     const onlySlug = process.argv.find(a => a.startsWith("--book="))?.split("=")[1];
     const books = onlySlug ? CANONICAL_BOOKS.filter(b => b.slug === onlySlug) : CANONICAL_BOOKS;
@@ -243,7 +254,7 @@ const main = async () => {
                 translator: "",
                 type: TextKind.TEACHIND,
                 updatedAt: new Date(),
-                contentType: TextContentType.VERSES,
+                contentType: "verses",
                 saintId: "",
                 textingPriority: null,
             });
@@ -275,6 +286,14 @@ const main = async () => {
 
     console.log(`\nГотово: книг — ${bookIndex - 1}, стихов всего — ${totalVerses}`);
 };
+
+if (!process.argv.includes("--i-rewrote-it")) {
+    console.error(
+        "Скрипт отработал и писал в прежнюю модель Библии (books/texts/verses), которой больше нет. " +
+        "Перепишите запись под bible_editions/bible_books/bible_verses — см. шапку файла."
+    );
+    process.exit(1);
+}
 
 main().then(() => process.exit(0)).catch(e => {
     console.error(e);

@@ -141,6 +141,7 @@ const SOURCE_CONDITION: Record<string, string> = {
     book: "ci.group_id IS NOT NULL",
     canon: "ci.canon_id IS NOT NULL",
     akathist: "ci.akathist_id IS NOT NULL",
+    prayer: "ci.prayer_id IS NOT NULL",
 };
 
 /**
@@ -302,10 +303,10 @@ export const chantFacets = (): ChantFacets | null => {
     return {
         // Какие владельцы в корпусе вообще есть: акафистов может не быть
         // вовсе, и предлагать по ним отбор было бы обманом.
-        sources: ["book", "canon", "akathist"].filter((s, i) =>
+        sources: ["book", "canon", "akathist", "prayer"].filter((s, i) =>
             (db.prepare(
                 `SELECT count(*) AS n FROM content_items WHERE ${
-                    ["group_id", "canon_id", "akathist_id"][i]} IS NOT NULL LIMIT 1`,
+                    ["group_id", "canon_id", "akathist_id", "prayer_id"][i]} IS NOT NULL LIMIT 1`,
             ).get() as { n: number }).n > 0),
         books: column<string>("SELECT DISTINCT book FROM memories ORDER BY book"),
         months: column<number>("SELECT DISTINCT month FROM memories WHERE month IS NOT NULL ORDER BY month"),

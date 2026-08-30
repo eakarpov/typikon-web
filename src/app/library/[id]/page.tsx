@@ -1,6 +1,7 @@
 import Content from "@/app/library/[id]/Content";
 import {Suspense} from "react";
-import {getItem} from "@/app/library/[id]/api";
+import {getBibleEditionCode, getItem} from "@/app/library/[id]/api";
+import {permanentRedirect} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
@@ -45,6 +46,10 @@ export async function generateMetadata(
 }
 
 const Library = async ({ params: { id }}: { params: {id: string}}) => {
+    // Оглавление издания Библии — по канону, и живёт оно в своём разделе.
+    const [bibleCode] = await getBibleEditionCode(id);
+    if (bibleCode) permanentRedirect(`/bible?v=${bibleCode}`);
+
     const itemPromise = getItem(id);
     setMeta();
 

@@ -15,6 +15,9 @@ const Admin = () => {
                     <Link href="/admin/books">
                         Редактирование книг
                     </Link>
+                    <Link href="/admin/bible">
+                        Издания Библии
+                    </Link>
                     <Link href="/admin/weeks">
                         Редактирование недель
                     </Link>

@@ -1,33 +1,77 @@
 import { Db, ObjectId } from "mongodb";
-import { filterVersesByRanges, sortVerses } from "@/utils/verses";
 import { FALLBACK_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
+import { expectedVerseCount } from "@/lib/bible/refs";
+import { referenceChapterLengths } from "@/utils/bibleVersification";
+import { booksForCanon, editionForLang, ResolvedVerse, versesForCanonRanges } from "@/lib/bible/query";
 
-// Резолвит зачало в реальные стихи для конкретного языка: находит издание Библии
-// с нужным bibleLanguageCode, внутри него — книгу с нужным bibleBookSlug, и
-// фильтрует её стихи по диапазонам зачала. Возвращает null, если для этого языка
-// ещё нет ни самого издания, ни конкретной книги (например, книга ещё не размечена
-// bibleBookSlug в админке).
+// Зачало — это отрезок канона («Дан. 3:1–88»), а не отрезок конкретной книги
+// конкретного издания. Поэтому резолвится оно так: издание выбирается по языку,
+// а стихи берутся по КАНОНИЧЕСКОЙ нумерации — тогда неважно, что румынская Библия
+// издала песнь трёх отроков отдельной книгой: в чтении она встанет посреди третьей
+// главы Даниила, как ей и положено по уставу.
+//
+// Наружу отдаётся каноническая нумерация, а не родная нумерация издания: чтение
+// подписано «Дан. 3:1–88», и стихи под этой подписью должны считаться так же.
+// Родная остаётся рядом (nativeChapter/nativeVerse) — по ней стих ищут в книге.
+
+/** Ниже этой доли ожидаемого чтение считается не покрытым и берётся из эталона. */
+const COVERAGE_FLOOR = 0.5;
+
+const toPericopeVerse = (verse: ResolvedVerse) => ({
+    id: verse.id,
+    chapter: verse.canonChapter,
+    verse: verse.canonVerse,
+    content: verse.content,
+    // Как этот же стих напечатан в самом издании.
+    nativeChapter: verse.chapter,
+    nativeVerse: verse.verse,
+});
+
+/**
+ * Резолвит зачало в стихи одного языка. Возвращает null, если издания для языка
+ * нет, книга в нём отсутствует или отрезок покрыт слишком скудно, чтобы это можно
+ * было назвать чтением, — решение о запасном языке принимает вызывающий.
+ */
 export const resolvePericopeVerses = async (db: Db, pericope: any, lang: string) => {
-    const book = await db.collection("books").findOne({ bibleLanguageCode: lang });
-    if (!book) return null;
+    const edition = await editionForLang(db, lang);
+    if (!edition) return null;
 
-    const text = await db.collection("texts").findOne({ bookId: book._id, bibleBookSlug: pericope.bookSlug });
-    if (!text) return null;
+    const canonId: string = pericope.bookSlug;
+    const ranges = pericope.ranges || [];
 
-    const rawVerses = await db.collection("verses").find({ textId: text._id }).toArray();
-    const sorted = sortVerses(rawVerses.map(v => ({ ...(v as any), id: v._id.toString() })));
+    const verses = await versesForCanonRanges(db, edition._id, canonId, ranges);
+    if (!verses.length) return null;
+
+    // Покрытие меряем против эталонной версификации: издание может знать книгу, но
+    // не знать половины отрезка — так румынский Даниил отдавал 33 стиха вместо 88,
+    // и чтение обрывалось молча. Порог, а не строгое равенство, потому что издания
+    // разбивают текст на стихи по-своему: у румынской Псалтири в девятом псалме
+    // на стих меньше, и это не повод отнимать у читателя румынский текст.
+    const expected = expectedVerseCount(ranges, referenceChapterLengths(canonId));
+    if (expected && verses.length < expected * COVERAGE_FLOOR) return null;
+
+    // Книга издания — та, где чтение НАЧИНАЕТСЯ: одну книгу канона издание может
+    // собирать из нескольких своих (румынский Даниил собран из четырёх).
+    const books = await booksForCanon(db, edition._id, canonId);
+    const startBook = books.find((book) => book._id.equals(verses[0].bookId)) ?? books[0] ?? null;
 
     return {
-        textId: text._id.toString(),
-        textName: text.name,
-        textAlias: text.alias,
-        verses: filterVersesByRanges(sorted, pericope.ranges || []),
+        textId: startBook?._id.toString() ?? null,
+        textName: startBook?.name ?? "",
+        textAlias: startBook?.alias ?? "",
+        editionCode: edition.code,
+        verses: verses.map(toPericopeVerse),
     };
 };
 
-// То же самое, но с фолбеком: если для запрошенного языка ещё нет размеченной
-// книги/издания, тихо откатывается на церковнославянский, чтобы чтение не
-// пропадало из-за того, что какая-то книга ещё не размечена для другого языка.
+/**
+ * То же, но с запасным языком: не собралось чтение на выбранном — отдаём
+ * церковнославянское и честно говорим об этом в resolvedLang.
+ *
+ * Откатывается ЧТЕНИЕ ЦЕЛИКОМ, а не недостающая часть: сшитый из двух изданий
+ * отрывок выглядел бы цельным, не будучи им, и разнобой заметил бы только тот,
+ * кто читает на обоих языках сразу.
+ */
 export const resolvePericopeVersesWithFallback = async (db: Db, pericope: any, lang: string) => {
     const resolved = await resolvePericopeVerses(db, pericope, lang);
     if (resolved) return { ...resolved, resolvedLang: lang };

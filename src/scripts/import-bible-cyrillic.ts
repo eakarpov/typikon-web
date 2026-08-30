@@ -10,7 +10,7 @@ import path from "path";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { parseBulkVerseText } from "@/utils/verses";
-import { TextContentType, TextKind } from "@/utils/texts";
+import { TextKind } from "@/utils/texts";
 
 const FILE_PATH = path.join(process.cwd(), "romanian/output/bible_cyrillic.txt");
 const BOOK_ID = new ObjectId("6989959c169656dfeafaa36a"); // Сфънта Скриптура (Библия - на румынской кириллице)
@@ -115,6 +115,17 @@ const splitIntoBooks = (raw: string): IBookSegment[] => {
     });
 };
 
+
+// ОТРАБОТАВШИЙ СКРИПТ. Он писал в прежнюю модель (books/texts/verses), которой
+// больше нет: Библия живёт в bible_editions/bible_books/bible_verses
+// (@/lib/bible/schema). Оставлен ради разбора источника — это единственное место,
+// где записано, как из него добывались стихи, а корпус ещё придётся дочищать
+// (в церковнославянском Исходе нет глав 37–39: в источнике они без стиховой
+// разбивки). Прежде чем запускать снова, перепишите запись под новые коллекции.
+//
+// Пока этого не сделано, скрипт отказывается работать: молча залить корпус в
+// мёртвые коллекции хуже, чем не залить вовсе.
+
 const main = async () => {
     const raw = fs.readFileSync(FILE_PATH, "utf-8");
     const segments = splitIntoBooks(raw);
@@ -181,7 +192,7 @@ const main = async () => {
             translator: "",
             type: TextKind.TEACHIND,
             updatedAt: new Date(),
-            contentType: TextContentType.VERSES,
+            contentType: "verses",
             saintId: "",
             textingPriority: null,
         });
@@ -210,6 +221,14 @@ const main = async () => {
 
     console.log(`\nГотово: добавлено книг — ${insertedTextIds.length}, стихов всего — ${totalVerses}`);
 };
+
+if (!process.argv.includes("--i-rewrote-it")) {
+    console.error(
+        "Скрипт отработал и писал в прежнюю модель Библии (books/texts/verses), которой больше нет. " +
+        "Перепишите запись под bible_editions/bible_books/bible_verses — см. шапку файла."
+    );
+    process.exit(1);
+}
 
 main().then(() => process.exit(0)).catch(e => {
     console.error(e);

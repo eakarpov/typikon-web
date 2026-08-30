@@ -10,6 +10,23 @@ const loadBooks = async (): Promise<[any, any]> => {
             .collection("books")
             .aggregate([
                 { $match: { public: { $ne: false } } },
+                // Издания Библии остаются карточками библиотеки, но содержимое у них
+                // своё: оглавление по канону и параллельное чтение. Поэтому карточка
+                // ведёт в раздел Библии, а не на общую страницу книги.
+                {
+                    $lookup: {
+                        from: "bible_editions",
+                        localField: "_id",
+                        foreignField: "bookId",
+                        as: "bibleEdition",
+                    },
+                },
+                {
+                    $addFields: {
+                        bibleCode: { $arrayElemAt: ["$bibleEdition.code", 0] },
+                    },
+                },
+                { $project: { bibleEdition: 0 } },
                 // { $sort: { order: 1 }}
                 { $sort: { name: 1 } },
             ])
@@ -21,4 +38,4 @@ const loadBooks = async (): Promise<[any, any]> => {
     }
 };
 
-export const getItems = cachedTuple(loadBooks, ["library-list"], [CacheTag.BOOKS]);
+export const getItems = cachedTuple(loadBooks, ["library-list"], [CacheTag.BOOKS, CacheTag.BIBLE]);

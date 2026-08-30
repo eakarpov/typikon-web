@@ -4,6 +4,7 @@
 // включить в CI.
 type Nullable<T> = T | null;
 import {DayDTO} from "@/types/dto/days";
+import {BIBLE_CANON} from "@/utils/bibleCanon";
 
 export enum TextReadiness {
     READY= "ready",
@@ -45,20 +46,15 @@ export const textReadinessClassname = (readiness: TextReadiness) => {
     }
 }
 
+// Стихами набрана только Библия, а она с некоторых пор живёт своей моделью
+// (@/lib/bible/schema) — поэтому у текста собрания остался один вид содержимого.
+// Тип оставлен, а не выброшен: он записан в трёх тысячах документов, и снимать
+// его оттуда ради одного значения — работа без выгоды.
 export enum TextContentType {
     PARAGRAPHS= "paragraphs",
-    VERSES= "verses",
 }
 
-export const printTextContentType = (contentType: TextContentType) => {
-    switch (contentType) {
-        case TextContentType.VERSES:
-            return "Стихи (Библия и т.п.)";
-        case TextContentType.PARAGRAPHS:
-        default:
-            return "Абзацы";
-    }
-};
+export const printTextContentType = (_contentType: TextContentType) => "Абзацы";
 
 export enum TextKind {
     TEACHIND= "Teaching",
@@ -248,90 +244,19 @@ export const valueTitle = (valueName: TextType) => {
   }
 };
 
+// Книги Библии для сносок и зачал — вид канона, а не второй его список.
+// Раньше здесь лежали те же 77 книг литералом; с появлением второго издания
+// стало ясно, что список должен быть один на проект, и он переехал в
+// @/utils/bibleCanon. Здесь остались только функции разбора, которыми пользуется
+// разметка сносок («Быт.1:1») и импорт зачал с azbyka.ru.
 interface IBookMapEntry {
     code: string; // код книги в адресной схеме azbyka.ru (для ссылок на сноски)
     slug: string; // язык-независимый идентификатор книги для Библий/зачал (biblia-{lang}-{slug}-N)
 }
 
-const bookMap = {
-    "Быт": { code: "Gen", slug: "bytie" },
-    "Исх": { code: "Ex", slug: "iskhod" },
-    "Лев": { code: "Lev", slug: "levit" },
-    "Чис": { code: "Num", slug: "chisla" },
-    "Втор": { code: "Deut", slug: "vtorozakonie" },
-    "Нав": { code: "Nav", slug: "iisus-navin" },
-    "Суд": { code: "Judg", slug: "sudi" },
-    "Руф": { code: "Rth", slug: "ruf" },
-    "1Цар": { code: "1Sam", slug: "1-tsarstv" },
-    "2Цар": { code: "2Sam", slug: "2-tsarstv" },
-    "3Цар": { code: "3Sam", slug: "3-tsarstv" },
-    "4Цар": { code: "4Sam", slug: "4-tsarstv" },
-    "1Пар": { code: "1Chron", slug: "1-paralipomenon" },
-    "2Пар": { code: "2Chron", slug: "2-paralipomenon" },
-    "1Езд": { code: "Ezr", slug: "1-ezdry" },
-    "Неем": { code: "Nehem", slug: "neemii" },
-    "2Езд": { code: "2Ezr", slug: "2-ezdry" },
-    "Тов": { code: "Tov", slug: "tovita" },
-    "Иудиф": { code: "Judf", slug: "iudifi" },
-    "Есф": { code: "Est", slug: "esfir" },
-    "Иов": { code: "Job", slug: "iova" },
-    "Пс": { code: "Ps", slug: "psaltir" },
-    "Прит": { code: "Prov", slug: "pritchi" },
-    "Еккл": { code: "Eccl", slug: "ekklesiast" },
-    "Песн": { code: "Song", slug: "pesn-pesney" },
-    "Прем": { code: "Solom", slug: "premudrosti-solomona" },
-    "Сир": { code: "Sir", slug: "sirakha" },
-    "Ис": { code: "Is", slug: "isaii" },
-    "Иер": { code: "Jer", slug: "ieremii" },
-    "Плч": { code: "Lam", slug: "plach-ieremii" },
-    "ПослИер": { code: "pJer", slug: "poslanie-ieremii" },
-    "Вар": { code: "Bar", slug: "varukha" },
-    "Иез": { code: "Ezek", slug: "iezekiilya" },
-    "Дан": { code: "Dan", slug: "daniila" },
-    "Ос": { code: "Hos", slug: "osii" },
-    "Иоил": { code: "Joel", slug: "ioilya" },
-    "Ам": { code: "Am", slug: "amosa" },
-    "Авд": { code: "Avd", slug: "avdiya" },
-    "Ион": { code: "Jona", slug: "iony" },
-    "Мих": { code: "Mic", slug: "mikheya" },
-    "Наум": { code: "Naum", slug: "nauma" },
-    "Авв": { code: "Habak", slug: "avvakuma" },
-    "Соф": { code: "Sofon", slug: "sofonii" },
-    "Аг": { code: "Hag", slug: "aggeya" },
-    "Зах": { code: "Zah", slug: "zakharii" },
-    "Мал": { code: "Mal", slug: "malakhii" },
-    "1Мак": { code: "1Mac", slug: "1-makkaveyskaya" },
-    "2Мак": { code: "2Mac", slug: "2-makkaveyskaya" },
-    "3Мак": { code: "3Mac", slug: "3-makkaveyskaya" },
-    "3Езд": { code: "3Ezr", slug: "3-ezdry" },
-    "Мф": { code: "Mt", slug: "matfeya" },
-    "Мк": { code: "Mk", slug: "marka" },
-    "Лк": { code: "Lk", slug: "luki" },
-    "Ин": { code: "Jn", slug: "ioanna" },
-    "Деян": { code: "Act", slug: "deyaniya" },
-    "Иак": { code: "Jac", slug: "iakova" },
-    "1Пет": { code: "1Pet", slug: "1-petra" },
-    "2Пет": { code: "2Pet", slug: "2-petra" },
-    "1Ин": { code: "1Jn", slug: "1-ioanna-posl" },
-    "2Ин": { code: "2Jn", slug: "2-ioanna-posl" },
-    "3Ин": { code: "3Jn", slug: "3-ioanna-posl" },
-    "Иуд": { code: "Juda", slug: "iudy" },
-    "Рим": { code: "Rom", slug: "rimlyanam" },
-    "1Кор": { code: "1Cor", slug: "1-korinfyanam" },
-    "2Кор": { code: "2Cor", slug: "2-korinfyanam" },
-    "Гал": { code: "Gal", slug: "galatam" },
-    "Еф": { code: "Eph", slug: "efesyanam" },
-    "Флп": { code: "Phil", slug: "filippiytsam" },
-    "Кол": { code: "Col", slug: "kolossyanam" },
-    "1Фес": { code: "1Thes", slug: "1-fessaloniyitsam" },
-    "2Фес": { code: "2Thes", slug: "2-fessaloniyitsam" },
-    "1Тим": { code: "1Tim", slug: "1-timofeyu" },
-    "2Тим": { code: "2Tim", slug: "2-timofeyu" },
-    "Тит": { code: "Tit", slug: "titu" },
-    "Флм": { code: "Phlm", slug: "filimonu" },
-    "Евр": { code: "Hebr", slug: "evreyam" },
-    "Откр": { code: "Apok", slug: "otkrovenie" },
-} as { [key: string]: IBookMapEntry };
+const bookMap = Object.fromEntries(
+    BIBLE_CANON.map((book) => [book.abbr, { code: book.azbyka, slug: book.id }]),
+) as { [key: string]: IBookMapEntry };
 
 export const isFootnoteBook = (value?: string) => {
     const [probableBook, probablePlace] = (value || "").split(".");

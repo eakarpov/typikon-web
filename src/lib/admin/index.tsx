@@ -3,9 +3,13 @@ import {decrypt} from "@/lib/authorize/sessions";
 import {getItem} from "@/app/profile/api";
 import {FunctionComponent} from "react";
 
-export const hasAdminRights = (Component: FunctionComponent) =>
+// Обёртка обобщена по пропсам страницы. Была объявлена на FunctionComponent
+// без параметра, то есть на компонент БЕЗ пропсов, — и всякая админская
+// страница, берущая params или searchParams, спотыкалась об это типом
+// (десяток одинаковых ошибок в сборке). Поведение прежнее, шире только тип.
+export const hasAdminRights = <P extends object>(Component: FunctionComponent<P>) =>
     // eslint-disable-next-line react/display-name
-    async (props) => {
+    async (props: P) => {
     if (process.env.NODE_ENV === "development") {
         return <Component  {...props} />;
     }
