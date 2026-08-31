@@ -558,7 +558,554 @@ const VULGATE_BLOCKS: Array<[string, number, number | null, number | null, strin
     ["rimlyanam", 16, 25, 27, null, 14, -1,
      "славословие «Ei autem, qui potens est vos confirmare» Вульгата держит на западном " +
      "месте, в конце 16-й главы; славянская — в конце 14-й, лат. 16:25 = слав. 14:24"],
+
+    // --- Славянский стих, которого у латинской нет отдельным номером ----------
+    //
+    // Дальше идут главы, где расходится не состав, а разбивка: одно и то же
+    // место одна книга держит одним стихом, другая двумя. Там, где славянская
+    // дробит мельче, у латинской просто нет стиха под этим номером и счёт с него
+    // съезжает; там, где мельче дробит латинская, лишний стих уводится за конец
+    // главы отдельной строкой (см. примету у 3 Цар. 7:50 греческого блока).
+    // Каждая граница ниже прочитана по обеим книгам.
+
+    ["bytie", 49, 32, 32, null, null, 1,
+     "лат. Быт. 49:32 «Finitisque mandatis quibus filios instruebat, collegit pedes suos» = " +
+     "слав. 49:33; слав. 49:32 о стяжании села латинская держит внутри своего 49:31"],
+    ["bytie", 50, 23, 25, null, null, 1,
+     "лат. Быт. 50:23 «Quibus transactis, locutus est fratribus suis» = слав. 50:24; " +
+     "лат. 50:22 вмещает и слав. 50:22, и слав. 50:23 о детях Ефремовых"],
+
+    ["iisus-navin", 4, 24, 24, null, null, 1,
+     "лат. Нав. 4:24 «sicut fecerat prius in mari Rubro» — вторая половина слав. 4:23; " +
+     "своего номера у неё нет, уводим за конец главы"],
+    ["iisus-navin", 4, 25, 25, null, null, -1,
+     "лат. Нав. 4:25 «ut discant omnes terrarum populi» = слав. 4:24, последний стих"],
+    ["iisus-navin", 21, 37, 37, null, null, 1,
+     "лат. Нав. 21:37 «De tribu Gad civitates confugii» = слав. 21:38; слав. 21:37 о Гедсоне " +
+     "и Масфе латинская держит внутри своего 21:36"],
+    ["iisus-navin", 21, 38, 43, null, null, 2,
+     "лат. Нав. 21:38 «Omnes urbes filiorum Merari... duodecim» = слав. 21:40; с этого места " +
+     "счёт разошёлся уже на два стиха и так идёт до конца главы"],
+
+    ["3-tsarstv", 17, 22, 22, null, null, 2,
+     "лат. 3 Цар. 17:22 «Et exaudivit Dominus vocem Eliæ: et reversa est anima pueri» — " +
+     "славянский держит это внутри 17:21–22 и своего номера ему не даёт"],
+    ["3-tsarstv", 17, 23, 24, null, null, -1,
+     "лат. 3 Цар. 17:23 «Tulitque Elias puerum, et deposuit eum de cœnaculo» = слав. 17:22"],
+    ["3-tsarstv", 22, 44, 44, null, null, 10,
+     "лат. 3 Цар. 22:44 «Verumtamen excelsa non abstulit» о невзятых высотах — славянский " +
+     "держит это внутри 22:43, отдельного номера нет"],
+    ["3-tsarstv", 22, 45, 54, null, null, -1,
+     "лат. 3 Цар. 22:45 «Pacemque habuit Josaphat cum rege Israël» = слав. 22:44"],
+
+    ["neemii", 3, 31, 31, null, null, 1,
+     "лат. Неем. 3:31 «Et inter cœnaculum anguli in porta gregis» = слав. 3:32; слав. 3:31 " +
+     "о Мелхии латинская держит внутри своего 3:30 (так и во второй оцифровке Климентины)"],
+    ["neemii", 12, 34, 46, null, null, 1,
+     "лат. Неем. 12:34 «Et de filiis sacerdotum in tubis, Zacharias» = слав. 12:35; лат. 12:33 " +
+     "вмещает оба славянских стиха 33 и 34 — весь перечень имён одной строкой"],
+
+    ["iova", 16, 5, 5, null, null, 18,
+     "лат. Иов. 16:5 «consolarer et ego vos sermonibus» — первая половина слав. 16:5, у " +
+     "которой своего номера нет; вторая половина стоит у латинской под номером 6"],
+    ["iova", 16, 6, 23, null, null, -1,
+     "лат. Иов. 16:6 «roborarem vos ore meo» = слав. 16:5 «Бꙋ́ди же крѣ́пость во ᲂу҆стѣ́хъ мои́хъ»"],
+
+    ["psaltir", 43, 23, 26, null, null, 1,
+     "лат. Пс. 43:23 «Exsurge; quare obdormis, Domine?» = слав. 43:24; лат. 43:22 вмещает и " +
+     "слав. 43:22, и слав. 43:23 «Занѐ тебє̀ ра́ди ᲂу҆мерщвлѧ́емсѧ ве́сь де́нь»"],
+    ["psaltir", 55, 12, 13, null, null, 1,
+     "лат. Пс. 55:12 «In me sunt, Deus, vota tua» = слав. 55:13; лат. 55:11 вмещает и слав. " +
+     "55:11, и слав. 55:12 «На бг҃а ᲂу҆пова́хъ, не ᲂу҆бою́сѧ»"],
+    ["psaltir", 92, 5, 5, null, null, 1,
+     "лат. Пс. 92:5 «Testimonia tua credibilia facta sunt nimis» = слав. 92:6, последний стих"],
+    ["psaltir", 114, 5, 5, null, null, 4,
+     "лат. Пс. 114:5 «Misericors Dominus et justus» — вторая половина слав. 114:4, своего " +
+     "номера у неё нет"],
+    ["psaltir", 114, 6, 9, null, null, -1,
+     "лат. Пс. 114:6 «Custodiens parvulos Dominus» = слав. 114:5 «Хранѧ́й младе́нцы гдⷭ҇ь»"],
+    ["psaltir", 129, 5, 5, null, null, 2,
+     "лат. Пс. 129:5 «speravit anima mea in Domino» — хвост слав. 129:4, отдельного номера нет"],
+    ["psaltir", 129, 6, 7, null, null, -1,
+     "лат. Пс. 129:6 «A custodia matutina usque ad noctem» = слав. 129:5; лат. 129:8 «Et ipse " +
+     "redimet Israël» — вторая половина слав. 129:6, и она остаётся за концом псалма"],
+
+    ["pritchi", 13, 14, 25, null, null, 1,
+     "лат. Прит. 13:14 «Lex sapientis fons vitæ» = слав. 13:15 «Зако́нъ мꙋ́дромꙋ и҆сто́чникъ " +
+     "жи́зни»; слав. 13:14 — прибавка Семидесяти, латинская её не печатает"],
+    ["pritchi", 18, 23, 24, null, null, 1,
+     "лат. Прит. 18:23 «Cum obsecrationibus loquetur pauper» = слав. 18:24; лат. 18:22 вмещает " +
+     "и слав. 18:22 о доброй жене, и слав. 18:23 об изгоняющем добрую жену"],
+    ["pritchi", 25, 21, 28, null, null, 1,
+     "лат. Прит. 25:21 «Si esurierit inimicus tuus, ciba illum» = слав. 25:22; слав. 25:21 " +
+     "о моли в ризе — прибавка Семидесяти, латинская её не печатает"],
+    // Тридцать первая притча: у латинской акростих по еврейскому счёту, у
+    // славянской порядок Семидесяти, и два стиха стоят наоборот.
+    ["pritchi", 31, 25, 25, null, null, 1,
+     "лат. Прит. 31:25 «Fortitudo et decor indumentum ejus» = слав. 31:26 «Крѣ́постїю и҆ " +
+     "лѣ́потою ѡ҆блече́сѧ»"],
+    ["pritchi", 31, 26, 26, null, null, 2,
+     "лат. Прит. 31:26 «Os suum aperuit sapientiæ» = слав. 31:28 «Оу҆ста̀ своѧ̑ ѿве́рзе мꙋ́дрѡ»: " +
+     "стих перескакивает через соседний, потому что лат. 31:27 = слав. 31:27"],
+    ["pritchi", 31, 28, 31, null, null, 1,
+     "лат. Прит. 31:28 «Surrexerunt filii ejus» = слав. 31:29; слав. 31:25 остаётся без пары"],
+
+    ["isaii", 3, 23, 23, null, null, 3,
+     "перечень женских уборов латинская делит на шесть стихов (3:18–23), славянская на пять " +
+     "(3:18–22); лишний лат. 3:23 «et specula, et sindones» уводим за конец главы"],
+    ["isaii", 3, 24, 26, null, null, -1,
+     "лат. Ис. 3:24 «Et erit pro suavi odore fœtor» = слав. 3:23 «и҆ бꙋ́детъ вмѣ́стѡ вонѝ " +
+     "до́брыѧ смра́дъ» — с этого стиха счёт снова сходится, только на один назад"],
+
+    // Даниил: латинская кончает рассказ о Сусанне смертью Астиага, а славянская
+    // открывает им следующую главу — и вся четырнадцатая идёт на стих вперёд.
+    // Сверка длин глав этого НЕ ВИДИТ: у обеих в 14-й ровно по 42 стиха.
+    ["daniila", 13, 65, 65, null, 14, -64,
+     "лат. Дан. 13:65 «Et rex Astyages appositus est ad patres suos» = слав. 14:1 «И҆ ца́рь " +
+     "а҆стѷа́гъ приложи́сѧ къ ѻ҆тцє́мъ свои̑мъ» — первый стих следующей главы"],
+    ["daniila", 14, 1, 42, null, null, 1,
+     "лат. Дан. 14:1 «Erat autem Daniel conviva regis» = слав. 14:2; вся глава на стих вперёд, " +
+     "а последний лат. 14:42 «Tunc rex ait: Paveant omnes» — хвост слав. 14:42, и он остаётся " +
+     "за концом главы"],
+
+    ["amosa", 6, 11, 11, null, null, 4,
+     "лат. Ам. 6:11 «Et respondebit: Finis est. Et dicet ei: Tace» — вторая половина слав. " +
+     "6:10, своего номера у неё нет"],
+    ["amosa", 6, 12, 15, null, null, -1,
+     "лат. Ам. 6:12 «Quia ecce Dominus mandabit, et percutiet domum majorem» = слав. 6:11"],
+    ["mikheya", 5, 12, 14, null, null, 1,
+     "лат. Мих. 5:12 «et perire faciam sculptilia tua» = слав. 5:13; лат. 5:11 вмещает и слав. " +
+     "5:11 о городах, и слав. 5:12 о волхвованиях"],
+
+    // Первая Маккавейская, первая глава: латинская дробит рассказ мельче
+    // славянской в пяти местах и дважды, наоборот, сливает два славянских стиха
+    // в один. Смещение поэтому не одно, а растёт по главе: 0, −1, −2, −3.
+    // Каждый уступ прочитан по обеим книгам.
+    ["1-makkaveyskaya", 1, 5, 5, null, null, 60,
+     "лат. 1 Мак. 1:5 «et obtinuit regiones gentium, et tyrannos» — хвост слав. 1:4"],
+    ["1-makkaveyskaya", 1, 6, 21, null, null, -1,
+     "лат. 1 Мак. 1:6 «Et post hæc decidit in lectum» = слав. 1:5 «И҆ по си́хъ падѐ на ло́же»"],
+    ["1-makkaveyskaya", 1, 22, 22, null, null, 44,
+     "лат. 1 Мак. 1:22 «et ascendit Jerosolymam in multitudine gravi» — хвост слав. 1:20"],
+    ["1-makkaveyskaya", 1, 23, 23, null, null, -2,
+     "лат. 1 Мак. 1:23 «Et intravit in sanctificationem cum superbia» = слав. 1:21; этот стих " +
+     "вмещает и слав. 1:22 о трапезе предложения, отчего дальше смещение снова −1"],
+    ["1-makkaveyskaya", 1, 24, 31, null, null, -1,
+     "лат. 1 Мак. 1:24 «Et accepit argentum, et aurum, et vasa concupiscibilia» = слав. 1:23"],
+    ["1-makkaveyskaya", 1, 32, 32, null, null, 35,
+     "лат. 1 Мак. 1:32 «Et irruit super civitatem repente» — хвост слав. 1:30"],
+    ["1-makkaveyskaya", 1, 33, 47, null, null, -2,
+     "лат. 1 Мак. 1:33 «Et accepit spolia civitatis: et succendit eam igni» = слав. 1:31"],
+    ["1-makkaveyskaya", 1, 48, 48, null, null, 20,
+     "лат. 1 Мак. 1:48 «et prohiberent celebrari sabbatum, et dies solemnes» — хвост слав. 1:45"],
+    ["1-makkaveyskaya", 1, 49, 51, null, null, -3,
+     "лат. 1 Мак. 1:49 «et jussit coinquinari sancta» = слав. 1:46; лат. 1:51 вмещает и слав. " +
+     "1:48, и слав. 1:49, отчего дальше смещение опять −2"],
+    ["1-makkaveyskaya", 1, 52, 53, null, null, -2,
+     "лат. 1 Мак. 1:52 «et quicumque non fecissent secundum verbum regis Antiochi, morerentur» " +
+     "= слав. 1:50"],
+    ["1-makkaveyskaya", 1, 54, 54, null, null, 15,
+     "лат. 1 Мак. 1:54 «Et jusserunt civitatibus Juda sacrificare» — хвост слав. 1:51"],
+    ["1-makkaveyskaya", 1, 55, 67, null, null, -3,
+     "лат. 1 Мак. 1:55 «Et congregati sunt multi de populo» = слав. 1:52; так до конца главы: " +
+     "лат. 1:67 «et facta est ira magna super populum» = слав. 1:64"],
+    ["1-makkaveyskaya", 13, 53, 53, null, null, 1,
+     "лат. 1 Мак. 13:53 «Et munivit montem templi, qui erat secus arcem» — хвост слав. 13:52"],
+    ["1-makkaveyskaya", 13, 54, 54, null, null, -1,
+     "лат. 1 Мак. 13:54 «Et vidit Simon Joannem filium suum» = слав. 13:53, последний стих"],
+
+    ["marka", 8, 39, 39, null, 9, -38,
+     "лат. Мк. 8:39 «Et dicebat illis: Amen dico vobis, quia sunt quidam de hic stantibus» = " +
+     "слав. 9:1 — латинская кончает этим стихом восьмую главу, славянская им девятую начинает; " +
+     "остальная девятая уже разобрана правилом ниже"],
+    ["ioanna", 6, 52, 52, null, null, 20,
+     "лат. Ин. 6:52 «Si quis manducaverit ex hoc pane, vivet in æternum» — вторая половина " +
+     "слав. 6:51, своего номера у неё нет"],
+    ["ioanna", 6, 53, 72, null, null, -1,
+     "лат. Ин. 6:53 «Litigabant ergo Judæi ad invicem» = слав. 6:52 «Прѧ́хꙋсѧ же междꙋ̀ собо́ю " +
+     "жи́дове» — и дальше стих в стих до конца главы"],
+    ["deyaniya", 7, 56, 59, null, null, 1,
+     "лат. Деян. 7:56 «Exclamantes autem voce magna continuerunt aures suas» = слав. 7:57; " +
+     "слав. 7:56 «сѐ, ви́жꙋ небеса̀ ѿвє́рста» латинская держит внутри своего 7:55"],
 ];
+
+// --- Сирах: Древняя Латинская версия против греческого деления ---------------
+//
+// Отдельным блоком, потому что случай особый и крупный: расходятся не двадцать
+// пять глав по мелочи, а весь способ издания книги.
+//
+// Латинский Сирах — единственная книга Вульгаты, которую блаженный Иероним НЕ
+// переводил заново: он оставил старолатинский текст как был. А тот сделан с
+// греческого извода, который держит стихи, отсутствующие в нашем греческом и
+// славянском, и нередко печатает одно и то же дважды. Сир. 1:16 «Initium
+// sapientiæ timor Domini» и 1:20 «Plenitudo sapientiæ est timere Deum» — один
+// и тот же стих в двух видах; 1:17–19 о страхе Господнем в славянском нет
+// вовсе; 1:26 «In thesauris sapientiæ intellectus» повторяет то, что стоит
+// ниже под 1:31.
+//
+// Славянский Сирах при этом ближе к латинскому, чем к греческому: он переведён
+// по ЛАТИНСКОМУ делению на стихи (см. приговор греческому Сираху ниже) и держит
+// стихи вроде 1:5 «Исто́чникъ премꙋ́дрости сло́во бж҃їе», которых в греческом
+// нет. Поэтому здесь, в отличие от греческого, соответствие постишное и правила
+// пишутся: лишний латинский стих уводится за конец главы отдельной строкой,
+// а счёт после него сдвигается.
+//
+// Все 25 глав прочитаны построчно по обеим книгам; каждая помета ниже — начало
+// того стиха, на котором граница проверена. Сдвиг внутри главы не один: в 24-й
+// он доходит до −10, потому что латинская печатает там десять лишних стихов.
+//
+// Пролог книги («Multorum nobis et magnorum per legem») латинская оцифровка
+// держала ВНУТРИ 1:1, вместе с «Omnis sapientia a Domino Deo est». Это чинится
+// в разборе (scripts/parse_vulgate.py), а не правилом: пролог отдан стихом НОЛЬ,
+// вне счёта, как его и печатает славянская. Правила ему не нужно — нулевого
+// стиха в славянской главе нет, и он сам встаёт отдельной строкой.
+const SIRACH_BLOCKS: Array<[number, number, number, number, string]> = [
+    // [лат. глава, с какого стиха, по какой, сдвиг, примета]
+    // Сир. 1
+    [1, 7, 7, 24,
+     "лат. 1:7 «disciplina sapientiæ cui revelata est et manif» — пары нет, уводим за конец главы"],
+    [1, 8, 10, -1,
+     "лат. 1:8 «Unus est altissimus, Creator omnipotens, et re» = слав. 1:7 «Є҆ди́нъ є҆́сть премⷣръ, стра́шенъ ѕѣлѡ̀, сѣдѧ́»"],
+    [1, 15, 15, 17,
+     "лат. 1:15 «quibus autem apparuerit in visu diligunt eam i» — пары нет, уводим за конец главы"],
+    [1, 16, 16, -1,
+     "лат. 1:16 «Initium sapientiæ timor Domini: et cum fidelib» = слав. 1:15 «Нача́ло премꙋ́дрости боѧ́тисѧ гдⷭ҇а, и҆ съ вѣ́»"],
+    [1, 17, 19, 16,
+     "лат. 1:17–19 (с «Timor Domini scientiæ religiositas:») — пары нет, уводим за конец главы"],
+    [1, 20, 23, -4,
+     "лат. 1:20 «Plenitudo sapientiæ est timere Deum, et plenit» = слав. 1:16 «И҆сполне́нїе премꙋ́дрости є҆́же боѧ́тисѧ гдⷭ҇а»"],
+    [1, 24, 24, 12,
+     "лат. 1:24 «Scientiam et intellectum prudentiæ sapientia c» — пары нет, уводим за конец главы"],
+    [1, 25, 25, -5,
+     "лат. 1:25 «Radix sapientiæ est timere Dominum, et rami il» = слав. 1:20 «Ко́рень премꙋ́дрости є҆́же боѧ́тисѧ гдⷭ҇а, и҆»"],
+    [1, 26, 26, 11,
+     "лат. 1:26 «In thesauris sapientiæ intellectus et scientiæ» — пары нет, уводим за конец главы"],
+    [1, 27, 31, -6,
+     "лат. 1:27 «Timor Domini expellit peccatum:» = слав. 1:21 «Стра́хъ гдⷭ҇ень ѿрѣѧ́етъ грѣхѝ: пребыва́ѧй же»"],
+    [1, 32, 32, 6,
+     "лат. 1:32 «execratio autem peccatori cultura Dei.» — пары нет, уводим за конец главы"],
+    [1, 33, 34, -7,
+     "лат. 1:33 «Fili, concupiscens sapientiam, conserva justit» = слав. 1:26 «Возжелѣ́въ премꙋ́дрости, соблюдѝ за́пѡвѣди, и҆»"],
+    [1, 35, 35, 4,
+     "лат. 1:35 «fides et mansuetudo, et adimplebit thesauros i» — пары нет, уводим за конец главы"],
+    [1, 36, 38, -8,
+     "лат. 1:36 «Ne sis incredibilis timori Domini, et ne acces» = слав. 1:28 «Не сꙋмнѣва́йсѧ ѡ҆ стра́сѣ гдⷭ҇ни и҆ не пристꙋп»"],
+    [1, 39, 40, 1,
+     "лат. 1:39–40 (с «et revelet Deus absconsa tua, et in medio syna») — пары нет, уводим за конец главы"],
+    // Сир. 2
+    [2, 10, 10, 9,
+     "лат. 2:10 «Qui timetis Dominum, diligite illum, et illumi» — пары нет, уводим за конец главы"],
+    [2, 11, 11, -1,
+     "лат. 2:11 «Respicite, filii, nationes hominum: et scitote» = слав. 2:10 «Воззри́те на дрє́внїѧ ро́ды и҆ ви́дите, кто̀ в»"],
+    [2, 12, 12, 8,
+     "лат. 2:12 «Quis enim permansit in mandatis ejus, et derel» — пары нет, уводим за конец главы"],
+    [2, 13, 16, -2,
+     "лат. 2:13 «Quoniam pius et misericors est Deus, et remitt» = слав. 2:11 «Занѐ ще́дръ и҆ млⷭ҇тивъ гдⷭ҇ь, и҆ ѡ҆ставлѧ́етъ»"],
+    [2, 17, 17, 4,
+     "лат. 2:17 «Et quid facient cum inspicere cœperit Dominus?» — пары нет, уводим за конец главы"],
+    [2, 18, 20, -3,
+     "лат. 2:18 «Qui timent Dominum non erunt incredibiles verb» = слав. 2:15 «Боѧ́щїисѧ гдⷭ҇а не сꙋмнѣва́ютсѧ ѡ҆ гл҃го́лѣхъ»"],
+    [2, 21, 21, 1,
+     "лат. 2:21 «Qui timent Dominum custodiunt mandata illius» — пары нет, уводим за конец главы"],
+    [2, 22, 22, -4,
+     "лат. 2:22 «dicentes: Si pœnitentiam non egerimus, incidem» = слав. 2:18 «да впаде́мъ въ рꙋ́цѣ гдⷭ҇ни, а҆ не въ рꙋ́цѣ че»"],
+    // Сир. 3
+    [3, 1, 1, 31,
+     "лат. 3:1 «Filii sapientiæ ecclesia justorum, et natio il» — пары нет, уводим за конец главы"],
+    [3, 2, 9, -1,
+     "лат. 3:2 «Judicium patris audite, filii, et sic facite» = слав. 3:1 «Менѐ ѻ҆тца̀ послꙋ́шайте, ча̑да, и҆ си́це твори»"],
+    [3, 10, 10, 23,
+     "лат. 3:10 «ut superveniat tibi benedictio ab eo, et bened» — пары нет, уводим за конец главы"],
+    [3, 11, 20, -2,
+     "лат. 3:11 «Benedictio patris firmat domos filiorum: maled» = слав. 3:9 «Благослове́нїе бо ѻ҆́тчее ᲂу҆твержда́етъ до́мы»"],
+    [3, 21, 24, -1,
+     "лат. 3:21 «quoniam magna potentia Dei solius, et ab humil» = слав. 3:20 «ꙗ҆́кѡ ве́лїѧ си́ла гдⷭ҇нѧ, и҆ смире́нными сла́»"],
+    [3, 25, 25, 9,
+     "лат. 3:25 «Plurima enim super sensum hominum ostensa sunt» — пары нет, уводим за конец главы"],
+    [3, 26, 26, -2,
+     "лат. 3:26 «multos quoque supplantavit suspicio illorum, e» = слав. 3:24 «мнѡ́ги бо прельстѝ мнѣ́нїе и҆́хъ, и҆ мнѣ́нїе л»"],
+    [3, 27, 27, -1,
+     "лат. 3:27 «Cor durum habebit male in novissimo, et qui am» = слав. 3:26 «се́рдце же́стоко ѡ҆ѕло́битсѧ на послѣ́докъ:»"],
+    [3, 28, 28, 7,
+     "лат. 3:28 «Cor ingrediens duas vias non habebit successus» — пары нет, уводим за конец главы"],
+    [3, 29, 31, -2,
+     "лат. 3:29 «Cor nequam gravabitur in doloribus, et peccato» = слав. 3:27 «се́рдце же́стоко ѡ҆тѧготи́тсѧ болѣ́зньми, и҆ г»"],
+    [3, 32, 32, 4,
+     "лат. 3:32 «Sapiens cor et intelligibile abstinebit se a p» — пары нет, уводим за конец главы"],
+    [3, 33, 34, -3,
+     "лат. 3:33 «Ignem ardentem exstinguit aqua, et eleemosyna» = слав. 3:30 «Ѻ҆́гнь горѧ́щь ᲂу҆гаси́тъ вода̀, и҆ ми́лостынѧ»"],
+    // Сир. 4
+    [4, 27, 27, 9,
+     "лат. 4:27 «Ne reverearis proximum tuum in casu suo,» — пары нет, уводим за конец главы"],
+    [4, 28, 36, -1,
+     "лат. 4:28 «nec retineas verbum in tempore salutis. Non ab» = слав. 4:27 «Не возбранѝ словесѐ во вре́мѧ спасе́нїѧ:»"],
+    // Сир. 7
+    [7, 9, 9, 1,
+     "лат. 7:9 «Noli esse pusillanimis in animo tuo:» = слав. 7:10 «Не малодꙋ́шествꙋй въ моли́твѣ твое́й и҆ ми́лос»"],
+    [7, 10, 10, 30,
+     "лат. 7:10 «exorare et facere eleemosynam ne despicias.» — пары нет, уводим за конец главы"],
+    [7, 11, 11, -2,
+     "лат. 7:11 «Ne dicas: In multitudine munerum meorum respic» = слав. 7:9 «Не рцы̀: на мно́жество дарѡ́въ мои́хъ воззри́т»"],
+    [7, 12, 17, -1,
+     "лат. 7:12 «Non irrideas hominem in amaritudine animæ: est» = слав. 7:11 «Не рꙋга́йсѧ человѣ́кꙋ сꙋ́щꙋ въ го́рести дꙋшѝ є»"],
+    [7, 35, 35, 6,
+     "лат. 7:35 «Datum brachiorum tuorum, et sacrificium sancti» — пары нет, уводим за конец главы"],
+    [7, 36, 40, -1,
+     "лат. 7:36 «Et pauperi porrige manum tuam, ut perficiatur» = слав. 7:35 «И҆ ни́щемꙋ прострѝ рꙋ́кꙋ твою̀, да соверши́тсѧ»"],
+    // Сир. 9
+    [9, 10, 11, 14,
+     "лат. 9:10–11 (с «Omnis mulier quæ est fornicaria, quasi stercus») — пары нет, уводим за конец главы"],
+    [9, 12, 21, -2,
+     "лат. 9:12 «Cum aliena muliere ne sedeas omnino, nec accum» = слав. 9:10 «Съ мꙋжа́тицею ѿню́дъ не сѣдѝ и҆ не ме́дли съ н»"],
+    [9, 22, 22, -1,
+     "лат. 9:22 «Viri justi sint tibi convivæ, et in timore Dei» = слав. 9:21 «Мꙋ́жїе првⷣнїи да вечерѧ́ютъ съ тобо́ю, и҆ во»"],
+    [9, 23, 23, -3,
+     "лат. 9:23 «et in sensu sit tibi cogitatus Dei, et omnis e» = слав. 9:20 «Съ разꙋми́выми бꙋ́ди размышле́нїе твоѐ, и҆ всѧ»"],
+    [9, 24, 25, -2,
+     "лат. 9:24 «In manu artificum opera laudabuntur, et prince» = слав. 9:22 «Ѿ рꙋкѝ хꙋдо́жникѡвъ дѣ́ло похвале́но быва́етъ»"],
+    // Сир. 11
+    [11, 15, 16, 20,
+     "лат. 11:15–16 (с «sapientia, et disciplina, et scientia legis, a») — пары нет, уводим за конец главы"],
+    [11, 17, 36, -2,
+     "лат. 11:17 «Datio Dei permanet justis, et profectus illius» = слав. 11:15 «Даѧ́нїе гдⷭ҇не пребыва́етъ бл҃гочести̑вымъ, и҆»"],
+    // Сир. 12
+    [12, 5, 5, 2,
+     "лат. 12:5 «Da bono, et non receperis peccatorem.» = слав. 12:7 «Да́ждь благо́мꙋ и҆ не застꙋпа́й грѣ́шника.»"],
+    [12, 6, 7, -1,
+     "лат. 12:6 «Benefac humili, et non dederis impio: prohibe» = слав. 12:5 «Добро̀ сотворѝ смире́нномꙋ и҆ не да́ждь нечест»"],
+    [12, 16, 16, 3,
+     "лат. 12:16 «In oculis suis lacrimatur inimicus, et si inve» — пары нет, уводим за конец главы"],
+    [12, 17, 19, -1,
+     "лат. 12:17 «Et si incurrerint tibi mala, invenies eum illi» = слав. 12:16 «А҆́ще срѧ́щꙋтъ тѧ̀ ѕла̑ѧ, тꙋ̀ ѡ҆брѧ́щеши є҆го̀»"],
+    // Сир. 15
+    [15, 15, 15, 6,
+     "лат. 15:15 «adjecit mandata et præcepta sua.» — пары нет, уводим за конец главы"],
+    [15, 16, 21, -1,
+     "лат. 15:16 «Si volueris mandata servare, conservabunt te» = слав. 15:15 «а҆́ще хо́щеши, соблюде́ши за́пѡвѣди и҆ вѣ́рꙋ с»"],
+    // Сир. 20
+    [20, 2, 2, 2,
+     "лат. 20:2 «Concupiscentia spadonis devirginabit juvencula» = слав. 20:4 «Жела́нїе ско́пчо растли́тъ ли дѣви́цꙋ; та́кожд»"],
+    [20, 3, 3, 29,
+     "лат. 20:3 «sic qui facit per vim judicium iniquum.» — пары нет, уводим за конец главы"],
+    [20, 4, 4, -2,
+     "лат. 20:4 «Quam bonum est correptum manifestare pœnitenti» = слав. 20:2 «Ко́ль добро̀ ѡ҆бличе́нномꙋ ꙗ҆ви́ти покаѧ́нїе:»"],
+    [20, 16, 16, 17,
+     "лат. 20:16 «Hodie fœneratur quis, et cras expetit: odibili» — пары нет, уводим за конец главы"],
+    [20, 17, 18, -1,
+     "лат. 20:17 «Fatuo non erit amicus, et non erit gratia boni» = слав. 20:16 «Бꙋ́й рече́тъ: нѣ́сть мѝ дрꙋ́га и҆ нѣ́сть хвалы»"],
+    [20, 19, 19, 15,
+     "лат. 20:19 «neque enim quod habendum erat directo sensu di» — пары нет, уводим за конец главы"],
+    [20, 20, 33, -2,
+     "лат. 20:20 «Lapsus falsæ linguæ quasi qui in pavimento cad» = слав. 20:18 «Поползнове́нїе на землѝ лꙋ́чше не́же ѿ ѧ҆зы́ка»"],
+    // Сир. 22
+    [22, 8, 8, 24,
+     "лат. 22:8 «Qui narrat verbum non audienti, quasi qui exci» — пары нет, уводим за конец главы"],
+    [22, 9, 11, -1,
+     "лат. 22:9 «Cum dormiente loquitur qui enarrat stulto sapi» = слав. 22:8 «повѣ́даетъ дре́млющемꙋ повѣ́даѧй бꙋ́емꙋ, и҆ на»"],
+    [22, 12, 12, 21,
+     "лат. 22:12 «nequissimi enim nequissima vita super mortem f» — пары нет, уводим за конец главы"],
+    [22, 13, 22, -2,
+     "лат. 22:13 «Luctus mortui septem dies: fatui autem et impi» = слав. 22:11 «Сѣ́тованїе ѡ҆ мертвецѣ̀ се́дмь дні́й, ѡ҆ бꙋ́ем»"],
+    [22, 23, 23, 11,
+     "лат. 22:23 «Sicut cor trepidum in cogitatione fatui omni t» — пары нет, уводим за конец главы"],
+    [22, 24, 27, -3,
+     "лат. 22:24 «Pungens oculum deducit lacrimas, et qui pungit» = слав. 22:21 «Оу҆бода́ѧй ѻ҆́ко и҆сточи́тъ сле́зы, и҆ ᲂу҆бода»"],
+    [22, 28, 33, -2,
+     "лат. 22:28 «Fidem posside cum amico in paupertate illius» = слав. 22:26 «Вѣ́рꙋ стѧжѝ въ нищетѣ̀ со и҆́скреннимъ, да во»"],
+    // Сир. 23
+    [23, 5, 5, 33,
+     "лат. 23:5 «Extollentiam oculorum meorum ne dederis mihi» — пары нет, уводим за конец главы"],
+    [23, 6, 28, -1,
+     "лат. 23:6 «Aufer a me ventris concupiscentias, et concubi» = слав. 23:5 «Чре́ва по́хоть и҆ блꙋдодѣѧ̑нїѧ да не ѡ҆б̾и́мꙋт»"],
+    [23, 31, 31, 8,
+     "лат. 23:31 «Et erit dedecus omnibus, eo quod non intellexe» — пары нет, уводим за конец главы"],
+    [23, 32, 38, -1,
+     "лат. 23:32 «Sic et mulier omnis relinquens virum suum, et» = слав. 23:31 «Та́кожде и҆ жена̀ ѡ҆ста́вльшаѧ мꙋ́жа своего̀ и»"],
+    // Сир. 24
+    [24, 3, 4, 35,
+     "лат. 24:3–4 (с «et in medio populi sui exaltabitur, et in plen») — пары нет, уводим за конец главы"],
+    [24, 5, 5, -2,
+     "лат. 24:5 «Ego ex ore Altissimi prodivi, primogenita ante» = слав. 24:3 «а҆́зъ и҆з̾ ᲂу҆́стъ вы́шнѧгѡ и҆зыдо́хъ и҆ ꙗ҆́кѡ»"],
+    [24, 6, 6, 34,
+     "лат. 24:6 «Ego feci in cælis ut oriretur lumen indeficien» — пары нет, уводим за конец главы"],
+    [24, 7, 9, -3,
+     "лат. 24:7 «Ego in altissimis habitavi, et thronus meus in» = слав. 24:4 «а҆́зъ на высо́кихъ всели́хсѧ, и҆ престо́лъ мо́»"],
+    [24, 10, 10, 31,
+     "лат. 24:10 «et in omni gente primatum habui:» — пары нет, уводим за конец главы"],
+    [24, 11, 14, -4,
+     "лат. 24:11 «et omnium excellentium et humilium corda virtu» = слав. 24:7 «со всѣ́ми си́ми поко́ѧ взыска́хъ, и҆ во наслѣ́»"],
+    [24, 15, 23, -3,
+     "лат. 24:15 «Et sic in Sion firmata sum, et in civitate san» = слав. 24:12 «во гра́дѣ возлю́бленнѣмъ та́кожде мѧ̀ препоко́»"],
+    [24, 24, 25, 18,
+     "лат. 24:24–25 (с «Ego mater pulchræ dilectionis, et timoris, et») — пары нет, уводим за конец главы"],
+    [24, 26, 27, -5,
+     "лат. 24:26 «Transite ad me, omnes qui concupiscitis me, et» = слав. 24:21 «Пристꙋпи́те ко мнѣ̀, жела́ющїи менѐ, и҆ ѿ плод»"],
+    [24, 28, 28, 16,
+     "лат. 24:28 «Memoria mea in generatione sæculorum.» — пары нет, уводим за конец главы"],
+    [24, 29, 30, -6,
+     "лат. 24:29 «Qui edunt me, adhuc esurient, et qui bibunt me» = слав. 24:23 «Ꙗ҆дꙋ́щїи мѧ̀ є҆щѐ вза́лчꙋтъ, и҆ пїю́щїи мѧ̀ є҆»"],
+    [24, 31, 31, 14,
+     "лат. 24:31 «qui elucidant me, vitam æternam habebunt.» — пары нет, уводим за конец главы"],
+    [24, 32, 33, -7,
+     "лат. 24:32 «Hæc omnia liber vitæ, et testamentum Altissimi» = слав. 24:25 «Сїѧ̑ всѧ̑ кни́га завѣ́та бг҃а вы́шнѧгѡ,»"],
+    [24, 34, 34, 12,
+     "лат. 24:34 «Posuit David, puero suo, excitare regem ex ips» — пары нет, уводим за конец главы"],
+    [24, 35, 39, -8,
+     "лат. 24:35 «Qui implet quasi Phison sapientiam, et sicut T» = слав. 24:27 «насыща́ѧ ꙗ҆́кѡ фїсѡ́нъ премꙋ́дростїю и҆ ꙗ҆́кѡ»"],
+    [24, 40, 40, 7,
+     "лат. 24:40 «Ego sapientia effudi flumina:» — пары нет, уводим за конец главы"],
+    [24, 41, 44, -9,
+     "лат. 24:41 «ego quasi trames aquæ immensæ de fluvio: ego q» = слав. 24:32 «И҆ а҆́зъ ꙗ҆́кѡ раскопа́нїе и҆з̾ рѣкѝ и҆ ꙗ҆́кож»"],
+    [24, 45, 45, 3,
+     "лат. 24:45 «Penetrabo omnes inferiores partes terræ, et in» — пары нет, уводим за конец главы"],
+    [24, 46, 47, -10,
+     "лат. 24:46 «Adhuc doctrinam quasi prophetiam effundam, et» = слав. 24:36 «є҆щѐ ᲂу҆че́нїе ꙗ҆́коже прⷪ҇ро́чество и҆злїю̀ и»"],
+    // Сир. 25
+    [25, 15, 16, 15,
+     "лат. 25:15–16 (с «Beatus homo cui donatum est habere timorem Dei») — пары нет, уводим за конец главы"],
+    [25, 17, 17, -2,
+     "лат. 25:17 «Omnis plaga tristitia cordis est, et omnis mal» = слав. 25:15 «Всѧ́ка ꙗ҆́зва и҆ не ꙗ҆́зва серде́чнаѧ и҆ всѧ́к»"],
+    [25, 18, 19, 14,
+     "лат. 25:18–19 (с «Et omnem plagam, et non plagam videbit cordis:») — пары нет, уводим за конец главы"],
+    [25, 20, 20, -4,
+     "лат. 25:20 «et omnem obductum, et non obductum odientium:» = слав. 25:16 «всѧ́кое нападе́нїе и҆ не нападе́нїе ненави́дѧщ»"],
+    [25, 21, 21, 13,
+     "лат. 25:21 «et omnem vindictam, et non vindictam inimicoru» — пары нет, уводим за конец главы"],
+    [25, 22, 29, -5,
+     "лат. 25:22 «Non est caput nequius super caput colubri,» = слав. 25:17 «Нѣ́сть главы̀ па́че главы̀ ѕмїи́ны, и҆ нѣ́сть»"],
+    [25, 30, 30, 5,
+     "лат. 25:30 «Mulier si primatum habeat, contraria est viro» — пары нет, уводим за конец главы"],
+    [25, 31, 35, -6,
+     "лат. 25:31 «Cor humile, et facies tristis, et plaga cordis» = слав. 25:25 «Се́рдце смире́но, и҆ лицѐ дрѧ́хло, и҆ ꙗ҆́зва с»"],
+    // Сир. 26
+    [26, 7, 7, 21,
+     "лат. 26:7 «calumniam mendacem super mortem omnia gravia:» — пары нет, уводим за конец главы"],
+    [26, 8, 15, -1,
+     "лат. 26:8 «dolor cordis et luctus, mulier zelotypa.» = слав. 26:7 «Болѣ́знь се́рдца и҆ сѣ́тованїе жена̀ ревни́ва»"],
+    [26, 17, 17, 12,
+     "лат. 26:17 «Disciplina illius datum Dei est.» — пары нет, уводим за конец главы"],
+    [26, 18, 21, -1,
+     "лат. 26:18 «Mulier sensata et tacita, non est immutatio er» = слав. 26:17 «Даѧ́нїе гдⷭ҇не жена̀ молчали́ва, и҆ нѣ́сть и҆с»"],
+    [26, 24, 24, 6,
+     "лат. 26:24 «Fundamenta æterna supra petram solidam, et man» — пары нет, уводим за конец главы"],
+    [26, 25, 28, -1,
+     "лат. 26:25 «In duobus contristatum est cor meum, et in ter» = слав. 26:24 «Ѡ҆ двои́хъ печа́льно бы́сть се́рдце моѐ, и҆ ѡ҆»"],
+    // Сир. 29
+    [29, 17, 18, 15,
+     "лат. 29:17–18 (с «et super lanceam») — пары нет, уводим за конец главы"],
+    [29, 19, 21, -2,
+     "лат. 29:19 «Vir bonus fidem facit pro proximo suo: et qui» = слав. 29:17 «Мꙋ́жъ бла́гъ спорꙋ́чникъ бꙋ́детъ и҆́скреннемꙋ»"],
+    [29, 22, 23, 12,
+     "лат. 29:22–23 (с «Bona repromissoris sibi ascribit peccator: et») — пары нет, уводим за конец главы"],
+    [29, 24, 35, -4,
+     "лат. 29:24 «Repromissio nequissima multos perdidit dirigen» = слав. 29:20 «Порꙋче́нїе мно́гихъ погꙋбѝ благоꙋправлѧ́ющихъ»"],
+    // Сир. 31
+    [31, 11, 13, 1,
+     "лат. 31:11 «Ideo stabilita sunt bona illius in Domino, et» = слав. 31:12 «Оу҆твердѧ́тсѧ блага̑ѧ є҆гѡ̀, и҆ ми́лѡстыни є҆г»"],
+    [31, 14, 14, 24,
+     "лат. 31:14 «Memento quoniam malus est oculus nequam.» — пары нет, уводим за конец главы"],
+    [31, 17, 17, 22,
+     "лат. 31:17 «Ne comprimaris in convivio.» — пары нет, уводим за конец главы"],
+    [31, 18, 22, -1,
+     "лат. 31:18 «Intellige quæ sunt proximi tui ex teipso.» = слав. 31:17 «Разсꙋжда́й, ꙗ҆̀же сꙋ́ть и҆́скреннѧгѡ, ѿ тебє̀»"],
+    [31, 24, 24, -2,
+     "лат. 31:24 «somnus sanitatis in homine parco: dormiet usqu» = слав. 31:22 «Со́нъ здра́вый ѿ чре́ва ᲂу҆мѣ́ренна: воста̀ за»"],
+    [31, 25, 32, -1,
+     "лат. 31:25 «Et si coactus fueris in edendo multum, surge e» = слав. 31:24 «И҆ а҆́ще ѡ҆тѧготи́лсѧ є҆сѝ бра́шны, воста́ни ѿ»"],
+    [31, 33, 34, 7,
+     "лат. 31:33–34 (с «Quæ vita est ei qui minuitur vino?») — пары нет, уводим за конец главы"],
+    [31, 35, 36, -3,
+     "лат. 31:35 «Vinum in jucunditatem creatum est, et non in e» = слав. 31:32 «Кі́й живо́тъ побѣжда́емомꙋ вїно́мъ; сїе́ бо на»"],
+    [31, 37, 37, 5,
+     "лат. 31:37 «Sanitas est animæ et corpori sobrius potus.» — пары нет, уводим за конец главы"],
+    [31, 38, 38, -4,
+     "лат. 31:38 «Vinum multum potatum irritationem, et iram, et» = слав. 31:34 «го́ресть дꙋшѝ вїно̀ пїе́мо мно́го въ ра́спри и»"],
+    [31, 39, 39, 4,
+     "лат. 31:39 «Amaritudo animæ vinum multum potatum.» — пары нет, уводим за конец главы"],
+    [31, 40, 42, -5,
+     "лат. 31:40 «Ebrietatis animositas, imprudentis offensio, m» = слав. 31:35 «ᲂу҆множа́етъ пїѧ́нство ꙗ҆́рость безꙋ́мнагѡ на»"],
+    // Сир. 32
+    [32, 9, 9, 17,
+     "лат. 32:9 «Audi tacens, et pro reverentia accedet tibi bo» — пары нет, уводим за конец главы"],
+    [32, 10, 10, -1,
+     "лат. 32:10 «Adolescens, loquere in tua causa vix.» = слав. 32:9 «Глаго́ли, ю҆́ноше, а҆́ще тебѣ̀ є҆́сть потре́ба»"],
+    [32, 11, 11, 16,
+     "лат. 32:11 «Si bis interrogatus fueris, habeat caput respo» — пары нет, уводим за конец главы"],
+    [32, 12, 22, -2,
+     "лат. 32:12 «In multis esto quasi inscius, et audi tacens s» = слав. 32:10 «сократѝ сло́во, ма́лыми мнѡ́гаѧ (и҆зглаго́ли)»"],
+    [32, 23, 23, 5,
+     "лат. 32:23 «etiam postquam fecit cum eo sine consilio, et» — пары нет, уводим за конец главы"],
+    [32, 24, 28, -3,
+     "лат. 32:24 «Fili, sine consilio nihil facias, et post fact» = слав. 32:21 «Без̾ совѣ́та ничесо́же творѝ, и҆ є҆гда̀ сотвор»"],
+    // Сир. 34
+    [34, 11, 11, 16,
+     "лат. 34:11 «Qui tentatus non est qualia scit? qui implanat» — пары нет, уводим за конец главы"],
+    [34, 12, 14, -1,
+     "лат. 34:12 «Multa vidi errando, et plurimas verborum consu» = слав. 34:11 «Мно́гѡ ви́дѣхъ во ѡ҆бхожде́нїи мое́мъ, и҆ вѧ̑щ»"],
+    [34, 15, 15, 13,
+     "лат. 34:15 «Spes enim illorum in salvantem illos, et oculi» — пары нет, уводим за конец главы"],
+    [34, 16, 17, -2,
+     "лат. 34:16 «Qui timet Dominum nihil trepidabit: et non pav» = слав. 34:14 «Боѧ́йсѧ гдⷭ҇а ничегѡ̀ ᲂу҆бои́тсѧ и҆ не ᲂу҆стра»"],
+    [34, 18, 18, 11,
+     "лат. 34:18 «Ad quem respicit, et quis est fortitudo ejus?» — пары нет, уводим за конец главы"],
+    [34, 19, 21, -3,
+     "лат. 34:19 «Oculi Domini super timentes eum: protector pot» = слав. 34:16 «Ѻ҆́чи гдⷭ҇ни на лю́бѧщыѧ є҆го̀: защище́нїе си́»"],
+    [34, 22, 22, 8,
+     "лат. 34:22 «Dominus solus sustinentibus se in via veritati» — пары нет, уводим за конец главы"],
+    [34, 23, 26, -4,
+     "лат. 34:23 «Dona iniquorum non probat Altissimus, nec resp» = слав. 34:19 «Не бл҃говоли́тъ вы́шнїй ѡ҆ приноше́нїи нечести»"],
+    [34, 27, 27, 4,
+     "лат. 34:27 «Qui effundit sanguinem, et qui fraudem facit m» — пары нет, уводим за конец главы"],
+    [34, 28, 31, -5,
+     "лат. 34:28 «Unus ædificans, et unus destruens: quid prodes» = слав. 34:23 «Є҆ди́нъ созида́ѧй, а҆ дрꙋгі́й разорѧ́ѧй, что̀»"],
+    // Сир. 35
+    [35, 2, 3, 22,
+     "лат. 35:2–3 (с «Sacrificium salutare est attendere mandatis, e») — пары нет, уводим за конец главы"],
+    [35, 4, 6, -2,
+     "лат. 35:4 «Retribuet gratiam qui offert similaginem: et q» = слав. 35:2 «Воздаѧ́й благода́ть а҆́ки приносѧ́й семїда́лъ»"],
+    [35, 7, 7, 19,
+     "лат. 35:7 «hæc enim omnia propter mandatum Dei fiunt.» — пары нет, уводим за конец главы"],
+    [35, 8, 18, -3,
+     "лат. 35:8 «Oblatio justi impinguat altare, et odor suavit» = слав. 35:5 «Приноше́нїе пра́веднагѡ ᲂу҆тꙋчнѧ́етъ ѻ҆лта́рь»"],
+    [35, 19, 19, 8,
+     "лат. 35:19 «A maxilla enim ascendunt usque ad cælum, et Do» — пары нет, уводим за конец главы"],
+    [35, 20, 21, -4,
+     "лат. 35:20 «Qui adorat Deum in oblectatione suscipietur, e» = слав. 35:16 «Слꙋжа́й (бг҃ꙋ) во благоволе́нїи прїѧ́тъ бꙋ́дет»"],
+    [35, 22, 26, -3,
+     "лат. 35:22 «Et Dominus non elongabit: et judicabit justos» = слав. 35:19 «и҆ гдⷭ҇ь не заме́длитъ, нижѐ и҆́мать долготерп»"],
+    // Сир. 36
+    [36, 8, 8, 22,
+     "лат. 36:8 «Excita furorem, et effunde iram.» — пары нет, уводим за конец главы"],
+    [36, 9, 19, -1,
+     "лат. 36:9 «Tolle adversarium, et afflige inimicum.» = слав. 36:8 «и҆змѝ сопоста́та и҆ сотрѝ врага̀,»"],
+    // Сир. 39
+    [39, 7, 7, 36,
+     "лат. 39:7 «Aperiet os suum in oratione, et pro delictis s» — пары нет, уводим за конец главы"],
+    [39, 8, 20, -1,
+     "лат. 39:8 «Si enim Dominus magnus voluerit, spiritu intel» = слав. 39:7 «А҆́ще гдⷭ҇ь ве́лїй восхо́щетъ, дꙋ́хомъ ра́зꙋма»"],
+    [39, 22, 41, 1,
+     "лат. 39:22 «In verbo ejus stetit aqua sicut congeries: et» = слав. 39:23 «Сло́вомъ є҆гѡ̀ ста̀ вода̀ ꙗ҆́кѡ сто́гъ, и҆ гл҃»"],
+    // Сир. 43
+    [43, 33, 33, 4,
+     "лат. 43:33 «Benedicentes Dominum, exaltate illum quantum p» — пары нет, уводим за конец главы"],
+    [43, 34, 37, -1,
+     "лат. 43:34 «Exaltantes eum, replemini virtute, ne laboreti» = слав. 43:33 «возносѧ́ще є҆го̀ ᲂу҆мно́житесѧ крѣ́постїю: не»"],
+    // Сир. 49
+    [49, 18, 18, 1,
+     "лат. 49:18 «et ossa ipsius visitata sunt, et post mortem p» — пары нет, уводим за конец главы"],
+    [49, 19, 19, -1,
+     "лат. 49:19 «Seth et Sem apud homines gloriam adepti sunt» = слав. 49:18 «Си́мъ и҆ си́ѳъ просла̑влена бы́ста въ человѣ́ц»"],
+];
+
+const sirachRules: BibleMappingRule[] = SIRACH_BLOCKS.map(
+    ([chapter, verseFrom, verseTo, verseOffset, note]) => ({
+        edition: "la-vulgata",
+        from: { book: "sirakha", chapter, verseFrom, verseTo },
+        to: { verseOffset },
+        exact: true,
+        note,
+    }),
+);
 
 const vulgateRules: BibleMappingRule[] = VULGATE_BLOCKS.map(
     ([book, chapter, verseFrom, verseTo, toBook, toChapter, verseOffset, note]) => ({
@@ -689,6 +1236,7 @@ export const BIBLE_MAPPINGS: BibleMappingRule[] = [
     ...psalmRules,
     ...otherRules,
     ...vulgateRules,
+    ...sirachRules,
 ];
 
 const matches = (rule: BibleMappingRule, book: string, chapter: number, verse: number): boolean => {
@@ -758,6 +1306,14 @@ export interface ChapterVerdict {
 // «стих под своим номером» объясняет длины лучше любого сдвига, сдвига там нет.
 // Это довод, а не доказательство; главу из этого списка стоит перечитать, если
 // с ней что-то не сойдётся.
+// Главы, прочитанные ПОСТРОЧНО по обеим книгам: у каждой найдена та граница,
+// на которой счёт мог бы съехать, и видно, что он не съезжает. Довод сильнее
+// просеивания по длинам — это не оценка, а сверка текста.
+const READ =
+    "прочитано построчно по обеим книгам: латинская печатает больше или меньше слов, но стих " +
+    "стоит под своим номером. Там, где у славянской есть лишний стих, латинская держит его " +
+    "внутри соседнего — счёт от этого не съезжает";
+
 const SCREENED =
     "просеяно сравнением длин стихов: «стих под своим номером» объясняет главу лучше любого " +
     "сдвига в пределах шести стихов. Греческий короче или длиннее, но нумерация не съезжает. " +
@@ -1046,6 +1602,176 @@ export const CHAPTER_VERDICTS: ChapterVerdict[] = [
             "в один по всей книге, во всех семи главах разом. Соответствие «многие к одному», и " +
             "смещением оно не выражается: сорок шесть греческих стихов остались бы без места, а " +
             "любое правило столкнуло бы их с соседями",
+    },
+    {
+        edition: "la-vulgata",
+        book: "bytie",
+        chapters: [5],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Быт. 5:31 вмещает и слав. 5:31, и слав. 5:32 о Ное пятисот лет",
+    },
+    {
+        edition: "la-vulgata",
+        book: "iskhod",
+        chapters: [14],
+        verdict: "aligned",
+        reason: READ + " — " + "слав. Исх. 14:32 «Тогда̀ воспѣ̀ мѡѷсе́й» латинская держит в начале своей 15-й главы",
+    },
+    {
+        edition: "la-vulgata",
+        book: "levit",
+        chapters: [26],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Лев. 26:45 вмещает и слав. 26:45, и слав. 26:46 «Сїѧ̑ сꙋдьбы̑ моѧ̑»",
+    },
+    {
+        edition: "la-vulgata",
+        book: "chisla",
+        chapters: [11],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Чис. 11:34 вмещает и слав. 11:34, и слав. 11:35 о движении в Асироф",
+    },
+    {
+        edition: "la-vulgata",
+        book: "iisus-navin",
+        chapters: [24],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Нав. 24:33 = слав. 24:33; слав. 24:34–36 — прибавка Семидесяти, латинская её не печатает",
+    },
+    {
+        edition: "la-vulgata",
+        book: "1-paralipomenon",
+        chapters: [11, 20],
+        verdict: "aligned",
+        reason: READ + " — " + "хвост главы: лат. 11:46 вмещает слав. 11:46–47, лат. 20:7 — слав. 20:7–8",
+    },
+    {
+        edition: "la-vulgata",
+        book: "2-paralipomenon",
+        chapters: [36],
+        verdict: "aligned",
+        reason: READ + " — " + "слав. 2 Пар. 36:24 — Молитва Манассиина, латинская её здесь не печатает",
+    },
+    {
+        edition: "la-vulgata",
+        book: "iova",
+        chapters: [40, 41, 42],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Иов. 40:28 «Ecce spes ejus frustrabitur eum» остаётся за концом главы: 41-я у обеих по 25 стихов и идёт стих в стих; лат. 42:16 вмещает слав. 42:16–17",
+    },
+    {
+        edition: "la-vulgata",
+        book: "psaltir",
+        chapters: [2, 4, 15, 71, 151],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Пс. 2:13, 4:10 и 71:20 — хвосты, оставшиеся за концом псалма; лат. Пс. 15:10 вмещает слав. 15:10–11; 151-го псалма латинская не печатает вовсе",
+    },
+    {
+        edition: "la-vulgata",
+        book: "pritchi",
+        chapters: [4],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Прит. 4:27 вмещает и слав. 4:28, и слав. 4:29 — прибавку Семидесяти о правых течениях",
+    },
+    {
+        edition: "la-vulgata",
+        book: "premudrosti-solomona",
+        chapters: [2, 12, 19],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Прем. 2:25 — хвост слав. 2:24 за концом главы; лат. 12:27 и 19:20 вмещают по два последних славянских стиха",
+    },
+    {
+        edition: "la-vulgata",
+        book: "iezekiilya",
+        chapters: [2],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Иез. 2:9 вмещает и слав. 2:9 о простёртой руке, и слав. 2:10 о развитом свитке",
+    },
+    {
+        edition: "la-vulgata",
+        book: "osii",
+        chapters: [2],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Ос. 2:24 «Et dicam Non populo meo» — вторая половина слав. 2:23, она остаётся за концом главы",
+    },
+    {
+        edition: "la-vulgata",
+        book: "marka",
+        chapters: [4],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Мк. 4:40 вмещает и слав. 4:40, и слав. 4:41 «И҆ ᲂу҆боѧ́шасѧ стра́хомъ ве́лїимъ»",
+    },
+    {
+        edition: "la-vulgata",
+        book: "ioanna",
+        chapters: [11],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Ин. 11:56 вмещает и слав. 11:56, и слав. 11:57 о заповеди архиереев",
+    },
+    {
+        edition: "la-vulgata",
+        book: "3-ioanna-posl",
+        chapters: [1],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. 3 Ин. 14 вмещает и слав. 14, и слав. 15 «Ми́ръ тебѣ̀. Цѣлꙋ́ютъ тѧ̀ дрꙋ́зи»",
+    },
+    {
+        edition: "la-vulgata",
+        book: "2-korinfyanam",
+        chapters: [1, 11],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. 2 Кор. 1:23 вмещает слав. 1:23–24; лат. 11:33 — вторая половина слав. 11:32, за концом главы",
+    },
+    {
+        edition: "la-vulgata",
+        book: "otkrovenie",
+        chapters: [12],
+        verdict: "aligned",
+        reason: READ + " — " + "лат. Откр. 12:18 «Et stetit supra arenam maris» — то, что славянская держит на переходе к 13-й главе; за концом главы",
+    },
+    {
+        edition: "la-vulgata",
+        book: "plach-ieremii",
+        chapters: [1],
+        verdict: "aligned",
+        reason: READ + " — " +
+            "лат. Плач 1:1–22 идут стих в стих со славянскими; лишний стих у главы только один " +
+            "и это НОЛЬ — пролог «Et factum est, postquam in captivitatem redactus est Israël», " +
+            "который разбор отделил от первого стиха (см. PROLOGUE в parse_vulgate.py). " +
+            "Славянская печатает его так же вне счёта",
+    },
+    {
+        edition: "la-vulgata",
+        book: "sirakha",
+        chapters: [41],
+        verdict: "aligned",
+        reason: READ + " — " +
+            "единственная глава Сираха, где ничего не разъехалось: лат. 41:1–28 идут стих в стих " +
+            "со слав. 41:1–28, а слав. 41:29 «ѿ повторе́нїѧ и҆ сло́ва слы́шанїѧ» латинская держит " +
+            "внутри своего 41:28. Правила остальным двадцати четырём главам — в SIRACH_BLOCKS",
+    },
+    {
+        edition: "la-vulgata",
+        book: "tovita",
+        verdict: "unmappable",
+        reason:
+            "Латинский Товит — не перевод той же книги, а СВОЙ извод: блаженный Иероним делал " +
+            "его с арамейского, а славянский идёт за греческим. Видно на девятой главе: у " +
+            "латинской 12 стихов против славянских 6, и это не дробление — лат. 9:2 «Si meipsum " +
+            "tradam tibi servum» и лат. 9:8–12 о брачном благословении в славянском отсутствуют " +
+            "вовсе, а лат. 9:5 о заклятии Рагуилово стоит ПОСЛЕ того, что славянский держит в " +
+            "9:4, то есть порядок стихов у книг разный. Соответствие не смещение, а пересказ",
+    },
+    {
+        edition: "la-vulgata",
+        book: "iudifi",
+        verdict: "unmappable",
+        reason:
+            "Тот же случай, что у Товита, и виден с первой строки второй главы: у латинской " +
+            "«Anno tertiodecimo Nabuchodonosor regis», у славянской «въ лѣ́то ѻ҆смоена́десѧть» — " +
+            "издания расходятся в самом годе царствования. В главе у латинской 18 стихов против " +
+            "славянских 28, и по книге длины гуляют в обе стороны. Правило выражает смещение, " +
+            "а здесь другой текст",
     },
     {
         edition: "grc-lxx-pat",

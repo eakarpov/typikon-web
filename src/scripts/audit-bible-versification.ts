@@ -51,8 +51,11 @@ interface BookShape {
     bookIndex: number | null;
     /** Длины глав по возрастанию номера главы. */
     chapters: Array<{ chapter: number; verses: number; missing: number[]; duplicates: number[] }>;
-    /** Канонические места, занятые стихами книги, — уже с применёнными правилами. */
-    canonRefs: Array<{ chapter: number; verse: number }>;
+    /** Канонические места, занятые стихами книги, — уже с применёнными правилами.
+     *  Книгу канона (`canonId`) держим при себе: правило умеет увести стих в
+     *  ДРУГУЮ книгу — латинский Варух 6 в Послание Иеремии, — и место такого
+     *  стиха надо мерить по книге, куда он ушёл, а не по той, где напечатан. */
+    canonRefs: Array<{ canonId: string; chapter: number; verse: number }>;
 }
 
 interface EditionShape {
@@ -86,7 +89,7 @@ const readEdition = async (
         // ровно те расхождения, ради которых пишутся следующие.
         const verses = await db.collection(BIBLE_VERSES)
             .find({ bookId: text._id },
-                  { projection: { chapter: 1, verse: 1, canonChapter: 1, canonVerse: 1 } })
+                  { projection: { chapter: 1, verse: 1, canonId: 1, canonChapter: 1, canonVerse: 1 } })
             .toArray();
 
         // Группируем по главам сами, а не distinct-ом: заодно видны дыры и повторы
@@ -115,6 +118,7 @@ const readEdition = async (
             });
 
         const canonRefs = verses.map((v) => ({
+            canonId: (v.canonId as string) || (text.slug as string),
             chapter: (v.canonChapter as number) ?? v.chapter,
             verse: (v.canonVerse as number) ?? v.verse,
         }));
@@ -219,21 +223,39 @@ const buildReport = (editions: EditionShape[]): string => {
     // лежащим в базе, то есть проверяется результат, а не намерение.
     //
     // Столкновение значит, что два стиха издания претендуют на одно место, и
-    // параллельный вид молча покажет который-нибудь один. Промах — что стих ушёл
-    // в главу, где столько стихов не бывает. И то и другое — ошибка правил.
+    // параллельный вид молча покажет который-нибудь один. Это всегда ошибка.
+    //
+    // Промах — что стих ушёл в главу, где столько стихов не бывает. Ошибка НЕ
+    // всегда: стих, которому в славянской нет пары, мы намеренно уводим за конец
+    // главы, чтобы он встал лишней строкой, а не поверх чужой. Промахи поэтому
+    // читаются вместе с правилами, а не сами по себе.
     others.forEach((edition) => {
         const rows: string[] = [];
+
+        // Собираем места ПО КНИГЕ КАНОНА, а не по книге издания. Разница не
+        // косметическая: латинский Варух печатает Послание Иеремии своей шестой
+        // главой, правило уводит его в `poslanie-ieremii`, и меряя такой стих по
+        // Варуху сверка насчитывала столкновения там, где всё сошлось.
+        const claimed = new Map<string, Array<{ chapter: number; verse: number }>>();
+        edition.books.forEach((book) => {
+            book.canonRefs.forEach((ref) => {
+                const list = claimed.get(ref.canonId) || [];
+                list.push({ chapter: ref.chapter, verse: ref.verse });
+                claimed.set(ref.canonId, list);
+            });
+        });
+
         BIBLE_CANON.forEach((canon) => {
-            const book = edition.books.get(canon.id);
+            const refs = claimed.get(canon.id);
             const reference2 = reference.books.get(canon.id);
-            if (!book || !reference2) return;
+            if (!refs || !reference2) return;
 
             const lengths = reference2.chapters.reduce((map, c) => map.set(c.chapter, c.verses),
                                                        new Map<number, number>());
             const taken = new Set<string>();
             let collisions = 0;
             let outside = 0;
-            book.canonRefs.forEach((ref) => {
+            refs.forEach((ref) => {
                 const key = `${ref.chapter}:${ref.verse}`;
                 if (taken.has(key)) collisions++;
                 taken.add(key);
@@ -241,7 +263,7 @@ const buildReport = (editions: EditionShape[]): string => {
                 if (ref.verse < 1 || ref.verse > length) outside++;
             });
             if (collisions || outside) {
-                rows.push(`| ${edition.lang} | ${canon.name} | ${book.canonRefs.length} | ` +
+                rows.push(`| ${edition.lang} | ${canon.name} | ${refs.length} | ` +
                           `${collisions} | ${outside} |`);
             }
         });

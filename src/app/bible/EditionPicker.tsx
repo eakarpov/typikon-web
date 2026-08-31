@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import type { EditionView } from "@/app/bible/api";
+import { chapterPath } from "@/app/bible/chapterPath";
 
 // Выбор изданий для чтения рядом.
 //
@@ -23,13 +24,19 @@ import type { EditionView } from "@/app/bible/api";
 const EditionPicker = ({
     editions,
     selected,
-    base = null,
+    base,
 }: {
     editions: EditionView[];
     selected: string[];
     /**
-     * Издание, чьим счётом идёт страница. null — канонический вид. Показывается
-     * только на странице главы: в оглавлении вести нечего.
+     * Издание, чьим счётом идёт страница. null — канонический вид, undefined —
+     * страница, где вести нечем.
+     *
+     * ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ЗДЕСЬ БЫТЬ НЕ ДОЛЖНО. Переключатель счёта показывают
+     * по условию `base !== undefined` — то есть «страница передала базу, пусть и
+     * пустую». Стояло `base = null`, и оглавление, не передающее базу вовсе,
+     * получало её пустой: условие срабатывало, переключатель выходил там, где
+     * вести нечего, и уводил на несуществующий адрес.
      */
     base?: string | null;
 }) => {
@@ -42,11 +49,8 @@ const EditionPicker = ({
 
     const go = (codes: string[], nextBase: string | null, chapter?: number) => {
         const query = `?v=${codes.join(",")}${nextBase ? `&base=${nextBase}` : ""}`;
-        // Смена базы уводит на первую главу: у изданий разное число глав (у
-        // греческих Притчей 29, у славянских 31), и остаться на прежнем номере
-        // значило бы иногда упираться в главу, которой у новой базы нет.
         const here = pathname ?? "";
-        const path = chapter === undefined ? here : here.replace(/\/[^/]+$/, `/${chapter}`);
+        const path = chapter === undefined ? here : chapterPath(here, chapter);
         router.replace(`${path}${query}`, { scroll: false });
     };
 
