@@ -21,7 +21,7 @@
 // минутами и рвётся по таймауту; по метке исповедания выходит полтора десятка
 // запросов поменьше, каждый со своим отступом при отказе.
 //
-// Запуск:  npm run temples:import-osm [-- --write] [-- --only russian_orthodox]
+// Запуск:  npm run temples:import-osm [-- --write] [-- --only greek_orthodox,serbian_orthodox]
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { slugify, uniqueAlias } from "@/lib/news/format";
@@ -86,7 +86,12 @@ const nameFor = (tags: Record<string, string>) =>
 const main = async () => {
     const argv = process.argv;
     const write = argv.includes("--write");
-    const only = argv.includes("--only") ? argv[argv.indexOf("--only") + 1] : null;
+    // Списком, а не по одной: привоз рвётся посередине (сеть, очередь
+    // Overpass), и доводить его до конца по одной метке — значит держать в
+    // голове, какие уже забраны.
+    const only = argv.includes("--only")
+        ? argv[argv.indexOf("--only") + 1].split(",").map((d) => d.trim()).filter(Boolean)
+        : null;
 
     const db = (await clientPromise).db("typikon");
     const temples = db.collection("temples");
@@ -114,7 +119,7 @@ const main = async () => {
     const byChurch = new Map<string, number>();
     let cyrillic = 0, other = 0;
 
-    for (const denomination of only ? [only] : DENOMINATIONS) {
+    for (const denomination of only ?? DENOMINATIONS) {
         const query = `[out:json][timeout:250];
 nwr["amenity"="place_of_worship"]["denomination"="${denomination}"];
 out center tags;`;

@@ -141,3 +141,21 @@ test("надстрочные снимаются, а «й» переживает 
     assert.equal(normalizeTempleName("Sfântul Gheorghe"), "sfantul gheorghe");
     assert.equal(slugOf("Церковь Смоленской иконы Божией Матери"), "ikona-smolenskaya");
 });
+
+test("престол читается и по-английски: каталог всемирный", () => {
+    // Английские имена — самая большая брешь всемирного каталога: их 14 290,
+    // и называют они престол так же прямо, как русский родительный падеж.
+    assert.equal(slugOf("Saint Nicholas Orthodox Cathedral"), "nikolay-chudotvorec");
+    assert.equal(slugOf("Cathedral of the Dormition and All Saints"), "uspenie");
+    assert.equal(slugOf("Cathédrale Saint-Alexandre-Nevsky"), "aleksandr-nevsky");
+    assert.equal(slugOf("Holy Trinity Church"), "troica");
+    assert.equal(slugOf("Church of St. George"), "georgiy-pobedonosec");
+});
+
+test("грузинское и греческое имя тоже разбираются", () => {
+    assert.equal(slugOf("წმინდა ნინოს ეკლესია"), "nina-ravnoapostolnaya");
+    assert.equal(slugOf("ჯიმასტაროს წმ.გიორგის ეკლესია"), "georgiy-pobedonosec");
+    // «Ευαγγελίστρια» — та же Благовещенская, только существительным.
+    assert.equal(slugOf("Ευαγγελίστρια"), "blagoveshenie");
+    assert.equal(slugOf("Καθεδρικός Ναός Αγίου Θεοδώρου"), "feodor-stratilat");
+});
