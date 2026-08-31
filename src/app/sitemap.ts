@@ -1,4 +1,5 @@
 import {MetadataRoute} from "next";
+import { saintSlugs } from "@/lib/saints";
 import clientPromise from "@/lib/mongodb";
 import {TextReadiness} from "@/utils/texts";
 import {BIBLE_CANON} from "@/utils/bibleCanon";
@@ -104,9 +105,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             });
         });
 
-        // Страницы святых: адрес — идентификатор из святцев, дата правки — самая
-        // свежая среди наших текстов этой памяти. Имена со святцев здесь не нужны,
-        // в карту идут одни адреса, так что наружу за ней никто не ходит.
+        // Страницы святых: дата правки — самая свежая среди наших текстов этой памяти.
+        // Адрес с 2026-08-31 наш собственный (`saints.slug`); номер святцев остаётся
+        // рабочим и уводит редиректом, но в карту сайта идёт конечный адрес, а не тот,
+        // с которого перебрасывает.
         const saints = await db.collection("texts").aggregate([
             {
                 $match: {
@@ -131,6 +133,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             { $unwind: "$saintIds" },
             { $group: { _id: "$saintIds", updatedAt: { $max: "$updatedAt" } } },
         ]).toArray();
+
+        // Номер святцев -> наш адрес. Памяти, до которой каталог ещё не дошёл,
+        // в карте остаётся номер: страница по нему работает.
+        const saintAddresses = await saintSlugs(saints.map((saint: any) => String(saint._id)));
 
         const days = await db.collection("days")
             .find({ alias: { $nin: ["", null] } }, { projection: { alias: 1, updatedAt: 1, paschal: 1 } })
@@ -181,7 +187,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             ...books.map((book) =>
                 entry(`/library/${book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
             ...saints.map((saint) =>
-                entry(`/saints/${saint._id}`, saint.updatedAt, 0.6, "monthly")),
+                entry(`/saints/${saintAddresses[String(saint._id)] ?? saint._id}`, saint.updatedAt, 0.6, "monthly")),
             ...bibleChapters,
         ]);
     } catch (e) {

@@ -43,7 +43,7 @@ const TextLinksContent = async ({ item }: { item: any }) => {
 
             {links.memory && (
                 <Row label="Память:">
-                    <Link className="font-serif text-amber-800 hover:underline" href={`/saints/${links.memory.dneslovId}`}>
+                    <Link className="font-serif text-amber-800 hover:underline" href={`/saints/${links.memory.slug ?? links.memory.dneslovId}`}>
                         {links.memory.title}
                     </Link>
                     <UserCircleIcon className="w-4 h-4 text-amber-800" />
@@ -63,7 +63,7 @@ const TextLinksContent = async ({ item }: { item: any }) => {
                             </Link>
                         ))}
                         {links.memory.total > links.memory.siblings.length && (
-                            <Link className="font-serif text-sm text-slate-500 hover:underline" href={`/saints/${links.memory.dneslovId}`}>
+                            <Link className="font-serif text-sm text-slate-500 hover:underline" href={`/saints/${links.memory.slug ?? links.memory.dneslovId}`}>
                                 и ещё {links.memory.total - links.memory.siblings.length} — все на странице памяти
                             </Link>
                         )}
@@ -77,7 +77,7 @@ const TextLinksContent = async ({ item }: { item: any }) => {
                         <Link
                             key={mention.dneslovId}
                             className="font-serif text-amber-800 border rounded border-slate-300 px-2 py-0.5 text-sm hover:underline"
-                            href={`/saints/${mention.dneslovId}`}
+                            href={`/saints/${mention.slug ?? mention.dneslovId}`}
                         >
                             {mention.title}
                         </Link>

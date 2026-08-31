@@ -138,6 +138,25 @@ const SPECS: Spec[] = [
     { db: "typikon-users", collection: "favourites", key: { userId: 1, createdAt: -1 },
       why: "выдача избранного списком, новые сверху" },
 
+    // --- typikon: святцы
+    //
+    // Снимок чужих святцев и наш каталог поверх него (sync-dneslov.ts, build-saints.ts).
+    // Снимок выбирают по паре «годен + когда снят»: синхронизация каждый раз ищет,
+    // что устарело. Каталог ищут по внешнему ключу — это его основной способ находиться,
+    // пока свой slug не назначен.
+    { db: "typikon", collection: "dneslov_memories", key: { status: 1, fetchedAt: 1 },
+      why: "синхронизация: какие снимки устарели или ни разу не удались" },
+    { db: "typikon", collection: "saints", key: { "externals.source": 1, "externals.id": 1 },
+      options: { partialFilterExpression: { "externals.source": { $exists: true } }, unique: true },
+      why: "святой по внешнему ключу; уникальность не даёт двум записям присвоить одну и ту же чужую "
+         + "память — а это ровно та порча, которую мы и завели каталог ловить "
+         + "(записи без внешних ключей уникальности не мешают: у них этого поля нет)" },
+    { db: "typikon", collection: "saints", key: { previousSlugs: 1 },
+      why: "старый адрес после ручной смены слуга — по нему ищут, чтобы увести редиректом" },
+    { db: "typikon", collection: "saints", key: { slug: 1 },
+      options: { partialFilterExpression: { slug: { $gt: "" } }, unique: true },
+      why: "будущий адрес /saints/{slug}: уникальность заводим заранее, чтобы двух одинаковых не завелось до переезда" },
+
     // --- typikon-meta
     { db: "typikon-meta", collection: "logs", key: { ipHash: 1, url: 1 },
       why: "счётчик просмотров ищет запись по паре ipHash+url на каждый просмотр страницы" },

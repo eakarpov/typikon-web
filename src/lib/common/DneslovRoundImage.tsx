@@ -6,14 +6,24 @@ import {TextKind} from "@/utils/texts";
 interface IDneslovImages {
     id: string;
     textType: TextKind;
+    /**
+     * Адрес кругляша из нашего каталога (saintRoundels). Когда он есть, в святцы не
+     * ходим: этот компонент стоит в СПИСКЕ содержания книги, и без готового адреса
+     * страница книги на полсотни текстов делала из браузера читателя полсотни
+     * запросов к чужому серверу — по одному на строку.
+     */
+    roundelUrl?: string | null;
 }
 
 const cdnDneslovUrl = "https://cdn.dneslov.org";
 
-const DneslovRoundImage = ({ id, textType }: IDneslovImages) => {
-    const [images, setImages] = useState<Array<{ url: string; roundelable_name: string; }>>([]);
+const DneslovRoundImage = ({ id, textType, roundelUrl }: IDneslovImages) => {
+    const [images, setImages] = useState<Array<{ url: string; roundelable_name: string; }>>(
+        roundelUrl ? [{ url: roundelUrl, roundelable_name: "" }] : [],
+    );
 
     useEffect(() => {
+        if (roundelUrl) return;
         if (id) {
             fetch(`https://dneslov.org/api/v1/roundels.json?m=${id}`)
                 .then((res) => res.json())
@@ -21,7 +31,7 @@ const DneslovRoundImage = ({ id, textType }: IDneslovImages) => {
                     setImages(res);
                 });
         }
-    }, [id]);
+    }, [id, roundelUrl]);
 
     if (!images.length) return (
         <div className="flex flex-col" style={{ paddingRight: '10px' }}>

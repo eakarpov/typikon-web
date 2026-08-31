@@ -6,14 +6,27 @@ import "react-image-gallery/styles/css/image-gallery.css";
 interface IDneslovImages {
     dneslovId: string;
     dneslovEventId?: string;
+    /**
+     * Ссылки из нашего снимка (см. @/lib/saints, saintImages). Когда они есть — в
+     * святцы не ходим вовсе: этот запрос уходил ИЗ БРАУЗЕРА ЧИТАТЕЛЯ на каждое
+     * открытие чтения, то есть их доступность была доступностью картинок у читателя,
+     * а их логи видели его адрес. undefined — памяти нет в каталоге, тогда старый путь.
+     *
+     * Сами файлы по-прежнему грузятся с их CDN: мы кэшируем адреса, а не изображения.
+     */
+    images?: { url: string; thumbUrl: string | null }[];
 }
 
 const cdnDneslovUrl = "https://cdn.dneslov.org";
 
-const DneslovImages = ({ dneslovId, dneslovEventId }: IDneslovImages) => {
-    const [images, setImages] = useState<ReactImageGalleryItem[]>([]);
+const DneslovImages = ({ dneslovId, dneslovEventId, images: given }: IDneslovImages) => {
+    const [images, setImages] = useState<ReactImageGalleryItem[]>(
+        (given ?? []).map((e) => ({ thumbnail: e.thumbUrl ?? e.url, original: e.url })),
+    );
 
     useEffect(() => {
+        // Список пришёл с сервера — за ним никуда не идём.
+        if (given) return;
         if (dneslovId) {
             fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}${dneslovEventId ? `&e=${dneslovEventId}`: ""}`)
                 .then((res) => res.json())
@@ -24,7 +37,7 @@ const DneslovImages = ({ dneslovId, dneslovEventId }: IDneslovImages) => {
                             original: e.url.includes("https") ? e.url : `${cdnDneslovUrl}${e.url}`,})));
                 });
         }
-    }, [dneslovId]);
+    }, [dneslovId, given]);
 
     if (!images.length) return null;
 

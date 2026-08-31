@@ -1,49 +1,86 @@
-import {setMeta} from "@/lib/meta";
-import {getDneslovObject, getItems, getLinkedNoble, getMentions} from "@/app/saints/[id]/api";
+import { notFound, permanentRedirect } from "next/navigation";
+import { Metadata } from "next";
+import { Suspense } from "react";
+import { setMeta } from "@/lib/meta";
+import { getItems, getLinkedNoble, getMemory, getMentions } from "@/app/saints/[id]/api";
 import Content from "@/app/saints/[id]/Content";
-import {Suspense} from "react";
-import {myFont} from "@/utils/font";
-import {Metadata} from "next";
+import { myFont } from "@/utils/font";
+import { dneslovIdsOf, getSaintByAddress, type Saint } from "@/lib/saints";
+
+// Адрес страницы святого — наш слуг (`saints.slug`). Номер памяти святцев
+// (/saints/3030) остаётся рабочим навсегда и уводит постоянным редиректом: такие
+// ссылки стоят в разметке самих текстов корпуса, и переписать их означало бы
+// править корпус. Разбор адреса — в @/lib/saints.
 
 type Props = {
     params: { id: string }
 }
 
-export async function generateMetadata(
-    { params }: Props,
-): Promise<Metadata> {
-    const id = params.id
+/** Что показать в заголовке: имя из нашего каталога, а не из чужого ответа по сети. */
+const heading = (saint: Saint | null, address: string) =>
+    saint?.name || saint?.title || `Память №${address}`;
 
-    const [itemPromise] = await Promise.allSettled([getDneslovObject(id)]);
-
-    const item = itemPromise.status === "fulfilled" && itemPromise.value;
-
-    const lastMemo = Array.isArray(item?.memoes) && item.memoes[0];
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const address = params.id;
+    const saint = await getSaintByAddress(address);
+    const name = heading(saint, address);
+    const url = `//www.typikon.su/saints/${saint?.slug || address}`;
 
     return {
-        title: `Страница святого - ${lastMemo?.title || item?.title || id}`,
-        description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || item?.title || id}`,
+        title: `Страница святого - ${name}`,
+        description: `Уставные чтения с упоминанием или авторством святого - ${name}`,
         openGraph: {
             type: "website",
-            url: `//www.typikon.su/saints/${id}`,
-            title: `Страница святого - ${lastMemo?.title || item?.title || id}`,
-            description: `Уставные чтения с упоминанием или авторством святого - ${lastMemo?.title || item?.title || id}`,
+            url,
+            title: `Страница святого - ${name}`,
+            description: `Уставные чтения с упоминанием или авторством святого - ${name}`,
         },
-    }
+    };
 }
 
-const SaintItem = ({ params: { id }}: { params: { id: string }}) => {
+const SaintItem = async ({ params: { id: address } }: Props) => {
     setMeta();
-    const itemPromise = Promise.allSettled([getItems(id), getDneslovObject(id), getMentions(id), getLinkedNoble(id)]);
+
+    const saint = await getSaintByAddress(address);
+
+    // Пришли по старому адресу — уводим на новый. Постоянным: адрес сменился
+    // насовсем, и поисковикам стоит об этом знать.
+    if (saint?.slug && saint.slug !== address) permanentRedirect(`/saints/${saint.slug}`);
+
+    // Слуга такого нет — значит нет и страницы. Раньше адресами были одни числа, и
+    // мусор в них не заводился; теперь адрес — произвольный текст, и отдавать на любую
+    // опечатку двухсотку с надписью «ничего не нашлось» значит плодить бесконечные
+    // мягкие 404. Номера — исключение: по ним могут найтись тексты и без записи в
+    // каталоге (например, у памяти, которая исчезла у святцев).
+    if (!saint && !/^\d+$/.test(address)) notFound();
+
+    // Тексты и акафисты по-прежнему подписаны номером святцев. Номеров у записи
+    // может быть несколько — тогда это две их памяти, сведённые нами в одно лицо,
+    // и тексты надо собрать по всем.
+    const dneslovIds = dneslovIdsOf(saint);
+    const known = dneslovIds.length ? dneslovIds : (/^\d+$/.test(address) ? [address] : []);
+
+    const itemPromise = Promise.allSettled([
+        getItems(known),
+        getMemory(known[0]),
+        getMentions(known),
+        getLinkedNoble(known),
+    ]);
 
     return (
         <div className={myFont.variable}>
             <Suspense fallback={<div>Loading...</div>}>
                 {/* @ts-expect-error Async Server Component */}
-                <Content id={id} itemPromise={itemPromise} />
+                <Content
+                    id={known[0] ?? address}
+                    itemPromise={itemPromise}
+                    // Только простые поля: дальше клиентский компонент, и документ
+                    // Mongo целиком туда не сериализуется (ObjectId, Date).
+                    naming={{ name: saint?.name ?? null, altNames: saint?.altNames ?? [] }}
+                />
             </Suspense>
         </div>
-    )
+    );
 };
 
 export default SaintItem;

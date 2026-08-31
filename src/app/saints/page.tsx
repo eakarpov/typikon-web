@@ -4,7 +4,6 @@ import { Metadata } from "next";
 import { setMeta } from "@/lib/meta";
 import { myFont } from "@/utils/font";
 import { getSaintRows, SAINTS_PER_PAGE } from "@/app/saints/api";
-import { saintTitles } from "@/lib/dneslov";
 
 // Указатель святых. До сих пор страницы /saints/[id] существовали, но попасть на них
 // можно было только из текста — списка не было нигде, и в карту сайта они не попадали.
@@ -34,10 +33,6 @@ const SaintsList = async ({ page }: { page: number }) => {
     const current = Math.min(Math.max(page, 1), pages);
     const shown = rows.slice((current - 1) * SAINTS_PER_PAGE, current * SAINTS_PER_PAGE);
 
-    // Имена запрашиваем только для показанной полусотни: святцы чужие, и тянуть
-    // все 840 имён ради одной страницы списка нельзя.
-    const titles = await saintTitles(shown.map((item) => item.dneslovId));
-
     return (
         <>
             <p className="font-serif text-slate-500 mb-2">
@@ -46,8 +41,8 @@ const SaintsList = async ({ page }: { page: number }) => {
             <ul className="flex flex-col gap-1">
                 {shown.map((item) => (
                     <li key={item.dneslovId} className="font-serif">
-                        <Link className="text-amber-800 hover:underline" href={`/saints/${item.dneslovId}`}>
-                            {titles[item.dneslovId]}
+                        <Link className="text-amber-800 hover:underline" href={`/saints/${item.slug ?? item.dneslovId}`}>
+                            {item.name ?? `Память №${item.dneslovId}`}
                         </Link>
                         <span className="text-sm text-slate-500">
                             {" — "}
