@@ -504,6 +504,81 @@ const otherRules: BibleMappingRule[] = OTHER_BLOCKS.map(
     }),
 );
 
+// --- Вульгата: границы книг и галликанский счёт ------------------------------
+//
+// Латинская расходится со славянской куда меньше греческой — Псалтирь у неё по
+// счёту Семидесяти, Даниил уже собран в четырнадцать глав вместе с Сусанной и
+// Вилом, — и правил ей нужно немного. Все проверены по тексту с обеих границ.
+const VULGATE_BLOCKS: Array<[string, number, number | null, number | null, string | null, number | null, number, string]> = [
+    // [книга, лат. глава, с какого стиха, по какой, книга-цель, глава-цель, сдвиг, примета]
+    ["varukha", 6, 1, 4, "poslanie-ieremii", 1, 1,
+     "Послание Иеремии Вульгата печатает шестой главой Варуха: лат. 6:1 " +
+     "«Propter peccata quæ peccastis ante Deum» = слав. 1:2; слав. 1:1 — надписание " +
+     "послания, которого латинская не нумерует"],
+    ["varukha", 6, 5, 5, "poslanie-ieremii", 1, 68,
+     "лат. 6:5 «Visa itaque turba de retro et ab ante» славянский держит внутри своего " +
+     "пятого стиха; своего номера у него нет, уводим за конец книги"],
+    ["varukha", 6, 6, 72, "poslanie-ieremii", 1, 0,
+     "с лат. 6:6 «Angelus enim meus vobiscum est» счёт сходится со славянским и идёт " +
+     "стих в стих до конца — 6:72 = слав. 1:72"],
+
+    // Правил на 115-й и 147-й псалмы НЕТ намеренно. В другой оцифровке
+    // Климентины они продолжают счёт предыдущего псалма (115 нумерован 10–19,
+    // 147 — 12–20), и правила бы понадобились; наша нумерует их с единицы, как
+    // и славянская, — и сводить нечего.
+
+    // Сдвиги на один стих: у латинской либо есть стих, которого славянская не
+    // нумерует (надписание псалма), либо наоборот. Каждая граница прочитана.
+    ["psaltir", 10, 1, 1, null, null, 7,
+     "лат. Пс. 10:1 «In finem. Psalmus David» — надписание, которого славянская не " +
+     "нумерует; своего номера нет, уводим за конец псалма"],
+    ["psaltir", 10, 2, 8, null, null, -1,
+     "лат. Пс. 10:2 «In Domino confido» = слав. 10:1 «На гдⷭ҇а ᲂу҆пова́хъ»"],
+    ["psaltir", 127, 4, 6, null, null, 1,
+     "лат. Пс. 127:4 «Ecce sic benedicetur homo» = слав. 127:5; слав. 127:4 о сынах " +
+     "как масличных отраслях латинская держит внутри своего 127:3"],
+    ["iisus-navin", 6, 1, 1, null, null, 26,
+     "лат. Нав. 6:1 «Jericho autem clausa erat atque munita» славянского соответствия " +
+     "не имеет — уводим за конец главы"],
+    ["iisus-navin", 6, 2, 27, null, null, -1,
+     "лат. Нав. 6:2 «Dixitque Dominus ad Josue» = слав. 6:1"],
+    ["ieremii", 37, 5, 20, null, null, 1,
+     "лат. Иер. 37:5 «Et factum est verbum Domini ad Jeremiam» = слав. 37:6; слав. 37:5 " +
+     "о войске фараона латинская не печатает"],
+    ["marka", 9, 1, 49, null, null, 1,
+     "вся девятая Марка на стих вперёд: лат. 9:1 «Et post dies sex assumit Jesus Petrum» " +
+     "= слав. 9:2"],
+    ["matfeya", 17, 20, 26, null, null, 1,
+     "лат. Мф. 17:20 «Hoc autem genus non ejicitur nisi per orationem et jejunium» = " +
+     "слав. 17:21"],
+    ["deyaniya", 14, 7, 27, null, null, 1,
+     "лат. Деян. 14:7 «Et quidam vir Lystris infirmus pedibus sedebat» = слав. 14:8; " +
+     "слав. 14:7 латинская держит внутри своего 14:6"],
+
+    ["rimlyanam", 16, 25, 27, null, 14, -1,
+     "славословие «Ei autem, qui potens est vos confirmare» Вульгата держит на западном " +
+     "месте, в конце 16-й главы; славянская — в конце 14-й, лат. 16:25 = слав. 14:24"],
+];
+
+const vulgateRules: BibleMappingRule[] = VULGATE_BLOCKS.map(
+    ([book, chapter, verseFrom, verseTo, toBook, toChapter, verseOffset, note]) => ({
+        edition: "la-vulgata",
+        from: {
+            book,
+            chapter,
+            ...(verseFrom === null ? {} : { verseFrom }),
+            ...(verseTo === null ? {} : { verseTo }),
+        },
+        to: {
+            ...(toBook === null ? {} : { book: toBook }),
+            ...(toChapter === null ? {} : { chapter: toChapter }),
+            verseOffset,
+        },
+        exact: true,
+        note,
+    }),
+);
+
 // Порядок значим: применяется первое подошедшее правило.
 export const BIBLE_MAPPINGS: BibleMappingRule[] = [
     // --- Сфънта Скриптура, 1688 -----------------------------------------------
@@ -613,6 +688,7 @@ export const BIBLE_MAPPINGS: BibleMappingRule[] = [
     ...kingdoms3Rules,
     ...psalmRules,
     ...otherRules,
+    ...vulgateRules,
 ];
 
 const matches = (rule: BibleMappingRule, book: string, chapter: number, verse: number): boolean => {
@@ -947,6 +1023,19 @@ export const CHAPTER_VERDICTS: ChapterVerdict[] = [
         reason:
             "счёт у обоих изданий по Семидесяти и держится: греческий либо не печатает стиха " +
             "(Пс. 63:3), либо печатает лишний (Пс. 71:20), но номера не съезжают",
+    },
+    {
+        edition: "la-vulgata",
+        book: "esfir",
+        verdict: "unmappable",
+        reason:
+            "Вульгата выносит греческие добавления Есфири отдельными главами 11–16, а славянская " +
+            "держит их внутри рассказа, и держит СЛИТНО: её стих 1:1 — 2010 знаков, вдевятеро " +
+            "длиннее среднего по книге, потому что вмещает целиком и сон Мардохея, и раскрытие " +
+            "заговора, и переход к повествованию — то, что латинская разносит по восемнадцати " +
+            "стихам (11:2–12, 12:1–6 и 1:1). В главах 10–16 у латинской 111 стихов против " +
+            "славянских трёх: 109 стихам места нет вовсе. Соответствие «многие к одному», " +
+            "смещением оно не выражается",
     },
     {
         edition: "grc-lxx-pat",
