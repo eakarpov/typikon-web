@@ -5,6 +5,7 @@ import Link from "next/link";
 import {useCallback, useMemo, useState} from "react";
 import reactStringReplace from "react-string-replace";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
+import {bibleLanguageSubstitution} from "@/utils/bibleLanguage";
 
 export interface IReadDayPart {
     value: any;
@@ -210,6 +211,8 @@ const DayPartReading = ({
     );
 
     const renderPericopeItem = (item: any, index: number) => {
+        const substitution = bibleLanguageSubstitution(
+            item.pericope.requestedLang, item.pericope.resolvedLang);
         const versesByChapter: [number, any[]][] = [];
         (item.pericope.verses || []).forEach((v: any) => {
             const last = versesByChapter[versesByChapter.length - 1];
@@ -232,6 +235,13 @@ const DayPartReading = ({
                 </div>
                 {item.description && (
                     <p className="font-serif text-red-600">{item.description}</p>
+                )}
+                {/* Чтение отдано не тем языком, что выбран, — говорим об этом.
+                    Молчать нельзя: с частичным переводом (одно Четвероевангелие)
+                    подмена пойдёт на каждой второй службе, и читатель решил бы,
+                    что его выбор просто не работает. */}
+                {substitution && (
+                    <p className="font-serif text-sm text-amber-700">{substitution}</p>
                 )}
                 {!item.pericope.verses ? (
                     <p className="font-serif text-slate-400">

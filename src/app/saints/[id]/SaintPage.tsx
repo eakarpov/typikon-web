@@ -16,7 +16,7 @@ enum COLLECTION_TYPE {
     AUTHOR,
 }
 
-const SaintPage = ({ id, item, items, mentions, linkedNoble, akathists = [] }: {id: string, item: any, items: any[], mentions: any[], linkedNoble?: {id: number; name: string} | null, akathists?: {id: string; title: string; stanzas: number}[] }) => {
+const SaintPage = ({ id, naming, item, items, mentions, linkedNoble, akathists = [] }: {id: string, naming?: {name: string | null; altNames: string[]}, item: any, items: any[], mentions: any[], linkedNoble?: {id: number; name: string} | null, akathists?: {id: string; title: string; stanzas: number}[] }) => {
     const authorItems = useMemo(() => items.filter(el => el.dneslovType === DneslovKind.AUTHOR), [items]);
     const bookItems = useMemo(() => items.filter(el => el.dneslovType !== DneslovKind.AUTHOR), [items]); // MEMORY
 
@@ -40,9 +40,11 @@ const SaintPage = ({ id, item, items, mentions, linkedNoble, akathists = [] }: {
     }, []);
 
     const lastMemo = Array.isArray(item?.memoes) && item.memoes[0];
-    // Имя приходит со святцев, а тексты — наши. Когда dneslov.org недоступен,
-    // страница остаётся на месте: подписываем память номером и идём дальше.
-    const heading = lastMemo?.title || item?.title || item?.short_name || `Память №${id}`;
+    // Подписываем СВОИМ именем: как памятью называют по-русски — наше решение, а не
+    // их подпись («Мари́я Богоро́дица» вместо «Богородица»). Всё, что ниже, — запасные
+    // пути на случай памяти, которой ещё нет в каталоге.
+    const heading = naming?.name || lastMemo?.title || item?.title || item?.short_name || `Память №${id}`;
+    const altNames = naming?.altNames ?? [];
 
     return (
         <>
@@ -58,6 +60,11 @@ const SaintPage = ({ id, item, items, mentions, linkedNoble, akathists = [] }: {
                 <p className="font-serif">
                     Страница памяти: <strong>{heading}</strong>
                 </p>
+                {!!altNames.length && (
+                    <p className="font-serif text-sm text-slate-500">
+                        Известна также как: {altNames.join(", ")}
+                    </p>
+                )}
                 {!item && (
                     <p className="font-serif text-sm text-slate-500">
                         Сведения о святом со святцев dneslov.org сейчас недоступны — показаны только наши тексты.

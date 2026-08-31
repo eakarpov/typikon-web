@@ -24,6 +24,8 @@ import "@/scripts/lib/env";
 import { AnyBulkWriteOperation, Db, Document, ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { canonBook } from "@/utils/bibleCanon";
+import { DEFAULT_BIBLE_SCOPE } from "@/utils/bibleScope";
+import { DEFAULT_BIBLE_EDITION_CANON } from "@/utils/bibleEditionCanon";
 import { canonSort, formatCanonRef } from "@/lib/bible/refs";
 import { mappingsFor, toCanonRef } from "@/lib/bible/mappings";
 import { BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
@@ -56,6 +58,10 @@ const EDITIONS = [
         title: "Сфънта Скриптура (Библия на румынской кириллице, 1688)",
         shortTitle: "РУМ",
         versification: "ro-1688",
+        // Канон греческий: Бухарестская 1688 переведена с Септуагинты, и 3-й
+        // Ездры (лат. IV Esdrae) в ней нет по той же причине, что и у греческой
+        // колонки, — греческого текста этой книги не существовало.
+        canon: "grc-lxx",
         year: 1688,
         sourceLink:
             "https://www.academia.edu/43284538/БИ_БЛЇѦ_СА_Ꙋ_СФН_ТА_СК_РИП_ТꙊ_РЪ_Biblia_sau_Sfânta_Scriptură",
@@ -182,6 +188,10 @@ const migrateEdition = async (db: Db, spec: typeof EDITIONS[number]) => {
             title: spec.title,
             shortTitle: spec.shortTitle,
             versification: spec.versification,
+            // Объём и канон — две оси (@/utils/bibleScope, @/utils/bibleEditionCanon).
+            // Необъявленные значат «полная Библия» и «эталонный канон».
+            scope: (spec as any).scope ?? DEFAULT_BIBLE_SCOPE,
+            canon: (spec as any).canon ?? DEFAULT_BIBLE_EDITION_CANON,
             year: spec.year,
             sourceLink: spec.sourceLink,
             bookId: legacyBook._id,

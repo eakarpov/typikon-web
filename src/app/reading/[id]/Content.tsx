@@ -3,6 +3,7 @@ import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon, BookOpenIcon} from "@heroicons/react/24/outline";
 import TextImages from "@/app/reading/TextImages";
 import DneslovImages from "@/app/reading/DneslovImages";
+import { saintImages } from "@/lib/saints";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
 import TextLinks from "@/app/reading/[id]/TextLinks";
@@ -28,6 +29,10 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
           </div>
         );
     }
+
+    // Ссылки на изображения памяти — из своего снимка. Раньше их запрашивал сам
+    // браузер читателя у dneslov.org на каждое открытие чтения.
+    const dneslovImages = item.dneslovId ? await saintImages(String(item.dneslovId)) : null;
 
     if (shouldRedirect) {
         return (
@@ -145,6 +150,7 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
             <DneslovImages
                 dneslovId={item.dneslovId}
                 dneslovEventId={item.dneslovEventId}
+                images={dneslovImages ?? undefined}
             />
         )}
         </div>

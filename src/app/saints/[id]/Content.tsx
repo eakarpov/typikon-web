@@ -7,7 +7,17 @@ import { akathistsOfSaint } from "@/lib/akathists";
 const settled = <T,>(result: PromiseSettledResult<T> | undefined, fallback: T): T =>
     result?.status === "fulfilled" ? result.value : fallback;
 
-const Content = async ({ id, itemPromise }: { id: string, itemPromise: Promise<any> }) => {
+export interface SaintNaming {
+    /** Наше основное именование. Оно главнее того, как памятью подписаны святцы. */
+    name: string | null;
+    altNames: string[];
+}
+
+const Content = async ({ id, itemPromise, naming }: {
+    id: string,
+    itemPromise: Promise<any>,
+    naming?: SaintNaming,
+}) => {
 
     const [textsResult, memoryResult, mentionsResult, nobleResult] = await itemPromise;
 
@@ -33,6 +43,7 @@ const Content = async ({ id, itemPromise }: { id: string, itemPromise: Promise<a
     return (
         <SaintPage
             id={id}
+            naming={naming}
             item={memory}
             items={items || []}
             mentions={mentions || []}

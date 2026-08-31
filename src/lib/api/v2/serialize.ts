@@ -168,6 +168,7 @@ const slotItem = (item: any) => ({
             textId: id(item.pericope.textId),
             textName: item.pericope.textName ?? null,
             textAlias: item.pericope.textAlias ?? null,
+            requestedLang: item.pericope.requestedLang ?? null,
             resolvedLang: item.pericope.resolvedLang ?? null,
             verses: (item.pericope.verses ?? []).map(verse),
         }

@@ -3,7 +3,8 @@ import {ObjectId} from "mongodb";
 import {DayDTO} from "@/types/dto/days";
 import {getAggregationFindIdInField} from "@/utils/database";
 import {cached, CacheTag} from "@/lib/cache";
-import {saintTitles} from "@/lib/dneslov";
+import {saintFallbackTitle, saintTitles} from "@/lib/dneslov";
+import {saintNames, saintSlugs} from "@/lib/saints";
 import {coverageFor} from "@/lib/accents/store";
 import {markText} from "@/lib/accents/service";
 import {libFondCipher, libFondUrl, type LibFondSource} from "@/lib/libFond";
@@ -150,8 +151,8 @@ export interface TextLink {
 }
 
 export interface TextLinks {
-    memory: { dneslovId: string; title: string; siblings: TextLink[]; total: number } | null;
-    mentions: { dneslovId: string; title: string }[];
+    memory: { dneslovId: string; slug: string | null; title: string; siblings: TextLink[]; total: number } | null;
+    mentions: { dneslovId: string; slug: string | null; title: string }[];
 }
 
 const loadSiblings = cached(async (dneslovId: string, selfId: string) => {
@@ -212,23 +213,34 @@ export const getTextLinks = async (item: any): Promise<TextLinks> => {
     }
 
     try {
-        const [siblings, titles] = await Promise.all([
+        const ids = [dneslovId, ...mentionIds].filter(Boolean);
+
+        // Имена и адреса — из своего каталога. Раньше здесь стоял saintTitles(), то есть
+        // поход в чужие святцы на КАЖДОЕ открытие чтения; теперь сеть остаётся только
+        // запасным путём для памятей, до которых каталог ещё не дошёл.
+        const [siblings, names, slugs] = await Promise.all([
             dneslovId && item?.id ? loadSiblings(dneslovId, item.id) : Promise.resolve([]),
-            saintTitles([dneslovId, ...mentionIds]),
+            saintNames(ids),
+            saintSlugs(ids),
         ]);
+
+        const missing = ids.filter((id) => !names[id]);
+        const fallback = missing.length ? await saintTitles(missing) : {};
+        const titleOf = (id: string) => names[id] || fallback[id] || saintFallbackTitle(id);
 
         return {
             memory: dneslovId
                 ? {
                     dneslovId,
-                    title: titles[dneslovId],
+                    slug: slugs[dneslovId] ?? null,
+                    title: titleOf(dneslovId),
                     // Показываем горсть, а не весь список: у самых представленных
                     // памятей текстов под два десятка, и это уже не связь, а оглавление.
                     siblings: siblings.slice(0, 5),
                     total: siblings.length,
                 }
                 : null,
-            mentions: mentionIds.map((id) => ({ dneslovId: id, title: titles[id] })),
+            mentions: mentionIds.map((id) => ({ dneslovId: id, slug: slugs[id] ?? null, title: titleOf(id) })),
         };
     } catch (e) {
         console.error(e);

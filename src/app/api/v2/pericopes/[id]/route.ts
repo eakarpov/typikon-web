@@ -48,6 +48,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             textId: resolved?.textId?.toString() ?? null,
             textName: resolved?.textName ?? null,
             textAlias: resolved?.textAlias ?? null,
+            requestedLang: resolved?.requestedLang ?? null,
             resolvedLang: resolved?.resolvedLang ?? null,
             verses: (resolved?.verses ?? []).map(verse),
         }, { access });

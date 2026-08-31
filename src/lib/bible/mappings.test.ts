@@ -353,13 +353,18 @@ test("невыразимое помечено, а не забыто", () => {
 });
 
 // Приговор и правило на одну главу — противоречие: либо она сведена, либо нет.
+//
+// Проверяем только ОТКУДА правило берёт стих. Быть ЦЕЛЬЮ чужого правила
+// приговору не противоречит, а наоборот, им и объясняется: у румынской и
+// славянской границы глав стоят в разных местах, и слав. Нав. 5:16 забирает
+// правило на ро Нав. 6:1. Пятая глава при этом сведена стих в стих — её
+// собственные стихи никуда не смещаются, и приговор «aligned» на ней верен.
 test("у главы не бывает разом и правила, и приговора", () => {
     CHAPTER_VERDICTS.filter((v) => v.chapters).forEach((entry) => {
         const rules = mappingsFor(entry.edition);
         entry.chapters!.forEach((chapter) => {
             const ruled = rules.some((r) =>
-                (r.from.book === entry.book && r.from.chapter === chapter)
-                || ((r.to.book ?? r.from.book) === entry.book && r.to.chapter === chapter));
+                r.from.book === entry.book && r.from.chapter === chapter);
             assert.equal(ruled, false,
                 `${entry.book} гл. ${chapter}: есть и правило, и приговор «${entry.verdict}»`);
         });

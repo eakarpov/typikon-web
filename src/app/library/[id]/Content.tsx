@@ -1,6 +1,7 @@
 import Link from "next/link";
 import CountMeta from "@/app/meta/CountMeta";
 import DneslovRoundImage from "@/lib/common/DneslovRoundImage";
+import { saintRoundels } from "@/lib/saints";
 import {UserCircleIcon} from "@heroicons/react/24/outline";
 import {TextReadiness} from "@/utils/texts";
 import {bookLanguageLabel} from "@/utils/bookLanguages";
@@ -8,6 +9,13 @@ import {bookLanguageLabel} from "@/utils/bookLanguages";
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     const [item, err] = await itemPromise;
+
+    // Кругляши на всю книгу одним запросом к своей базе. Раньше их тянул из браузера
+    // читателя каждый ряд списка по отдельности — полсотни запросов к чужому серверу
+    // на одну страницу содержания.
+    const roundels = await saintRoundels(
+        (item?.texts ?? []).map((t: any) => t?.dneslovId).filter(Boolean),
+    );
 
     if (err) {
         return (
@@ -55,6 +63,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                             <DneslovRoundImage
                                 textType={text.type}
                                 id={text.dneslovId}
+                                roundelUrl={roundels[String(text.dneslovId)] ?? null}
                             />
                         </div>
                         <Link

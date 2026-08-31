@@ -6,6 +6,9 @@ import { myFont } from "@/utils/font";
 import { BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
 import EditionPicker from "@/app/bible/EditionPicker";
 import { getBibleIndex, resolveEditionCodes } from "@/app/bible/api";
+import { bibleScopeTitle, DEFAULT_BIBLE_SCOPE } from "@/utils/bibleScope";
+import { coverageNote } from "@/utils/bibleCoverage";
+import { absentFromCanon, bibleEditionCanonTitle } from "@/utils/bibleEditionCanon";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +56,26 @@ const Index = async ({ selected }: { selected: string }) => {
                                 {edition.title}
                             </Link>
                             {edition.year && <span className="text-slate-500"> — {edition.year}</span>}
+                            {/* Объём и покрытие показываем только когда есть что
+                                сказать: у полной Библии «полная Библия, отдаёт
+                                100% чтений» — шум, а помета должна значить
+                                «тут есть чему не найтись». */}
+                            {edition.scope !== DEFAULT_BIBLE_SCOPE && (
+                                <span className="text-slate-500"> · {bibleScopeTitle(edition.scope)}</span>
+                            )}
+                            {/* Канон — не то же, что объём: он говорит, чего у
+                                традиции нет вовсе. Читателю, сличающему издания,
+                                важно знать, что латинская колонка у 3 Маккавейской
+                                пуста не по недосмотру. */}
+                            {absentFromCanon(edition.canon).length > 0 && (
+                                <span className="text-slate-500 text-sm">
+                                    {" · "}канон {bibleEditionCanonTitle(edition.canon)}:
+                                    {" "}нет {absentFromCanon(edition.canon).join(", ")}
+                                </span>
+                            )}
+                            {coverageNote(edition.coverage) && (
+                                <span className="text-amber-700 text-sm"> · {coverageNote(edition.coverage)}</span>
+                            )}
                         </li>
                     ))}
                 </ul>

@@ -173,7 +173,13 @@ export const getAkathist = (id: string): AkathistDetail | null => {
 export const akathistsOfSaint = (dneslovId: string): AkathistRow[] => {
     const db = rulesDb();
     if (!db || !dneslovId) return [];
-    return (db.prepare(`
+    // Корпус — артефакт сборки соседнего проекта: build_db.py сносит data.db и строит
+    // заново, и на это время база заперта (SQLite отвечает «attempt to write a readonly
+    // database» даже на чтение — ему негде завести временный файл). Страница святого
+    // от этого падать не должна: акафисты на ней — довесок, а тексты и имя наши и лежат
+    // в Mongo. Ведём себя как с недоступными святцами: показываем, что есть.
+    try {
+        return (db.prepare(`
         SELECT a.akathist_id, a.title, a.subject_kind, a.dneslov_id, a.status,
                a.memory_id, m.label AS memory,
                count(ci.item_id) AS stanzas,
@@ -183,4 +189,8 @@ export const akathistsOfSaint = (dneslovId: string): AkathistRow[] => {
         LEFT JOIN content_items ci ON ci.akathist_id = a.akathist_id
         WHERE a.dneslov_id = ?
         GROUP BY a.akathist_id ORDER BY a.title`).all(dneslovId) as any[]).map(rowOf);
+    } catch (e) {
+        console.error(`корпус typikon-rules недоступен (акафисты памяти ${dneslovId}):`, e);
+        return [];
+    }
 };

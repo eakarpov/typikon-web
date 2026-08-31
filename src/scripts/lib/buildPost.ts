@@ -2,6 +2,7 @@ import { getDneslovMemory, getDneslovImage, DneslovEvent } from "@/scripts/lib/d
 import { extractHeroFromHeuristic, HeroName } from "@/scripts/lib/heroName";
 import { expandOrderAbbreviation } from "@/scripts/lib/orderAbbreviations";
 import { ChannelPostNameSource } from "@/types/dto/channelPost";
+import { saintImages, saintSlugs } from "@/lib/saints";
 
 interface DaySongText {
     _id: string;
@@ -57,12 +58,27 @@ const formatOldStyleDate = (day: DayWithMonth): string => {
     return `${day?.monthIndex ?? ""} ${monthName}`.trim();
 };
 
+// В разметке текстов святой обозначен номером святцев: {st|102|Златоуст}. Адрес страницы
+// с 2026-08-31 — наш слуг, а номер уводит редиректом; поэтому номера в ссылку не ставим,
+// а сперва переводим в адреса. Опубликованный пост живёт в канале вечно, и ссылка в нём
+// должна вести куда надо сразу, а не через переброс, который однажды может и не пережить
+// очередной правки маршрутов.
+const SAINT_MARKER = /\{st\|([^|}]+)\|([^}]+)\}/g;
+
+/** Номера святцев, помянутые в разметке, — чтобы разрешить их адреса одним запросом. */
+const saintIdsIn = (content: string): string[] =>
+    [...content.matchAll(SAINT_MARKER)].map((m) => String(m[1]).trim()).filter(Boolean);
+
 // {st|id|Имя} -> ссылка на святого, {pl|id|Имя} -> ссылка на место, {k|текст} -> выделение
 // (замена киновари, в Telegram нет цвета), {123} / note_123# -> убираем — это ссылки на
 // сноски/личные заметки, без соответствующей панели в посте они бессмысленны.
-const markupToTelegramHtml = (paragraph: string): string =>
+const markupToTelegramHtml = (paragraph: string, saintAddresses: Record<string, string> = {}): string =>
     escapeHtml(paragraph)
-        .replace(/\{st\|([^|}]+)\|([^}]+)\}/g, (_, id, label) => `<a href="${SITE}/saints/${id}">${label}</a>`)
+        .replace(SAINT_MARKER, (_, id, label) => {
+            const key = String(id).trim();
+            // Памяти, которой нет в каталоге, оставляем номер: страница по нему работает.
+            return `<a href="${SITE}/saints/${saintAddresses[key] ?? key}">${label}</a>`;
+        })
         .replace(/\{pl\|([^|}]+)\|([^}]+)\}/g, (_, id, label) => `<a href="${SITE}/places/${id}">${label}</a>`)
         .replace(/\{k\|([^}]+)\}/g, (_, text) => `<b>${text}</b>`)
         .replace(/\{\d+\}/g, "")
@@ -140,13 +156,26 @@ export const buildChannelPost = async ({
 }): Promise<BuiltChannelPost> => {
     const text = item.text;
 
-    const paragraphs = (text.content || "").split("\n\n").map(markupToTelegramHtml);
+    const content = text.content || "";
+    const saintAddresses = await saintSlugs(saintIdsIn(content));
+    const paragraphs = content.split("\n\n").map((paragraph) => markupToTelegramHtml(paragraph, saintAddresses));
     const { html: bodyHtml, truncated } = truncateBody(paragraphs.join("\n\n"));
 
     const poemsBlock = text.poems ? `<b>Стихи́:</b>\n${escapeHtml(text.poems)}` : "";
 
     const { hero, dneslovSlug } = await resolveHero(text);
-    const imageUrl = text.dneslovId ? await getDneslovImage(text.dneslovId, text.dneslovEventId) : null;
+    // Картинка поста: сперва свой снимок, сеть — запасным путём. Прежде этот запрос
+    // уходил в святцы на каждый собираемый пост и при их недоступности оставлял пост
+    // без картинки (замер 2026-08-31: таймаут на 10 секундах).
+    //
+    // РАЗНИЦА, О КОТОРОЙ СТОИТ ЗНАТЬ: снимок хранит изображения памяти целиком, без
+    // разбивки по событиям, а сетевой путь умеет спрашивать конкретное событие
+    // (dneslovEventId). Берём первое, как брал и он, но у памяти с несколькими
+    // событиями это может быть не та же картинка, что раньше.
+    const imageUrl = text.dneslovId
+        ? ((await saintImages(text.dneslovId))?.[0]?.url
+            ?? await getDneslovImage(text.dneslovId, text.dneslovEventId))
+        : null;
 
     // normalize+strip диакритику (Днеслов пишет с ударениями: "Стефа́н") — иначе значок ударения
     // остаётся в хэштеге как отдельный символ.
