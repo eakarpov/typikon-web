@@ -161,7 +161,14 @@ const fetchJson = async (path: string, timeoutMs: number): Promise<any> => {
             const res = await dneslovFetch(`${scheme}://${path}`, { signal: AbortSignal.timeout(timeoutMs) });
             if (res.status === 404) throw new Gone(path);
             if (!res.ok) throw new Error(`ответил ${res.status}`);
-            return await res.json();
+            // 204 и пустое тело — это ОТВЕТ «ничего нет», а не сбой. Так отвечает
+            // images.json у памяти без изображений, и таких больше половины. Пока
+            // здесь стоял голый res.json(), он падал на пустом теле, и «картинок нет»
+            // засчитывалось как «не дозвонились»: пятьсот памятей переспрашивались
+            // проходом за проходом, и ни одна не могла ответить иначе.
+            if (res.status === 204) return null;
+            const body = (await res.text()).trim();
+            return body ? JSON.parse(body) : null;
         } catch (e) {
             if (e instanceof Gone) throw e;
             last = e;
@@ -179,7 +186,8 @@ export const fetchMemorySnapshot = async (
         try {
             const memory = await fetchJson(MEMORY_PATH(id), timeoutMs);
             // slug — единственное, ради чего нужен первый запрос: подробности лежат
-            // по имени, а не по номеру. Нет slug — считаем ответ негодным, а не пустым.
+            // по имени, а не по номеру. Нет slug (в том числе пустой ответ) — считаем
+            // ответ негодным, а не пустым.
             if (!memory?.slug) throw new Error(`memories/${id}.json без slug`);
 
             const details = await fetchJson(DETAILS_PATH(memory.slug), timeoutMs);
