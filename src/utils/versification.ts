@@ -28,6 +28,7 @@ export const VERSIFICATIONS: Versification[] = [
     { id: "sla-lxx", label: "славянская (Елизаветинская, счёт Семидесяти)", reference: true },
     { id: "ro-1688", label: "румынская (Сфънта Скриптура, 1688)", reference: false },
     { id: "grc-lxx", label: "греческая (Септуагинта и Патриарший текст)", reference: false },
+    { id: "la-vulgata", label: "латинская (Вульгата Климентина, счёт галликанский)", reference: false },
 ];
 
 /** Эталонная традиция: в её счёте записан canonRef каждого стиха. */

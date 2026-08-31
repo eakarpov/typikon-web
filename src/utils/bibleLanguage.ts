@@ -10,6 +10,7 @@ export const BIBLE_LANGUAGE_OPTIONS: Array<{ code: string; label: string }> = [
     { code: "cs", label: "ЦС" },
     { code: "ro", label: "РУМ" },
     { code: "grc", label: "ГРЕЧ" },
+    { code: "la", label: "ЛАТ" },
 ];
 
 export const getClientBibleLanguage = (): string => {

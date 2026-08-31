@@ -1,15 +1,20 @@
-// Импорт греческой Библии — Септуагинты и Патриаршего текста 1904 года — в
-// коллекции bible_editions / bible_books / bible_verses.
+// Импорт ИЗДАНИЯ Библии в коллекции bible_editions / bible_books / bible_verses.
 //
-// Данные приходят одним файлом greek/output/greek-bible.json, который собирает
-// scripts/export_greek_bible.py в typikon-rules: там она выкачана (Ветхий Завет —
-// издание Свита, Кембридж 1909–1930; Новый — myriobiblos.gr, библиотека Элладской
-// Церкви) и разобрана. Здесь только укладка в базу и приведение к канону.
+// Скрипт один на все издания, и это условие, а не удобство: правила приведения,
+// уборка лишнего и устойчивые идентификаторы должны работать у всех одинаково,
+// а копия на язык расходится с оригиналом на второй же правке.
 //
-// ОДНО ИЗДАНИЕ НА ДВА ЗАВЕТА. Греческая православная Библия так и печатается —
-// Ο΄ в Ветхом Завете, Патриарший текст в Новом. Завести их двумя изданиями было
-// бы вернее источникам и хуже для чтений: `editionForLang` отдаёт на язык ОДНО
-// издание, и у недефолтного половина Библии стала бы невидимой для устава.
+// Данные приходят одним JSON, который собирает соседний проект typikon-rules
+// (scripts/export_*.py): там издание выкачано и разобрано, здесь только укладка
+// в базу и приведение к канону. Файл называет и само издание — код, заголовок,
+// язык, год, ссылку на источник, — чтобы добавление следующего не требовало
+// правки этого скрипта.
+//
+// ОДНО ИЗДАНИЕ НА ВСЮ БИБЛИЮ, даже когда заветы напечатаны с разных оригиналов:
+// греческая православная Библия — это Ο΄ в Ветхом Завете и Патриарший текст в
+// Новом. Завести их двумя изданиями было бы вернее источникам и хуже для
+// чтений: `editionForLang` отдаёт на язык ОДНО издание, и у недефолтного
+// половина Библии стала бы невидимой для устава.
 //
 // ЛИШНЕЕ УБИРАЕТСЯ. Перезапись по устойчивому _id делает импорт повторяемым
 // только наполовину: изменившийся стих перепишется, а ИСЧЕЗНУВШИЙ останется в
@@ -34,8 +39,10 @@
 // правда, а не сбой: Еноха у славянской Библии нет.
 //
 // Запуск:
-//   npx tsx src/scripts/import-bible-greek.ts           # план, в базу не пишет
-//   npx tsx src/scripts/import-bible-greek.ts --apply   # импортировать
+//   npx tsx src/scripts/import-bible-edition.ts greek/output/greek-bible.json
+//   npx tsx src/scripts/import-bible-edition.ts latin/output/vulgate.json --apply
+//
+// Без --apply в базу ничего не пишется.
 import "@/scripts/lib/env";
 import fs from "fs";
 import path from "path";
@@ -49,7 +56,7 @@ import { BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
 
 const APPLY = process.argv.includes("--apply");
 const BATCH = 2000;
-const FILE_PATH = path.join(process.cwd(), "greek/output/greek-bible.json");
+const GIVEN = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 
 interface SourceBook {
     slug: string;
@@ -72,6 +79,11 @@ interface SourceFile {
     langCode: string;
     language: string;
     versification: string;
+    /** Год издания; null у составных, где одним годом не назвать. */
+    year: number | null;
+    sourceLink: string;
+    /** Место колонки в параллельном виде. */
+    order: number;
     books: SourceBook[];
 }
 
@@ -80,12 +92,19 @@ const oid = (seed: string) =>
     new ObjectId(crypto.createHash("md5").update(seed).digest("hex").slice(0, 24));
 
 const main = async () => {
-    if (!fs.existsSync(FILE_PATH)) {
-        console.error(`Нет файла ${FILE_PATH} — сначала scripts/export_greek_bible.py в typikon-rules`);
+    if (!GIVEN) {
+        console.error("Не сказано, что импортировать. Например:");
+        console.error("  npx tsx src/scripts/import-bible-edition.ts latin/output/vulgate.json --apply");
         process.exit(1);
     }
 
-    const source: SourceFile = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
+    const filePath = path.isAbsolute(GIVEN) ? GIVEN : path.join(process.cwd(), GIVEN);
+    if (!fs.existsSync(filePath)) {
+        console.error(`Нет файла ${filePath} — сначала собери его scripts/export_*.py в typikon-rules`);
+        process.exit(1);
+    }
+
+    const source: SourceFile = JSON.parse(fs.readFileSync(filePath, "utf-8"));
     const mapping = mappingsFor(source.code);
     const now = new Date();
     const editionId = oid(`edition:${source.code}`);
@@ -194,14 +213,15 @@ const main = async () => {
             title: source.title,
             shortTitle: source.shortTitle,
             versification: source.versification,
-            // Год издания у составного издания один назвать нельзя: Ветхий Завет
-            // Свитов (1909–1930), Новый — Патриарший (1904). Пусть будет пусто,
-            // а годы стоят в подписи, чем одно из двух выдавать за оба.
-            year: null,
-            sourceLink: "https://www.myriobiblos.gr/bible/nt2/",
+            // Год приходит из файла и бывает пустым намеренно: у составного
+            // издания одним годом не назвать (греческий Ветхий Завет Свитов
+            // 1909–1930, Новый — Патриарший 1904), и лучше пусто, чем одно из
+            // двух выдать за оба.
+            year: source.year ?? null,
+            sourceLink: source.sourceLink ?? "",
             bookId: null,
             mapping,
-            order: 3,
+            order: source.order ?? 99,
             public: true,
             updatedAt: now,
         },
