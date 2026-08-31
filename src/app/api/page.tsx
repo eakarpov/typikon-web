@@ -38,7 +38,7 @@ const ApiDocs = () => (
                 ключа; для настоящей работы ключ заводится за минуту в профиле.
             </p>
             <p>
-                Базовый адрес — <code>https://typikon.su/api/v2</code>. Машинное описание:{" "}
+                Базовый адрес — <code>https://www.typikon.su/api/v2</code>. Машинное описание:{" "}
                 <a href="/api/v2/openapi.json" className="text-amber-800 underline underline-offset-4">
                     openapi.json
                 </a>
@@ -110,7 +110,7 @@ const ApiDocs = () => (
                 перестаёт работать.
             </p>
             <Example>{`curl -H "Authorization: Bearer tk_…" \\
-  "https://typikon.su/api/v2/search?q=пасха"`}</Example>
+  "https://www.typikon.su/api/v2/search?q=пасха"`}</Example>
             <p>
                 В каждом ответе видно, сколько осталось: <code>X-RateLimit-Remaining</code> и{" "}
                 <code>X-Quota-Remaining</code>. Суточный счётчик обнуляется в полночь UTC
@@ -133,7 +133,7 @@ const ApiDocs = () => (
                 День по постоянному адресу — <code>pascha</code>, <code>march-30</code>,{" "}
                 <code>post-1-sb</code>, — без пересчёта подвижного круга.
             </Endpoint>
-            <Example>{`curl https://typikon.su/api/v2/calendar/2026-04-12
+            <Example>{`curl https://www.typikon.su/api/v2/calendar/2026-04-12
 
 {
   "date": "2026-04-12",
@@ -167,7 +167,7 @@ const ApiDocs = () => (
                 набирать не нужно: «стражи» находит «стра́жи», «иоанна» — «і҆ѡа́нна».
                 Фрагмент возвращается в исходном написании.
             </Endpoint>
-            <Example>{`curl "https://typikon.su/api/v2/texts?readiness=ready&limit=2"
+            <Example>{`curl "https://www.typikon.su/api/v2/texts?readiness=ready&limit=2"
 
 {
   "items": [ { "id": "...", "alias": "prolog-08-11-eupl", "name": "..." } ],

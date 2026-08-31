@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 // Всё, что отдаётся наружу, проходит через respond/fail — поэтому заголовки лицензии,
 // CORS и формат ошибок задаются в одном месте, а не повторяются в каждой ручке.
 
-export const LICENSE_URL = "https://typikon.su/license";
+export const LICENSE_URL = "https://www.typikon.su/license";
 export const LICENSE_ID = "CC-BY-4.0";
 
 // Сутки: содержимое меняется правкой в админке, а она сбрасывает кэш тегами.

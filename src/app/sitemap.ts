@@ -9,7 +9,7 @@ import {REFERENCE_VERSIFICATION} from "@/utils/bibleVersification";
 // чтения в индекс не попадали. Пересобирается раз в сутки.
 export const revalidate = 86400;
 
-const BASE_URL = "https://typikon.su";
+const BASE_URL = "https://www.typikon.su";
 
 // Тексты в статусах "в наличии"/"пока отсутствует" — это заготовки без содержимого,
 // в индексе им делать нечего.

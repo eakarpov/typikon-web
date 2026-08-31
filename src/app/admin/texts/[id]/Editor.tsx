@@ -219,7 +219,7 @@ const AdminEditor = ({ value }: any) => {
     }, [setNotes]);
 
     const onBufferClick = useCallback(() => {
-        navigator.clipboard.writeText(`https://typikon.su/reading/${alias}`);
+        navigator.clipboard.writeText(`https://www.typikon.su/reading/${alias}`);
     }, [alias]);
 
     const onSubmit = () => {

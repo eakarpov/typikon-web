@@ -57,9 +57,9 @@ export const openapi = () => ({
             "Ключ заводится в профиле на typikon.su и передаётся заголовком Authorization: Bearer. " +
             "Остаток виден в заголовках X-RateLimit-Remaining и X-Quota-Remaining.",
         license: { name: LICENSE_ID, url: LICENSE_URL },
-        contact: { url: "https://typikon.su/contact" },
+        contact: { url: "https://www.typikon.su/contact" },
     },
-    servers: [{ url: "https://typikon.su", description: "Основной сервер" }],
+    servers: [{ url: "https://www.typikon.su", description: "Основной сервер" }],
     // Ключ не обязателен: без него ручки тоже отвечают, только скупее и без поиска.
     // Поэтому security на уровне документа, а не в каждой операции.
     security: [{ apiKey: [] }, {}],

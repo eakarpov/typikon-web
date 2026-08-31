@@ -20,8 +20,24 @@ fi
 
 # Проверяем, что в файле есть поисковый индекс. Без него страница песнопений
 # будет молча ничего не находить, и понять это на сервере окажется нечем.
-if ! sqlite3 "$RULES_DB_LOCAL" "SELECT count(*) FROM content_items_fts LIMIT 1" >/dev/null 2>&1; then
-    echo "в $RULES_DB_LOCAL нет content_items_fts — пересобери корпус"
+#
+# Вывод sqlite3 ловим, а не глушим: «нет таблицы» и «файл занят» — разные беды с
+# разным лечением, и первая просит пересборки, а вторая просит подождать. Пока
+# ошибка уходила в /dev/null, идущая рядом пересборка корпуса (она удаляет и
+# создаёт файл заново, держа его открытым) выглядела как отсутствие индекса.
+FTS_CHECK=$(sqlite3 "$RULES_DB_LOCAL" "SELECT count(*) FROM content_items_fts" 2>&1)
+if ! [ "$FTS_CHECK" -eq "$FTS_CHECK" ] 2>/dev/null; then
+    case "$FTS_CHECK" in
+        *"database is locked"*|*"database is busy"*)
+            echo "$RULES_DB_LOCAL занята — похоже, идёт пересборка корпуса"
+            echo "  проверь:  ps aux | grep build_db.py   — и дождись её конца"
+            ;;
+        *)
+            echo "в $RULES_DB_LOCAL нет content_items_fts — пересобери корпус:"
+            echo "  cd ../typikon-rules && python3 src/build_db.py"
+            echo "  sqlite3 сказал: $FTS_CHECK"
+            ;;
+    esac
     exit 1
 fi
 

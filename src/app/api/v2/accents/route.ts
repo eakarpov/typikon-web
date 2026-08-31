@@ -67,7 +67,7 @@ export async function GET(request: Request) {
                 // обещать в API адрес, которого нет, хуже, чем промолчать.
                 // Ставится в ACCENTS_DUMP_URL после настройки раздачи на сервере.
                 ...(process.env.ACCENTS_DUMP_URL ? { download: process.env.ACCENTS_DUMP_URL } : {}),
-                documentation: "https://typikon.su/api",
+                documentation: "https://www.typikon.su/api",
             }, { maxAge: 86400, access });
         }
 

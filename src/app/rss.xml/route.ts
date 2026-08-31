@@ -15,7 +15,7 @@ import { rssXml } from "@/lib/news/format";
 // продолжал отдавать старый фид, когда новость уже вышла.
 export const dynamic = "force-dynamic";
 
-const SITE = "https://typikon.su";
+const SITE = "https://www.typikon.su";
 
 // Двадцати записей хватает любой читалке: они показывают последнее, а не архив.
 const FEED_SIZE = 20;

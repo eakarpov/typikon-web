@@ -82,5 +82,5 @@ export const countV1Request = (headers: Headers): string | null => {
 export const deprecationHeaders = (): Record<string, string> => ({
     "Deprecation": "true",
     "Sunset": SUNSET,
-    "Link": '</api/v2>; rel="successor-version", <https://typikon.su/api>; rel="help"',
+    "Link": '</api/v2>; rel="successor-version", <https://www.typikon.su/api>; rel="help"',
 });

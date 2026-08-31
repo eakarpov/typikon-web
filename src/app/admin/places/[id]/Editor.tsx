@@ -25,7 +25,7 @@ const AdminEditor = ({ value }: any) => {
     const [saved, setIsSaved] = useState(false);
 
     const onBufferClick = useCallback(() => {
-        navigator.clipboard.writeText(`https://typikon.su/reading/${alias}`);
+        navigator.clipboard.writeText(`https://www.typikon.su/reading/${alias}`);
     }, [alias]);
 
     const onSubmit = () => {

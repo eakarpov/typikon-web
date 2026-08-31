@@ -17,7 +17,7 @@ import { DEFAULT_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
 // готовый ответ и обновляет его в фоне.
 export const revalidate = 86400;
 
-const BASE_URL = "https://typikon.su";
+const BASE_URL = "https://www.typikon.su";
 const DAYS_BACK = 7;
 const DAYS_AHEAD = 90;
 
@@ -77,6 +77,9 @@ const buildEvent = (date: Date, result: any): CalendarEvent | null => {
     ].filter((part) => part !== null).join("\n");
 
     return {
+        // Домен в uid остаётся голым, хотя адреса выше переехали на www: uid — это
+        // не адрес, а опознавательный знак события. Сменить его значит для каждого
+        // подписчика превратить правку дня в новое событие рядом со старым.
         uid: `${toIcsDate(date)}@typikon.su`,
         date: toIcsDate(date),
         summary,

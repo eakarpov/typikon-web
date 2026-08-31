@@ -41,10 +41,10 @@ export async function GET(request: Request) {
             description:
                 "Церковнославянские уставные чтения по Типикону: тексты, привязка к дням года, зачала.",
             version: "2",
-            website: "https://typikon.su",
+            website: "https://www.typikon.su",
             license: {
                 corpus: "CC-BY-4.0",
-                url: "https://typikon.su/license",
+                url: "https://www.typikon.su/license",
                 attribution: "Корпус «Уставные чтения» (typikon.su), CC BY 4.0",
                 note: "Оригиналы памятников — общественное достояние. Сканы, переводы и данные dneslov.org принадлежат их владельцам.",
             },
@@ -62,15 +62,15 @@ export async function GET(request: Request) {
                 pericopes: "/api/v2/pericopes",
                 signs: "/api/v2/signs",
                 news: "/api/v2/news",
-                documentation: "https://typikon.su/api",
+                documentation: "https://www.typikon.su/api",
             },
             // Первое, что хочет знать клиент после «что тут есть» — «сколько мне можно».
             access: {
                 anonymous: `${ANONYMOUS_ALLOWANCE.limit} запросов в час с адреса, без поиска`,
                 withKey: `${TIERS.free.limit} запросов в минуту и ${TIERS.free.perDay} в сутки, все разделы`,
                 header: "Authorization: Bearer {ключ}",
-                obtain: "https://typikon.su/profile",
-                documentation: "https://typikon.su/api",
+                obtain: "https://www.typikon.su/profile",
+                documentation: "https://www.typikon.su/api",
             },
             stability:
                 "В версии 2 поля только добавляются. Несовместимые изменения выйдут отдельной версией.",

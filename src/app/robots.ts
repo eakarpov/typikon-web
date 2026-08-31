@@ -11,7 +11,7 @@ import { MetadataRoute } from "next";
 // а вторая половина (счётчики и отказы тем, кто просьбу не читает) живёт в
 // rateLimit.ts и в настройках nginx.
 
-const BASE_URL = "https://typikon.su";
+const BASE_URL = "https://www.typikon.su";
 
 /** Личное и служебное: индексировать нечего, а отвечает всё это из базы. */
 const PRIVATE = [
