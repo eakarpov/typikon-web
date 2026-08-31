@@ -5,6 +5,7 @@ import { setMeta } from "@/lib/meta";
 import { myFont } from "@/utils/font";
 import { getSaintRows, SAINTS_PER_PAGE } from "@/app/saints/api";
 import { saintMatches, searchTerms } from "@/lib/saintSearch";
+import { plural } from "@/utils/plural";
 
 // Указатель святых. До сих пор страницы /saints/[id] существовали, но попасть на них
 // можно было только из текста — списка не было нигде, и в карту сайта они не попадали.
@@ -17,14 +18,6 @@ export const metadata: Metadata = {
         description: "Указатель святых, чьи памяти и упоминания встречаются в уставных чтениях собрания.",
         url: "//www.typikon.su/saints/",
     },
-};
-
-const plural = (n: number, one: string, few: string, many: string) => {
-    const mod10 = n % 10;
-    const mod100 = n % 100;
-    if (mod10 === 1 && mod100 !== 11) return one;
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-    return many;
 };
 
 // Адрес страницы указателя с сохранением набранного в поиске: уходя на вторую

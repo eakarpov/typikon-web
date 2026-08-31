@@ -1,0 +1,1531 @@
+// Словарь посвящений: как из названия храма узнать, кому он посвящён.
+//
+// ЗАЧЕМ ОН НУЖЕН. Открытые списки храмов (Wikidata, OSM) престола отдельным
+// полем не держат: он спрятан в названии, и притом двояко — то родительным
+// падежом («Церковь Илии Пророка»), то прилагательным («Ильинская церковь»,
+// «Спасо-Преображенский собор»). Из 11 763 храмов России в Wikidata поле
+// «назван в честь» (P138) заполнено у 979; всё остальное приходится читать
+// из имени. Отсюда и словарь.
+//
+// ПОЧЕМУ ОН ЖЕ НУЖЕН УСТАВУ. «Свята́го, его́же есть храм» — параметр службы:
+// от престола зависят отпуст, тропарь с кондаком по входе на Литургии, канон
+// храма на субботней утрене и храмовая глава в престольный праздник. Движку
+// устава для этого нужна ПАМЯТЬ (memory_id корпуса), а не строка «Никольская
+// церковь». Словарь — единственное место, где одно превращается в другое.
+//
+// ДАТЫ ЗДЕСЬ ЦЕРКОВНЫЕ, СТАРОГО СТИЛЯ — как напечатано в Минее и как устроены
+// memories.month/day корпуса и коллекция signs (см. churchDate в @/lib/calcDay).
+// Никола зимний — 6 декабря, а не 19-е.
+//
+// ПРАЗДНИКОВ У ПОСВЯЩЕНИЯ БЫВАЕТ НЕСКОЛЬКО, и это не избыточность: Никольский
+// храм празднует дважды (6 декабря и 9 мая), и оба дня для него престольные.
+// Который из них главный, знает приход, а не мы.
+//
+// ПОРЯДОК ЗАПИСЕЙ ЗНАЧИМ: побеждает первое совпадение. Частное идёт раньше
+// общего — «Спаса Нерукотворного» раньше «Спасский», «Рождества Богородицы»
+// раньше «Рождественский», иначе общее правило съест частное.
+
+export type DedicationKind =
+    /** Господский престол: Спас, Троица, Господские праздники. */
+    | "gospodskiy"
+    /** Богородичный: праздники Богородицы и Её иконы. */
+    | "bogorodichen"
+    /** Святого — самый частый случай. */
+    | "svyatogo";
+
+export interface DedicationFeast {
+    /** Церковный месяц (старый стиль). Вместе с day — неподвижный праздник. */
+    month?: number;
+    day?: number;
+    /** Дней от Пасхи: 0 — сама Пасха, 39 — Вознесение, 49 — Пятидесятница. */
+    paschaOffset?: number;
+    /** Чем эта дата зовётся, когда их несколько: «Никола вешний». */
+    note?: string;
+    /**
+     * Чем сверить найденную память, когда общей сверки записи мало: у Зосимы
+     * и Савватия две даты и два разных имени, и одно `expect` на запись
+     * забраковало бы верную память по чужому имени.
+     */
+    expect?: string;
+}
+
+export interface Dedication {
+    /** Устойчивый ключ. По нему адресуется страница посвящения и связь храма. */
+    slug: string;
+    /** Как поминается: полная форма родительного падежа с ударениями. */
+    label: string;
+    /** Короткое имя — для указателя, карты и фильтров. */
+    short: string;
+    kind: DedicationKind;
+    /**
+     * Образцы названия храма. Проверяются по названию, приведённому к нижнему
+     * регистру и без ударений (см. matchDedication).
+     */
+    patterns: RegExp[];
+    /** Престольные праздники. Пусто — значит память ещё не выяснена. */
+    feasts: DedicationFeast[];
+    /**
+     * Запись-заглушка: «Богородица (прочие иконы)», «Спасский». Годится,
+     * когда имя не называет ничего точнее, и мешает, когда называет:
+     * у Казанской иконы «Богородицы» в имени есть всегда, и без этого
+     * признака заглушка лезла бы вторым престолом в каждый Богородичный храм.
+     */
+    generic?: boolean;
+    /**
+     * Чем проверить, что найденная по дате память — та самая. Обломок метки
+     * памяти в корпусе; сверяется при сборке словаря, а не при показе.
+     */
+    expect?: string;
+    /**
+     * Год ПРОСЛАВЛЕНИЯ в Русской Церкви — если он известен твёрдо.
+     *
+     * Не украшение карточки: рядом с волной построек он и превращает столбцы в
+     * ответ на вопрос «когда почитание разошлось». У Серафима Саровского волна
+     * встаёт через год после 1903-го, у Митрофана Воронежского — после 1832-го.
+     *
+     * Ставим ТОЛЬКО там, где дата не спорна. Для древних святых прославление
+     * часто растянуто и датируется по-разному, и подпирать картинку спорным
+     * годом значило бы выдать спор за факт.
+     */
+    canonized?: number;
+}
+
+/**
+ * Названия, за которыми стоит не православный престол. Отсеиваются ДО
+ * словаря: «Базилика Святого Амвросия» и «Лютеранская церковь Святой Марии»
+ * иначе разобрались бы как Богородичный и святительский престолы.
+ *
+ * Проверка идёт по названию целиком, потому что признак инославия стоит в нём
+ * отдельным словом («кирха», «костёл», «мечеть»), а не при имени святого.
+ */
+export const NOT_ORTHODOX =
+    /кирх|костёл|костел|базилик|лютеран|католич|римско-католич|англикан|баптист|евангельск|ехб|адвентист|пятидесятник|методист|мечет|синагог|дацан|дуган|молельн|армянск|григорианск|униатск|старообрядческ|поморск|беглопоповск/i;
+
+/**
+ * Инославие, названное не общиной, а САМИМ ПОСВЯЩЕНИЕМ. «Непорочное
+ * Зачатие», «Пресвятое Сердце Иисуса», «Розарий», «Пресвятая Дева Мария» —
+ * обороты латинского обихода, которых в православном именовании престола не
+ * бывает; за ними стоит костёл, даже когда слова «костёл» в названии нет.
+ */
+export const NOT_ORTHODOX_DEDICATION =
+    /непорочн|пресвятого сердца|сердца иисуса|розари|девы марии|фатимск|лурдск|реформатск|григория просветителя|христа царя/i;
+
+export const DEDICATIONS: Dedication[] = [
+    // ── Господские праздники и Спас ──────────────────────────────────────────
+    {
+        slug: "voskresenie",
+        label: "Воскресе́ния Христо́ва",
+        short: "Воскресение Христово",
+        kind: "gospodskiy",
+        patterns: [/воскресени[яе] христов/, /воскресенск/, /спаса на крови/, /храм воскресения/, /αναστασ/, /invierea/, /vaskrsenj/, /uskrs/, /resurrection/, /holy sepulchre/],
+        feasts: [{ paschaOffset: 0, note: "Пасха" }, { month: 9, day: 13, note: "обновление храма Воскресения" }],
+        expect: "воскресени",
+    },
+    {
+        slug: "troica",
+        label: "Живонача́льныя Тро́ицы",
+        short: "Троица",
+        kind: "gospodskiy",
+        patterns: [/живоначальной троиц/, /святой троиц/, /троицк/, /αγια τριαδα/, /αγιασ τριαδοσ/, /sf(anta)? treime/, /sveta troji/, /svete troji/, /holy trinity/, /trinity (church|cathedral)/, /sainte-trinite/, /dreifaltigkeit/],
+        feasts: [{ paschaOffset: 49, note: "Пятидесятница" }],
+        expect: "пятидесятниц",
+    },
+    {
+        slug: "duh-svyatoy",
+        label: "Соше́ствия Свята́го Ду́ха на апо́столы",
+        short: "Сошествие Святого Духа",
+        kind: "gospodskiy",
+        patterns: [/сошестви[яе] свят[оа]г[оа] духа/, /святого духа/, /духосошественск/, /духовск/],
+        feasts: [{ paschaOffset: 50, note: "Духов день" }],
+        expect: "духа",
+    },
+    {
+        slug: "preobrazhenie",
+        label: "Преображе́ния Госпо́дня",
+        short: "Преображение Господне",
+        kind: "gospodskiy",
+        patterns: [/преображени/, /спасо-преображенск/, /преображенск/, /μεταμορφωσ/, /schimbarea la fata/, /preobraz/, /transfiguration/, /metamorphosis/],
+        feasts: [{ month: 8, day: 6 }],
+        expect: "преображени",
+    },
+    {
+        slug: "spas-nerukotvorny",
+        label: "Нерукотворе́ннаго О́браза Го́спода на́шего Иису́са Христа́",
+        short: "Спас Нерукотворный",
+        kind: "gospodskiy",
+        patterns: [/нерукотвор/, /образа спаса/, /святого убруса/],
+        feasts: [{ month: 8, day: 16 }],
+        expect: "нерукотворе",
+    },
+    {
+        slug: "spas-vsemilostivy",
+        label: "Всеми́лостивого Спа́са",
+        short: "Всемилостивый Спас",
+        kind: "gospodskiy",
+        patterns: [/всемилостив/, /происхождения честных древ/, /медовый спас/],
+        feasts: [{ month: 8, day: 1 }],
+        expect: "честных древ",
+    },
+    {
+        slug: "vozdvizhenie",
+        label: "Воздви́жения Честна́го и Животворя́щего Креста́ Госпо́дня",
+        short: "Воздвижение Креста",
+        kind: "gospodskiy",
+        patterns: [/воздвижени/, /крестовоздвиженск/, /честного креста/, /животворящего креста/, /τιμιου σταυρου/, /τιμιο[σς]? σταυρο[σς]?/, /sf(anta)? cruce/, /krstovdan/, /vazdvizenj/, /holy cross/, /exaltation of the cross/, /elevation of the cross/, /true cross/],
+        feasts: [{ month: 9, day: 14 }],
+        expect: "воздвижени",
+    },
+    {
+        slug: "rozhdestvo-hristovo",
+        label: "Рождества́ Го́спода Бо́га и Спа́са на́шего Иису́са Христа́",
+        short: "Рождество Христово",
+        kind: "gospodskiy",
+        patterns: [/рождества христова/, /рождества господ/, /христорождественск/, /христа спасителя/, /рождественск/, /nativity of (our lord|christ)/, /christmas church/],
+        feasts: [{ month: 12, day: 25 }],
+        expect: "рождеств",
+    },
+    {
+        slug: "bogoyavlenie",
+        label: "Богоявле́ния Госпо́дня",
+        short: "Богоявление",
+        kind: "gospodskiy",
+        patterns: [/богоявленск/, /богоявлени/, /крещения господ/, /крещенск/, /theophany/, /epiphany/, /baptism of (christ|the lord)/],
+        feasts: [{ month: 1, day: 6 }],
+        expect: "богоявлени",
+    },
+    {
+        slug: "sretenie",
+        label: "Сре́тения Го́спода на́шего Иису́са Христа́",
+        short: "Сретение Господне",
+        kind: "gospodskiy",
+        patterns: [/сретени/, /сретенск/, /presentation of (christ|the lord)/, /meeting of the lord/, /hypapante/],
+        feasts: [{ month: 2, day: 2 }],
+        expect: "сретени",
+    },
+    {
+        slug: "vhod-gospoden",
+        label: "Вхо́да Госпо́дня во Иерусали́м",
+        short: "Вход Господень в Иерусалим",
+        kind: "gospodskiy",
+        patterns: [/входа господня/, /вход[ао]иерусалимск/, /входо-иерусалимск/, /вербн/],
+        feasts: [{ paschaOffset: -7 }],
+        expect: "ваий",
+    },
+    {
+        slug: "voznesenie",
+        label: "Вознесе́ния Госпо́дня",
+        short: "Вознесение Господне",
+        kind: "gospodskiy",
+        patterns: [/вознесени/, /вознесенск/, /αναληψ/, /inaltarea domnului/, /vaznesenj/, /ascension/],
+        feasts: [{ paschaOffset: 39 }],
+        expect: "вознесени",
+    },
+    {
+        slug: "spassky-obshiy",
+        generic: true,
+        label: "Спа́са на́шего Иису́са Христа́",
+        short: "Спасский",
+        kind: "gospodskiy",
+        patterns: [/спасск/, /спаса /, /спаса$/],
+        feasts: [],
+    },
+
+    // ── Богородичные праздники ───────────────────────────────────────────────
+    {
+        slug: "pokrov",
+        label: "Покрова́ Пресвяты́я Влады́чицы на́шея Богоро́дицы и Присноде́вы Мари́и",
+        short: "Покров Богородицы",
+        kind: "bogorodichen",
+        patterns: [/покров/, /αγια σκεπη/, /acoperamantul maicii domnului/, /pokrov/, /protection of the (theotokos|mother of god)/, /pokrov/, /intercession of the theotokos/],
+        feasts: [{ month: 10, day: 1 }],
+        expect: "покров",
+    },
+    {
+        slug: "uspenie",
+        label: "Успе́ния Пресвяты́я Богоро́дицы",
+        short: "Успение Богородицы",
+        kind: "bogorodichen",
+        patterns: [/успени/, /успенск/, /κοιμησ/, /adormirea/, /uspenj/, /dormition/, /assumption/, /koimesis/, /entschlafung/],
+        feasts: [{ month: 8, day: 15 }],
+        expect: "успени",
+    },
+    {
+        slug: "rozhdestvo-bogorodicy",
+        label: "Рождества́ Пресвяты́я Богоро́дицы",
+        short: "Рождество Богородицы",
+        kind: "bogorodichen",
+        patterns: [/рождества (пресвятой |пресвятыя )?богородиц/, /рождество-богородич/, /рождество-богородицк/, /γενν[ηθ]σι[σς]? τη[σς]? θεοτοκου/, /nasterea maicii domnului/, /nativity of the (most holy )?(theotokos|virgin|mother of god)/, /nativity of the blessed virgin/],
+        feasts: [{ month: 9, day: 8 }],
+        expect: "рождеств",
+    },
+    {
+        slug: "vvedenie",
+        label: "Введе́ния во храм Пресвяты́я Богоро́дицы",
+        short: "Введение во храм",
+        kind: "bogorodichen",
+        patterns: [/введени/, /введенск/, /εισοδια/, /intrarea in biserica/, /vavedenj/, /presentation of the (theotokos|virgin)/, /entry of the theotokos/],
+        feasts: [{ month: 11, day: 21 }],
+        expect: "введени",
+    },
+    {
+        slug: "blagoveshenie",
+        label: "Благове́щения Пресвяты́я Богоро́дицы",
+        short: "Благовещение",
+        kind: "bogorodichen",
+        patterns: [/благовещени/, /благовещенск/, /ευαγγελισμ/, /buna vestire/, /blagovest/, /annunciation/, /ευαγγελιστρια/, /evangelistria/, /annonciation/],
+        feasts: [{ month: 3, day: 25 }],
+        expect: "благовещени",
+    },
+    {
+        slug: "pokrovenie-rizy",
+        label: "Положе́ния честны́я ри́зы Пресвяты́я Богоро́дицы во Влахе́рне",
+        short: "Положение ризы Богородицы",
+        kind: "bogorodichen",
+        patterns: [/положения ризы/, /ризположен/, /ризоположен/],
+        feasts: [{ month: 7, day: 2 }],
+        expect: "ризы",
+    },
+
+    // ── Иконы Богородицы ─────────────────────────────────────────────────────
+    {
+        slug: "ikona-kazanskaya",
+        label: "Каза́нския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Казанская икона",
+        kind: "bogorodichen",
+        patterns: [/казанск/],
+        feasts: [{ month: 7, day: 8, note: "явление" }, { month: 10, day: 22, note: "избавление от поляков" }],
+        expect: "казанск",
+    },
+    {
+        slug: "ikona-tihvinskaya",
+        label: "Тихви́нския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Тихвинская икона",
+        kind: "bogorodichen",
+        patterns: [/тихвинск/],
+        feasts: [{ month: 6, day: 26 }],
+        expect: "тихвинск",
+    },
+    {
+        slug: "ikona-smolenskaya",
+        label: "Смоле́нския ико́ны Пресвяты́я Богоро́дицы, имену́емыя Одиги́трия",
+        short: "Смоленская икона",
+        kind: "bogorodichen",
+        patterns: [/одигитри/, /смоленск(ой|ая|ий) икон/, /смоленской божией/],
+        feasts: [{ month: 7, day: 28 }],
+        expect: "смоленск",
+    },
+    {
+        slug: "ikona-vladimirskaya",
+        label: "Влади́мирския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Владимирская икона",
+        kind: "bogorodichen",
+        patterns: [/владимирск(ой|ая|ий) икон/, /владимирской божией/, /владимирской богоматер/],
+        feasts: [{ month: 5, day: 21 }, { month: 6, day: 23 }, { month: 8, day: 26 }],
+        expect: "владимирск",
+    },
+    {
+        slug: "ikona-iverskaya",
+        label: "Иве́рския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Иверская икона",
+        kind: "bogorodichen",
+        patterns: [/иверск/],
+        feasts: [{ month: 2, day: 12 }, { month: 10, day: 13 }],
+        expect: "иверск",
+    },
+    {
+        slug: "ikona-znamenie",
+        label: "Ико́ны Пресвяты́я Богоро́дицы, имену́емыя «Зна́мение»",
+        short: "Знамение",
+        kind: "bogorodichen",
+        patterns: [/знаменск/, /знамени[яе] пресвят/, /знамения божией/, /икон[ыа] знамени/],
+        feasts: [{ month: 11, day: 27 }],
+        expect: "знамени",
+    },
+    {
+        slug: "ikona-fedorovskaya",
+        label: "Фео́доровския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Феодоровская икона",
+        kind: "bogorodichen",
+        patterns: [/фед[оё]ровск(ой|ая|ий) икон/, /феодоровск(ой|ая|ий) икон/, /феодоровской божией/, /феодоровск/, /федоровск/],
+        feasts: [{ month: 3, day: 14 }, { month: 8, day: 16 }],
+        expect: "феодоровск",
+    },
+    {
+        slug: "ikona-skorbyashih",
+        label: "Ико́ны Пресвяты́я Богоро́дицы «Всех скорбя́щих Ра́дость»",
+        short: "Всех скорбящих Радость",
+        kind: "bogorodichen",
+        patterns: [/скорбящ/],
+        feasts: [{ month: 10, day: 24 }],
+        expect: "скорбящ",
+    },
+    {
+        slug: "ikona-donskaya",
+        label: "Донско́й ико́ны Пресвяты́я Богоро́дицы",
+        short: "Донская икона",
+        kind: "bogorodichen",
+        patterns: [/донск(ой|ая|ий) икон/, /донской божией/],
+        feasts: [{ month: 8, day: 19 }],
+        expect: "донск",
+    },
+    {
+        slug: "ikona-pochaevskaya",
+        label: "Поча́евския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Почаевская икона",
+        kind: "bogorodichen",
+        patterns: [/почаевск/],
+        feasts: [{ month: 7, day: 23 }],
+        expect: "почаевск",
+    },
+    {
+        slug: "ikona-bogolyubskaya",
+        label: "Боголю́бския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Боголюбская икона",
+        kind: "bogorodichen",
+        patterns: [/боголюбск/],
+        feasts: [{ month: 6, day: 18 }],
+        expect: "боголюбск",
+    },
+    {
+        slug: "ikona-troeruchica",
+        label: "Ико́ны Пресвяты́я Богоро́дицы «Троеру́чица»",
+        short: "Троеручица",
+        kind: "bogorodichen",
+        patterns: [/троеручиц/],
+        feasts: [{ month: 6, day: 28 }],
+        expect: "троеручиц",
+    },
+    {
+        slug: "ikona-neupivaemaya-chasha",
+        label: "Ико́ны Пресвяты́я Богоро́дицы «Неупива́емая Ча́ша»",
+        short: "Неупиваемая Чаша",
+        kind: "bogorodichen",
+        patterns: [/неупиваем/],
+        feasts: [{ month: 5, day: 5 }],
+        expect: "неупиваем",
+    },
+    {
+        slug: "bogorodica-obshee",
+        generic: true,
+        label: "Пресвяты́я Влады́чицы на́шея Богоро́дицы",
+        short: "Богородица (прочие иконы)",
+        kind: "bogorodichen",
+        patterns: [/божией матер/, /богоматер/, /богородиц/, /пресвятой богородиц/, /παναγια/, /θεοτοκου/, /maicii domnului/, /presvete bogorodice/, /bogorodic/, /theotokos/, /mother of god/, /our lady/, /notre-dame/, /gottesmutter/, /panagia/, /წმინდა მარიამ/, /st mary/, /st marys/, /holy virgin/, /sainte-marie/],
+        feasts: [],
+    },
+
+    // ── Бесплотные силы, апостолы, пророки ───────────────────────────────────
+    {
+        slug: "arhangel-mihail",
+        label: "Собо́ра Арха́нгела Михаи́ла и про́чих Небе́сных Сил безпло́тных",
+        short: "Архангел Михаил",
+        kind: "svyatogo",
+        patterns: [/михаил[оа]-архангельск/, /архангела михаила/, /архангельск/, /михайло-архангельск/, /собора архистратига/, /архистратиг/, /αρχαγγελ/, /taxiarch/, /sf(intii)? arhangheli/, /sveti arhangel/, /archangel michael/, /st\.? michael/, /saint-michel/, /taxiarchis/, /михайловск/, /st michael/],
+        feasts: [{ month: 11, day: 8, note: "Собор" }, { month: 9, day: 6, note: "чудо в Хонех" }],
+        expect: "михаил",
+    },
+    {
+        slug: "ioann-predtecha",
+        label: "Свята́го сла́внаго Проро́ка, Предте́чи и Крести́теля Госпо́дня Иоа́нна",
+        short: "Иоанн Предтеча",
+        kind: "svyatogo",
+        patterns: [/предтеч/, /иоанно-предтеченск/, /иоанна крестителя/, /крестителя господня/, /усекновения главы/, /αγι[α-ω]{0,3} ιωαννη[σς]? ο προδρομο[σς]?/, /προδρομ/, /sf(antul)? ioan botezator/, /john the baptist/, /forerunner/, /saint-jean-baptiste/],
+        feasts: [
+            { month: 6, day: 24, note: "рождество" },
+            { month: 8, day: 29, note: "усекновение главы" },
+            { month: 1, day: 7, note: "Собор" },
+        ],
+        expect: "предтеч",
+    },
+    {
+        slug: "petr-i-pavel",
+        label: "Святы́х сла́вных и всехва́льных первоверхо́вных апо́стол Петра́ и Па́вла",
+        short: "Пётр и Павел",
+        kind: "svyatogo",
+        patterns: [/петра и павла/, /петропавловск/, /петро-павловск/, /первоверховных/, /αγιων? αποστολων πετρου/, /πετρου και παυλου/, /sfintii apostoli petru/, /sveti petar i pavle/, /peter and paul/, /sts?\.? peter/],
+        feasts: [{ month: 6, day: 29 }],
+        expect: "петр",
+    },
+    {
+        slug: "andrey-pervozvanny",
+        label: "Свята́го и всехва́льнаго апо́стола Андре́я Первозва́ннаго",
+        short: "Андрей Первозванный",
+        kind: "svyatogo",
+        patterns: [/андрея первозванн/, /андреевск/, /andrew the (first-called|apostle)/, /st\.? andrew/, /saint-andre/, /αγι[α-ω]{0,3} ανδρεα/, /st andrew/],
+        feasts: [{ month: 11, day: 30 }],
+        expect: "андре",
+    },
+    {
+        slug: "ioann-bogoslov",
+        label: "Свята́го апо́стола и евангели́ста Иоа́нна Богосло́ва",
+        short: "Иоанн Богослов",
+        kind: "svyatogo",
+        patterns: [/иоанна богослова/, /иоанно-богословск/, /богословск/, /john the theologian/, /john the evangelist/],
+        feasts: [{ month: 9, day: 26, note: "преставление" }, { month: 5, day: 8 }],
+        expect: "богослов",
+    },
+    {
+        slug: "ilia-prorok",
+        label: "Свята́го сла́внаго проро́ка Илии́",
+        short: "Илия пророк",
+        kind: "svyatogo",
+        patterns: [/ильинск/, /илии пророка/, /пророка илии/, /ильи пророка/, /προφητη[σς]? ηλια/, /sf(antul)? ilie/, /sveti ilij/, /prophet elijah/, /st\.? elijah/, /elias/],
+        feasts: [{ month: 7, day: 20 }],
+        expect: "или",
+    },
+    {
+        slug: "dvenadcat-apostolov",
+        label: "Собо́ра святы́х сла́вных и всехва́льных двена́дцати апо́столов",
+        short: "Двенадцать апостолов",
+        kind: "svyatogo",
+        patterns: [/двенадцати апостол/, /12 апостол/],
+        feasts: [{ month: 6, day: 30 }],
+        expect: "апостол 12",
+    },
+
+    // ── Святители ────────────────────────────────────────────────────────────
+    {
+        slug: "nikolay-chudotvorec",
+        label: "И́же во святы́х отца́ на́шего Никола́я, архиепи́скопа Мир Лики́йских, чудотво́рца",
+        short: "Николай Чудотворец",
+        kind: "svyatogo",
+        patterns: [/никольск/, /николаевск/, /николая чудотворца/, /николая мирликийск/, /свято-никольск/, /николо-/, /αγι[α-ω]{0,3} νικολα/, /νικολαου/, /sf(antul|inte)? nicolae/, /sveti nikol/, /svetog nikol/, /st\.? nicholas/, /saint nicholas/, /nicholas the wonderworker/, /saint-nicolas/, /nikolaus/, /st nicholas/, /st nikolas/],
+        feasts: [
+            { month: 12, day: 6, note: "Никола зимний, преставление" },
+            { month: 5, day: 9, note: "Никола вешний, перенесение мощей" },
+        ],
+        expect: "никола",
+    },
+    {
+        slug: "tri-svyatitelya",
+        label: "И́же во святы́х оте́ц на́ших Васи́лия Вели́каго, Григо́рия Богосло́ва и Иоа́нна Златоу́стаго",
+        short: "Три святителя",
+        kind: "svyatogo",
+        patterns: [/тр[её]х святител/, /три святител/],
+        feasts: [{ month: 1, day: 30 }],
+        expect: "иерархов",
+    },
+    {
+        slug: "vasiliy-veliky",
+        label: "И́же во святы́х отца́ на́шего Васи́лия Вели́каго, архиепи́скопа Кесари́и Каппадоки́йския",
+        short: "Василий Великий",
+        kind: "svyatogo",
+        patterns: [/василия великого/, /васильевск/, /αγι[α-ω]{0,3} βασιλει/, /sf(antul)? vasile/, /basil the great/, /st\.? basil/, /st basil/],
+        feasts: [{ month: 1, day: 1 }],
+        expect: "васили",
+    },
+    {
+        slug: "ioann-zlatoust",
+        label: "И́же во святы́х отца́ на́шего Иоа́нна Златоу́стаго, архиепи́скопа Константино́поля",
+        short: "Иоанн Златоуст",
+        kind: "svyatogo",
+        patterns: [/златоуст/, /john chrysostom/],
+        feasts: [{ month: 11, day: 13 }, { month: 1, day: 27, note: "перенесение мощей" }],
+        expect: "златоуст",
+    },
+    {
+        slug: "aleksiy-moskovsky",
+        label: "И́же во святы́х отца́ на́шего Алекси́я, митрополи́та Моско́вскаго",
+        short: "Алексий Московский",
+        kind: "svyatogo",
+        patterns: [/алексия митрополита/, /алексия московск/, /алексеевск/],
+        feasts: [{ month: 2, day: 12 }, { month: 5, day: 20, note: "обретение мощей" }],
+        expect: "алекси",
+    },
+    {
+        slug: "mitrofan-voronezhsky",
+        label: "И́же во святы́х отца́ на́шего Митрофа́на, епи́скопа Воро́нежскаго",
+        short: "Митрофан Воронежский",
+        kind: "svyatogo",
+        patterns: [/митрофан/],
+        feasts: [{ month: 11, day: 23 }, { month: 8, day: 7, note: "обретение мощей" }],
+        canonized: 1832,
+        expect: "митрофан",
+    },
+    {
+        slug: "tihon-zadonsky",
+        label: "И́же во святы́х отца́ на́шего Ти́хона, епи́скопа Воро́нежскаго, Задо́нскаго чудотво́рца",
+        short: "Тихон Задонский",
+        kind: "svyatogo",
+        patterns: [/тихона задонск/, /тихоновск/],
+        feasts: [{ month: 8, day: 13 }],
+        canonized: 1861,
+        expect: "тихон",
+    },
+    {
+        slug: "stefan-permsky",
+        label: "И́же во святы́х отца́ на́шего Стефа́на, епи́скопа Вели́копе́рмскаго",
+        short: "Стефан Пермский",
+        kind: "svyatogo",
+        patterns: [/стефана пермск/],
+        feasts: [{ month: 4, day: 26 }],
+        expect: "стефана",
+    },
+    {
+        slug: "innokentiy-irkutsky",
+        label: "И́же во святы́х отца́ на́шего Инноке́нтия, епи́скопа Ирку́тскаго",
+        short: "Иннокентий Иркутский",
+        kind: "svyatogo",
+        patterns: [/иннокенти/],
+        feasts: [{ month: 11, day: 26 }],
+        expect: "иннокенти",
+    },
+    {
+        slug: "spiridon-trimifuntsky",
+        label: "И́же во святы́х отца́ на́шего Спиридо́на, епи́скопа Тримифу́нтскаго, чудотво́рца",
+        short: "Спиридон Тримифунтский",
+        kind: "svyatogo",
+        patterns: [/спиридон/, /αγι[α-ω]{0,3} σπυριδων/, /sf(antul)? spiridon/, /st\.? spyridon/, /spyridon/],
+        feasts: [{ month: 12, day: 12 }],
+        expect: "спиридон",
+    },
+
+    // ── Преподобные ──────────────────────────────────────────────────────────
+    {
+        slug: "sergiy-radonezhsky",
+        label: "Преподо́бнаго и Богоно́снаго отца́ на́шего Се́ргия, игу́мена Ра́донежскаго, чудотво́рца",
+        short: "Сергий Радонежский",
+        kind: "svyatogo",
+        patterns: [/сергия радонежск/, /сергиевск/, /преподобного сергия/, /сергия игумена/, /sergius of radonezh/, /st\.? sergius/],
+        feasts: [{ month: 9, day: 25, note: "преставление" }, { month: 7, day: 5, note: "обретение мощей" }],
+        expect: "серги",
+    },
+    {
+        slug: "serafim-sarovsky",
+        label: "Преподо́бнаго и Богоно́снаго отца́ на́шего Серафи́ма, Саро́вскаго чудотво́рца",
+        short: "Серафим Саровский",
+        kind: "svyatogo",
+        patterns: [/серафима саровск/, /серафимовск/, /серафима/, /seraphim of sarov/, /st\.? seraphim/],
+        feasts: [{ month: 1, day: 2, note: "преставление" }, { month: 7, day: 19, note: "обретение мощей" }],
+        canonized: 1903,
+        expect: "серафим",
+    },
+    {
+        slug: "aleksandr-svirsky",
+        label: "Преподо́бнаго отца́ на́шего Алекса́ндра Сви́рскаго",
+        short: "Александр Свирский",
+        kind: "svyatogo",
+        patterns: [/александра свирск/, /свирск/],
+        feasts: [{ month: 8, day: 30 }],
+        expect: "свирск",
+    },
+    {
+        slug: "dimitriy-priluckiy",
+        label: "Преподо́бнаго отца́ на́шего Дими́трия, игу́мена Прилу́цкаго, Волого́дскаго чудотво́рца",
+        short: "Димитрий Прилуцкий",
+        kind: "svyatogo",
+        patterns: [/прилуцк/],
+        feasts: [{ month: 2, day: 11 }],
+        expect: "прилуцк",
+    },
+    {
+        slug: "zosima-i-savvatiy",
+        label: "Преподо́бных отце́в на́ших Зоси́мы и Савва́тия, Солове́цких чудотво́рцев",
+        short: "Зосима и Савватий Соловецкие",
+        kind: "svyatogo",
+        patterns: [/зосимы и савватия/, /зосимо-савватиевск/, /савватиевск/],
+        feasts: [{ month: 4, day: 17, note: "Зосима", expect: "зосим" }, { month: 9, day: 27, note: "Савватий", expect: "саввати" }],
+        expect: "зосим",
+    },
+    {
+        slug: "savva-storozhevsky",
+        label: "Преподо́бнаго отца́ на́шего Са́ввы, игу́мена Сторожевска́го, Звенигоро́дскаго чудотво́рца",
+        short: "Савва Сторожевский",
+        kind: "svyatogo",
+        patterns: [/саввы сторожевск/, /саввинск/],
+        feasts: [{ month: 12, day: 3 }],
+        expect: "саввы",
+    },
+    {
+        slug: "makariy-zheltovodsky",
+        label: "Преподо́бнаго отца́ на́шего Мака́рия, Жёлтоводскаго и У́нженскаго чудотво́рца",
+        short: "Макарий Желтоводский",
+        kind: "svyatogo",
+        patterns: [/макария желтоводск/, /макарьевск/],
+        feasts: [{ month: 7, day: 25 }],
+        expect: "макари",
+    },
+    {
+        slug: "aleksiy-chelovek-bozhiy",
+        label: "Преподо́бнаго Алекси́я, челове́ка Бо́жия",
+        short: "Алексий человек Божий",
+        kind: "svyatogo",
+        patterns: [/алексия человека божия/],
+        feasts: [{ month: 3, day: 17 }],
+        expect: "человека божия",
+    },
+
+    // ── Мученики и благоверные ───────────────────────────────────────────────
+    {
+        slug: "georgiy-pobedonosec",
+        label: "Свята́го великому́ченика и Победоно́сца Гео́ргия",
+        short: "Георгий Победоносец",
+        kind: "svyatogo",
+        patterns: [/георгиевск/, /георгия победоносца/, /победоносца георгия/, /егорьевск/, /юрьевск/, /αγι[α-ω]{0,3} γεωργ/, /sf(antul)? gheorghe/, /sveti (djordje|georgij)/, /svetog djordja/, /st\.? george/, /saint george/, /saint-georges/, /წმ.?\s?გიორგ/, /წმინდა გიორგ/, /st george/],
+        feasts: [{ month: 4, day: 23 }, { month: 11, day: 26, note: "Юрьев день, освящение храма в Киеве" }],
+        expect: "георги",
+    },
+    {
+        slug: "dimitriy-solunsky",
+        label: "Свята́го великому́ченика Дими́трия Солу́нскаго, мироточи́ваго",
+        short: "Димитрий Солунский",
+        kind: "svyatogo",
+        patterns: [/димитрия солунск/, /дмитрия солунск/, /дмитриевск/, /димитриевск/, /αγι[α-ω]{0,3} δημητρ/, /sf(antul)? dumitru/, /sveti dimitrij/, /st\.? demetri/, /saint demetri/],
+        feasts: [{ month: 10, day: 26 }],
+        expect: "димитри",
+    },
+    {
+        slug: "panteleimon",
+        label: "Свята́го великому́ченика и целе́бника Пантелеи́мона",
+        short: "Пантелеимон",
+        kind: "svyatogo",
+        patterns: [/пантелеим/, /пантелейм/, /παντελεημ/, /sf(antul)? pantelimon/, /panteleimon/, /panteleemon/],
+        feasts: [{ month: 7, day: 27 }],
+        expect: "пантелеимон",
+    },
+    {
+        slug: "paraskeva-pyatnica",
+        label: "Святы́я великому́ченицы Параске́вы, нарече́нныя Пя́тницы",
+        short: "Параскева Пятница",
+        kind: "svyatogo",
+        patterns: [/параскев/, /пятницк/, /αγια παρασκευη/, /sf(anta)? (cuvioasa )?parascheva/, /sveta petka/, /st\.? paraskev/, /saint paraskev/],
+        feasts: [{ month: 10, day: 28 }],
+        expect: "параскев",
+    },
+    {
+        slug: "varvara",
+        label: "Святы́я великому́ченицы Варва́ры",
+        short: "Варвара",
+        kind: "svyatogo",
+        patterns: [/варвар/, /st\.? barbara/],
+        feasts: [{ month: 12, day: 4 }],
+        expect: "варвар",
+    },
+    {
+        slug: "ekaterina",
+        label: "Святы́я великому́ченицы Екатери́ны",
+        short: "Екатерина",
+        kind: "svyatogo",
+        patterns: [/екатерин/, /st\.? catherine/, /saint catherine/, /st catherine/],
+        feasts: [{ month: 11, day: 24 }],
+        expect: "екатерин",
+    },
+    {
+        slug: "flor-i-lavr",
+        label: "Святы́х му́ченик Фло́ра и Ла́вра",
+        short: "Флор и Лавр",
+        kind: "svyatogo",
+        patterns: [/флора и лавра/, /фроловск/, /флоровск/],
+        feasts: [{ month: 8, day: 18 }],
+        expect: "флора",
+    },
+    {
+        slug: "vlasiy",
+        label: "Свята́го священному́ченика Власи́я, епи́скопа Севасти́йскаго",
+        short: "Власий Севастийский",
+        kind: "svyatogo",
+        patterns: [/власиевск/, /власьевск/, /власия/],
+        feasts: [{ month: 2, day: 11 }],
+        expect: "власи",
+    },
+    {
+        slug: "boris-i-gleb",
+        label: "Святы́х благове́рных князе́й-страстоте́рпцев Бори́са и Гле́ба",
+        short: "Борис и Глеб",
+        kind: "svyatogo",
+        patterns: [/бориса и глеба/, /борисоглебск/, /борисо-глебск/, /борисоглебск/],
+        feasts: [{ month: 5, day: 2 }, { month: 7, day: 24 }],
+        expect: "борис",
+    },
+    {
+        slug: "aleksandr-nevsky",
+        label: "Свята́го благове́рнаго вели́каго кня́зя Алекса́ндра Не́вскаго",
+        short: "Александр Невский",
+        kind: "svyatogo",
+        patterns: [/александра невск/, /александро-невск/, /невского/, /alexander nevsky/, /alexandre-nevsky/, /alexander-newski/],
+        feasts: [{ month: 11, day: 23 }, { month: 8, day: 30, note: "перенесение мощей" }],
+        expect: "александр",
+    },
+    {
+        slug: "vladimir-ravnoapostolny",
+        label: "Свята́го равноапо́стольнаго вели́каго кня́зя Влади́мира",
+        short: "Владимир равноапостольный",
+        kind: "svyatogo",
+        patterns: [/княже-владимирск/, /свято-владимирск/, /князя владимира/, /равноапостольного владимира/, /st\.? vladimir/, /prince vladimir/, /святого владимира/, /st vladimir/],
+        feasts: [{ month: 7, day: 15 }],
+        expect: "владимира",
+    },
+    {
+        slug: "olga-ravnoapostolnaya",
+        label: "Святы́я равноапо́стольныя вели́кия княги́ни О́льги",
+        short: "Ольга равноапостольная",
+        kind: "svyatogo",
+        patterns: [/княгини ольги/, /равноапостольной ольги/, /ольгинск/, /st\.? olga/, /princess olga/],
+        feasts: [{ month: 7, day: 11 }],
+        expect: "ольг",
+    },
+    {
+        slug: "ksenia-peterburgskaya",
+        label: "Святы́я блаже́нныя Ксе́нии Петербу́ржския",
+        short: "Ксения Петербургская",
+        kind: "svyatogo",
+        patterns: [/ксени/],
+        feasts: [{ month: 1, day: 24 }],
+        canonized: 1988,
+        expect: "петербур",
+    },
+    {
+        slug: "ioann-kronshtadtsky",
+        label: "Свята́го пра́веднаго Иоа́нна Кроншта́дтскаго",
+        short: "Иоанн Кронштадтский",
+        kind: "svyatogo",
+        patterns: [/кронштадтск/],
+        feasts: [{ month: 12, day: 20, note: "преставление" }, { month: 10, day: 19, note: "прославление" }],
+        canonized: 1990,
+        expect: "кронштадт",
+    },
+    {
+        slug: "vera-nadezhda-lyubov",
+        label: "Святы́х му́чениц Ве́ры, Наде́жды, Любве́ и ма́тере их Софи́и",
+        short: "Вера, Надежда, Любовь и София",
+        kind: "svyatogo",
+        patterns: [/веры, надежды/, /веры надежды/, /веры надежды любви/],
+        feasts: [{ month: 9, day: 17 }],
+        expect: "веры",
+    },
+    {
+        slug: "ioakim-i-anna",
+        label: "Святы́х пра́ведных богооте́ц Иоаки́ма и А́нны",
+        short: "Иоаким и Анна",
+        kind: "svyatogo",
+        patterns: [/иоакима и анны/, /праведной анны/, /зачатия анны/],
+        feasts: [{ month: 9, day: 9 }],
+        expect: "иоакима",
+    },
+    {
+        slug: "novomucheniki",
+        label: "Святы́х новому́чеников и испове́дников Це́ркве Ру́сския",
+        short: "Новомученики и исповедники",
+        kind: "svyatogo",
+        patterns: [/новомучен/, /новых мучеников/],
+        feasts: [],
+        canonized: 2000,
+        expect: "новомучен",
+    },
+    {
+        slug: "zheny-mironosicy",
+        label: "Святы́х жен-мироно́сиц",
+        short: "Жёны-мироносицы",
+        kind: "svyatogo",
+        patterns: [/мироносиц/, /myrrh-?bearer/],
+        feasts: [{ paschaOffset: 14, note: "2-я неделя по Пасхе" }],
+        expect: "мироносиц",
+    },
+    {
+        slug: "lazar-chetverodnevny",
+        label: "Свята́го пра́веднаго Ла́заря Четверодне́вного",
+        short: "Лазарь Четверодневный",
+        kind: "svyatogo",
+        patterns: [/лазаревск/, /лазаря/],
+        feasts: [{ paschaOffset: -8, note: "Лазарева суббота", expect: "лазарев" }, { month: 10, day: 17, expect: "лазар" }],
+        expect: "лазар",
+    },
+    {
+        slug: "varlaam-hutynsky",
+        label: "Преподо́бнаго отца́ на́шего Варлаа́ма Хуты́нскаго",
+        short: "Варлаам Хутынский",
+        kind: "svyatogo",
+        patterns: [/варлаам/],
+        feasts: [{ month: 11, day: 6 }],
+        expect: "варлаам",
+    },
+    {
+        slug: "kirill-belozersky",
+        label: "Преподо́бнаго отца́ на́шего Кири́лла, игу́мена Белоезе́рскаго",
+        short: "Кирилл Белозерский",
+        kind: "svyatogo",
+        patterns: [/кирилло-белозерск/, /кирилла белозерск/],
+        feasts: [{ month: 6, day: 9 }],
+        expect: "бело",
+    },
+    {
+        slug: "nikita-muchenik",
+        label: "Свята́го великому́ченика Ники́ты",
+        short: "Никита мученик",
+        kind: "svyatogo",
+        patterns: [/никиты муче/, /никитск/, /никиты/],
+        feasts: [{ month: 9, day: 15 }],
+        expect: "никиты",
+    },
+    {
+        slug: "harlampiy",
+        label: "Свята́го священному́ченика Харла́мпия",
+        short: "Харлампий",
+        kind: "svyatogo",
+        patterns: [/харлампи/],
+        feasts: [{ month: 2, day: 10 }],
+        expect: "аламп",
+    },
+    {
+        slug: "grigoriy-neokesariysky",
+        label: "И́же во святы́х отца́ на́шего Григо́рия, епи́скопа Неокесари́йскаго, чудотво́рца",
+        short: "Григорий Неокесарийский",
+        kind: "svyatogo",
+        patterns: [/григория неокесарийск/],
+        feasts: [{ month: 11, day: 17 }],
+        expect: "неокесари",
+    },
+    {
+        slug: "carstvennye-strastoterpcy",
+        label: "Святы́х Ца́рственных страстоте́рпцев",
+        short: "Царственные страстотерпцы",
+        kind: "svyatogo",
+        patterns: [/царственных страстотерпц/, /царственных мучеников/],
+        feasts: [{ month: 7, day: 4 }],
+        canonized: 2000,
+        expect: "царственн",
+    },
+    {
+        slug: "zahariya-i-elisaveta",
+        label: "Святы́х пра́ведных Заха́рии и Елисаве́ты",
+        short: "Захария и Елисавета",
+        kind: "svyatogo",
+        patterns: [/захария и елисаветы/, /захарии и елисаветы/, /захария и елизаветы/],
+        feasts: [{ month: 9, day: 5 }],
+        expect: "захари",
+    },
+    {
+        slug: "isaakiy-dalmatsky",
+        label: "Преподо́бнаго отца́ на́шего Исаа́кия Далма́тскаго",
+        short: "Исаакий Далматский",
+        kind: "svyatogo",
+        patterns: [/исаакиевск/, /исаакия далматск/],
+        feasts: [{ month: 5, day: 30 }],
+        expect: "исааки",
+    },
+    {
+        slug: "vasiliy-blazhenny",
+        label: "Свята́го блаже́ннаго Васи́лия, Христа́ ра́ди юро́диваго, Моско́вскаго чудотво́рца",
+        short: "Василий Блаженный",
+        kind: "svyatogo",
+        patterns: [/василия блаженного/],
+        feasts: [{ month: 8, day: 2 }],
+        expect: "блажен",
+    },
+    {
+        slug: "sofia-premudrost",
+        label: "Свята́я Софи́я, Прему́дрость Бо́жия",
+        short: "София Премудрость Божия",
+        kind: "bogorodichen",
+        patterns: [/софийск/, /софии премудрости/, /святой софии/, /holy wisdom/, /hagia sophia/, /st\.? sophia/, /st sophia/],
+        feasts: [],
+        expect: "софи",
+    },
+    {
+        slug: "kir-i-ioann",
+        label: "Святы́х чудотво́рцев и безсре́бреник Ки́ра и Иоа́нна",
+        short: "Кир и Иоанн",
+        kind: "svyatogo",
+        patterns: [/кира и иоанна/],
+        feasts: [{ month: 1, day: 31 }],
+        expect: "кира",
+    },
+    {
+        slug: "elisaveta-prepodobnaya",
+        label: "Преподо́бныя Елисаве́ты чудотво́рицы",
+        short: "Елисавета",
+        kind: "svyatogo",
+        patterns: [/елисаветы преподобной/, /преподобной елисаветы/, /елисаветинск/, /елизаветинск/],
+        feasts: [{ month: 4, day: 24 }],
+        expect: "елисавет",
+    },
+    {
+        slug: "iosif-obruchnik",
+        label: "Свята́го пра́веднаго Ио́сифа Обру́чника",
+        short: "Иосиф Обручник",
+        kind: "svyatogo",
+        patterns: [/иосифа обручника/],
+        feasts: [],
+        expect: "иосифа",
+    },
+    {
+        slug: "anna-pravednaya",
+        label: "Святы́я пра́ведныя А́нны, ма́тере Пресвяты́я Богоро́дицы",
+        short: "Анна праведная",
+        kind: "svyatogo",
+        patterns: [/святой анны/, /праведной анны/, /аннинск/],
+        feasts: [{ month: 7, day: 25, note: "успение", expect: "успение святыя анны" }, { month: 12, day: 9, note: "зачатие", expect: "зачатие святыя анны" }],
+        expect: "анны",
+    },
+    {
+        slug: "evfimiy-suzdalsky",
+        label: "Преподо́бнаго отца́ на́шего Евфи́мия, архимандри́та Су́ждальскаго",
+        short: "Евфимий Суздальский",
+        kind: "svyatogo",
+        patterns: [/евфими/],
+        feasts: [{ month: 4, day: 1 }],
+        expect: "евфими",
+    },
+    {
+        slug: "ioann-lestvichnik",
+        label: "Преподо́бнаго отца́ на́шего Иоа́нна, писа́теля Ле́ствицы",
+        short: "Иоанн Лествичник",
+        kind: "svyatogo",
+        patterns: [/лествичник/, /ивана великого/],
+        feasts: [{ month: 3, day: 30 }],
+        expect: "лествиц",
+    },
+    {
+        slug: "kosma-i-damian",
+        label: "Святы́х безсре́бреник и чудотво́рцев Космы́ и Дамиа́на",
+        short: "Косма и Дамиан",
+        kind: "svyatogo",
+        patterns: [/косм[оы]-дамиан/, /козьм[оы]-дамиан/, /кос[ьм]?мы и дамиана/, /козьмы и дамиана/, /космодамианск/, /козьмодемьянск/, /кузьмы и демьяна/, /дамиана/],
+        feasts: [{ month: 11, day: 1 }, { month: 7, day: 1 }],
+        expect: "космы",
+    },
+    {
+        slug: "konstantin-i-elena",
+        label: "Святы́х равноапо́стольных царя́ Константи́на и ма́тере его́ Еле́ны",
+        short: "Константин и Елена",
+        kind: "svyatogo",
+        patterns: [/константина и елены/, /царя константина/, /константино-еленинск/, /αγιων κωνσταντινου/, /sfintii imparati constantin/, /sveti car konstantin/, /constantine and helen/],
+        feasts: [{ month: 5, day: 21 }],
+        expect: "константин",
+    },
+    {
+        slug: "kliment-rimsky",
+        label: "Свята́го священному́ченика Кли́мента, Па́пы Ри́мскаго",
+        short: "Климент Римский",
+        kind: "svyatogo",
+        patterns: [/климент/],
+        feasts: [{ month: 11, day: 25 }],
+        expect: "климент",
+    },
+    {
+        slug: "sorok-muchenikov",
+        label: "Святы́х четы́редесяти му́ченик, в Севасти́йстем е́зере му́чившихся",
+        short: "Сорок мучеников Севастийских",
+        kind: "svyatogo",
+        patterns: [/сорока мучеников/, /сорокосвятск/, /сорок мучеников/, /40 мучеников/],
+        feasts: [{ month: 3, day: 9 }],
+        expect: "севастийст",
+    },
+    {
+        slug: "simeon-stolpnik",
+        label: "Преподо́бнаго отца́ на́шего Симео́на Сто́лпника",
+        short: "Симеон Столпник",
+        kind: "svyatogo",
+        patterns: [/симеона столпника/, /симеоновск/, /симеона богоприимца/],
+        feasts: [{ month: 9, day: 1 }],
+        expect: "симеон",
+    },
+    {
+        slug: "feodor-stratilat",
+        label: "Свята́го великому́ченика Фео́дора Стратила́та",
+        short: "Феодор Стратилат",
+        kind: "svyatogo",
+        patterns: [/феодора стратилата/, /федора стратилата/, /феодоровск(ая|ий|ой) церк/, /αγι[α-ω]{0,3} θεοδωρ/, /st\.? theodore/, /თეოდორე/],
+        feasts: [{ month: 2, day: 8 }, { month: 6, day: 8 }],
+        expect: "стратилат",
+    },
+    {
+        slug: "ioann-voin",
+        label: "Свята́го му́ченика Иоа́нна Во́ина",
+        short: "Иоанн Воин",
+        kind: "svyatogo",
+        patterns: [/иоанна воина/, /иоанно-воинск/],
+        feasts: [{ month: 7, day: 30 }],
+        expect: "воина",
+    },
+    {
+        slug: "trifon",
+        label: "Свята́го му́ченика Трифо́на",
+        short: "Трифон",
+        kind: "svyatogo",
+        patterns: [/трифон/],
+        feasts: [{ month: 2, day: 1 }],
+        expect: "трифон",
+    },
+    {
+        slug: "mina",
+        label: "Свята́го великому́ченика Ми́ны",
+        short: "Мина",
+        kind: "svyatogo",
+        patterns: [/великомученика мины/, /мининск/],
+        feasts: [{ month: 11, day: 11 }],
+        expect: "мины",
+    },
+    {
+        slug: "antoniy-i-feodosiy-pecherskie",
+        label: "Преподо́бных отце́в на́ших Анто́ния и Феодо́сия Пече́рских",
+        short: "Антоний и Феодосий Печерские",
+        kind: "svyatogo",
+        patterns: [/антония и феодосия/, /антониевск/, /феодосиевск/],
+        feasts: [{ month: 7, day: 10, note: "Антоний", expect: "антони" }, { month: 5, day: 3, note: "Феодосий", expect: "феодоси" }],
+        expect: "антони",
+    },
+    {
+        slug: "grigoriy-bogoslov",
+        label: "И́же во святы́х отца́ на́шего Григо́рия Богосло́ва, архиепи́скопа Константино́поля",
+        short: "Григорий Богослов",
+        kind: "svyatogo",
+        patterns: [/григория богослова/],
+        feasts: [{ month: 1, day: 25 }],
+        expect: "григори",
+    },
+    {
+        slug: "afanasiy-i-kirill",
+        label: "И́же во святы́х оте́ц на́ших Афана́сия и Кири́лла, архиепи́скопов Александри́йских",
+        short: "Афанасий и Кирилл Александрийские",
+        kind: "svyatogo",
+        patterns: [/афанасия и кирилла/, /афанасиевск/],
+        feasts: [{ month: 1, day: 18 }],
+        expect: "афанаси",
+    },
+    {
+        slug: "petr-i-fevronia",
+        label: "Святы́х благове́рных князя́ Петра́ и княги́ни Февро́нии, Му́ромских чудотво́рцев",
+        short: "Пётр и Феврония",
+        kind: "svyatogo",
+        patterns: [/петра и февронии/, /февронии/],
+        feasts: [{ month: 6, day: 25 }],
+        expect: "феврон",
+    },
+    {
+        slug: "matrona-moskovskaya",
+        label: "Святы́я блаже́нныя Матро́ны Моско́вския",
+        short: "Матрона Московская",
+        kind: "svyatogo",
+        patterns: [/матрон/],
+        feasts: [{ month: 4, day: 19 }],
+        canonized: 1999,
+        expect: "матрон",
+    },
+    {
+        slug: "luka-krymsky",
+        label: "Свята́го испове́дника Луки́, архиепи́скопа Симферо́польскаго и Кры́мскаго",
+        short: "Лука Крымский",
+        kind: "svyatogo",
+        patterns: [/луки крымск/, /луки войно/, /луки исповедника/],
+        feasts: [{ month: 5, day: 29 }],
+        canonized: 1995,
+        expect: "луки",
+    },
+    {
+        slug: "tihon-patriarh",
+        label: "Свята́го Ти́хона, Патриа́рха Моско́вскаго и всея́ Руси́",
+        short: "Тихон, Патриарх Московский",
+        kind: "svyatogo",
+        patterns: [/тихона патриарха/, /патриарха тихона/],
+        feasts: [{ month: 3, day: 25, note: "преставление" }, { month: 10, day: 5 }],
+        canonized: 1989,
+        expect: "тихон",
+    },
+    {
+        slug: "ioann-russky",
+        label: "Свята́го пра́веднаго Иоа́нна Ру́сскаго, испове́дника",
+        short: "Иоанн Русский",
+        kind: "svyatogo",
+        patterns: [/иоанна русского/],
+        feasts: [{ month: 5, day: 27 }],
+        canonized: 1962,
+        expect: "русск",
+    },
+    {
+        slug: "ipatiy-gangrsky",
+        label: "Свята́го священному́ченика Ипа́тия, епи́скопа Га́нгрскаго",
+        short: "Ипатий Гангрский",
+        kind: "svyatogo",
+        patterns: [/ипати/],
+        feasts: [{ month: 3, day: 31 }],
+        expect: "ипати",
+    },
+    {
+        slug: "ikona-tolgskaya",
+        label: "То́лгския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Толгская икона",
+        kind: "bogorodichen",
+        patterns: [/толгск/],
+        feasts: [{ month: 8, day: 8 }],
+        expect: "толгск",
+    },
+    {
+        slug: "ikona-grebnevskaya",
+        label: "Гре́бневския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Гребневская икона",
+        kind: "bogorodichen",
+        patterns: [/гребневск/],
+        feasts: [{ month: 7, day: 28 }],
+        expect: "гребневск",
+    },
+    {
+        slug: "ikona-ahtyrskaya",
+        label: "Ахты́рския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Ахтырская икона",
+        kind: "bogorodichen",
+        patterns: [/ахтырск/],
+        feasts: [{ month: 7, day: 2 }],
+        expect: "ахтырск",
+    },
+    {
+        slug: "ikona-vzyskanie-pogibshih",
+        label: "Ико́ны Пресвяты́я Богоро́дицы «Взыска́ние поги́бших»",
+        short: "Взыскание погибших",
+        kind: "bogorodichen",
+        patterns: [/взыскани[ея] погибших/],
+        feasts: [{ month: 2, day: 5 }],
+        expect: "взыскани",
+    },
+    {
+        slug: "ikona-umilenie",
+        label: "Ико́ны Пресвяты́я Богоро́дицы «Умиле́ние»",
+        short: "Умиление",
+        kind: "bogorodichen",
+        patterns: [/умилени/],
+        feasts: [{ month: 7, day: 28 }],
+        expect: "умилени",
+    },
+    {
+        slug: "ikona-kurskaya-korennaya",
+        label: "Ку́рския Коренны́я ико́ны Пресвяты́я Богоро́дицы «Зна́мение»",
+        short: "Курская Коренная",
+        kind: "bogorodichen",
+        patterns: [/курск(ой|ая) коренн/, /коренн(ой|ая) пустын/],
+        feasts: [{ month: 11, day: 27 }],
+        expect: "коренн",
+    },
+    {
+        slug: "ikona-ierusalimskaya",
+        label: "Иерусали́мския ико́ны Пресвяты́я Богоро́дицы",
+        short: "Иерусалимская икона",
+        kind: "bogorodichen",
+        patterns: [/иерусалимск(ой|ая|ий) икон/, /иерусалимской божией/],
+        feasts: [{ month: 10, day: 12 }],
+        expect: "иерусалимск",
+    },
+    {
+        slug: "kirill-i-mefodiy",
+        label: "И́же во святы́х оте́ц на́ших Мефо́дия и Кири́лла, учи́телей Слове́нских",
+        short: "Кирилл и Мефодий",
+        kind: "svyatogo",
+        patterns: [/кирилла и мефодия/, /мефодия и кирилла/, /мефоди/, /cyril and methodius/],
+        feasts: [{ month: 5, day: 11 }],
+        expect: "мефоди",
+    },
+    {
+        slug: "mariya-magdalina",
+        label: "Святы́я равноапо́стольныя мироно́сицы Мари́и Магдали́ны",
+        short: "Мария Магдалина",
+        kind: "svyatogo",
+        patterns: [/магдалин/, /mary magdalene/],
+        feasts: [{ month: 7, day: 22 }],
+        expect: "магдалин",
+    },
+    {
+        slug: "filipp-moskovsky",
+        label: "И́же во святы́х отца́ на́шего Фили́ппа, митрополи́та Моско́вскаго",
+        short: "Филипп Московский",
+        kind: "svyatogo",
+        patterns: [/филиппа митрополита/, /филиппа московск/, /филипповск/, /филиппа/],
+        feasts: [{ month: 1, day: 9 }, { month: 7, day: 3, note: "перенесение мощей" }],
+        expect: "филипп",
+    },
+    {
+        slug: "prokopiy-ustyuzhsky",
+        label: "Свята́го пра́веднаго Проко́пия, Христа́ ра́ди юро́диваго, У́стюжскаго чудотво́рца",
+        short: "Прокопий Устюжский",
+        kind: "svyatogo",
+        patterns: [/прокопи/],
+        feasts: [{ month: 7, day: 8 }],
+        expect: "прокопи",
+    },
+    {
+        slug: "kirik-i-iulitta",
+        label: "Святы́х му́ченик Ки́рика и Иули́тты",
+        short: "Кирик и Иулитта",
+        kind: "svyatogo",
+        patterns: [/кирика и иулитты/, /кирика/],
+        feasts: [{ month: 7, day: 15 }],
+        expect: "кирика",
+    },
+    {
+        slug: "iakov-apostol",
+        label: "Свята́го апо́стола Иа́кова",
+        short: "Апостол Иаков",
+        kind: "svyatogo",
+        patterns: [/апостола иакова/, /иакова/],
+        feasts: [{ month: 10, day: 23 }],
+        expect: "иакова",
+    },
+    {
+        slug: "stefan-pervomuchenik",
+        label: "Свята́го первому́ченика и архидиа́кона Стефа́на",
+        short: "Стефан первомученик",
+        kind: "svyatogo",
+        patterns: [/первомученика стефана/, /стефана архидиакона/, /αγι[α-ω]{0,3} στεφανο/, /sf(antul)? stefan/, /st\.? stephen/, /стефановск/],
+        feasts: [{ month: 12, day: 27 }],
+        expect: "стефана",
+    },
+    {
+        slug: "savva-serbsky",
+        label: "Свята́го Са́ввы, архиепи́скопа Се́рбскаго",
+        short: "Савва Сербский",
+        kind: "svyatogo",
+        patterns: [/саввы сербск/, /светог саве/, /sveti sava/, /svetog save/, /св сава/],
+        feasts: [{ month: 1, day: 12 }],
+        expect: "савв",
+    },
+    {
+        slug: "ioann-rilsky",
+        label: "Преподо́бнаго отца́ на́шего Иоа́нна Ры́льскаго",
+        short: "Иоанн Рильский",
+        kind: "svyatogo",
+        patterns: [/иоанна рыльск/, /иван рилски/, /ивана рилског/],
+        feasts: [{ month: 10, day: 19 }],
+        expect: "рыльск",
+    },
+    {
+        slug: "nina-ravnoapostolnaya",
+        label: "Святы́я равноапо́стольныя Ни́ны, просвети́тельницы Гру́зии",
+        short: "Нина равноапостольная",
+        kind: "svyatogo",
+        patterns: [/равноапостольной нины/, /святой нины/, /წმინდა ნინო/, /წმ\.?\s?ნინო/, /st\.? nino/],
+        feasts: [{ month: 1, day: 14 }],
+        expect: "нин",
+    },
+    {
+        slug: "raspyatie",
+        label: "Распя́тия Го́спода на́шего Иису́са Христа́",
+        short: "Распятие Господне",
+        kind: "gospodskiy",
+        patterns: [/распятск/, /распятия господ/, /crucifixion/],
+        feasts: [{ paschaOffset: -2, note: "Великий Пяток" }],
+    },
+    {
+        slug: "sobor-bogorodicy",
+        label: "Собо́ра Пресвяты́я Богоро́дицы",
+        short: "Собор Пресвятой Богородицы",
+        kind: "bogorodichen",
+        patterns: [/собора (пресвятой |пресвятыя )?бого(родицы|матери)/, /собора божьей матери/, /собора божией матери/],
+        feasts: [{ month: 12, day: 26 }],
+        expect: "собор",
+    },
+    {
+        slug: "foma-apostol",
+        label: "Свята́го апо́стола Фомы́",
+        short: "Апостол Фома",
+        kind: "svyatogo",
+        patterns: [/апостола фомы/, /st thomas/, /фомы апостола/],
+        feasts: [{ month: 10, day: 6 }],
+        expect: "фом",
+    },
+    {
+        slug: "petr-moskovsky",
+        label: "И́же во святы́х отца́ на́шего Петра́, митрополи́та Моско́вскаго",
+        short: "Пётр, митрополит Московский",
+        kind: "svyatogo",
+        patterns: [/петра митрополита/, /митрополита петра/],
+        feasts: [{ month: 12, day: 21 }],
+        expect: "петр",
+    },
+    {
+        slug: "sampson-strannopriimec",
+        label: "Преподо́бнаго Сампсо́на страннопри́имца",
+        short: "Сампсон Странноприимец",
+        kind: "svyatogo",
+        patterns: [/сампсониевск/, /сампсона/],
+        feasts: [{ month: 6, day: 27 }],
+        expect: "сампсон",
+    },
+    {
+        slug: "vsehsvyatsky",
+        label: "Всех святы́х",
+        short: "Все святые",
+        kind: "svyatogo",
+        patterns: [/всех святых, в земле/, /всех святых/, /всехсвятск/, /αγιων παντων/, /tuturor sfintilor/, /svih svetih/, /all saints/],
+        feasts: [{ paschaOffset: 56, note: "1-я неделя по Пятидесятнице" }],
+        expect: "всех святых",
+    },
+];
+
+
+/**
+ * Второй ярус словаря: короткие основы имени.
+ *
+ * Отдельно от `patterns`, а не в них, ПО ПОРЯДКУ РАЗБОРА. Побеждает первое
+ * совпадение, и основа «троиц», стоящая в своей записи, съедала бы
+ * «Рождества Богородицы» у всякого храма, чьё имя начинается с Троицы
+ * («Троице-Сергиева лавра, церковь Рождества Богородицы»). Разложенные в два
+ * яруса, точные образцы всего словаря проверяются раньше любой основы.
+ *
+ * Порядок внутри яруса тоже значим: частное раньше общего.
+ */
+export const DEDICATION_STEMS: [RegExp, string][] = [
+    [/никол/, "nikolay-chudotvorec"],
+    [/троиц/, "troica"],
+    [/успен/, "uspenie"],
+    [/покров/, "pokrov"],
+    [/преображ/, "preobrazhenie"],
+    [/вознесен/, "voznesenie"],
+    [/воскресен/, "voskresenie"],
+    [/введен/, "vvedenie"],
+    [/благовещен/, "blagoveshenie"],
+    [/богоявлен/, "bogoyavlenie"],
+    [/сретен/, "sretenie"],
+    [/воздвижен/, "vozdvizhenie"],
+    [/знамени[яе]/, "ikona-znamenie"],
+    [/михаил/, "arhangel-mihail"],
+    [/георги/, "georgiy-pobedonosec"],
+    [/димитри|дмитри/, "dimitriy-solunsky"],
+    [/серги/, "sergiy-radonezhsky"],
+    [/серафим/, "serafim-sarovsky"],
+    [/илии|ильи/, "ilia-prorok"],
+    [/параскев/, "paraskeva-pyatnica"],
+    [/варвар/, "varvara"],
+    [/екатерин/, "ekaterina"],
+    [/пантелеим|пантелейм/, "panteleimon"],
+    [/казанск/, "ikona-kazanskaya"],
+    [/тихвинск/, "ikona-tihvinskaya"],
+    [/иверск/, "ikona-iverskaya"],
+    [/владимирск/, "ikona-vladimirskaya"],
+    [/смоленск/, "ikona-smolenskaya"],
+];
+
+/** Приведение названия к виду, по которому идёт сравнение. */
+export const normalizeTempleName = (name: string): string =>
+    name
+        .toLowerCase()
+        // Уточнение в скобках — это адрес, а не престол: «Никольская церковь
+        // (Владимир)». Оставь его, и город попадёт в разбор наравне с именем.
+        .replace(/\([^)]*\)/g, " ")
+        // Запятые и кавычки внутри имени рвут образец: «Алексия, человека
+        // Божия» — то же посвящение, что и без запятой, а сравнение их
+        // различало. Дефис оставляем: «Александро-Невский» им и держится.
+        .replace(/[,.;:«»"'’]/g, " ")
+        // «й» ПРЯЧЕМ. Дальше снимаются надстрочные знаки — греческие тона
+        // (Άγιος/αγιος), румынские ă, â, î, ș, ț, — и снимаются они разбором
+        // буквы на основу и знак. Но так же разбирается и «й»: это «и» с
+        // краткой, и без этой защиты «Смоленской» превращалась бы в
+        // «Смоленскои», а образец с «ой» переставал совпадать.
+        .replace(/й/g, "\uE000")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f\u0483-\u0489]/g, "")
+        .replace(/\uE000/g, "й")
+        .replace(/ё/g, "е")
+        // «Saint Nicholas» и «St. Nicholas» — одно и то же, и держать оба вида
+        // в каждом образце значит однажды забыть один из них: на выгрузке так
+        // и вышло — «Saint Sophia» и «Saint Basil’s» проходили мимо образцов,
+        // написанных через «st». Французское «saint» сюда же.
+        .replace(/\bsaintes?\b|\bsaints\b|\bsaint\b/g, "st")
+        .replace(/\s+/g, " ")
+        .trim();
+
+export interface DedicationMatch {
+    dedication: Dedication;
+    /** Каким образцом нашлось — для отчёта и разбора в админке. */
+    pattern: string;
+    /**
+     * Каким ярусом словаря. Разница существенная: точный образец называет
+     * посвящение («Церковь Илии Пророка»), короткая основа лишь совпадает с
+     * ним буквами и могла прийти от места («храм в Никольском»).
+     */
+    tier: "pattern" | "stem";
+}
+
+/**
+ * Посвящение по названию храма. Побеждает первое совпадение — порядок в
+ * DEDICATIONS значим. Инославные храмы отсекаются до словаря, а не после:
+ * иначе «Базилика Святого Амвросия» разбиралась бы как престол святителя.
+ */
+export const matchDedication = (name: string): DedicationMatch | null => {
+    const text = normalizeTempleName(name);
+    if (NOT_ORTHODOX.test(text) || NOT_ORTHODOX_DEDICATION.test(text)) return null;
+    for (const dedication of DEDICATIONS) {
+        for (const pattern of dedication.patterns) {
+            if (pattern.test(text)) return { dedication, pattern: pattern.source, tier: "pattern" };
+        }
+    }
+    for (const [stem, slug] of DEDICATION_STEMS) {
+        if (!stem.test(text)) continue;
+        const dedication = DEDICATIONS.find((d) => d.slug === slug);
+        // Основа без записи — опечатка в словаре, и молчать о ней нельзя:
+        // разбор тогда просто теряет храмы, не сообщая почему.
+        if (!dedication) throw new Error(`основа ${stem.source} указывает на неизвестное посвящение ${slug}`);
+        return { dedication, pattern: stem.source, tier: "stem" };
+    }
+    return null;
+};
+
+/**
+ * ВСЕ посвящения, какие видны в названии, — а не одно.
+ *
+ * Нужно не для выбора престола (его даёт matchDedication), а чтобы знать,
+ * что имя многозначно. «Церковь Рождества Пресвятой Богородицы (Никольская
+ * церковь)» называет два, и второе — либо придел, либо народное имя, либо
+ * прежнее посвящение. Своим разбор этого не решит, но обязан показать, что
+ * решать есть что.
+ *
+ * Смотрит на имя ЦЕЛИКОМ, со скобками: именно в них второе имя и стоит.
+ * Оттого и не годится для выбора престола — в скобках столь же часто стоит
+ * город, и «(Никольское)» дало бы ложный престол всякому храму того села.
+ */
+export const matchAllDedications = (name: string): DedicationMatch[] => {
+    const text = normalizeTempleName(name).concat(" ", name.toLowerCase().replace(/́/g, "").replace(/ё/g, "е"));
+    if (NOT_ORTHODOX.test(text) || NOT_ORTHODOX_DEDICATION.test(text)) return [];
+    const found: DedicationMatch[] = [];
+    for (const dedication of DEDICATIONS) {
+        const hit = dedication.patterns.find((p) => p.test(text));
+        if (hit) found.push({ dedication, pattern: hit.source, tier: "pattern" });
+    }
+    for (const [stem, slug] of DEDICATION_STEMS) {
+        if (!stem.test(text) || found.some((f) => f.dedication.slug === slug)) continue;
+        const dedication = DEDICATIONS.find((d) => d.slug === slug);
+        if (dedication) found.push({ dedication, pattern: stem.source, tier: "stem" });
+    }
+    return found;
+};
+
+/**
+ * Все престолы, какие называет имя храма, по порядку упоминания.
+ *
+ * ЗАЧЕМ ОТДЕЛЬНО ОТ matchDedication. Тот отвечает на вопрос «чей это храм» и
+ * даёт один ответ; здесь вопрос другой — «сколько престолов названо». У храма
+ * их обычно несколько, и «Сретенско-Преображенская церковь» называет два.
+ *
+ * СКОБКИ НЕ ЧИТАЕМ. В них стоит место, а не придел: «(Козьмодемьянск)» дал бы
+ * придел Космы и Дамиана всякому храму того города, «(Никольск)» —
+ * Никольский. Проверено на выгрузке: без этого правила из 2469 «вторых
+ * престолов» настоящими были единицы.
+ *
+ * ЗАГЛУШКИ ОТБРАСЫВАЕМ, когда есть точное того же вида: слово «Богородицы»
+ * стоит в имени всякого Богородичного храма, и общая запись иначе становилась
+ * бы вторым престолом у каждой Казанской и каждого Покрова.
+ */
+export const matchDedications = (name: string): DedicationMatch[] => {
+    const text = normalizeTempleName(name);
+    if (NOT_ORTHODOX.test(text) || NOT_ORTHODOX_DEDICATION.test(text)) return [];
+
+    const found: (DedicationMatch & { at: number })[] = [];
+    const add = (dedication: Dedication, pattern: RegExp, tier: "pattern" | "stem") => {
+        if (found.some((f) => f.dedication.slug === dedication.slug)) return;
+        found.push({ dedication, pattern: pattern.source, tier, at: text.search(pattern) });
+    };
+
+    for (const dedication of DEDICATIONS) {
+        const hit = dedication.patterns.find((p) => p.test(text));
+        if (hit) add(dedication, hit, "pattern");
+    }
+    for (const [stem, slug] of DEDICATION_STEMS) {
+        if (!stem.test(text)) continue;
+        const dedication = DEDICATIONS.find((d) => d.slug === slug);
+        if (dedication) add(dedication, stem, "stem");
+    }
+
+    const specific = found.filter((f) => !f.dedication.generic);
+    const kept = found.filter((f) => !f.dedication.generic
+        || !specific.some((s) => s.dedication.kind === f.dedication.kind));
+
+    // По порядку упоминания: имя называет главный престол первым.
+    return kept.sort((a, b) => a.at - b.at).map(({ at, ...m }) => m);
+};

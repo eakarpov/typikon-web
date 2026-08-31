@@ -9,6 +9,7 @@ import {
     ArrowLeftOnRectangleIcon,
     ArrowRightOnRectangleIcon,
     UserCircleIcon,
+    LanguageIcon,
 } from "@heroicons/react/20/solid";
 import {usePathname, useRouter} from "next/navigation";
 import {useCallback, useEffect, useState} from "react";
@@ -17,7 +18,8 @@ import {AuthSlice} from "@/lib/store/auth";
 import {WithRights} from "@/lib/admin/client";
 import NewsLink from "@/app/NewsLink";
 import NavGroup from "@/app/NavGroup";
-import {BIBLE_LANGUAGE_OPTIONS, DEFAULT_BIBLE_LANGUAGE, getClientBibleLanguage, setClientBibleLanguage} from "@/utils/bibleLanguage";
+import NavPopover from "@/app/NavPopover";
+import {BIBLE_LANGUAGE_OPTIONS, DEFAULT_BIBLE_LANGUAGE, bibleLanguageShort, getClientBibleLanguage, setClientBibleLanguage} from "@/utils/bibleLanguage";
 
 const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
     showAdmin?: string;
@@ -33,6 +35,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
     const userStore =  useAppSelector(state => state.auth.user);
 
     const [bibleLang, setBibleLang] = useState(DEFAULT_BIBLE_LANGUAGE);
+    const bibleLangLabel = bibleLanguageShort(bibleLang);
 
     useEffect(() => {
         setBibleLang(getClientBibleLanguage());
@@ -122,6 +125,11 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     title="Пособия"
                     items={[
                         { href: "/accents", label: "Ударения" },
+                        // Храмы — пособие, а не собрание: читают в них не их,
+                        // а по ним узнают свой престол, от которого зависит
+                        // служба.
+                        { href: "/temples", label: "Храмы" },
+                        { href: "/dedications", label: "Посвящения" },
                     ]}
                 />
                 <Link
@@ -177,22 +185,34 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 >
                     <InformationCircleIcon className="w-4 h-4" />
                 </Link>
-                <div
+                {/* Языки — под значком, а не строкой. Их стало пятеро, и строка
+                    «ЦС/РУМ/ГРЕЧ/ЛАТ/КИТ» распирала шапку вширь; каждый
+                    следующий извод распирал бы её дальше. Выбранный виден на
+                    самой кнопке — иначе за значком не понять, на каком языке
+                    сейчас читаешь. */}
+                <NavPopover
                     title="Язык Библии (для зачал)"
-                    className="cursor-pointer min-w-fit flex items-center font-serif text-sm"
+                    className="cursor-pointer min-w-fit flex items-center gap-0.5 font-serif text-sm"
+                    trigger={(
+                        <>
+                            <LanguageIcon className="w-4 h-4" />
+                            <span className="text-slate-500">{bibleLangLabel}</span>
+                        </>
+                    )}
                 >
-                    {BIBLE_LANGUAGE_OPTIONS.map((opt, i) => (
-                        <span key={opt.code}>
-                            {i > 0 && <span className="text-slate-400">/</span>}
-                            <span
-                                className={bibleLang === opt.code ? "text-red-600 font-bold" : "text-slate-400"}
-                                onClick={() => onChangeBibleLang(opt.code)}
-                            >
-                                {opt.label}
-                            </span>
-                        </span>
+                    {(close) => BIBLE_LANGUAGE_OPTIONS.map((opt) => (
+                        <button
+                            key={opt.code}
+                            type="button"
+                            onClick={() => { onChangeBibleLang(opt.code); close(); }}
+                            className={`font-serif px-3 py-1 text-left hover:bg-amber-50 ${
+                                bibleLang === opt.code ? "text-red-600" : ""
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
                     ))}
-                </div>
+                </NavPopover>
                 <Link
                     title="Настройки"
                     href="/settings"
