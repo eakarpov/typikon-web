@@ -17,10 +17,16 @@ import { BIBLE_CANON, BibleSection } from "@/utils/bibleCanon";
  * ОБЪЁМ НЕ ЗАМЕНЯЕТ ПРОВЕРКИ. Он говорит, чего ЖДАТЬ; сошлось ли ожидаемое с
  * привезённым — считает сверка версификации.
  */
-export type BibleScopeId = "full" | "nt" | "gospels" | "apostle" | "psalter";
+export type BibleScopeId =
+    "full" | "nt" | "nt-lectionary" | "gospels" | "apostle" | "psalter";
 
 const SECTIONS: Record<Exclude<BibleScopeId, "full">, BibleSection[] | null> = {
     nt: ["gospel", "apostle", "revelation"],
+    // Новый Завет, каким его печатают для церкви: всё, что читается за
+    // богослужением, и ничего сверх того. Откровение не читается — и его в
+    // такой книге нет. Это не «недовезли», а состав издания: китайский
+    // Новый Завет 1910 года набран ровно так, 26 книг и 238 глав.
+    "nt-lectionary": ["gospel", "apostle"],
     gospels: ["gospel"],
     // Апостол богослужебный — Деяния и послания; Откровение за литургией не
     // читается, и в такое издание оно обычно не входит.
@@ -31,6 +37,7 @@ const SECTIONS: Record<Exclude<BibleScopeId, "full">, BibleSection[] | null> = {
 export const BIBLE_SCOPES: Array<{ id: BibleScopeId; title: string }> = [
     { id: "full", title: "полная Библия" },
     { id: "nt", title: "Новый Завет" },
+    { id: "nt-lectionary", title: "Новый Завет без Апокалипсиса" },
     { id: "gospels", title: "Четвероевангелие" },
     { id: "apostle", title: "Апостол" },
     { id: "psalter", title: "Псалтирь" },

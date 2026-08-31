@@ -5,8 +5,10 @@ import { bibleLanguageShort, bibleLanguageSubstitution } from "@/utils/bibleLang
 test("ярлык языка", () => {
     assert.equal(bibleLanguageShort("cs"), "ЦС");
     assert.equal(bibleLanguageShort("grc"), "ГРЕЧ");
+    assert.equal(bibleLanguageShort("zh"), "КИТ");
     // Незнакомый код не подменяем знакомым: издание могли завести раньше списка.
-    assert.equal(bibleLanguageShort("zh"), "ZH");
+    // Японский так и приедет — сначала книгой, потом строкой в списке языков.
+    assert.equal(bibleLanguageShort("ja"), "JA");
 });
 
 test("подменять не пришлось — показывать нечего", () => {
@@ -15,8 +17,10 @@ test("подменять не пришлось — показывать нече
 });
 
 test("подмена называет оба языка", () => {
+    // Ровно тот случай, ради которого помета и заведена: китайский Новый Завет
+    // не содержит Ветхого, и на паремии читателю молча отдадут славянский.
     const note = bibleLanguageSubstitution("zh", "cs");
-    assert.ok(note && note.includes("ЦС") && note.includes("ZH"),
+    assert.ok(note && note.includes("ЦС") && note.includes("КИТ"),
               `в помете должны стоять оба языка, а стоит: ${note}`);
 });
 

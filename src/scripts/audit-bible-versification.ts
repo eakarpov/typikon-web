@@ -43,6 +43,7 @@ const EDITIONS = [
     { code: "ro-1688", lang: "ro", title: "Сфънта Скриптура (румынская, 1688)" },
     { code: "grc-lxx-pat", lang: "grc", title: "Ἡ Ἁγία Γραφή (греческая: Ο΄ и Патриарший 1904)" },
     { code: "la-vulgata", lang: "la", title: "Biblia Sacra Vulgata (латинская, Климентина 1592)" },
+    { code: "zh-1910", lang: "zh", title: "新約聖經 (китайская: Новый Завет, Пекин 1910)" },
 ];
 
 interface BookShape {
