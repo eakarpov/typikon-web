@@ -9,6 +9,7 @@ export const FALLBACK_BIBLE_LANGUAGE = "cs";
 export const BIBLE_LANGUAGE_OPTIONS: Array<{ code: string; label: string }> = [
     { code: "cs", label: "ЦС" },
     { code: "ro", label: "РУМ" },
+    { code: "grc", label: "ГРЕЧ" },
 ];
 
 export const getClientBibleLanguage = (): string => {

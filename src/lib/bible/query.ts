@@ -110,16 +110,29 @@ export const versesForCanonRanges = async (
     return docs.map(toResolved);
 };
 
-/** Глава канона в одном издании — тот же запрос, только диапазон известен заранее. */
+/**
+ * Глава канона в одном издании.
+ *
+ * Спрашивает canonChapter НАПРЯМУЮ, а не диапазоном по canonSort. Через диапазон
+ * было бы естественнее — тот же путь, что у зачал, — но верхней границей пришлось
+ * бы брать «последний стих главы», а он заранее не известен. Number.MAX_SAFE_INTEGER
+ * на эту роль не годится: свёртка `глава * 100000 + стих` (@/utils/verses) от такого
+ * стиха даёт число больше любого следующего ГЛАВЫ, и запрос молча отдавал бы главу
+ * вместе со всем остатком книги.
+ */
 export const versesForCanonChapter = async (
     db: Db,
     editionId: ObjectId,
     canonId: string,
     chapter: number,
-): Promise<ResolvedVerse[]> =>
-    versesForCanonRanges(db, editionId, canonId, [
-        { chapterFrom: chapter, verseFrom: 1, chapterTo: chapter, verseTo: Number.MAX_SAFE_INTEGER },
-    ]);
+): Promise<ResolvedVerse[]> => {
+    const docs = await db.collection(BIBLE_VERSES)
+        .find({ editionId, canonId, canonChapter: chapter })
+        .sort({ canonSort: 1 })
+        .toArray();
+
+    return docs.map(toResolved);
+};
 
 /** Какие главы канона есть у книги в этом издании — для оглавления. */
 export const canonChaptersOf = async (
@@ -139,12 +152,19 @@ export const canonChaptersOf = async (
  * у румынской Псалтири в девятом псалме на стих меньше, чем у славянской, и честнее
  * показать пробел, чем сдвинуть соседние строки.
  */
+export interface ParallelRow {
+    canonRef: string;
+    /** Номер, под которым строка показывается: в каноническом виде — канонический. */
+    number: number;
+    cells: Array<ResolvedVerse | null>;
+}
+
 export const parallelChapter = async (
     db: Db,
     editions: BibleEdition[],
     canonId: string,
     chapter: number,
-): Promise<Array<{ canonRef: string; canonVerse: number; cells: Array<ResolvedVerse | null> }>> => {
+): Promise<ParallelRow[]> => {
     if (!editions.length) return [];
 
     const editionIds = editions.map((edition) => edition._id);
@@ -169,9 +189,103 @@ export const parallelChapter = async (
         .sort((a, b) => a[1].canonVerse - b[1].canonVerse)
         .map(([canonRef, row]) => ({
             canonRef,
-            canonVerse: row.canonVerse,
+            number: row.canonVerse,
             cells: editionIds.map((id) => row.cells.get(id.toString()) ?? null),
         }));
+};
+
+/**
+ * Главы книги В СЧЁТЕ ИЗДАНИЯ — то есть так, как они в нём напечатаны.
+ *
+ * Отличается от canonChaptersOf принципиально: та отдаёт главы КАНОНА, и у
+ * греческих Притчей их выходит 31, хотя издание печатает 29. Здесь наоборот —
+ * что напечатано, то и отдаётся.
+ *
+ * Одну книгу канона издание может собирать из нескольких своих (греческий
+ * Даниил — из Даниила, Сусанны и Вила), и номер главы у них начинается заново.
+ * Поэтому главы нумеруются СКВОЗНО по книгам издания в их порядке: Даниил
+ * 1–12, Сусанна становится тринадцатой, Вил четырнадцатой. Тем и хорошо, что
+ * совпадает с каноническим счётом ровно там, где славянская Библия свела эти
+ * книги в одну.
+ */
+export const baseChapters = async (
+    db: Db,
+    editionId: ObjectId,
+    canonId: string,
+): Promise<Array<{ bookId: ObjectId; chapter: number }>> => {
+    const books = await booksForCanon(db, editionId, canonId);
+    const out: Array<{ bookId: ObjectId; chapter: number }> = [];
+
+    for (const book of books) {
+        const chapters = await db.collection(BIBLE_VERSES).distinct("chapter", { bookId: book._id });
+        (chapters as number[]).sort((a, b) => a - b)
+            .forEach((chapter) => out.push({ bookId: book._id, chapter }));
+    }
+
+    return out;
+};
+
+/**
+ * Глава в счёте БАЗОВОГО издания: строки ведёт оно, остальные подтягиваются.
+ *
+ * Канонический вид отвечает на вопрос «что стоит напротив славянского стиха».
+ * Этот — на обратный: «что напечатано в греческой двадцать четвёртой главе и
+ * где эти стихи у славян». Оба нужны, и ни один не выводится из другого:
+ * греческая 24-я задевает славянские 24, 30 и 31, а славянская 24-я собрана из
+ * двух разных мест греческой.
+ *
+ * Работает это без единого нового правила: у стиха уже лежат обе нумерации, и
+ * достаточно спросить по родной, а соседей подтянуть по canonRef. Соответствие
+ * взаимно однозначно — на каждом издании проверено, что двух стихов на одном
+ * каноническом месте нет, — поэтому обращение определено само собой.
+ *
+ * `index` — порядковый номер главы в списке baseChapters, начиная с единицы.
+ */
+export const chapterByBase = async (
+    db: Db,
+    base: BibleEdition,
+    others: BibleEdition[],
+    canonId: string,
+    index: number,
+): Promise<{ chapter: number; rows: ParallelRow[] } | null> => {
+    const chapters = await baseChapters(db, base._id, canonId);
+    const target = chapters[index - 1];
+    if (!target) return null;
+
+    const baseVerses = await db.collection(BIBLE_VERSES)
+        .find({ bookId: target.bookId, chapter: target.chapter })
+        .sort({ verse: 1 })
+        .toArray();
+    if (!baseVerses.length) return null;
+
+    const refs = baseVerses.map((verse) => verse.canonRef as string);
+    const otherIds = others.map((edition) => edition._id);
+    const found = otherIds.length
+        ? await db.collection(BIBLE_VERSES)
+            .find({ editionId: { $in: otherIds }, canonRef: { $in: refs } })
+            .toArray()
+        : [];
+
+    // Ключ — издание И каноническое место: одно издание может держать на одном
+    // месте только один стих (это проверено), но изданий несколько.
+    const byKey = new Map<string, ResolvedVerse>();
+    found.forEach((doc) => {
+        const key = `${doc.editionId.toString()}|${doc.canonRef}`;
+        if (!byKey.has(key)) byKey.set(key, toResolved(doc));
+    });
+
+    return {
+        chapter: target.chapter,
+        rows: baseVerses.map((verse) => ({
+            canonRef: verse.canonRef as string,
+            // Номер строки — РОДНОЙ номер базового издания: здесь ведёт оно.
+            number: verse.verse as number,
+            cells: [
+                toResolved(verse),
+                ...otherIds.map((id) => byKey.get(`${id.toString()}|${verse.canonRef}`) ?? null),
+            ],
+        })),
+    };
 };
 
 /**

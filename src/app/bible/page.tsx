@@ -1,16 +1,19 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { myFont } from "@/utils/font";
-import { getBibleIndex } from "@/app/bible/api";
+import { BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
+import EditionPicker from "@/app/bible/EditionPicker";
+import { getBibleIndex, resolveEditionCodes } from "@/app/bible/api";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
     title: "Библия — Уставные чтения",
     description:
-        "Библия по книгам и главам: церковнославянская Елизаветинская и румынская 1688 года, " +
-        "с возможностью читать издания рядом, стих против стиха.",
+        "Библия по книгам и главам: церковнославянская Елизаветинская, румынская 1688 года " +
+        "и греческая — Септуагинта с Патриаршим текстом. Издания читаются рядом, стих против стиха.",
     openGraph: {
         type: "website",
         url: "//www.typikon.su/bible",
@@ -21,13 +24,17 @@ export const metadata: Metadata = {
 
 const Index = async ({ selected }: { selected: string }) => {
     const { editions, sections } = await getBibleIndex();
-    // Все издания разом — по такой ссылке раздел и открывается параллельным видом.
-    const all = editions.map((edition) => edition.code).join(",");
 
     // Пришли из библиотеки или по ссылке на конкретное издание — пусть и оглавление
-    // ведёт в него же, а не в то, что стоит по умолчанию.
+    // ведёт в него же. А без выбора берём не «все разом», а издание языка из
+    // настроек: с тремя изданиями и больше «все разом» — это стена колонок,
+    // которую никто не просил.
+    const lang = cookies().get(BIBLE_LANGUAGE_COOKIE)?.value || DEFAULT_BIBLE_LANGUAGE;
     const known = selected.split(",").filter((code) => editions.some((e) => e.code === code));
-    const suffix = known.length ? `?v=${known.join(",")}` : "";
+    const chosen = known.length
+        ? known
+        : (await resolveEditionCodes(undefined, lang)).split(",").filter(Boolean);
+    const suffix = chosen.length ? `?v=${chosen.join(",")}` : "";
 
     return (
         <div className="pt-2 space-y-4">
@@ -49,12 +56,14 @@ const Index = async ({ selected }: { selected: string }) => {
                         </li>
                     ))}
                 </ul>
+
                 {editions.length > 1 && (
-                    <p className="mt-2">
-                        <Link href={`/bible/bytie/1?v=${all}`} className="text-red-900">
-                            Читать издания рядом →
-                        </Link>
-                    </p>
+                    <div className="mt-2 space-y-1">
+                        <p className="text-slate-500 text-sm">
+                            Отметьте, какие читать рядом — оглавление ниже поведёт в них же:
+                        </p>
+                        <EditionPicker editions={editions} selected={chosen} />
+                    </div>
                 )}
             </div>
 
@@ -63,7 +72,7 @@ const Index = async ({ selected }: { selected: string }) => {
                     <p className="font-bold text-red-900">{section.label}</p>
                     <ul className="mt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4">
                         {section.books.map((book) => (
-                            <li key={book.id}>
+                            <li key={book.id} title={book.note}>
                                 <Link href={`/bible/${book.id}/1${suffix}`} className="hover:text-red-900">
                                     {book.name}
                                 </Link>

@@ -15,7 +15,28 @@ const nextConfig = {
     return config;
   },
   async headers() {
+    // robots.txt только просит не обходить адрес — он не мешает попасть в выдачу
+    // по чужой ссылке. Заголовок запрещает уже индексацию, и его читают все
+    // поисковики. Разделы те же, что закрыты в src/app/robots.ts.
+    const noIndex = [
+      // :path+, а не :path*: страница описания /api сама по себе открыта и в карте сайта.
+      "/api/:path+",
+      "/admin",
+      "/admin/:path+",
+      "/profile",
+      "/settings",
+      "/notes",
+      "/texting",
+      "/texting/:path+",
+      "/search",
+      "/calculator/:date",
+    ].map((source) => ({
+      source,
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    }));
+
     return [
+      ...noIndex,
       {
         source: "/login",
         headers: [

@@ -1,9 +1,12 @@
 import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
-import { BIBLE_CANON, canonBook, canonBySection } from "@/utils/bibleCanon";
+import { BIBLE_CANON, canonBySection } from "@/utils/bibleCanon";
+import { BIBLE_APPENDIX } from "@/utils/bibleAppendix";
+import { bibleBook } from "@/utils/bibleBooks";
 import { referenceChapterCount } from "@/utils/bibleVersification";
 import {
-    canonChaptersOf, editionsByCodes, editionForLang, parallelChapter, publicEditions,
+    baseChapters, canonChaptersOf, chapterByBase, editionsByCodes, editionForLang,
+    parallelChapter, publicEditions,
 } from "@/lib/bible/query";
 import { BibleEdition } from "@/lib/bible/schema";
 
@@ -38,7 +41,7 @@ export interface BibleIndexData {
     sections: Array<{
         id: string;
         label: string;
-        books: Array<{ id: string; name: string; abbr: string; chapters: number }>;
+        books: Array<{ id: string; name: string; abbr: string; chapters: number; note?: string }>;
     }>;
 }
 
@@ -49,16 +52,32 @@ const loadIndex = async (): Promise<BibleIndexData> => {
         editions: (await publicEditions(db)).map(toView),
         // Число глав берём из эталонной версификации, а не из базы: она уже в коде,
         // и оглавление канона не должно стоить семидесяти семи запросов.
-        sections: canonBySection().map((section) => ({
-            id: section.id,
-            label: section.label,
-            books: section.books.map((book) => ({
-                id: book.id,
-                name: book.name,
-                abbr: book.abbr,
-                chapters: referenceChapterCount(book.id),
+        sections: [
+            ...canonBySection().map((section) => ({
+                id: section.id,
+                label: section.label,
+                books: section.books.map((book) => ({
+                    id: book.id,
+                    name: book.name,
+                    abbr: book.abbr,
+                    chapters: referenceChapterCount(book.id),
+                })),
             })),
-        })),
+            // Приложение идёт последним и только если в нём что-то есть. Числа
+            // глав у него нет: эталон собран с церковнославянского издания, а
+            // этих книг в нём нет вовсе — потому они и в приложении.
+            {
+                id: "appendix",
+                label: "Вне славянского канона",
+                books: BIBLE_APPENDIX.map((book) => ({
+                    id: book.id,
+                    name: book.name,
+                    abbr: book.abbr,
+                    chapters: 0,
+                    note: book.note,
+                })),
+            },
+        ],
     };
 };
 
@@ -76,24 +95,68 @@ export interface ChapterData {
     canonId: string;
     name: string;
     abbr: string;
+    /** Номер главы: канонический в обычном виде, родной у базового издания — в его. */
     chapter: number;
     chapters: number[];
     editions: EditionView[];
-    rows: Array<{ canonRef: string; canonVerse: number; cells: Array<ChapterCell | null> }>;
+    /**
+     * Чьим счётом идёт страница. null — каноническим (славянским): строки суть
+     * места канона, и в них попадает всё, что какое-либо издание туда кладёт.
+     * Иначе — код издания, которое ведёт: строки суть ЕГО стихи в ЕГО порядке,
+     * а прочие подтягиваются к ним.
+     */
+    base: string | null;
+    rows: Array<{ canonRef: string; number: number; cells: Array<ChapterCell | null> }>;
 }
+
+const toCell = (cell: { id: string; chapter: number; verse: number; content: string } | null) =>
+    cell && { id: cell.id, chapter: cell.chapter, verse: cell.verse, content: cell.content };
 
 const loadChapter = async (
     canonId: string,
     chapter: number,
     codes: string,
+    base: string,
 ): Promise<ChapterData | null> => {
-    const canon = canonBook(canonId);
+    const canon = bibleBook(canonId);
     if (!canon) return null;
 
     const db = (await clientPromise).db("typikon");
     const editions = await editionsByCodes(db, codes.split(",").filter(Boolean));
     if (!editions.length) return null;
 
+    const head = { canonId, name: canon.name, abbr: canon.abbr, editions: editions.map(toView) };
+
+    // --- Вид в счёте базового издания
+    //
+    // Базой может быть только выбранное издание: вести страницу тем, чего на ней
+    // нет, значило бы показывать пустые строки под чужим номером.
+    const baseEdition = base ? editions.find((edition) => edition.code === base) : null;
+    if (baseEdition) {
+        const others = editions.filter((edition) => edition.code !== base);
+        const [found, chapters] = await Promise.all([
+            chapterByBase(db, baseEdition, others, canonId, chapter),
+            baseChapters(db, baseEdition._id, canonId),
+        ]);
+        if (!found) return null;
+
+        // Колонки идут в порядке изданий, а базовая — первой: строки ведёт она,
+        // и читать их проще, когда ведущая колонка слева.
+        return {
+            ...head,
+            editions: [baseEdition, ...others].map(toView),
+            chapter,
+            chapters: chapters.map((_, index) => index + 1),
+            base,
+            rows: found.rows.map((row) => ({
+                canonRef: row.canonRef,
+                number: row.number,
+                cells: row.cells.map(toCell),
+            })),
+        };
+    }
+
+    // --- Обычный вид, в каноническом счёте
     const [rows, chapters] = await Promise.all([
         parallelChapter(db, editions, canonId, chapter),
         // Список глав — по первому изданию: это то, чью навигацию читатель видит
@@ -103,21 +166,14 @@ const loadChapter = async (
     ]);
 
     return {
-        canonId,
-        name: canon.name,
-        abbr: canon.abbr,
+        ...head,
         chapter,
         chapters,
-        editions: editions.map(toView),
+        base: null,
         rows: rows.map((row) => ({
             canonRef: row.canonRef,
-            canonVerse: row.canonVerse,
-            cells: row.cells.map((cell) => cell && {
-                id: cell.id,
-                chapter: cell.chapter,
-                verse: cell.verse,
-                content: cell.content,
-            }),
+            number: row.number,
+            cells: row.cells.map(toCell),
         })),
     };
 };

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { csFont } from "@/utils/font";
 import { needsChurchFont } from "@/utils/bookLanguages";
 import type { ChapterData, EditionView } from "@/app/bible/api";
+import EditionPicker from "@/app/bible/EditionPicker";
 
 // Церковнославянское и валашское начертания обычным шрифтом не показать — в нём нет
 // ни титла, ни юса, и текст осыплется квадратами. Решает язык издания, а не догадка
@@ -11,8 +12,8 @@ const fontOf = (edition: EditionView) =>
         ? { wrapper: csFont.variable, text: "font-sans-serif" }
         : { wrapper: "", text: "font-serif" };
 
-const chapterHref = (canonId: string, chapter: number, codes: string) =>
-    `/bible/${canonId}/${chapter}?v=${codes}`;
+const chapterHref = (canonId: string, chapter: number, codes: string, base: string | null) =>
+    `/bible/${canonId}/${chapter}?v=${codes}${base ? `&base=${base}` : ""}`;
 
 /** Одно издание — сплошным текстом, как читают книгу. */
 const SingleColumn = ({ data, edition }: { data: ChapterData; edition: EditionView }) => {
@@ -24,8 +25,8 @@ const SingleColumn = ({ data, edition }: { data: ChapterData; edition: EditionVi
                 const cell = row.cells[0];
                 if (!cell) return null;
                 return (
-                    <span key={row.canonRef} id={`v${row.canonVerse}`}>
-                        <sup className="text-red-600 font-bold">{row.canonVerse}</sup>{" "}
+                    <span key={row.canonRef} id={`v${row.number}`}>
+                        <sup className="text-red-600 font-bold">{row.number}</sup>{" "}
                         {cell.content}{" "}
                     </span>
                 );
@@ -63,9 +64,9 @@ const ParallelColumns = ({ data }: { data: ChapterData }) => (
             </thead>
             <tbody>
                 {data.rows.map((row) => (
-                    <tr key={row.canonRef} id={`v${row.canonVerse}`} className="align-top">
+                    <tr key={row.canonRef} id={`v${row.number}`} className="align-top">
                         <td className="text-red-600 font-bold font-serif text-sm pt-1">
-                            {row.canonVerse}
+                            {row.number}
                         </td>
                         {row.cells.map((cell, index) => {
                             const edition = data.editions[index];
@@ -77,7 +78,7 @@ const ParallelColumns = ({ data }: { data: ChapterData }) => (
                                     </td>
                                 );
                             }
-                            const shifted = cell.chapter !== data.chapter || cell.verse !== row.canonVerse;
+                            const shifted = cell.chapter !== data.chapter || cell.verse !== row.number;
                             return (
                                 <td
                                     key={edition.code}
@@ -105,11 +106,14 @@ const ParallelColumns = ({ data }: { data: ChapterData }) => (
 const Chapter = ({
     data,
     codes,
+    allEditions,
     previous,
     next,
 }: {
     data: ChapterData;
     codes: string;
+    /** Все публичные издания — чтобы снятое можно было вернуть, не правя адрес. */
+    allEditions: EditionView[];
     previous: { canonId: string; chapter: number; label: string } | null;
     next: { canonId: string; chapter: number; label: string } | null;
 }) => (
@@ -120,14 +124,25 @@ const Chapter = ({
 
         <h1 className="font-bold font-serif text-xl">
             {data.name}, глава {data.chapter}
+            {data.base && (
+                <span className="text-slate-400 font-normal text-base">
+                    {" "}— по счёту издания «{data.editions[0].shortTitle}»
+                </span>
+            )}
         </h1>
+
+        <EditionPicker
+            editions={allEditions}
+            selected={codes.split(",").filter(Boolean)}
+            base={data.base}
+        />
 
         {data.chapters.length > 1 && (
             <p className="font-serif text-sm space-x-1">
                 {data.chapters.map((chapter) => (
                     <Link
                         key={chapter}
-                        href={chapterHref(data.canonId, chapter, codes)}
+                        href={chapterHref(data.canonId, chapter, codes, data.base)}
                         className={chapter === data.chapter ? "font-bold text-red-900" : "text-slate-500 hover:text-red-900"}
                     >
                         {chapter}
@@ -149,14 +164,14 @@ const Chapter = ({
         <div className="flex justify-between font-serif text-sm pt-2">
             <span>
                 {previous && (
-                    <Link href={chapterHref(previous.canonId, previous.chapter, codes)} className="text-red-900">
+                    <Link href={chapterHref(previous.canonId, previous.chapter, codes, data.base)} className="text-red-900">
                         ← {previous.label}
                     </Link>
                 )}
             </span>
             <span>
                 {next && (
-                    <Link href={chapterHref(next.canonId, next.chapter, codes)} className="text-red-900">
+                    <Link href={chapterHref(next.canonId, next.chapter, codes, data.base)} className="text-red-900">
                         {next.label} →
                     </Link>
                 )}

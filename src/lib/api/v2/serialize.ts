@@ -10,6 +10,7 @@ import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
 // (служебные копии текста), textingPriority (очередь отекстовки), newUi, fileId.
 
 import type { NewsPostDTO } from "@/types/dto/news";
+import { pericopeVersification } from "@/utils/versification";
 
 const id = (value: any): string | null =>
     value == null ? null : (typeof value === "string" ? value : value.toString());
@@ -145,6 +146,10 @@ export const pericope = (doc: any) => ({
     variant: doc.variant ?? null,
     label: doc.label ?? null,
     ranges: doc.ranges ?? [],
+    // В чьём счёте записаны эти ranges. Не проставлено — значит славянский:
+    // зачала Типикона Русской Церкви (@/utils/versification). Отдаём наружу,
+    // чтобы читающий API не гадал, номера какого издания перед ним.
+    versification: pericopeVersification(doc),
     occasions: doc.occasions ?? [],
 });
 

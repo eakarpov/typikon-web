@@ -11,7 +11,11 @@
 // по памяти о трёх известных случаях.
 //
 // Эталон — церковнославянское издание: оно же фолбек сайта, оно же славянская
-// традиция LXX, на которую опирается устав. Румынское сверяется против него.
+// традиция LXX, на которую опирается устав. Остальные сверяются против него.
+//
+// ЧИТАЕТ bible_editions / bible_books / bible_verses. Раньше читал старые
+// `books`/`texts`/`verses` — и перестал работать молча, как только
+// drop-legacy-bible.ts их снял: «изданий не найдено» на полной базе.
 //
 // В БАЗУ НЕ ПИШЕТ. Пишет два файла:
 //   BIBLE_VERSIFICATION.md          — отчёт для чтения глазами;
@@ -24,14 +28,18 @@ import path from "path";
 import { Db, ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { BIBLE_CANON, canonBook } from "@/utils/bibleCanon";
+import { isAppendixBook } from "@/utils/bibleAppendix";
+import { chapterVerdict, mappingsFor } from "@/lib/bible/mappings";
+import { BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
 
 const REPORT_PATH = path.join(process.cwd(), "BIBLE_VERSIFICATION.md");
 const REFERENCE_PATH = path.join(process.cwd(), "src/utils/bibleVersification.ts");
 
 /** Эталонное издание идёт первым: остальные сверяются против него. */
 const EDITIONS = [
-    { lang: "cs", title: "Елизаветинская (церковнославянская)" },
-    { lang: "ro", title: "Сфънта Скриптура (румынская, 1688)" },
+    { code: "cs-eliz", lang: "cs", title: "Елизаветинская (церковнославянская)" },
+    { code: "ro-1688", lang: "ro", title: "Сфънта Скриптура (румынская, 1688)" },
+    { code: "grc-lxx-pat", lang: "grc", title: "Ἡ Ἁγία Γραφή (греческая: Ο΄ и Патриарший 1904)" },
 ];
 
 interface BookShape {
@@ -42,31 +50,42 @@ interface BookShape {
     bookIndex: number | null;
     /** Длины глав по возрастанию номера главы. */
     chapters: Array<{ chapter: number; verses: number; missing: number[]; duplicates: number[] }>;
+    /** Канонические места, занятые стихами книги, — уже с применёнными правилами. */
+    canonRefs: Array<{ chapter: number; verse: number }>;
 }
 
 interface EditionShape {
+    /** Код издания (bible_editions.code) — по нему находятся его правила приведения. */
+    code: string;
     lang: string;
     title: string;
     bookName: string;
     books: Map<string, BookShape>;
 }
 
-const readEdition = async (db: Db, lang: string, title: string): Promise<EditionShape | null> => {
-    const book = await db.collection("books").findOne({ bibleLanguageCode: lang });
-    if (!book) {
-        console.warn(`!! издания с bibleLanguageCode=${lang} в базе нет — пропускаю`);
+const readEdition = async (
+    db: Db, code: string, lang: string, title: string,
+): Promise<EditionShape | null> => {
+    const edition = await db.collection(BIBLE_EDITIONS).findOne({ code });
+    if (!edition) {
+        console.warn(`!! издания «${code}» в базе нет — пропускаю`);
         return null;
     }
 
-    const texts = await db.collection("texts")
-        .find({ bookId: book._id }, { projection: { name: 1, alias: 1, bibleBookSlug: 1, bookIndex: 1 } })
+    const texts = await db.collection(BIBLE_BOOKS)
+        .find({ editionId: edition._id }, { projection: { name: 1, alias: 1, slug: 1, order: 1 } })
         .toArray();
 
     const books = new Map<string, BookShape>();
 
     for (const text of texts) {
-        const verses = await db.collection("verses")
-            .find({ textId: text._id }, { projection: { chapter: 1, verse: 1 } })
+        // Нумерация берётся РОДНАЯ (chapter/verse), а не каноническая: отчёт для
+        // того и нужен, чтобы увидеть, где издание печатает иначе. Сверяй мы
+        // canonChapter/canonVerse, уже применённые правила спрятали бы от нас
+        // ровно те расхождения, ради которых пишутся следующие.
+        const verses = await db.collection(BIBLE_VERSES)
+            .find({ bookId: text._id },
+                  { projection: { chapter: 1, verse: 1, canonChapter: 1, canonVerse: 1 } })
             .toArray();
 
         // Группируем по главам сами, а не distinct-ом: заодно видны дыры и повторы
@@ -94,17 +113,23 @@ const readEdition = async (db: Db, lang: string, title: string): Promise<Edition
                 return { chapter, verses: sorted.length, missing, duplicates };
             });
 
-        const slug = (text.bibleBookSlug as string) || `?${text.alias || text._id}`;
+        const canonRefs = verses.map((v) => ({
+            chapter: (v.canonChapter as number) ?? v.chapter,
+            verse: (v.canonVerse as number) ?? v.verse,
+        }));
+
+        const slug = (text.slug as string) || `?${text.alias || text._id}`;
         books.set(slug, {
             slug,
             name: text.name as string,
             alias: (text.alias as string) || "",
-            bookIndex: (text.bookIndex as number) ?? null,
+            canonRefs,
+            bookIndex: (text.order as number) ?? null,
             chapters,
         });
     }
 
-    return { lang, title, bookName: book.name as string, books };
+    return { code, lang, title, bookName: edition.title as string, books };
 };
 
 const totalVerses = (book: BookShape) =>
@@ -136,10 +161,16 @@ const buildReport = (editions: EditionShape[]): string => {
     });
 
     // --- состав книг
+    //
+    // Книги приложения (@/utils/bibleAppendix) сюда не идут намеренно. Раздел
+    // называет КАНДИДАТОВ НА ПРАВИЛО — книгу, изданную отдельно, а в каноне
+    // бывшую частью другой. Енох и Оды не таковы: у них нет канонического места
+    // и не будет, правило им писать не из чего. Попади они в список, он перестал
+    // бы быть списком работы.
     lines.push(section("Книги вне канона"));
     const strays = editions.flatMap((edition) =>
         [...edition.books.values()]
-            .filter((book) => !canonBook(book.slug))
+            .filter((book) => !canonBook(book.slug) && !isAppendixBook(book.slug))
             .map((book) => ({ edition, book })),
     );
     if (!strays.length) {
@@ -158,6 +189,75 @@ const buildReport = (editions: EditionShape[]): string => {
         });
     }
 
+    // --- приложение
+    const inAppendix = editions.flatMap((edition) =>
+        [...edition.books.values()]
+            .filter((book) => isAppendixBook(book.slug))
+            .map((book) => ({ edition, book })),
+    );
+    if (inAppendix.length) {
+        lines.push(section("Приложение: напечатано, но канон не держит"));
+        lines.push("Правил приведения этим книгам не нужно — канонического места у них нет,");
+        lines.push("адрес у каждой свой (`src/utils/bibleAppendix.ts`).");
+        lines.push("");
+        lines.push("| издание | слуг | название | глав | стихов |");
+        lines.push("|---|---|---|---:|---:|");
+        inAppendix.forEach(({ edition, book }) => {
+            lines.push(
+                `| ${edition.lang} | \`${book.slug}\` | ${book.name} | ` +
+                `${book.chapters.length} | ${totalVerses(book)} |`,
+            );
+        });
+    }
+
+    // --- сошлись ли стихи
+    //
+    // Колонка «приведение» выше говорит про ГЛАВЫ и правила. Здесь — про стихи и
+    // про то, что вышло на деле: каждый ли стих издания занял своё, отдельное и
+    // существующее место в эталоне. Считается по canonChapter/canonVerse, уже
+    // лежащим в базе, то есть проверяется результат, а не намерение.
+    //
+    // Столкновение значит, что два стиха издания претендуют на одно место, и
+    // параллельный вид молча покажет который-нибудь один. Промах — что стих ушёл
+    // в главу, где столько стихов не бывает. И то и другое — ошибка правил.
+    others.forEach((edition) => {
+        const rows: string[] = [];
+        BIBLE_CANON.forEach((canon) => {
+            const book = edition.books.get(canon.id);
+            const reference2 = reference.books.get(canon.id);
+            if (!book || !reference2) return;
+
+            const lengths = reference2.chapters.reduce((map, c) => map.set(c.chapter, c.verses),
+                                                       new Map<number, number>());
+            const taken = new Set<string>();
+            let collisions = 0;
+            let outside = 0;
+            book.canonRefs.forEach((ref) => {
+                const key = `${ref.chapter}:${ref.verse}`;
+                if (taken.has(key)) collisions++;
+                taken.add(key);
+                const length = lengths.get(ref.chapter) ?? 0;
+                if (ref.verse < 1 || ref.verse > length) outside++;
+            });
+            if (collisions || outside) {
+                rows.push(`| ${edition.lang} | ${canon.name} | ${book.canonRefs.length} | ` +
+                          `${collisions} | ${outside} |`);
+            }
+        });
+
+        lines.push(section(`Сошлись ли стихи: ${edition.title}`));
+        if (!rows.length) {
+            lines.push("Каждый стих издания занял своё, отдельное и существующее место эталона.");
+        } else {
+            lines.push("Книги, где это не так. Столкновение — два стиха на одно место;");
+            lines.push("промах — стих ушёл в главу, где столько стихов не бывает.");
+            lines.push("");
+            lines.push("| издание | книга | стихов | столкновений | промахов |");
+            lines.push("|---|---|---:|---:|---:|");
+            lines.push(...rows);
+        }
+    });
+
     lines.push(section("Состав относительно канона"));
     lines.push("| книга канона | " + editions.map((e) => e.lang).join(" | ") + " |");
     lines.push("|---|" + editions.map(() => "---").join("|") + "|");
@@ -172,15 +272,45 @@ const buildReport = (editions: EditionShape[]): string => {
     others.forEach((edition) => {
         lines.push(section(`Расхождения: ${edition.title}`));
 
+        // Правила издания — чтобы отличить расхождение УЖЕ СВЕДЁННОЕ от открытого.
+        // Без этого столбца отчёт врёт как список работы: греческий Иеремия
+        // расходится с эталоном двадцатью семью главами и при этом сведён весь,
+        // до последнего стиха, — а выглядел бы нетронутым.
+        const rules = mappingsFor(edition.code);
+        // Глава считается сведённой, если какое-то правило ведёт ИМЕННО В НЕЁ.
+        // Проверять «правило упоминает эту книгу» нельзя: правило без to.chapter
+        // (сдвиг внутри своей же главы) пометило бы сведённой всю книгу разом, и
+        // отчёт как список работы соврал бы в приятную сторону.
+        const covered = (book: string, chapter: number) =>
+            rules.some((rule) =>
+                (rule.from.book === book && rule.from.chapter === chapter)
+                || ((rule.to.book ?? rule.from.book) === book && rule.to.chapter === chapter));
+
         const rows: string[] = [];
+        let open = 0;
         BIBLE_CANON.forEach((canon) => {
             const mine = edition.books.get(canon.id);
             const theirs = reference.books.get(canon.id);
             if (!mine || !theirs) return;
 
+            // Четыре состояния, а не два. «—» остаётся только у того, до чего не
+            // дошли руки, и только оно идёт в счёт работы: глава, сверенная и
+            // признанная верной, — не задолженность, и говорить о ней как о
+            // задолженности значит выдумывать себе работу.
+            const mark = (chapter: number) => {
+                if (covered(canon.id, chapter)) return "правило есть";
+                const verdict = chapterVerdict(edition.code, canon.id, chapter);
+                if (verdict === "aligned") return "сверено, сдвига нет";
+                if (verdict === "unmappable") return "правилом не выразимо";
+                open++;
+                return "—";
+            };
+
             if (mine.chapters.length !== theirs.chapters.length) {
+                // Строка про ЧИСЛО ГЛАВ — сведение, а не единица работы: столбец
+                // «приведение» ей нечего сказать, и в счёт открытого она не идёт.
                 rows.push(
-                    `| ${canon.name} | глав | ${theirs.chapters.length} | ${mine.chapters.length} |`,
+                    `| ${canon.name} | глав | ${theirs.chapters.length} | ${mine.chapters.length} |  |`,
                 );
             }
 
@@ -188,9 +318,9 @@ const buildReport = (editions: EditionShape[]): string => {
             theirs.chapters.forEach((chapter) => {
                 const here = byChapter.get(chapter.chapter);
                 if (here === undefined) {
-                    rows.push(`| ${canon.name} | гл. ${chapter.chapter} | ${chapter.verses} | **нет** |`);
+                    rows.push(`| ${canon.name} | гл. ${chapter.chapter} | ${chapter.verses} | **нет** | ${mark(chapter.chapter)} |`);
                 } else if (here !== chapter.verses) {
-                    rows.push(`| ${canon.name} | гл. ${chapter.chapter} | ${chapter.verses} | ${here} |`);
+                    rows.push(`| ${canon.name} | гл. ${chapter.chapter} | ${chapter.verses} | ${here} | ${mark(chapter.chapter)} |`);
                 }
             });
         });
@@ -198,10 +328,10 @@ const buildReport = (editions: EditionShape[]): string => {
         if (!rows.length) {
             lines.push("Длины глав сходятся во всех общих книгах.");
         } else {
-            lines.push(`Расхождений: **${rows.length}**.`);
+            lines.push(`Расхождений: **${rows.length}**, из них без правила: **${open}**.`);
             lines.push("");
-            lines.push(`| книга | место | эталон (${reference.lang}) | ${edition.lang} |`);
-            lines.push("|---|---|---:|---:|");
+            lines.push(`| книга | место | эталон (${reference.lang}) | ${edition.lang} | приведение |`);
+            lines.push("|---|---|---:|---:|---|");
             lines.push(...rows);
         }
     });
@@ -336,8 +466,8 @@ const main = async () => {
     const db = client.db("typikon");
 
     const editions: EditionShape[] = [];
-    for (const { lang, title } of EDITIONS) {
-        const edition = await readEdition(db, lang, title);
+    for (const { code, lang, title } of EDITIONS) {
+        const edition = await readEdition(db, code, lang, title);
         if (edition) editions.push(edition);
     }
 

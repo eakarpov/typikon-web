@@ -3,6 +3,7 @@ import { FALLBACK_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
 import { expectedVerseCount } from "@/lib/bible/refs";
 import { referenceChapterLengths } from "@/utils/bibleVersification";
 import { booksForCanon, editionForLang, ResolvedVerse, versesForCanonRanges } from "@/lib/bible/query";
+import { pericopeResolvesDirectly, pericopeVersification, versificationLabel } from "@/utils/versification";
 
 // Зачало — это отрезок канона («Дан. 3:1–88»), а не отрезок конкретной книги
 // конкретного издания. Поэтому резолвится оно так: издание выбирается по языку,
@@ -33,6 +34,21 @@ const toPericopeVerse = (verse: ResolvedVerse) => ({
  * было назвать чтением, — решение о запасном языке принимает вызывающий.
  */
 export const resolvePericopeVerses = async (db: Db, pericope: any, lang: string) => {
+    // В КАКОМ СЧЁТЕ ЗАПИСАНО ЗАЧАЛО. Наши 1067 — из Типикона Русской Церкви, и
+    // «Дан. 3:1–88» у них значит номера Елизаветинской Библии, то есть эталон;
+    // потому и резолвятся они прямо по canonRef. Зачало другого устава может
+    // прийти в своём счёте, и тогда его сперва надо привести к эталону — правил
+    // для этого нет. Отказываемся вслух: молча резолвить чужой счёт как свой
+    // значит выдать читателю не тот отрывок, ничем этого не показав.
+    if (!pericopeResolvesDirectly(pericope)) {
+        console.warn(
+            `зачало «${pericope.label ?? pericope._id}» записано в счёте ` +
+            `«${versificationLabel(pericopeVersification(pericope))}», а не в эталонном — ` +
+            "правил приведения для него нет, чтение не собрано",
+        );
+        return null;
+    }
+
     const edition = await editionForLang(db, lang);
     if (!edition) return null;
 
