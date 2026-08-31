@@ -30,13 +30,24 @@ export const slugify = (title: string): string => {
     return slug || "novost";
 };
 
-/** Свободный адрес: занятый дополняется номером, а не молча перезаписывает чужую запись. */
-export const uniqueAlias = (base: string, taken: readonly string[]): string => {
-    if (!taken.includes(base)) return base;
+/**
+ * Свободный адрес: занятый дополняется номером, а не молча перезаписывает
+ * чужую запись.
+ *
+ * Занятые принимаем и множеством, а не только списком. На десятке новостей
+ * разницы нет, а на импорте храмов есть: там занятых пятьдесят тысяч и столько
+ * же вызовов, и поиск перебором превращает привоз в квадратичный — минуты
+ * ожидания на ровном месте.
+ */
+export const uniqueAlias = (base: string, taken: readonly string[] | ReadonlySet<string>): string => {
+    const isTaken = (value: string) =>
+        Array.isArray(taken) ? taken.includes(value) : (taken as ReadonlySet<string>).has(value);
+
+    if (!isTaken(base)) return base;
 
     for (let i = 2; ; i++) {
         const candidate = `${base}-${i}`;
-        if (!taken.includes(candidate)) return candidate;
+        if (!isTaken(candidate)) return candidate;
     }
 };
 

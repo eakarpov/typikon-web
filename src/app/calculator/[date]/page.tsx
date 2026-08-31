@@ -6,6 +6,7 @@ import {Metadata} from "next";
 import {cookies} from "next/headers";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 import {notFound} from "next/navigation";
+import MyTempleToday from "@/app/components/MyTempleToday";
 
 type Props = {
     params: { date: string };
@@ -42,6 +43,12 @@ const CalculatorDate = async ({ params: { date } }: Props) => {
 
     return (
         <div>
+            {/* Отметка о престольном празднике стоит ПЕРЕД чтениями: если
+                сегодня храмовой праздник, это меняет саму службу, а не
+                дополняет её примечанием. Храм читателя живёт в браузере,
+                поэтому строка приходит отдельным запросом и не мешает
+                странице дня оставаться общей для всех. */}
+            <MyTempleToday date={date} />
             <Suspense fallback={<div>Loading...</div>}>
                 {/* @ts-expect-error Async Server Component */}
                 <Content date={date} resultPromise={resultPromise} />
