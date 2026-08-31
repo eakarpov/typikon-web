@@ -90,12 +90,17 @@ export const resolvePericopeVerses = async (db: Db, pericope: any, lang: string)
  */
 export const resolvePericopeVersesWithFallback = async (db: Db, pericope: any, lang: string) => {
     const resolved = await resolvePericopeVerses(db, pericope, lang);
-    if (resolved) return { ...resolved, resolvedLang: lang };
+    if (resolved) return { ...resolved, requestedLang: lang, resolvedLang: lang };
 
     if (lang === FALLBACK_BIBLE_LANGUAGE) return null;
 
     const fallback = await resolvePericopeVerses(db, pericope, FALLBACK_BIBLE_LANGUAGE);
-    return fallback ? { ...fallback, resolvedLang: FALLBACK_BIBLE_LANGUAGE } : null;
+    // Отдаём и то, ЧЕГО ПРОСИЛИ: одного resolvedLang мало, чтобы показ понял,
+    // была ли подмена. Сравнивать его на странице не с чем — выбранный язык
+    // лежит в cookie и до карточки чтения не доходит.
+    return fallback
+        ? { ...fallback, requestedLang: lang, resolvedLang: FALLBACK_BIBLE_LANGUAGE }
+        : null;
 };
 
 // Резолвит зачала внутри одного слота чтений дня ({ items: [...] }) — для каждого

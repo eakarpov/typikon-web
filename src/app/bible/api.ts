@@ -9,6 +9,9 @@ import {
     parallelChapter, publicEditions,
 } from "@/lib/bible/query";
 import { BibleEdition } from "@/lib/bible/schema";
+import { DEFAULT_BIBLE_SCOPE } from "@/utils/bibleScope";
+import { DEFAULT_BIBLE_EDITION_CANON } from "@/utils/bibleEditionCanon";
+import type { PericopeCoverage } from "@/utils/bibleCoverage";
 
 // Раздел Библии читает базу через тот же кэш выборок, что и остальной сайт: сами
 // страницы остаются динамическими (издания выбираются в адресе и в cookie), а в
@@ -24,6 +27,12 @@ export interface EditionView {
     language: string;
     year: number | null;
     sourceLink: string;
+    /** Объявленный объём (@/utils/bibleScope): «full», «gospels»… */
+    scope: string;
+    /** Сколько чтений года издание отдаёт (@/utils/bibleCoverage); меряется прогоном. */
+    coverage: PericopeCoverage | null;
+    /** Канон традиции (@/utils/bibleEditionCanon): «sla», «grc-lxx», «la-vulgata». */
+    canon: string;
 }
 
 const toView = (edition: BibleEdition): EditionView => ({
@@ -34,6 +43,9 @@ const toView = (edition: BibleEdition): EditionView => ({
     language: edition.language,
     year: edition.year ?? null,
     sourceLink: edition.sourceLink || "",
+    scope: (edition as any).scope || DEFAULT_BIBLE_SCOPE,
+    coverage: (edition as any).coverage ?? null,
+    canon: (edition as any).canon || DEFAULT_BIBLE_EDITION_CANON,
 });
 
 export interface BibleIndexData {

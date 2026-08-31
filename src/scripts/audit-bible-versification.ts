@@ -29,6 +29,8 @@ import { Db, ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { BIBLE_CANON, canonBook } from "@/utils/bibleCanon";
 import { isAppendixBook } from "@/utils/bibleAppendix";
+import { bibleScopeTitle, outsideBibleScope } from "@/utils/bibleScope";
+import { absentFromCanon, bibleEditionCanonTitle, outsideBibleEditionCanon } from "@/utils/bibleEditionCanon";
 import { chapterVerdict, mappingsFor } from "@/lib/bible/mappings";
 import { BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
 
@@ -64,6 +66,10 @@ interface EditionShape {
     lang: string;
     title: string;
     bookName: string;
+    /** Объявленный объём (@/utils/bibleScope): чего от издания вообще ждать. */
+    scope: string;
+    /** Канон традиции (@/utils/bibleEditionCanon): чего у неё нет вовсе. */
+    canon: string;
     books: Map<string, BookShape>;
 }
 
@@ -134,7 +140,9 @@ const readEdition = async (
         });
     }
 
-    return { code, lang, title, bookName: edition.title as string, books };
+    return { code, lang, title, bookName: edition.title as string,
+             scope: (edition.scope as string) || "full",
+             canon: (edition.canon as string) || "sla", books };
 };
 
 const totalVerses = (book: BookShape) =>
@@ -282,10 +290,48 @@ const buildReport = (editions: EditionShape[]): string => {
     });
 
     lines.push(section("Состав относительно канона"));
+    // «Нет» и «вне объёма» — разные вещи, и valить их в одну колонку значило бы
+    // звать Четвероевангелие Библией с шестьюдесятью дырами. Объём объявлен у
+    // издания (@/utils/bibleScope); отсутствие книги ВНУТРИ объёма — недоделка,
+    // снаружи — свойство издания.
+    // Две ОСИ, а не одна: объём — сколько своего канона несёт это издание,
+    // канон — чего у традиции нет вовсе. Латинская без 3 Маккавейской не
+    // неполна: её там никогда не было.
+    editions.forEach((e) => {
+        const absent = absentFromCanon(e.canon);
+        lines.push(`- **${e.lang}** — ${bibleScopeTitle(e.scope)}; канон ${bibleEditionCanonTitle(e.canon)}` +
+                   (absent.length ? ` (нет: ${absent.join(", ")})` : ""));
+    });
+    lines.push("");
+    lines.push("«Вне канона» — книги у традиции нет вовсе; «вне объёма» — издание её не несёт, " +
+               "хотя канон держит; «нет» — не объяснено ни тем, ни другим, то есть недоделка.");
+    lines.push("");
+    lines.push("«Через правило» — отдельной книги у издания нет, а текст есть: латинское " +
+               "Послание Иеремии напечатано шестой главой Варуха, и правило разводит их. " +
+               "Прежде такая книга значилась «нет», хотя стихи стояли на месте.");
+    lines.push("");
+
+    // Книги канона, куда попадают стихи издания ПОСЛЕ правил, — не те же, что
+    // его собственные книги.
+    const claimed = editions.map((edition) => {
+        const ids = new Set<string>();
+        edition.books.forEach((book) => book.canonRefs.forEach((ref) => ids.add(ref.canonId)));
+        return ids;
+    });
     lines.push("| книга канона | " + editions.map((e) => e.lang).join(" | ") + " |");
     lines.push("|---|" + editions.map(() => "---").join("|") + "|");
     BIBLE_CANON.forEach((canon) => {
-        const cells = editions.map((edition) => (edition.books.has(canon.id) ? "есть" : "**нет**"));
+        const cells = editions.map((edition, i) => (
+            edition.books.has(canon.id) ? "есть"
+                : claimed[i].has(canon.id) ? "через правило"
+                // Канон раньше объёма: он говорит то, чего объём не скажет.
+                // У частичного издания «вне объёма» стоит у десятков книг и
+                // ничего не выделяет, а «вне канона» — ровно у тех, которых не
+                // было бы и в полном.
+                : outsideBibleEditionCanon(edition.canon, canon.id) ? "вне канона"
+                : outsideBibleScope(edition.scope, canon.id) ? "вне объёма"
+                : "**нет**"
+        ));
         if (cells.some((cell) => cell !== "есть")) {
             lines.push(`| ${canon.name} (\`${canon.id}\`) | ${cells.join(" | ")} |`);
         }

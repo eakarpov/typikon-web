@@ -53,6 +53,8 @@ import { bibleBook } from "@/utils/bibleBooks";
 import { canonSort, formatCanonRef } from "@/lib/bible/refs";
 import { mappingsFor, toCanonRef } from "@/lib/bible/mappings";
 import { BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
+import { bibleScopeTitle, DEFAULT_BIBLE_SCOPE } from "@/utils/bibleScope";
+import { absentFromCanon, bibleEditionCanonTitle, DEFAULT_BIBLE_EDITION_CANON } from "@/utils/bibleEditionCanon";
 
 const APPLY = process.argv.includes("--apply");
 const BATCH = 2000;
@@ -82,6 +84,14 @@ interface SourceFile {
     /** Год издания; null у составных, где одним годом не назвать. */
     year: number | null;
     sourceLink: string;
+    /**
+     * Объявленный объём (@/utils/bibleScope). Необязателен: до частичных
+     * переводов все издания были полными Библиями, и пустое поле значит именно
+     * это, а не «неизвестно».
+     */
+    scope?: string;
+    /** Канон традиции (@/utils/bibleEditionCanon). Необъявленный — эталонный. */
+    canon?: string;
     /** Место колонки в параллельном виде. */
     order: number;
     books: SourceBook[];
@@ -184,6 +194,14 @@ const main = async () => {
         }
     }
 
+    // Объём говорим вслух: необъявленное считается полной Библией, и частичный
+    // перевод, забывший объявиться, иначе молча прикинулся бы Библией с дырами.
+    console.log(`объём издания: ${bibleScopeTitle(source.scope)}` +
+                (source.scope ? "" : "  (в файле не объявлен — считаю полной Библией)"));
+    const absent = absentFromCanon(source.canon);
+    console.log(`канон: ${bibleEditionCanonTitle(source.canon)}` +
+                (absent.length ? `  (нет: ${absent.join(", ")})` : "") +
+                (source.canon ? "" : "  (в файле не объявлен — считаю эталонным)"));
     console.log(`${source.code}: книг — ${bookOps.length}, стихов — ${verseCount}, ` +
                 `перенумеровано правилами — ${remapped}`);
     if (appendix.length) {
@@ -213,6 +231,13 @@ const main = async () => {
             title: source.title,
             shortTitle: source.shortTitle,
             versification: source.versification,
+            // Не объявлено — считаем полной Библией: так было со всеми четырьмя
+            // изданиями до появления частичных переводов, и умолчание не должно
+            // менять их смысла задним числом.
+            scope: source.scope ?? DEFAULT_BIBLE_SCOPE,
+            // Необъявленный канон — эталонный: так было со всеми изданиями до
+            // того, как ось завели, и умолчание не должно снимать проверок.
+            canon: source.canon ?? DEFAULT_BIBLE_EDITION_CANON,
             // Год приходит из файла и бывает пустым намеренно: у составного
             // издания одним годом не назвать (греческий Ветхий Завет Свитов
             // 1909–1930, Новый — Патриарший 1904), и лучше пусто, чем одно из
