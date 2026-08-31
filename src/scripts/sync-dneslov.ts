@@ -65,7 +65,12 @@ const MAX_AGE_DAYS = Number(value("--max-age") ?? 30);
 
 // Восемь потоков — столько же, сколько берёт страница указателя (src/lib/dneslov.ts),
 // то есть не больше того, что этот сервис от нас и так видит.
-const CONCURRENCY = 8;
+//
+// Но не всегда восемь: замер 2026-08-31 на проходе за картинками показал, как доля
+// удач ползёт вниз по ходу обхода (93% на подробностях -> 41% на картинках к семисотой
+// памяти). Похоже, мы придавливаем их сами. Для догона отставших вернее сбавить темп
+// и добавить повторов, чем долбить сильнее: --concurrency 3 --retries 3.
+const CONCURRENCY = Number(value("--concurrency") ?? 8);
 
 // ПОЧЕМУ ПЕРВЫЙ ПРОХОД БЕЗ ПОВТОРОВ. Замер 2026-08-31: здоровый ответ приходит за
 // 0.6-1.8 с, но примерно каждый десятый запрос виснет до упора (77 с при ручной
@@ -149,7 +154,7 @@ const syncImages = async (col: any) => {
         for (;;) {
             const id = plan.shift();
             if (!id) return;
-            const result = await fetchMemoryImages(id);
+            const result = await fetchMemoryImages(id, { retries: RETRIES });
             if (result.status === "ok") {
                 ok++;
                 if (result.images.length) { withImages++; total += result.images.length; }

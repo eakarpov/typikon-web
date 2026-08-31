@@ -28,14 +28,17 @@ const DneslovImages = ({ dneslovId, dneslovEventId, images: given }: IDneslovIma
         // Список пришёл с сервера — за ним никуда не идём.
         if (given) return;
         if (dneslovId) {
+            // Пустое тело (204 «картинок нет») разбираем как пустой список, а не роняем.
             fetch(`https://dneslov.org/api/v1/images.json?m=${dneslovId}${dneslovEventId ? `&e=${dneslovEventId}`: ""}`)
-                .then((res) => res.json())
-                .then((res) => {
+                .then((res) => res.text())
+                .then((body) => {
+                    const res = body.trim() ? JSON.parse(body) : [];
                     setImages(res.map((e: { url: string; thumb_url: string; }) =>
                         ({
                             thumbnail: e.thumb_url.includes("https") ? e.thumb_url : `${cdnDneslovUrl}${e.thumb_url}`,
                             original: e.url.includes("https") ? e.url : `${cdnDneslovUrl}${e.url}`,})));
-                });
+                })
+                .catch(() => setImages([]));
         }
     }, [dneslovId, given]);
 

@@ -25,11 +25,16 @@ const DneslovRoundImage = ({ id, textType, roundelUrl }: IDneslovImages) => {
     useEffect(() => {
         if (roundelUrl) return;
         if (id) {
+            // Пустой ответ — это «кругляша нет», а не сбой: святцы отвечают 204 без
+            // тела, и голый res.json() ронял на нём необработанное обещание в консоль
+            // читателя. Тот же случай, что и в снимке (см. scripts/lib/dneslov.ts).
             fetch(`https://dneslov.org/api/v1/roundels.json?m=${id}`)
-                .then((res) => res.json())
-                .then((res) => {
-                    setImages(res);
-                });
+                .then((res) => res.text())
+                .then((body) => {
+                    const parsed = body.trim() ? JSON.parse(body) : [];
+                    setImages(Array.isArray(parsed) ? parsed : []);
+                })
+                .catch(() => setImages([]));
         }
     }, [id, roundelUrl]);
 
