@@ -1,6 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
-import { saintNames, saintSlugs } from "@/lib/saints";
+import { saintCards } from "@/lib/saints";
 
 // Указатель святых. Строится из наших данных — texts.dneslovId и texts.mentionIds
 // дают, кто в корпусе представлен, а имя и адрес берутся из каталога `saints`.
@@ -24,6 +24,8 @@ export interface SaintRow {
     slug: string | null;
     /** Наше имя. null — тогда подписываем номером, как и прежде. */
     name: string | null;
+    /** Прочие именования — не показываются, но по ним ищут (см. @/lib/saintSearch). */
+    altNames: string[];
     texts: number;
     mentions: number;
 }
@@ -47,7 +49,8 @@ export const getSaintRows = cached(async (): Promise<SaintRow[]> => {
 
     const rows = new Map<string, SaintRow>();
     const row = (id: string) => {
-        const existing = rows.get(id) ?? { dneslovId: id, slug: null, name: null, texts: 0, mentions: 0 };
+        const existing = rows.get(id)
+            ?? { dneslovId: id, slug: null, name: null, altNames: [], texts: 0, mentions: 0 };
         rows.set(id, existing);
         return existing;
     };
@@ -56,12 +59,15 @@ export const getSaintRows = cached(async (): Promise<SaintRow[]> => {
     mentioned.forEach((item) => { row(item._id as string).mentions = item.n; });
 
     // Имена и адреса — одним запросом на весь указатель: это своя коллекция, а не
-    // чужой сервис, и экономить на ней незачем.
-    const ids = [...rows.keys()];
-    const [names, slugs] = await Promise.all([saintNames(ids), saintSlugs(ids)]);
+    // чужой сервис, и экономить на ней незачем. Альтернативные имена едут сюда же:
+    // по ним ищут, хотя в списке их не видно.
+    const cards = await saintCards([...rows.keys()]);
     rows.forEach((r, id) => {
-        r.name = names[id] ?? null;
-        r.slug = slugs[id] ?? null;
+        const card = cards[id];
+        if (!card) return;
+        r.name = card.name;
+        r.slug = card.slug;
+        r.altNames = card.altNames;
     });
 
     // Числовая сортировка id во вторую очередь — иначе порядок внутри одинаковых

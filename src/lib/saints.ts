@@ -110,6 +110,17 @@ export const saintNames = (ids: string[]) =>
 export const saintSlugs = (ids: string[]) =>
     byDneslovIds<string>(ids, { slug: 1 }, (s) => s.slug ?? null);
 
+/**
+ * Всё, что нужно указателю: имя, адрес и альтернативные имена (по ним тоже ищут).
+ * Одним запросом вместо трёх — указатель просит их для всех восьмисот памятей сразу.
+ */
+export const saintCards = (ids: string[]) =>
+    byDneslovIds<{ name: string | null; slug: string | null; altNames: string[] }>(
+        ids,
+        { name: 1, slug: 1, altNames: 1 },
+        (s) => ({ name: s.name ?? null, slug: s.slug ?? null, altNames: s.altNames ?? [] }),
+    );
+
 /** Кругляши для списков: раньше их тянул из браузера каждый ряд списка отдельным запросом. */
 export const saintRoundels = (ids: string[]) =>
     byDneslovIds<string>(ids, { roundelUrl: 1 }, (s) => s.roundelUrl ?? null);
