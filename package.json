@@ -59,7 +59,8 @@
     "script": "node src/scripts",
     "release:rules-db": "bash rules-db-release.sh",
     "release:ordo": "bash release-ordo.sh",
-    "release:ustav": "bash release-ustav.sh"
+    "release:ustav": "bash release-ustav.sh",
+    "chronology:diff": "tsx src/scripts/check-chronology-parity.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

@@ -130,6 +130,10 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         // служба.
                         { href: "/temples", label: "Храмы" },
                         { href: "/dedications", label: "Посвящения" },
+                        // Не для читателя, а для того, кто держит источник с датой
+                        // «в лето такое-то, индикта третьяго»: числа года в обе
+                        // стороны и разбор датировки перебором.
+                        { href: "/chronology", label: "Хронология" },
                     ]}
                 />
                 <Link
