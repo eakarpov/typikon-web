@@ -133,6 +133,8 @@ const Page = async ({ params, searchParams }: Props) => {
                     <Link href={`/parish/${slug}/schedule/${monthShift(month, -1)}`}>← прошлый</Link>
                     {" · "}
                     <Link href={`/parish/${slug}/schedule/${monthShift(month, 1)}`}>следующий →</Link>
+                    {" · "}
+                    <Link href={`/parish/${slug}/schedule/${month}/print`}>лист на стенд</Link>
                 </div>
             </div>
             <p style={{ color: "#666", margin: ".25rem 0 0" }}>
