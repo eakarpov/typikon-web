@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { parishMonth, parishView } from "@/lib/parish/schedule";
 import { rightsOn } from "@/lib/parish/access";
 import type { Gathering, ParishDay } from "@/lib/parish/types";
-import { AddGathering, DropEdit, EditGathering } from "./Edit";
+import { AddGathering, DropEdit, EditGathering, type DayMarks } from "./Edit";
 import { Publish } from "./Publish";
 
 // ПРОЕКТ РАСПИСАНИЯ, который остаётся поправить, а не составить.
@@ -73,7 +73,10 @@ const Row = ({ day, why, edit, slug, month }: RowProps) => {
                     <span style={{ color: "#bbb" }}>—</span>
                 )}
                 {day.gatherings.map(g => (
-                    <Item key={g.key} g={g} why={why} edit={edit} slug={slug} month={month} />
+                    <Item key={g.key} g={g} why={why} edit={edit} slug={slug} month={month}
+                          marks={{ sign: day.sign, dayVariant: dayVariantOf(day),
+                                   weekday: day.weekdayLabel, dvunadesyaty: day.dvunadesyaty,
+                                   prestolny: Boolean(day.prestolny), triod: day.triodLabel }} />
                 ))}
                 {edit && <AddGathering slug={slug} month={month} date={day.date} />}
             </td>
@@ -81,8 +84,15 @@ const Row = ({ day, why, edit, slug, month }: RowProps) => {
     );
 };
 
-const Item = ({ g, why, edit, slug, month }: {
+// Вариант дня в строке не хранится — он и не нужен читателю; для правила же
+// он и есть признак «по всем таким дням», и выводится из подписи дня недели
+const dayVariantOf = (d: ParishDay) =>
+    d.weekdayLabel === "воскресенье" ? "voskresny"
+        : d.weekdayLabel === "суббота" ? "subbotny" : "sedmichny";
+
+const Item = ({ g, why, edit, slug, month, marks }: {
     g: Gathering; why: boolean; edit: boolean; slug: string; month: string;
+    marks?: DayMarks;
 }) => (
     <div style={{ marginBottom: ".35rem",
                   textDecoration: g.cancelled ? "line-through" : undefined,
@@ -108,7 +118,7 @@ const Item = ({ g, why, edit, slug, month }: {
                     .map(s => s.label).join(", ")}
             </span>
         )}
-        {edit && <EditGathering slug={slug} month={month} g={g} />}
+        {edit && <EditGathering slug={slug} month={month} g={g} day={marks} />}
         {why && (
             <ul style={{
                 margin: ".2rem 0 .5rem 3.4rem", padding: 0, listStyle: "none",
@@ -186,6 +196,8 @@ const Page = async ({ params, searchParams }: Props) => {
                                 <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 1 : 0}&edit=${edit ? 0 : 1}`}>
                                     {edit ? "закончить правку" : "поправить"}
                                 </Link>
+                                {" · "}
+                                <Link href={`/parish/${slug}/rules`}>как у нас служат</Link>
                                 {" · "}
                                 <Link href={`/parish/${slug}/admins`}>кто ведёт</Link>
                             </>

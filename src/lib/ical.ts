@@ -1,5 +1,6 @@
 // Сборка iCalendar (RFC 5545). Отдельно от данных, чтобы формат можно было проверять
 // сам по себе: тут только экранирование, сворачивание строк и склейка.
+import { knownZone, vtimezoneLines } from "@/lib/timezones";
 
 interface CalendarEventBase {
     uid: string;
@@ -37,28 +38,11 @@ export type CalendarEvent = AllDayEvent | TimedEvent;
 
 const isTimed = (e: CalendarEvent): e is TimedEvent => "start" in e;
 
-/**
- * ПОЯС НАДО ОБЪЯВИТЬ, А НЕ ТОЛЬКО НАЗВАТЬ. TZID без блока VTIMEZONE Apple
- * Calendar и Outlook кладут не туда: имя пояса им ни о чём не говорит, если в
- * файле нет правила перехода. Российские зоны с 2014 года летнего времени не
- * знают, и блок у них в шесть строк — генерировать нечего, проще перечислить.
- */
-const VTIMEZONE_RU: Record<string, number> = {
-    "Europe/Kaliningrad": 2, "Europe/Moscow": 3, "Europe/Simferopol": 3,
-    "Europe/Volgograd": 3, "Europe/Kirov": 3, "Europe/Astrakhan": 4,
-    "Europe/Saratov": 4, "Europe/Ulyanovsk": 4, "Europe/Samara": 4,
-    "Asia/Yekaterinburg": 5, "Asia/Omsk": 6, "Asia/Novosibirsk": 7,
-    "Asia/Barnaul": 7, "Asia/Tomsk": 7, "Asia/Novokuznetsk": 7,
-    "Asia/Krasnoyarsk": 7, "Asia/Irkutsk": 8, "Asia/Chita": 9,
-    "Asia/Yakutsk": 9, "Asia/Khandyga": 9, "Asia/Vladivostok": 10,
-    "Asia/Ust-Nera": 10, "Asia/Magadan": 11, "Asia/Sakhalin": 11,
-    "Asia/Srednekolymsk": 11, "Asia/Kamchatka": 12, "Asia/Anadyr": 12,
-};
-
-export const knownTimezone = (tzid: string) => tzid in VTIMEZONE_RU;
-
-const offset = (hours: number) =>
-    `+${String(hours).padStart(2, "0")}00`;
+// ПОЯСА ЖИВУТ ОТДЕЛЬНО (lib/timezones): TZID без объявления Apple Calendar и
+// Outlook кладут не туда, а правил перехода два — российское (перехода нет) и
+// европейское (последнее воскресенье марта и октября). Держать их здесь, среди
+// склейки строк, значило бы смешать формат с географией.
+export const knownTimezone = knownZone;
 
 // В значениях экранируются обратный слэш, точка с запятой, запятая и перевод строки.
 const escapeText = (value: string) =>
@@ -128,19 +112,10 @@ export const buildCalendar = ({
 
     // Пояса объявляются один раз на календарь, до событий
     for (const tzid of new Set(events.filter(isTimed).map(e => e.tzid))) {
-        const hours = VTIMEZONE_RU[tzid];
-        if (hours === undefined) continue;   // неизвестный пояс — событие уйдёт в UTC
-        lines.push(
-            ...line("BEGIN", "VTIMEZONE"),
-            ...line("TZID", tzid),
-            ...line("BEGIN", "STANDARD"),
-            ...line("DTSTART", "19700101T000000"),
-            ...line("TZOFFSETFROM", offset(hours)),
-            ...line("TZOFFSETTO", offset(hours)),
-            ...line("TZNAME", `UTC${offset(hours)}`),
-            ...line("END", "STANDARD"),
-            ...line("END", "VTIMEZONE"),
-        );
+        for (const l of vtimezoneLines(tzid)) {
+            const [name, ...rest] = l.split(":");
+            lines.push(...line(name, rest.join(":")));
+        }
     }
 
     for (const event of events) {

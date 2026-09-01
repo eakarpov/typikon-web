@@ -1,5 +1,6 @@
 import { cached, CacheTag } from "@/lib/cache";
-import { getTemple, type Temple } from "@/lib/temples";
+import { getTemple } from "@/lib/temples";
+import { settingsFor } from "./settings";
 import { monthDates, ordoRange } from "./engine";
 import { buildMonth } from "./gatherings";
 import { DEFAULT_RULES } from "./presets";
@@ -15,30 +16,20 @@ import type { ParishDay, ParishSettings } from "./types";
  * помечен полем `ustav`. Не хватает одного — часов, и они пока берутся
  * умолчанием. Своя коллекция понадобится, когда часы начнут править руками.
  */
-export const settingsOf = (temple: Temple): ParishSettings => ({
-    slug: temple.slug,
-    title: temple.name,
-    // Часовой пояс нужен подписному календарю; у храма его пока нет, и Москва
-    // здесь — умолчание, а не знание. Ставится оно видимым, чтобы не выдать
-    // догадку за настройку.
-    timezone: "Europe/Moscow",
-    ustav: temple.ustav ?? null,
-    prestoly: (temple.prestoly ?? [])
-        .filter(p => p.state !== "lost" && p.memoryIds?.length)
-        .map(p => ({
-            memoryId: p.memoryIds[0],
-            kind: p.kind ?? null,
-            // приход поминает престол своими словами, и они важнее наших
-            label: p.label ?? null,
-        })),
-    rules: DEFAULT_RULES,
-});
+// Приход целиком собирается в parish/settings: имя и престолы у храма, пояс и
+// правила — у самого прихода, если он их назвал.
 
 export interface ParishMonth {
     slug: string;
     title: string;
     month: string;
     monthLabel: string;
+    /** Пояс, которым живёт подписной календарь. */
+    timezone: string;
+    /** Откуда он взят: сказан приходом или выведен нами. */
+    timezoneHow: "parish" | "country" | "longitude" | null;
+    /** Приход пишет свои правила, а не едет на умолчаниях. */
+    ownRules: boolean;
     days: ParishDay[];
     /** Служба устава не поднята — расписание строить не из чего. */
     unavailable: boolean;
@@ -56,7 +47,7 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
     const [year, mon] = month.split("-").map(Number);
     if (!year || !mon || mon < 1 || mon > 12) return null;
 
-    const settings = settingsOf(temple);
+    const settings = await settingsFor(temple);
     const dates = monthDates(year, mon);
     const { days, failed } = await ordoRange(dates, {
         ustav: settings.ustav,
@@ -67,7 +58,8 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
 
     const prefix = `${year}-${String(mon).padStart(2, "0")}`;
     return {
-        slug, title: temple.name, month,
+        slug, title: temple.name, month, timezone: settings.timezone,
+        timezoneHow: settings.timezoneHow, ownRules: settings.ownRules,
         monthLabel: `${MONTHS[mon - 1]} ${year}`,
         days: buildMonth(days, settings, d => d.startsWith(prefix)),
         unavailable: days.size === 0,

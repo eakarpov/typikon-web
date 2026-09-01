@@ -63,7 +63,9 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
         return new Response("нет такого прихода", { status: 404 });
     }
 
-    const tzid = "Europe/Moscow";
+    // ПОЯС ПРИХОДА, а не Москва. Стояла Москва всем, и служба в девять утра
+    // приезжала прихожанину в Иркутске на четыре часа раньше срока
+    const tzid = first.timezone;
     const events: CalendarEvent[] = [];
     for (const month of months) {
         for (const day of month?.days ?? []) {
@@ -87,6 +89,12 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
                         day.fastingLabel,
                         knownTimezone(tzid) ? null
                             : `Время указано по поясу ${tzid}, который календарь может не знать.`,
+                        // ДОГАДКА НАЗЫВАЕТСЯ ДОГАДКОЙ: пояс, выведенный по
+                        // долготе, у пограничных областей ошибается на час, и
+                        // подписчик должен знать, что его никто не подтверждал
+                        first.timezoneHow === "longitude"
+                            ? `Часовой пояс (${tzid}) выведен по долготе и приходом не подтверждён.`
+                            : null,
                         "",
                         `${BASE_URL}/parish/${slug}/schedule/${day.date.slice(0, 7)}`,
                     ].filter(Boolean).join("\n"),

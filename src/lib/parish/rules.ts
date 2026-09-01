@@ -86,6 +86,9 @@ export interface Resolved {
  */
 export const resolveRules = (rules: ParishRule[], ctx: DayContext): Resolved => {
     const applied = rules
+        // выключенное приходом не применяется, но и не стирается: вернуть его
+        // должно быть чем
+        .filter(r => r.enabled !== false)
         .filter(r => matches(r.when, ctx))
         .sort((a, b) => specificity(a.when) - specificity(b.when)
             || (a.priority ?? 0) - (b.priority ?? 0)
