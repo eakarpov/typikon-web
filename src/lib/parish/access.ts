@@ -28,6 +28,18 @@ export interface TempleAdmin {
     /** Кто позвал. Пусто у первого — его завёл администратор сайта. */
     addedBy?: string | null;
     addedAt: Date;
+    /**
+     * КОГДА ЭТО ПРАВО В ПОСЛЕДНИЙ РАЗ ПОДТВЕРДИЛОСЬ ДЕЛОМ.
+     *
+     * Право не протухает само: человек ушёл из прихода, а связь осталась, и
+     * расписание храма годами правит тот, кого там больше нет. Отбирать его
+     * по часам мы не станем — приход не обязан отчитываться, — но знать, что
+     * им давно не пользовались, надо: это первый признак, что храм осиротел.
+     *
+     * Отмечается делом, а не входом: правкой расписания и публикацией. Просто
+     * зайти на страницу — не подтверждение.
+     */
+    confirmedAt?: Date | null;
 }
 
 const collection = async () =>
@@ -47,6 +59,14 @@ export const currentUserId = async (): Promise<string | null> => {
 const canGrantParish = async (userId: string): Promise<boolean> => {
     const [user] = await getItem(userId);
     return userCan(user, "parish.grant");
+};
+
+/** Найти пользователя по почте — для приглашения: userId наизусть никто не помнит. */
+export const findUserByEmail = async (email: string) => {
+    const users = (await clientPromise).db("typikon-users").collection("users");
+    const u = await users.findOne({ email: email.trim() }, { projection: { email: 1, name: 1 } });
+    return u ? { userId: String(u._id), email: u.email as string,
+                 name: (u.name as string) ?? null } : null;
 };
 
 export interface ParishRights {
@@ -92,9 +112,24 @@ export const addAdmin = async (templeSlug: string, userId: string, addedBy?: str
     await col.replaceOne(
         { _id: idOf(templeSlug, userId) } as never,
         { _id: idOf(templeSlug, userId), templeSlug, userId,
-          addedBy: addedBy ?? null, addedAt: new Date() } as never,
+          addedBy: addedBy ?? null, addedAt: new Date(), confirmedAt: new Date() } as never,
         { upsert: true },
     );
+};
+
+/** Право подтвердилось делом — правкой или публикацией. */
+export const touchAdmin = async (templeSlug: string, userId: string) => {
+    await (await collection()).updateOne(
+        { _id: idOf(templeSlug, userId) } as never,
+        { $set: { confirmedAt: new Date() } },
+    );
+};
+
+/** Сколько дней назад правом пользовались. null — ни разу с тех пор, как дано. */
+export const staleDays = (a: TempleAdmin): number | null => {
+    const at = a.confirmedAt ?? a.addedAt;
+    if (!at) return null;
+    return Math.floor((Date.now() - new Date(at).getTime()) / 86_400_000);
 };
 
 /**

@@ -47,13 +47,37 @@ const Page = async ({ params }: { params: Promise<{ slug: string }> }) => {
                 </div>
             ) : (
                 <div style={{ marginTop: "1rem" }}>
+                    {/* СОСТОЯНИЕ ЗАЯВКИ НАЗЫВАЕТСЯ. Прежде страница показывала
+                        экран со знаком при любом статусе, и получивший отказ
+                        по-прежнему читал «положите знак на сайт» — то есть
+                        решение о нём было принято, а он об этом не знал */}
+                    {claim?.status === "rejected" && (
+                        <div style={{ padding: ".6rem .75rem", background: "#fdecec",
+                                      marginBottom: "1rem" }}>
+                            <b>Заявку не приняли.</b>
+                            {claim.decisionNote && <> {claim.decisionNote}</>}
+                            <div style={{ color: "#666", fontSize: ".9rem", marginTop: ".3rem" }}>
+                                Считаете это недоразумением — отправьте заявку снова,
+                                добавив, чем подтвердите. Прежнее решение при этом
+                                останется на виду у разбирающего.
+                            </div>
+                        </div>
+                    )}
+                    {claim?.status === "pending" && !claim.checkNote && (
+                        <div style={{ padding: ".6rem .75rem", background: "#f7f7f7",
+                                      marginBottom: "1rem" }}>
+                            Заявка принята и ждёт разбора. Ответ придёт письмом.
+                        </div>
+                    )}
                     <p style={{ color: "#555" }}>
                         Расписание выводится из устава само; ответственный поправляет
                         часы и говорит «этот месяц готов». Право именное и на один храм.
                     </p>
                     <ClaimForm slug={slug} website={temple.website ?? null}
-                               existing={claim ? { token: claim.token, status: claim.status,
-                                                   checkNote: claim.checkNote } : null} />
+                               existing={claim && claim.status !== "rejected"
+                                   ? { token: claim.token, status: claim.status,
+                                       checkNote: claim.checkNote }
+                                   : null} />
                 </div>
             )}
         </div>

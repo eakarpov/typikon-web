@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CacheTag } from "@/lib/cache";
-import { rightsOn } from "@/lib/parish/access";
+import { rightsOn, touchAdmin } from "@/lib/parish/access";
 import { publishMonth, unpublishMonth } from "@/lib/parish/publish";
 import { parishSchedule } from "@/lib/parish/schedule";
 
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
             { error: "устав не ответил — публиковать нечего" }, { status: 503 });
     }
     await publishMonth(slug, month, data.days, rights.userId!);
+    await touchAdmin(slug, rights.userId!);
     revalidateTag(CacheTag.PARISH);
     return NextResponse.json({ status: "published", days: data.days.length });
 }

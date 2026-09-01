@@ -7,6 +7,7 @@ import {getAllUserNotes} from "@/app/api/user-notes/service";
 import SidePanel from "@/app/profile/SidePanel";
 import {listTokens} from "@/app/api/api-tokens/service";
 import { capsOf, roleLabels } from "@/lib/rights";
+import MyTemples from "@/app/profile/MyTemples";
 
 const ProfilePage = async () => {
     const cookie = (await cookies()).get('session')?.value;
@@ -51,10 +52,14 @@ const ProfilePage = async () => {
                     </Link>
                 </p>
                 <Content item={item} />
-                {capsOf(item).has("content") && (
+                {/* СВОИ ХРАМЫ. Ответственный входил на сайт и не видел, чем
+                    ведает: до собственного расписания добирался через
+                    указатель храмов, как посторонний */}
+                <MyTemples userId={item.id} />
+                {capsOf(item).size > 0 && (
                     <div>
                         <p>
-                            Вы можете: {roleLabels(item.roles).join(", ") || "править содержимое"}.
+                            Вы можете: {roleLabels(item.roles).join(", ") || "править содержимое"}. <Link href="/admin">Админка</Link>
                         </p>
                         <Link href="/admin/corrections">
                             <span>

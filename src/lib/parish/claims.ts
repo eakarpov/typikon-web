@@ -58,6 +58,10 @@ export interface TempleClaim {
     decidedBy?: string | null;
     decidedAt?: Date | null;
     decisionNote?: string | null;
+    /** Подана снова после отказа — разбирающий должен это видеть. */
+    again?: boolean;
+    /** Чем кончилось в прошлый раз. Отказ не стирается повторной заявкой. */
+    priorDecision?: { at: Date | null; by: string | null; note: string | null } | null;
     createdAt: Date;
 }
 
@@ -93,12 +97,27 @@ export const saveClaim = async (
     const col = await collection();
     const _id = `${claim.templeSlug}:${claim.userId}`;
     const existing = await col.findOne({ _id } as never);
+
+    // ОТКАЗ ДЕРЖИТСЯ. Прежде повторная заявка молча возвращала запись в
+    // очередь: отказали — отправил снова, и она пришла как новая, без следа
+    // прежнего решения. Так решение модератора обходилось нажатием кнопки.
+    //
+    // Отправить снова МОЖНО — человек мог собрать доводы, — но приходит она
+    // помеченной, и прежний отказ с его причиной никуда не девается: пусть
+    // разбирающий видит, что уже отказывал и почему.
+    const again = existing?.status === "rejected";
+
     const doc: TempleClaim = {
         ...claim,
         // ЗНАК НЕ МЕНЯЕТСЯ ПРИ ПОВТОРНОЙ ЗАЯВКЕ: человек мог уже положить его
         // на сайт, и подменить знак значило бы обесценить сделанное
         token: existing?.token ?? claim.token ?? newToken(),
         status: claim.status ?? "pending",
+        again,
+        priorDecision: again
+            ? { at: existing!.decidedAt ?? null, by: existing!.decidedBy ?? null,
+                note: existing!.decisionNote ?? null }
+            : existing?.priorDecision ?? null,
         createdAt: existing?.createdAt ?? new Date(),
     } as TempleClaim;
     await col.replaceOne({ _id } as never, { ...doc, _id } as never, { upsert: true });

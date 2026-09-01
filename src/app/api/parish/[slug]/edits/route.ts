@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dropEdit, saveEdit, type EditOp } from "@/lib/parish/edits";
-import { rightsOn } from "@/lib/parish/access";
+import { rightsOn, touchAdmin } from "@/lib/parish/access";
 import type { Part } from "@/lib/parish/types";
 
 // Правка расписания — только тому, кто ведёт ЭТОТ храм. Не «вошедшему» и не
@@ -38,6 +38,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
         // изменено его расписание
         createdBy: rights.userId ?? undefined,
     });
+    // правка — дело, и она подтверждает право (parish/access.confirmedAt)
+    if (rights.userId) await touchAdmin(slug, rights.userId);
     return NextResponse.json({ id });
 }
 

@@ -34,6 +34,7 @@ export const getClaims = async (): Promise<ClaimRow[]> => {
             role: c.role, contact: c.contact, evidence: c.evidence ?? null,
             status: c.status, method: c.method, checkNote: c.checkNote ?? null,
             createdAt: c.createdAt.toISOString(),
+            again: Boolean(c.again), priorNote: c.priorDecision?.note ?? null,
         };
     });
 };

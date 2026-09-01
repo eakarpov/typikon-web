@@ -18,6 +18,9 @@ export interface ClaimRow {
     method: string;
     checkNote: string | null;
     createdAt: string;
+    /** Подана снова после отказа — и вот что решили тогда. */
+    again: boolean;
+    priorNote: string | null;
 }
 
 const STATUS = {
@@ -50,6 +53,14 @@ const Row = ({ c }: { c: ClaimRow }) => {
                 <b>{c.role}</b>, {c.contact}
                 {c.userEmail && <span style={{ color: "#888" }}> · вход: {c.userEmail}</span>}
             </div>
+            {/* ПОВТОРНАЯ ЗАЯВКА НАЗЫВАЕТСЯ ПОВТОРНОЙ. Прежде отказ стирался
+                следующей подачей, и разбирающий видел её как новую — то есть
+                собственное решение обходилось нажатием кнопки */}
+            {c.again && (
+                <div style={{ fontSize: ".9rem", color: "#8a1c1c", marginTop: ".2rem" }}>
+                    Подана снова после отказа{c.priorNote ? `: «${c.priorNote}»` : ""}
+                </div>
+            )}
             {c.evidence && (
                 <div style={{ fontSize: ".9rem", color: "#444", marginTop: ".2rem" }}>
                     {c.evidence}

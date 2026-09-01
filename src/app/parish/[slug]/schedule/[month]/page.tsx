@@ -186,6 +186,8 @@ const Page = async ({ params, searchParams }: Props) => {
                                 <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 1 : 0}&edit=${edit ? 0 : 1}`}>
                                     {edit ? "закончить правку" : "поправить"}
                                 </Link>
+                                {" · "}
+                                <Link href={`/parish/${slug}/admins`}>кто ведёт</Link>
                             </>
                         )}
                     </p>
