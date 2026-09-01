@@ -5,6 +5,7 @@ import {NextApiRequest} from "next";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {getUserInfo} from "@/lib/authorize/users";
+import { userCan, type Capability, type UserLike } from "@/lib/rights";
 
 export const verifySession = async () => {
     const cookie = (await cookies()).get('session')?.value;
@@ -19,7 +20,12 @@ export const verifySession = async () => {
     return { isAuth: false, userId: undefined, expiresAt: 0 };
 };
 
-export const verifySessionBack = async (req: NextApiRequest, isAdmin?: boolean) => {
+// Второй параметр значил «нужен админ». Теперь он называет ВОЗМОЖНОСТЬ, а
+// `true` понимается по-прежнему — как «править содержимое»: так старые вызовы
+// продолжают значить ровно то, что значили.
+export const verifySessionBack = async (
+    req: NextApiRequest, need?: boolean | Capability,
+) => {
     const { session: token } = req.cookies;
 
     if (!token) return undefined;
@@ -41,11 +47,11 @@ export const verifySessionBack = async (req: NextApiRequest, isAdmin?: boolean) 
 
             if (!sessionExist) return false;
 
-            if (isAdmin) {
+            if (need) {
                 let user = await getUserInfo(sessionExist.id as string);
                 if (!user) return false;
 
-                return user.isAdmin;
+                return userCan(user as UserLike, need === true ? "content" : need);
             }
             return true; // maybe also get user
         }

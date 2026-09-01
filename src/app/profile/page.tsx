@@ -6,6 +6,7 @@ import Content from "@/app/profile/Content";
 import {getAllUserNotes} from "@/app/api/user-notes/service";
 import SidePanel from "@/app/profile/SidePanel";
 import {listTokens} from "@/app/api/api-tokens/service";
+import { capsOf, roleLabels } from "@/lib/rights";
 
 const ProfilePage = async () => {
     const cookie = (await cookies()).get('session')?.value;
@@ -50,10 +51,10 @@ const ProfilePage = async () => {
                     </Link>
                 </p>
                 <Content item={item} />
-                {item.isAdmin && (
+                {capsOf(item).has("content") && (
                     <div>
                         <p>
-                            Вы админ.
+                            Вы можете: {roleLabels(item.roles).join(", ") || "править содержимое"}.
                         </p>
                         <Link href="/admin/corrections">
                             <span>

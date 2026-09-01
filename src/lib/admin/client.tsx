@@ -1,4 +1,5 @@
 import {FunctionComponent} from "react";
+import { userCan } from "@/lib/rights";
 
 export const WithRights = ({
     Component,
@@ -27,7 +28,9 @@ export const WithRights = ({
             return null;
         }
 
-        if (!user.isAdmin) {
+        // то же мерило, что и на сервере: возможность, а не роль. Здесь оно
+        // только прячет кнопку — решает всё равно сервер
+        if (!userCan(user, "content")) {
             return null;
         }
 

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import clientPromise from "@/lib/mongodb";
 import { decrypt } from "@/lib/authorize/sessions";
 import { getItem } from "@/app/profile/api";
+import { userCan } from "@/lib/rights";
 
 // КТО ВЕДЁТ РАСПИСАНИЕ ПРИХОДА.
 //
@@ -41,9 +42,11 @@ export const currentUserId = async (): Promise<string | null> => {
     return (session?.userId as string | undefined) ?? null;
 };
 
-const isSiteAdmin = async (userId: string): Promise<boolean> => {
+// Право сайта вмешаться в приходское — ИМЕННО ЭТА возможность, а не
+// «администратор вообще»: модератор приходов её имеет, а правящий книги — нет
+const canGrantParish = async (userId: string): Promise<boolean> => {
     const [user] = await getItem(userId);
-    return Boolean(user?.isAdmin);
+    return userCan(user, "parish.grant");
 };
 
 export interface ParishRights {
@@ -72,7 +75,7 @@ export const rightsOn = async (templeSlug: string): Promise<ParishRights> => {
     if (mine) {
         return { userId, canEdit: true, canInvite: true, asSiteAdmin: false };
     }
-    const site = await isSiteAdmin(userId);
+    const site = await canGrantParish(userId);
     return { userId, canEdit: site, canInvite: site, asSiteAdmin: site };
 };
 

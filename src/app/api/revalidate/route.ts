@@ -4,6 +4,7 @@ import {cookies} from "next/headers";
 import {decrypt} from "@/lib/authorize/sessions";
 import {getItem} from "@/app/profile/api";
 import {CacheTag} from "@/lib/cache";
+import {can} from "@/lib/rights-server";
 
 // Сбрасывает кэш выборок после правки контента. Вызывается из двух мест:
 //   * редакторы админки (src/lib/admin/revalidate.ts) — по сессии администратора;
@@ -17,15 +18,8 @@ const ALLOWED_TAGS: string[] = Object.values(CacheTag);
 
 const isAdmin = async () => {
     if (process.env.NODE_ENV === "development") return true;
-
-    const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
-
-    if (!session?.userId) return false;
-
-    const [user] = await getItem(session.userId as string);
-
-    return Boolean(user?.isAdmin);
+    // сброс кэша — часть правки содержимого, и права ему нужны те же
+    return can("content");
 };
 
 // Токен для скриптов. Пока REVALIDATE_TOKEN не задан в окружении, этот путь закрыт

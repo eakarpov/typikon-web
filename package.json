@@ -63,7 +63,8 @@
     "chronology:diff": "tsx src/scripts/check-chronology-parity.ts",
     "memories:import": "tsx src/scripts/import-memories.ts",
     "memories:review-prep": "tsx src/scripts/prepare-memory-review.ts",
-    "parish:admin": "tsx src/scripts/parish-admin.ts"
+    "parish:admin": "tsx src/scripts/parish-admin.ts",
+    "roles": "tsx src/scripts/roles.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",
