@@ -61,7 +61,8 @@
     "release:ordo": "bash release-ordo.sh",
     "release:ustav": "bash release-ustav.sh",
     "chronology:diff": "tsx src/scripts/check-chronology-parity.ts",
-    "memories:import": "tsx src/scripts/import-memories.ts"
+    "memories:import": "tsx src/scripts/import-memories.ts",
+    "memories:review-prep": "tsx src/scripts/prepare-memory-review.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",
