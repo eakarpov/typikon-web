@@ -65,10 +65,85 @@ const overpass = async (query: string, retries = 4): Promise<OsmElement[]> => {
         return overpass(query, retries - 1);
     }
     if (!res.ok) throw new Error(`Overpass ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    return (await res.json()).elements as OsmElement[];
+
+    // ОБРЕЗАННЫЙ ОТВЕТ ПРИХОДИТ С КОДОМ 200. Overpass, не уложившись, рвёт
+    // выдачу посреди строки и закрывает соединение — для fetch это успех, и
+    // спотыкается всё на JSON.parse. Разбираем текстом, чтобы отличить эту
+    // беду от испорченного запроса: первую лечит повтор и дробление, вторую
+    // нет, и путать их значит повторять бессмысленно.
+    const body = await res.text();
+    try {
+        return (JSON.parse(body).elements ?? []) as OsmElement[];
+    } catch {
+        if (retries <= 0) {
+            throw new Error("Overpass вернул обрезанный ответ; попытки исчерпаны");
+        }
+        console.log(`  ответ обрезан (${body.length} байт); жду минуту и повторяю`);
+        await sleep(60_000);
+        return overpass(query, retries - 1);
+    }
+};
+
+/**
+ * Тот же запрос, но по частям, когда целиком он не уезжает.
+ *
+ * Дробим ПО ТИПУ ОБЪЕКТА, а не по площади: тип есть у всякого элемента, и
+ * три запроса вместо одного дают три ответа втрое короче. Деление же по
+ * квадратам потребовало бы знать, где эти храмы, — а мы за тем и идём.
+ */
+const overpassByType = async (selector: string): Promise<OsmElement[]> => {
+    const out: OsmElement[] = [];
+    for (const type of ["node", "way", "relation"]) {
+        const part = await overpass(
+            `[out:json][timeout:250];\n${type}${selector};\nout center tags;`);
+        console.log(`    ${type}: ${part.length}`);
+        out.push(...part);
+        await sleep(2000);
+    }
+    return out;
 };
 
 /** Тип постройки по тегам, а не по имени: в OSM он размечен полем. */
+// КОНТАКТЫ ПРИХОДА. Теги мы и так запрашиваем все («out center tags»), а
+// сохраняли из них одно имя с местом — и оттого не могли проверить ни одной
+// заявки на ведение расписания: кто заявляет храм своим, тому нечего было
+// предъявить, а нам нечего сверить.
+//
+// Сайт прихода — единственный признак, проверяемый машиной: кто может
+// положить на него наш знак, тот и приход. По данным OSM он есть у пяти
+// процентов православных храмов (1362 из 26022) — путь побочный, но
+// настоящий, и приходы эти самые живые.
+//
+// Телефон и почта машиной не проверяются и лежат для человека: модератор
+// звонит и решает сам.
+//
+// ЧИСТИМ, НО НЕ ДОДУМЫВАЕМ: адрес без схемы получает https, потому что без
+// неё это не ссылка вовсе; всё прочее берётся как напечатано. Правка чужих
+// данных — не наше дело, и молча «поправленный» телефон хуже кривого.
+const trimmed = (v?: string) => {
+    const s = (v ?? "").trim();
+    return s && s.length <= 200 ? s : null;
+};
+
+const siteOf = (v?: string) => {
+    const s = trimmed(v);
+    if (!s) return null;
+    const url = /^https?:\/\//i.test(s) ? s : `https://${s}`;
+    try { return new URL(url).toString(); } catch { return null; }
+};
+
+const contactsOf = (tags: Record<string, string>) => {
+    const website = siteOf(tags.website ?? tags["contact:website"] ?? tags.url);
+    const phone = trimmed(tags.phone ?? tags["contact:phone"]);
+    const email = trimmed(tags.email ?? tags["contact:email"]);
+    return {
+        website, phone, email,
+        // откуда взято — чтобы отличить наше от чужого, когда приход поправит
+        // свои контакты сам
+        contactsSource: website || phone || email ? "osm" : null,
+    };
+};
+
 const kindOf = (tags: Record<string, string>): string => {
     if (tags.building === "chapel" || tags.church === "chapel" || /часовн|chapel|parekklisi/i.test(tags.name ?? "")) return "chapel";
     if (tags.building === "cathedral" || /собор|cathedral|katedral/i.test(tags.name ?? "")) return "cathedral";
@@ -120,11 +195,18 @@ const main = async () => {
     let cyrillic = 0, other = 0;
 
     for (const denomination of only ?? DENOMINATIONS) {
-        const query = `[out:json][timeout:250];
-nwr["amenity"="place_of_worship"]["denomination"="${denomination}"];
-out center tags;`;
+        const selector = `["amenity"="place_of_worship"]["denomination"="${denomination}"]`;
         console.log(`\n${denomination}…`);
-        const elements = await overpass(query);
+        let elements: OsmElement[];
+        try {
+            elements = await overpass(
+                `[out:json][timeout:250];\nnwr${selector};\nout center tags;`);
+        } catch (e) {
+            // Крупные разряды («orthodox» — двадцать шесть тысяч объектов)
+            // целиком не уезжают; тогда берём их по частям
+            console.log(`  целиком не вышло (${(e as Error).message}); беру по частям`);
+            elements = await overpassByType(selector);
+        }
         console.log(`  объектов: ${elements.length}`);
 
         for (const el of elements) {
@@ -171,6 +253,7 @@ out center tags;`;
                 $set: {
                     name, kind: kindOf(tags),
                     place: tags["addr:city"] ?? tags["addr:place"] ?? null,
+                    ...contactsOf(tags),
                     latitude: lat, longitude: lon,
                     location: { type: "Point", coordinates: [lon, lat] },
                     source: "osm",

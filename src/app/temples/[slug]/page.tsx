@@ -182,6 +182,14 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
                     {" "}— проект на месяц, выведенный из устава и престолов этого храма
                 </span>
             </p>
+            {/* Зовём того, кто может его вести. Показывается всем: кто не из
+                этого прихода, тому и предлагать нечего — заявку разберут */}
+            <p className="font-serif text-sm text-slate-500">
+                <a href={`/parish/${temple.slug}/claim`} className="text-amber-800 hover:underline">
+                    Вести расписание этого храма
+                </a>
+                {" "}— если вы из этого прихода
+            </p>
 
             <MyTemple slug={temple.slug} name={temple.name} />
 

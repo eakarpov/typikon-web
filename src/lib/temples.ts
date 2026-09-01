@@ -62,6 +62,17 @@ export interface Temple {
     churchSource?: "denomination" | "country" | null;
     /** Устав движка (rite/tradition) или null, когда его у нас нет. */
     ustav?: string | null;
+    /**
+     * КОНТАКТЫ ПРИХОДА, как их знает источник. Сайт — единственный из них,
+     * проверяемый машиной: им подтверждается заявка на ведение расписания
+     * (кто может положить на сайт наш знак, тот и приход). Телефон с почтой
+     * лежат для человека.
+     */
+    website?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    /** 'osm' — взято из источника; 'parish' — приход поправил сам. */
+    contactsSource?: string | null;
     wikidataId?: string;
     osmId?: string;
     source?: string;
