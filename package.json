@@ -60,7 +60,8 @@
     "release:rules-db": "bash rules-db-release.sh",
     "release:ordo": "bash release-ordo.sh",
     "release:ustav": "bash release-ustav.sh",
-    "chronology:diff": "tsx src/scripts/check-chronology-parity.ts"
+    "chronology:diff": "tsx src/scripts/check-chronology-parity.ts",
+    "memories:import": "tsx src/scripts/import-memories.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",
