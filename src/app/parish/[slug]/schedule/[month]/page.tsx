@@ -1,9 +1,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { parishMonth, parishSchedule } from "@/lib/parish/schedule";
+import { parishMonth, parishView } from "@/lib/parish/schedule";
+import { rightsOn } from "@/lib/parish/access";
 import type { Gathering, ParishDay } from "@/lib/parish/types";
 import { AddGathering, DropEdit, EditGathering } from "./Edit";
+import { Publish } from "./Publish";
 
 // ПРОЕКТ РАСПИСАНИЯ, который остаётся поправить, а не составить.
 //
@@ -134,9 +136,14 @@ const monthShift = (month: string, by: number) => {
 const Page = async ({ params, searchParams }: Props) => {
     const { slug, month } = await params;
     const q = await searchParams;
-    const [why, edit] = [q.why === "1", q.edit === "1"];
-    const data = await parishSchedule(slug, month);
+    const [why, editWanted] = [q.why === "1", q.edit === "1"];
+    const data = await parishView(slug, month);
     if (!data) notFound();
+
+    // ПРАВО — ИМЕННОЕ И НА ОДИН ХРАМ: настоятель не администратор сайта, и
+    // наоборот. Кнопки правки и публикации видит только тот, кто ведёт
+    const rights = await rightsOn(slug);
+    const edit = editWanted && rights.canEdit;
 
     const stale = data.edits.filter(e => e.status === "stale");
     const orphaned = data.edits.filter(e => e.status === "orphaned");
@@ -167,16 +174,36 @@ const Page = async ({ params, searchParams }: Props) => {
             ) : (
                 <>
                     <p style={{ color: "#777", fontSize: ".85rem", margin: ".75rem 0 0" }}>
-                        Это ПРОЕКТ, выведенный из устава: что служится — сказал устав, во
-                        сколько — приходское умолчание.{" "}
+                        {data.published
+                            ? "Расписание храма. Что служится — сказал устав, час поставил приход."
+                            : "Это ПРОЕКТ, выведенный из устава: что служится — сказал устав, во сколько — приходское умолчание."}{" "}
                         <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 0 : 1}&edit=${edit ? 1 : 0}`}>
                             {why ? "скрыть объяснения" : "показать, откуда что взялось"}
                         </Link>
-                        {" · "}
-                        <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 1 : 0}&edit=${edit ? 0 : 1}`}>
-                            {edit ? "закончить правку" : "поправить"}
-                        </Link>
+                        {rights.canEdit && (
+                            <>
+                                {" · "}
+                                <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 1 : 0}&edit=${edit ? 0 : 1}`}>
+                                    {edit ? "закончить правку" : "поправить"}
+                                </Link>
+                            </>
+                        )}
                     </p>
+
+                    {rights.canEdit ? (
+                        <Publish slug={slug} month={month}
+                                 published={data.published ? data.published.toISOString() : null}
+                                 drifted={data.drifted} />
+                    ) : !data.published && (
+                        // ЧЕЛОВЕКУ СО СТОРОНЫ СКАЗАНО ПРЯМО, что перед ним:
+                        // выведенное нами, а не признанное храмом
+                        <p style={{ margin: ".75rem 0 0", padding: ".5rem .75rem",
+                                    background: "#f7f7f7", fontSize: ".85rem",
+                                    color: "#555" }}>
+                            Приход этот лист ещё не утвердил: перед вами проект,
+                            выведенный из устава и престолов храма. Уточняйте в храме.
+                        </p>
+                    )}
 
                     {(stale.length > 0 || orphaned.length > 0) && (
                         <div style={{ margin: ".75rem 0 0", padding: ".5rem .75rem",

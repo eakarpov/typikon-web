@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { parishMonth } from "@/lib/parish/schedule";
+import { parishView } from "@/lib/parish/schedule";
 import type { ParishDay } from "@/lib/parish/types";
 
 // ЛИСТОВКА НА СТЕНД — то самое изделие, ради которого всё и делалось.
@@ -21,7 +21,7 @@ interface Props {
 
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
     const { slug, month } = await params;
-    const data = await parishMonth(slug, month);
+    const data = await parishView(slug, month);
     return {
         title: data ? `${data.title} — ${data.monthLabel}` : "Расписание",
         robots: { index: false },
@@ -112,7 +112,7 @@ const Day = ({ d }: { d: ParishDay }) => (
 
 const Page = async ({ params }: Props) => {
     const { slug, month } = await params;
-    const data = await parishMonth(slug, month);
+    const data = await parishView(slug, month);
     if (!data) notFound();
 
     return (

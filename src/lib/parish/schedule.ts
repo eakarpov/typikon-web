@@ -4,6 +4,7 @@ import { monthDates, ordoRange } from "./engine";
 import { buildMonth } from "./gatherings";
 import { DEFAULT_RULES } from "./presets";
 import { applyEdits, editsOf } from "./edits";
+import { driftedDays, publishedMonth } from "./publish";
 import type { ParishDay, ParishSettings } from "./types";
 
 /**
@@ -95,4 +96,38 @@ export const parishSchedule = async (slug: string, month: string) => {
     const edits = await editsOf(slug, month);
     const { days, applied } = applyEdits(data.days, edits);
     return { ...data, days, edits: applied };
+};
+
+export interface ParishView extends ParishMonth {
+    edits: Awaited<ReturnType<typeof parishSchedule>> extends null ? never
+        : NonNullable<Awaited<ReturnType<typeof parishSchedule>>>["edits"];
+    /** Настоятель сказал «готово» — и вот когда. */
+    published: Date | null;
+    /** Числа, в которых снимок разошёлся с нынешним выводом устава. */
+    drifted: string[];
+}
+
+/**
+ * ЧТО ПОКАЗАТЬ ЧЕЛОВЕКУ.
+ *
+ * Опубликованное показывается СНИМКОМ, а не свежим выводом: настоятель повесил
+ * на стенд определённый лист, и наша правка правил не вправе молча передвинуть
+ * ему час — прихожанин придёт не тогда. Лист висит, пока его не заменят.
+ *
+ * Расхождение при этом считается и отдаётся: видеть его должен настоятель, а
+ * решать — он же. Молча пересобрать за него нельзя, молча смолчать тоже.
+ */
+export const parishView = async (slug: string, month: string): Promise<ParishView | null> => {
+    const live = await parishSchedule(slug, month);
+    if (!live) return null;
+    const snapshot = await publishedMonth(slug, month);
+    if (!snapshot?.days?.length) {
+        return { ...live, published: null, drifted: [] } as ParishView;
+    }
+    return {
+        ...live,
+        days: snapshot.days,
+        published: snapshot.publishedAt ?? null,
+        drifted: driftedDays(snapshot.days, live.days),
+    } as ParishView;
 };

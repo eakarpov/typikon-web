@@ -1,0 +1,101 @@
+import { cookies } from "next/headers";
+import clientPromise from "@/lib/mongodb";
+import { decrypt } from "@/lib/authorize/sessions";
+import { getItem } from "@/app/profile/api";
+
+// КТО ВЕДЁТ ПРИХОД.
+//
+// Расписание висит на стенде, и править его вправе не всякий, кто открыл
+// страницу. Но и общей админкой это не закроешь: настоятель — не администратор
+// сайта, ему нечего делать в разборе книг, а сайту нечего решать за него, во
+// сколько у него литургия.
+//
+// Оттого право здесь ИМЕННОЕ и на один храм: пользователь такой-то ведёт храм
+// такой-то. Приглашает тот, кто уже ведёт; первого заводит администратор
+// сайта — иначе первым стал бы тот, кто раньше нажал.
+
+export interface TempleAdmin {
+    _id?: string;
+    templeSlug: string;
+    userId: string;
+    /** Кто позвал. Пусто у первого — его завёл администратор сайта. */
+    addedBy?: string | null;
+    addedAt: Date;
+}
+
+const collection = async () =>
+    (await clientPromise).db("typikon").collection<TempleAdmin>("templeAdmins");
+
+const idOf = (templeSlug: string, userId: string) => `${templeSlug}:${userId}`;
+
+/** Кто сейчас смотрит. null — не вошёл. */
+export const currentUserId = async (): Promise<string | null> => {
+    const cookie = (await cookies()).get("session")?.value;
+    const session = await decrypt(cookie);
+    return (session?.userId as string | undefined) ?? null;
+};
+
+const isSiteAdmin = async (userId: string): Promise<boolean> => {
+    const [user] = await getItem(userId);
+    return Boolean(user?.isAdmin);
+};
+
+export interface ParishRights {
+    userId: string | null;
+    /** Может править расписание и публиковать его. */
+    canEdit: boolean;
+    /** Может звать других вести этот храм. */
+    canInvite: boolean;
+    /** Право пришло от админства сайта, а не от прихода. */
+    asSiteAdmin: boolean;
+}
+
+/**
+ * Права этого пользователя на этот храм.
+ *
+ * Администратор сайта может всё — но это ВИДНО (`asSiteAdmin`), и в подписи
+ * правки он останется собой: приход должен понимать, кто менял его
+ * расписание, а «правил администратор» и «правил наш настоятель» — разное.
+ */
+export const rightsOn = async (templeSlug: string): Promise<ParishRights> => {
+    const userId = await currentUserId();
+    if (!userId) {
+        return { userId: null, canEdit: false, canInvite: false, asSiteAdmin: false };
+    }
+    const mine = await (await collection()).findOne({ templeSlug, userId });
+    if (mine) {
+        return { userId, canEdit: true, canInvite: true, asSiteAdmin: false };
+    }
+    const site = await isSiteAdmin(userId);
+    return { userId, canEdit: site, canInvite: site, asSiteAdmin: site };
+};
+
+/** Кто ведёт этот храм — для страницы прихода. */
+export const adminsOf = async (templeSlug: string) =>
+    (await collection()).find({ templeSlug }).sort({ addedAt: 1 }).toArray();
+
+/** Храмы, которые ведёт этот пользователь, — для его профиля. */
+export const templesOf = async (userId: string) =>
+    (await collection()).find({ userId }).sort({ addedAt: 1 }).toArray();
+
+export const addAdmin = async (templeSlug: string, userId: string, addedBy?: string) => {
+    const col = await collection();
+    await col.replaceOne(
+        { _id: idOf(templeSlug, userId) } as never,
+        { _id: idOf(templeSlug, userId), templeSlug, userId,
+          addedBy: addedBy ?? null, addedAt: new Date() } as never,
+        { upsert: true },
+    );
+};
+
+/**
+ * Снять право. ПОСЛЕДНЕГО НЕ СНИМАЕМ: храм без ведущего никто уже не поправит,
+ * и вернуть право сможет только администратор сайта — а он про этот храм
+ * ничего не знает. Уходящий обязан сперва позвать преемника.
+ */
+export const removeAdmin = async (templeSlug: string, userId: string): Promise<boolean> => {
+    const col = await collection();
+    if (await col.countDocuments({ templeSlug }) <= 1) return false;
+    await col.deleteOne({ _id: idOf(templeSlug, userId) } as never);
+    return true;
+};

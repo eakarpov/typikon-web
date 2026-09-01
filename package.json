@@ -62,7 +62,8 @@
     "release:ustav": "bash release-ustav.sh",
     "chronology:diff": "tsx src/scripts/check-chronology-parity.ts",
     "memories:import": "tsx src/scripts/import-memories.ts",
-    "memories:review-prep": "tsx src/scripts/prepare-memory-review.ts"
+    "memories:review-prep": "tsx src/scripts/prepare-memory-review.ts",
+    "parish:admin": "tsx src/scripts/parish-admin.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

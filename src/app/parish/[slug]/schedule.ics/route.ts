@@ -1,5 +1,5 @@
 import { buildCalendar, knownTimezone, type CalendarEvent } from "@/lib/ical";
-import { parishSchedule } from "@/lib/parish/schedule";
+import { parishView } from "@/lib/parish/schedule";
 import { isoDate } from "@/lib/parish/engine";
 
 // ПОДПИСНОЙ КАЛЕНДАРЬ ПРИХОДА. Прихожанин подписывается телефоном один раз, и
@@ -9,6 +9,10 @@ import { isoDate } from "@/lib/parish/engine";
 // Отличается от ленты уставных чтений (/calendar.ics) тем, ради чего всё и
 // затевалось: события здесь СО ВРЕМЕНЕМ. Суточное «сегодня Успение» человеку
 // на службу не поможет — ему нужно «в девять тридцать».
+//
+// Едет ОПУБЛИКОВАННОЕ, если приход что-то опубликовал, и проект, если нет.
+// Иначе вышло бы худшее: подписчик получил бы в телефон наш вывод, а на
+// стенде висело бы другое — и разошлись бы они молча.
 //
 // Окно скользящее — от прошлой недели на три месяца вперёд, как у соседней
 // ленты: календарные клиенты перечитывают её сами и редко, а вперёд нужно
@@ -53,7 +57,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
     const [lo, hi] = [isoDate(from), isoDate(to)];
 
     const months = await Promise.all(
-        monthsIn(from, to).map(m => parishSchedule(slug, m)));
+        monthsIn(from, to).map(m => parishView(slug, m)));
     const first = months.find(Boolean);
     if (!first) {
         return new Response("нет такого прихода", { status: 404 });
