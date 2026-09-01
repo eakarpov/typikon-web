@@ -67,8 +67,24 @@ const CanonPage = ({ params }: { params: { id: string } }) => {
             <Link href="/canons" className="font-serif text-sm text-red-900">← к канонам</Link>
             <h1 className="font-bold font-serif mt-2">{canon.memory || "Канон"}</h1>
             <p className="text-sm text-slate-500 font-serif">{head.join(" · ")}</p>
+            {/* Лицо и надписание — разные вещи, и стоят они порознь. Сверху то,
+                с чем надписание отождествлено («Иосиф Песнописец, IX в.»);
+                ниже — как эту же строку напечатала книга («Творе́ние
+                Ио́сифово. Гла́с 2.»), потому что напечатанное и есть
+                свидетельство, а отождествление — вывод из него, и он может
+                быть неверен. Где отождествления нет, остаётся одно
+                надписание: гадать за книгу мы не станем. */}
+            {canon.author && (
+                <p className="font-serif text-sm">
+                    <strong>Творение: </strong>{canon.author}
+                    {canon.authorCentury ? `, ${canon.authorCentury} в.` : ""}
+                </p>
+            )}
             {canon.creator && (
-                <p className="font-serif text-sm"><strong>Творение: </strong>{canon.creator}</p>
+                <p className="font-serif text-sm text-slate-600">
+                    <strong>{canon.author ? "Надписание книги: " : "Творение: "}</strong>
+                    {canon.creator}
+                </p>
             )}
             {canon.acrostic && (
                 <p className="font-serif text-sm"><strong>Краегранесие: </strong>{canon.acrostic}</p>

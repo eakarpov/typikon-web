@@ -44,7 +44,13 @@ export interface CanonRow {
     /** Глас памяти (у Октоиха) — не то же, что глас самого канона. */
     memoryTone: number | null;
     tone: number | null;
+    /** Надписание, КАК НАПЕЧАТАНО книгой: «Творе́ние Ио́сифово.] Гла́с 3.» */
     creator: string | null;
+    /** Лицо, с которым это надписание отождествлено, — если отождествлено. */
+    author: string | null;
+    authorCentury: string | null;
+    /** Каким свидетелем: надписание книги, греческий подлинник, документ... */
+    authorMethod: string | null;
     acrostic: string | null;
     service: string;
     role: string | null;
@@ -57,14 +63,40 @@ export interface CanonSearchResult {
     total: number;
 }
 
-const LIST_SQL = `
+// Слой авторства появился в корпусе позже самого корпуса, и выложен он не на
+// всяком сервере: rules-db-release.sh везёт файл целиком, но выкладка могла
+// отстать от сборки. Спрашивать вью, которого нет, — уронить раздел канонов
+// ради подписи под ним, поэтому запрос собирается по факту.
+let authorsAvailable: boolean | undefined;
+const hasAuthors = (db: any): boolean => {
+    if (authorsAvailable === undefined) {
+        authorsAvailable = !!db.prepare(
+            "SELECT 1 FROM sqlite_master WHERE type = 'view' AND name = 'work_authors'",
+        ).get();
+    }
+    return authorsAvailable;
+};
+
+// Автор берётся из work_authors, а не из canons.creator: в creator лежит
+// надписание, как его напечатала книга, — с гласом, скобками и в двадцати
+// написаниях на пять лиц («Творе́ние Ио́сифово», «ки́р ио́сифа»). Вью же
+// отдаёт разрешённое лицо: старшего из свидетелей, какие о каноне есть.
+const AUTHOR_JOIN = `
+    LEFT JOIN works w ON w.canon_id = c.canon_id
+    LEFT JOIN work_authors wa ON wa.work_id = w.work_id`;
+const AUTHOR_COLUMNS = `, wa.person_label AS author, wa.method AS author_method,
+           (SELECT century FROM persons WHERE person_id = wa.person_id) AS author_century`;
+
+const listSql = (withAuthors: boolean) => `
     SELECT c.canon_id, m.label AS memory, m.memory_id, m.book, m.month, m.day,
            m.pascha_offset, m.weekday, m.tone AS memory_tone,
            c.tone, c.creator, c.acrostic, c.service, c.role,
            count(DISTINCT ci.ode) AS odes, count(ci.item_id) AS items
+           ${withAuthors ? AUTHOR_COLUMNS : ""}
     FROM canons c
     JOIN memories m ON m.memory_id = c.memory_id
     LEFT JOIN content_items ci ON ci.canon_id = c.canon_id
+    ${withAuthors ? AUTHOR_JOIN : ""}
     GROUP BY c.canon_id
     ORDER BY m.book, m.month, m.day, m.pascha_offset, m.tone, c.rowid`;
 
@@ -80,6 +112,9 @@ const rowOf = (r: any): CanonRow => ({
     memoryTone: r.memory_tone ?? null,
     tone: r.tone ?? null,
     creator: r.creator ?? null,
+    author: r.author || null,
+    authorCentury: r.author_century ?? null,
+    authorMethod: r.author_method ?? null,
     acrostic: r.acrostic ?? null,
     service: r.service,
     role: r.role ?? null,
@@ -87,9 +122,12 @@ const rowOf = (r: any): CanonRow => ({
     items: r.items ?? 0,
 });
 
-/** По чему ищем имя: кому канон, чьё творение, какое краегранесие. */
+/** По чему ищем имя: кому канон, чьё творение, какое краегранесие.
+ *  Имя лица — рядом с напечатанным надписанием, а не вместо него: «Иосиф
+ *  Песнописец» и «Ио́сифово» должны находить один и тот же канон. */
 const haystack = (row: CanonRow) =>
-    normalizeQuery([row.memory, row.creator, row.acrostic].filter(Boolean).join(" "));
+    normalizeQuery([row.memory, row.creator, row.author, row.acrostic]
+        .filter(Boolean).join(" "));
 
 export const listCanons = (
     filters: CanonFilters = {},
@@ -99,7 +137,7 @@ export const listCanons = (
     const db = rulesDb();
     if (!db) return null;
 
-    let rows = (db.prepare(LIST_SQL).all() as any[]).map(rowOf);
+    let rows = (db.prepare(listSql(hasAuthors(db))).all() as any[]).map(rowOf);
 
     if (filters.book) rows = rows.filter(r => r.book === filters.book);
     if (filters.tone) rows = rows.filter(r => r.tone === filters.tone);
@@ -164,13 +202,16 @@ export const getCanon = (id: string): CanonDetail | null => {
     const db = rulesDb();
     if (!db) return null;
 
+    const withAuthors = hasAuthors(db);
     const head = db.prepare(`
         SELECT c.canon_id, m.label AS memory, m.memory_id, m.book, m.month, m.day,
                m.pascha_offset, m.weekday, m.tone AS memory_tone,
                c.tone, c.creator, c.acrostic, c.service, c.role,
                (SELECT count(DISTINCT ode) FROM content_items WHERE canon_id = c.canon_id) AS odes,
                (SELECT count(*) FROM content_items WHERE canon_id = c.canon_id) AS items
+               ${withAuthors ? AUTHOR_COLUMNS : ""}
         FROM canons c JOIN memories m ON m.memory_id = c.memory_id
+        ${withAuthors ? AUTHOR_JOIN : ""}
         WHERE c.canon_id = ?`).get(id) as any;
     if (!head) return null;
 
