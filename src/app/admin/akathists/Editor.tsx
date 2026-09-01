@@ -55,6 +55,28 @@ const Row = ({ link, onDecide }: {
                 </span>
                 <span className="text-xs text-slate-400">{Math.round(link.score * 100)}%</span>
                 {link.date && <span className="text-xs text-slate-400">{link.date}</span>}
+                {/* ДАТА — ВТОРОЙ ГОЛОС, независимый от слов имени: сошёлся ли
+                    день памяти святого с числом, под которым книга печатает
+                    службу. Где голоса нет вовсе (святого нет в нашем каталоге),
+                    молчим, а не показываем «не сошлось»: это разные вещи. */}
+                {link.dateAgrees === true && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700"
+                          title="день памяти святого совпал с числом книги">дата сошлась</span>
+                )}
+                {link.dateAgrees === false && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-rose-100 text-rose-700"
+                          title="день памяти святого не совпал с числом книги">дата мимо</span>
+                )}
+                {(link.sameSaint ?? 1) > 1 && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-sky-100 text-sky-700"
+                          title="этот же святой предложен и другим памятям — они стоят рядом">
+                        ещё {(link.sameSaint ?? 1) - 1} памятям
+                    </span>
+                )}
+                {link.approvedBy === "machine" && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200 text-slate-600"
+                          title="принято машиной по двойному согласию: имя и дата">машиной</span>
+                )}
                 <Link href={subjectHref(link)} target="_blank"
                       className="font-serif text-red-900 hover:underline">
                     {link.title}
