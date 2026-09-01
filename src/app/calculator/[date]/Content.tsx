@@ -5,6 +5,7 @@ import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import {formatDateISO} from "@/utils/dates";
 import {csFont, myFont} from "@/utils/font";
+import OfflineSave from "@/app/components/save/OfflineSave";
 
 const Content = async ({ date, resultPromise }: { date: string; resultPromise: Promise<ICalcDayResult | null> }) => {
     const result = await resultPromise;
@@ -42,6 +43,11 @@ const Content = async ({ date, resultPromise }: { date: string; resultPromise: P
                 <div>Ничего не нашлось на эту дату</div>
             ) : (
                 <>
+                    <div className="flex flex-row justify-center pt-1">
+                        <OfflineSave
+                            label={`Чтения на день: ${date}${result.day?.name ? ` — ${result.day.name}` : ""}`}
+                        />
+                    </div>
                     <DayMemories memories={result.memories} />
                     <DayFullContent item={result.day} paschal />
                 </>

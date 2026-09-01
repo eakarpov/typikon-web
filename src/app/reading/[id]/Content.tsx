@@ -12,6 +12,7 @@ import ReadingContent from "@/app/reading/[id]/ReadingContent";
 import Redirector from "@/app/reading/[id]/Redirector";
 import EditButton from "@/app/reading/[id]/EditButton";
 import TextSaveLocal from "@/app/components/save/TextSaveLocal";
+import OfflineSave from "@/app/components/save/OfflineSave";
 import {myFont} from "@/utils/font";
 import {TextReadiness} from "@/utils/texts";
 
@@ -76,6 +77,7 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
                     )}
                     <TextSave text={item} canDownloadPdf={process.env.CAN_DOWNLOAD_PDF} />
                     <TextSaveLocal name={item.name} />
+                    <OfflineSave label={item.name?.replaceAll("\u0301", "") || "Чтение"} />
                 </div>
                 <div className="flex flex-row items-center no-pdf">
                     <span className="w-fit text-xs pr-2">

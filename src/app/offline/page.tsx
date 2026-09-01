@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { myFont } from "@/utils/font";
+import SavedLinks from "@/app/offline/SavedLinks";
 
 // Страница показывается service worker'ом, когда сети нет, а запрошенное чтение
 // в кэш ещё не попало. Держится в кэше с установки приложения, поэтому она
@@ -20,6 +21,7 @@ const Offline = () => (
             Чтения, которые вы уже открывали, доступны и сейчас — откройте их
             из истории браузера или по прежним ссылкам.
         </p>
+        <SavedLinks />
         <p className="font-serif">
             <Link href="/" className="text-amber-800 underline underline-offset-4">
                 На главную
