@@ -221,7 +221,16 @@ const Page = async ({ params, searchParams }: Props) => {
                         </tbody>
                     </table>
 
-                    <p style={{ color: "#999", fontSize: ".8rem", marginTop: "1.5rem" }}>
+                    <p style={{ marginTop: "1.5rem", fontSize: ".9rem" }}>
+                        <a href={`/parish/${slug}/schedule.ics`}>
+                            Подписаться календарём
+                        </a>
+                        <span style={{ color: "#888" }}>
+                            {" "}— расписание приедет в телефон и будет обновляться само
+                        </span>
+                    </p>
+
+                    <p style={{ color: "#999", fontSize: ".8rem", marginTop: ".75rem" }}>
                         Вечернее богослужение стоит в строке того дня, ВЕЧЕРОМ которого
                         служится: церковный день начинается вечером, и вечерня с
                         всенощным принадлежат уже следующему.

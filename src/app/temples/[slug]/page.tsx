@@ -171,6 +171,18 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
             </p>
             )}
 
+            {/* Расписание — то, зачем на страницу храма приходят чаще всего.
+                Показывается всем: оно выводимо из устава и престолов, и ждать
+                для этого, чтобы приход сам его завёл, незачем. */}
+            <p className="font-serif mt-4">
+                <a href={`/parish/${temple.slug}`} className="text-amber-800 hover:underline">
+                    Расписание богослужений
+                </a>
+                <span className="text-slate-500 text-sm">
+                    {" "}— проект на месяц, выведенный из устава и престолов этого храма
+                </span>
+            </p>
+
             <MyTemple slug={temple.slug} name={temple.name} />
 
             <TempleMap latitude={temple.latitude} longitude={temple.longitude} name={temple.name} />
