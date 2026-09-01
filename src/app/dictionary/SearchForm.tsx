@@ -1,67 +1,39 @@
 'use client';
-import React, {ChangeEventHandler, KeyboardEventHandler, memo, useCallback, useEffect, useState} from "react";
-import "../components/search/styles.scss";
-import {usePathname, useRouter, useSearchParams} from 'next/navigation'
-import Link from "next/link";
+import React, { memo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const SearchForm = ({ initial = []}: {initial?: any[]}) => {
+// Форма только уводит на страницу с запросом — искать умеет сервер. Прежняя версия
+// ходила за результатами на /api/v1/dictionary, которого в проекте нет вовсе, так
+// что список молча оставался тем, что пришёл с сервера.
+
+const SearchForm = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const pathname = usePathname();
-    const [items, setItems] = useState(initial)
+    const [value, setValue] = useState(searchParams?.get("query") ?? "");
 
-    const [value, setValue] = useState(searchParams?.get("query") || "");
-
-    const onChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
-        setValue(e.target.value);
-    }, []);
-
-    const onKeyDown: KeyboardEventHandler<HTMLInputElement> = useCallback((e) => {
-        if (e.keyCode === 13) {
-            if (pathname === "/") {
-                router.push(`/dictionary?query=${value}`);
-            } else {
-                router.replace(`/dictionary?query=${value}`);
-                fetch(`/api/v1/dictionary?query=${value}`).then((res) => res.json()).then((newItems) => {
-                    if (Array.isArray(newItems)) {
-                        setItems(newItems);
-                    }
-                });
-            }
-        }
-    }, [value]);
-
-    useEffect(() => {
-        const val = searchParams?.get("query");
-        if (val) {
-            fetch(`/api/v1/dictionary?query=${val}`).then((res) => res.json()).then((newItems) => {
-                if (Array.isArray(newItems)) {
-                    setItems(newItems);
-                }
-            });
-        }
-    }, []);
+    const submit = (event: React.FormEvent) => {
+        event.preventDefault();
+        const query = value.trim();
+        if (query) router.push(`/dictionary?query=${encodeURIComponent(query)}`);
+    };
 
     return (
-        <>
-            <label className="font-serif">
-                Поиск:
-            </label>
+        <form onSubmit={submit} className="flex flex-row flex-wrap items-center gap-2">
             <input
                 value={value}
-                onChange={onChange}
-                onKeyDown={onKeyDown}
-                className="search-input"
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="глаголати"
+                aria-label="Слово"
+                className="font-serif border border-slate-300 rounded px-2 py-1"
             />
-            {items.map(item => (
-                <div key={item._id}>
-                    <Link href={`/dictionary/${item._id}`} className="font-serif">
-                        {item.name}
-                    </Link>
-                </div>
-            ))}
-        </>
-    )
+            <button
+                type="submit"
+                className="font-serif border border-slate-300 rounded px-3 py-1"
+            >
+                Найти
+            </button>
+        </form>
+    );
 };
 
 export default memo(SearchForm);

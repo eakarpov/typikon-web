@@ -1,31 +1,32 @@
-import SearchForm from "@/app/dictionary/SearchForm";
-import React, { Suspense } from "react";
-import {myFont} from "@/utils/font";
+import React from "react";
+import Link from "next/link";
+import type { Found } from "@/app/dictionary/api";
 
-interface IError {
-    error: string;
-}
-
-interface IContent {
-    itemsPromise: Promise<[any[], IError?]>
-}
-
-const Content = async ({ itemsPromise }: IContent) => {
-
+const Content = async ({ itemsPromise }: { itemsPromise: Promise<[Found[] | null, string | null]> }) => {
     const [items, error] = await itemsPromise;
 
-    if (error) return null;
+    if (error) return <p className="font-serif text-slate-600">{error}</p>;
+
+    if (!items?.length) {
+        return (
+            <p className="font-serif text-slate-600">
+                Ничего не нашлось. Слово ищется по началу, поэтому «глагол» найдёт и
+                «глаго́лати», и «глаго́ливый», — а вот по середине слова поиск не идёт.
+            </p>
+        );
+    }
 
     return (
-        <div>
-            <span className="font-serif">
-                Поиск по названию текста.<br/>
-                Для поиска используйте только кириллические буквы А-Я/а-я<br/>
-            </span>
-            <Suspense>
-                <SearchForm initial={items} />
-            </Suspense>
-        </div>
+        <ul className="flex flex-col gap-1">
+            {items.map((item) => (
+                <li key={item.id} className="font-serif">
+                    <Link href={`/dictionary/${item.id}`} className="underline underline-offset-4">
+                        {item.name}
+                    </Link>
+                    {item.pos && <span className="text-slate-500 text-sm">{" — "}{item.pos}</span>}
+                </li>
+            ))}
+        </ul>
     );
 };
 
