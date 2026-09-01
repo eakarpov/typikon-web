@@ -1,7 +1,8 @@
 import clientPromise from "@/lib/mongodb";
 import type { Gathering, ParishDay, Part } from "./types";
 
-// ПРАВКА НАСТОЯТЕЛЯ — «проект, который остаётся поправить, а не составить».
+// ПРАВКА ОТВЕТСТВЕННОГО — «проект, который остаётся поправить, а не
+// составить».
 //
 // Два хранилища, и они не пишут друг в друга. Сгенерированное расписание не
 // хранится вовсе: оно выводится из устава и приходских правил заново, и лежачая
@@ -72,7 +73,7 @@ export interface AppliedEdit extends ParishEdit {
  * Наложить правки на проект расписания.
  *
  * Правка со сбитым основанием НЕ ОТМЕНЯЕТСЯ, а помечается. Молча вернуть
- * уставное значение значило бы стереть решение настоятеля — и стереть тихо,
+ * уставное значение значило бы стереть решение ответственного — и стереть тихо,
  * так что он узнал бы об этом со стенда. Помеченную он увидит и решит сам.
  */
 export const applyEdits = (
@@ -96,7 +97,7 @@ export const applyEdits = (
             const i = gatherings.findIndex(g => g.key === e.gatheringKey);
 
             if (e.op === "add") {
-                // Собственное собрание настоятеля от устава не зависит и
+                // Собственное собрание ответственного от устава не зависит и
                 // осиротеть не может: оно и заведено помимо него
                 const g: Gathering = {
                     key: e.gatheringKey, civil: e.date, part: e.part,
@@ -104,7 +105,7 @@ export const applyEdits = (
                     title: e.value.title ?? "Служба", belongsTo: null,
                     duration: null,
                     services: (e.value.services ?? []).map(k => ({ key: k, label: k, own: true })),
-                    why: [{ kind: "parish", text: e.note ?? "добавлено настоятелем" }],
+                    why: [{ kind: "parish", text: e.note ?? "добавлено руками" }],
                     edited: true,
                 };
                 gatherings.push(g);
@@ -126,18 +127,22 @@ export const applyEdits = (
 
             if (e.op === "cancel") {
                 gatherings[i] = { ...g, cancelled: true, edited: true,
-                    why: [...g.why, { kind: "parish", text: e.note ?? "отменено настоятелем" }] };
+                    why: [...g.why, { kind: "parish", text: e.note ?? "отменено руками" }] };
             } else {
                 gatherings[i] = {
                     ...g,
                     time: e.op === "time" ? (e.value.time ?? g.time) : g.time,
                     title: e.op === "title" ? (e.value.title ?? g.title) : g.title,
                     edited: true,
+                    // «РУКАМИ» — а не «ответственным»: читающему «почему» важно
+                    // не кто, а ЧЕМ поставлено. Правило видно по имени правила,
+                    // правка — вот этим словом; имя правившего лежит в
+                    // createdBy и показывается там, где оно к месту
                     why: [...g.why, {
                         kind: "parish",
                         text: e.note ?? (e.op === "time"
-                            ? `час поставлен настоятелем: ${e.value.time}`
-                            : `название дано настоятелем`),
+                            ? `час поставлен руками: ${e.value.time}`
+                            : `название дано руками`),
                     }],
                 };
             }

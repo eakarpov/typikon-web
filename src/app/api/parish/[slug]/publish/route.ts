@@ -5,7 +5,7 @@ import { rightsOn } from "@/lib/parish/access";
 import { publishMonth, unpublishMonth } from "@/lib/parish/publish";
 import { parishSchedule } from "@/lib/parish/schedule";
 
-// «Этот месяц готов» — и обратно. Снимок кладётся тем, что настоятель видит
+// «Этот месяц готов» — и обратно. Снимок кладётся тем, что ответственный видит
 // перед собою в этот миг: устав, приходские правила и его собственные правки,
 // уже сложенные вместе.
 export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: string }> }) {

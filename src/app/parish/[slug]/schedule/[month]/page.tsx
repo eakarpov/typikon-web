@@ -140,7 +140,7 @@ const Page = async ({ params, searchParams }: Props) => {
     const data = await parishView(slug, month);
     if (!data) notFound();
 
-    // ПРАВО — ИМЕННОЕ И НА ОДИН ХРАМ: настоятель не администратор сайта, и
+    // ПРАВО — ИМЕННОЕ И НА ОДИН ХРАМ: ответственный не администратор сайта, и
     // наоборот. Кнопки правки и публикации видит только тот, кто ведёт
     const rights = await rightsOn(slug);
     const edit = editWanted && rights.canEdit;

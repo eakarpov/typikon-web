@@ -85,10 +85,10 @@ export const parishMonth = cached(
 );
 
 /**
- * Расписание, каким его видят: проект устава плюс правки настоятеля.
+ * Расписание, каким его видят: проект устава плюс правки ответственного.
  *
  * Правки читаются МИМО кэша — их правят по одной, и держать их час значило бы
- * показывать настоятелю не то, что он только что исправил.
+ * показывать ответственному не то, что он только что исправил.
  */
 export const parishSchedule = async (slug: string, month: string) => {
     const data = await parishMonth(slug, month);
@@ -101,7 +101,7 @@ export const parishSchedule = async (slug: string, month: string) => {
 export interface ParishView extends ParishMonth {
     edits: Awaited<ReturnType<typeof parishSchedule>> extends null ? never
         : NonNullable<Awaited<ReturnType<typeof parishSchedule>>>["edits"];
-    /** Настоятель сказал «готово» — и вот когда. */
+    /** Ответственный сказал «готово» — и вот когда. */
     published: Date | null;
     /** Числа, в которых снимок разошёлся с нынешним выводом устава. */
     drifted: string[];
@@ -110,11 +110,11 @@ export interface ParishView extends ParishMonth {
 /**
  * ЧТО ПОКАЗАТЬ ЧЕЛОВЕКУ.
  *
- * Опубликованное показывается СНИМКОМ, а не свежим выводом: настоятель повесил
+ * Опубликованное показывается СНИМКОМ, а не свежим выводом: ответственный повесил
  * на стенд определённый лист, и наша правка правил не вправе молча передвинуть
  * ему час — прихожанин придёт не тогда. Лист висит, пока его не заменят.
  *
- * Расхождение при этом считается и отдаётся: видеть его должен настоятель, а
+ * Расхождение при этом считается и отдаётся: видеть его должен ответственный, а
  * решать — он же. Молча пересобрать за него нельзя, молча смолчать тоже.
  */
 export const parishView = async (slug: string, month: string): Promise<ParishView | null> => {
