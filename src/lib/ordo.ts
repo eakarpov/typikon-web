@@ -59,13 +59,22 @@ const base = () => process.env.ORDO_SERVICE_URL || "";
  * который может быть не поднят на этом сервере, и это не повод ронять сайт.
  * Отличать «службы нет» от «ничего не нашлось» обязан вызывающий.
  */
-const ask = async <T>(path: string, params?: Record<string, string>): Promise<T | null> => {
+const ask = async <T>(
+    path: string,
+    params?: Record<string, string>,
+    // Повторяемые параметры отдельно: престолов у храма бывает несколько, а
+    // Record такого не выражает — второй ключ затёр бы первый молча.
+    repeated?: [string, string][],
+): Promise<T | null> => {
     const root = base();
     if (!root) return null;
 
     const url = new URL(path, root);
     for (const [k, v] of Object.entries(params ?? {})) {
         if (v) url.searchParams.set(k, v);
+    }
+    for (const [k, v] of repeated ?? []) {
+        if (v) url.searchParams.append(k, v);
     }
 
     try {
@@ -181,3 +190,161 @@ export const ordoOptions = async (): Promise<OrdoOptions | null> => {
 /** Текст файла правил — для «лестницы», объясняющей выдачу. */
 export const ordoRule = (path: string) =>
     ask<{ path: string; text: string }>("/rule", { path });
+
+
+// ─────────────────────────────────────────────────── день целиком
+
+// Престол прихода передаётся движку ЗНАЧЕНИЕМ: у него своя таблица приходов,
+// но она — образец, на котором писалась механика, и хозяин приходов здесь мы.
+// Берётся из Temple.prestoly (src/lib/temples.ts), где лежит то же самое.
+export interface OrdoPrestol {
+    memoryId: string;
+    /** gospodskiy | bogorodichen | svyatogo — от вида зависит ряд тропарей по входе. */
+    kind?: string | null;
+    /** Как приход поминает престол. Пусто — движок возьмёт имя самой памяти. */
+    label?: string | null;
+}
+
+export interface OrdoDayService {
+    key: string;
+    label: string;
+    ordoId: string;
+    /** Слой устава, назвавший канву. */
+    namedBy: string | null;
+    mark: string;
+    markLabel: string;
+    /**
+     * Ключ службы, которая эту вобрала. Всенощное — не две службы подряд, а
+     * одна, и вечерня с утреней в неё вошли; из списка они всё же не убраны,
+     * потому что «идеже всенощных не бывает» устав допускает прямо.
+     */
+    replacedBy: string | null;
+    /** Чем поправлено место службы в сутках, если поправлено. */
+    placementWhy: string | null;
+}
+
+/**
+ * СТОЯНИЕ — службы на одной половине гражданских суток, то есть один приход
+ * в храм. Половин четыре: vecher, noch, utro, den. Вечерня и всенощное дня
+ * стоят НАКАНУНЕ вечером, Преждеосвященная — днём самого дня, пасхальная
+ * заутреня — ночью; всё это движок и говорит здесь, вместе с «почему».
+ *
+ * Час и то, какие из этих служб приход служит, здесь не решается: это
+ * приходская практика, и она наша, а не движка.
+ */
+export interface OrdoStoyanie {
+    key: string;
+    /** Гражданская дата стояния — она же может не совпадать с датой дня. */
+    civil: string;
+    part: "vecher" | "noch" | "utro" | "den";
+    partLabel: string;
+    services: OrdoDayService[];
+    why: string[];
+}
+
+export interface OrdoMemory {
+    memoryId: string;
+    label: string;
+    book: string | null;
+}
+
+export interface OrdoVariant {
+    key: string;
+    label: string;
+    sign: string;
+    dayVariant: string;
+    feast: string | null;
+    why: string;
+    mark: string;
+    markLabel: string;
+    citationVerified: boolean;
+    fastingLabel: string | null;
+    /** Храмовая глава — непусто, если сегодня престольный праздник прихода. */
+    hram: Record<string, any> | null;
+    services: OrdoDayService[];
+    stoyaniya: OrdoStoyanie[];
+}
+
+export interface OrdoDay {
+    date: string;
+    churchDate: { month: number; day: number };
+    weekday: string;
+    weekdayLabel: string;
+    dayVariant: string;
+    pascha: string;
+    paschaOffset: number;
+    tone: number | null;
+    triod: string | null;
+    triodLabel: string | null;
+    postWeek: number | null;
+    memories: OrdoMemory[];
+    variants: OrdoVariant[];
+}
+
+const service = (raw: any): OrdoDayService => ({
+    key: raw.key,
+    label: raw.label,
+    ordoId: raw.ordo_id,
+    namedBy: raw.named_by ?? null,
+    mark: raw.mark,
+    markLabel: raw.mark_label,
+    replacedBy: raw.replaced_by ?? null,
+    placementWhy: raw.placement_why ?? null,
+});
+
+const variant = (raw: any): OrdoVariant => ({
+    key: raw.key,
+    label: raw.label,
+    sign: raw.sign,
+    dayVariant: raw.day_variant,
+    feast: raw.feast ?? null,
+    why: raw.why ?? "",
+    mark: raw.mark,
+    markLabel: raw.mark_label,
+    citationVerified: raw.citation_verified !== false,
+    fastingLabel: raw.fasting_label ?? null,
+    hram: raw.hram ?? null,
+    services: (raw.services ?? []).map(service),
+    stoyaniya: (raw.stoyaniya ?? []).map((s: any) => ({
+        key: s.key,
+        civil: s.civil,
+        part: s.part,
+        partLabel: s.part_label,
+        services: (s.services ?? []).map(service),
+        why: s.why ?? [],
+    })),
+});
+
+/**
+ * Что за день и что положено служить. Возвращает null, когда служба не
+ * поднята или дату не поняла, — отличать одно от другого обязан вызывающий.
+ */
+export const ordoDay = async (
+    date: string,
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[] },
+): Promise<OrdoDay | null> => {
+    const params: Record<string, string> = { date, ustav: opts?.ustav ?? "" };
+    const raw = await ask<any>("/day", params, (opts?.prestoly ?? []).map(p =>
+        // порядок значим: первый престол считается главным
+        ["prestoly", [p.memoryId, p.kind ?? "", p.label ?? ""].join("|")]));
+    if (!raw || raw.error || !raw.day) return null;
+
+    const d = raw.day;
+    return {
+        date: d.date,
+        churchDate: d.church_date,
+        weekday: d.weekday,
+        weekdayLabel: d.weekday_label,
+        dayVariant: d.day_variant,
+        pascha: d.pascha,
+        paschaOffset: d.pascha_offset,
+        tone: d.tone ?? null,
+        triod: d.triod ?? null,
+        triodLabel: d.triod_label ?? null,
+        postWeek: d.post_week ?? null,
+        memories: (d.memories ?? []).map((m: any) => ({
+            memoryId: m.memory_id, label: m.label, book: m.book ?? null,
+        })),
+        variants: (d.variants ?? []).map(variant),
+    };
+};
