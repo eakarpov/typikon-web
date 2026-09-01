@@ -145,6 +145,13 @@ export interface Gathering {
     duration: number | null;
     services: GatheringService[];
     why: WhyStep[];
+    /** Правка настоятеля легла поверх уставного проекта. */
+    edited?: boolean;
+    /**
+     * Отменено настоятелем. Собрание не выбрасывается, а гасится: в подписном
+     * календаре оно уже лежит у прихожан, и его надо ОТМЕНИТЬ, а не спрятать.
+     */
+    cancelled?: boolean;
 }
 
 export interface ParishDay {

@@ -3,6 +3,7 @@ import { getTemple, type Temple } from "@/lib/temples";
 import { monthDates, ordoRange } from "./engine";
 import { buildMonth } from "./gatherings";
 import { DEFAULT_RULES } from "./presets";
+import { applyEdits, editsOf } from "./edits";
 import type { ParishDay, ParishSettings } from "./types";
 
 /**
@@ -73,9 +74,25 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
     };
 };
 
+// ПРОЕКТ кэшируется: он выводится из устава и приходских правил, и меняется
+// только вместе с ними.
 export const parishMonth = cached(
     build,
     ["parish-month"],
     [CacheTag.PARISH],
     3600,
 );
+
+/**
+ * Расписание, каким его видят: проект устава плюс правки настоятеля.
+ *
+ * Правки читаются МИМО кэша — их правят по одной, и держать их час значило бы
+ * показывать настоятелю не то, что он только что исправил.
+ */
+export const parishSchedule = async (slug: string, month: string) => {
+    const data = await parishMonth(slug, month);
+    if (!data) return null;
+    const edits = await editsOf(slug, month);
+    const { days, applied } = applyEdits(data.days, edits);
+    return { ...data, days, edits: applied };
+};

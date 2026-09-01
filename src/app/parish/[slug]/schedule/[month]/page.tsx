@@ -1,8 +1,9 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { parishMonth } from "@/lib/parish/schedule";
+import { parishMonth, parishSchedule } from "@/lib/parish/schedule";
 import type { Gathering, ParishDay } from "@/lib/parish/types";
+import { AddGathering, DropEdit, EditGathering } from "./Edit";
 
 // ПРОЕКТ РАСПИСАНИЯ, который остаётся поправить, а не составить.
 //
@@ -15,7 +16,7 @@ export const revalidate = 3600;
 
 interface Props {
     params: Promise<{ slug: string; month: string }>;
-    searchParams: Promise<{ why?: string }>;
+    searchParams: Promise<{ why?: string; edit?: string }>;
 }
 
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
@@ -31,7 +32,11 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
 
 const WEEKEND = new Set(["суббота", "воскресенье"]);
 
-const Row = ({ day, why }: { day: ParishDay; why: boolean }) => {
+interface RowProps {
+    day: ParishDay; why: boolean; edit: boolean; slug: string; month: string;
+}
+
+const Row = ({ day, why, edit, slug, month }: RowProps) => {
     const marked = Boolean(day.prestolny) || day.dvunadesyaty;
     return (
         <tr style={{
@@ -65,14 +70,21 @@ const Row = ({ day, why }: { day: ParishDay; why: boolean }) => {
                 {day.gatherings.length === 0 && (
                     <span style={{ color: "#bbb" }}>—</span>
                 )}
-                {day.gatherings.map(g => <Item key={g.key} g={g} why={why} />)}
+                {day.gatherings.map(g => (
+                    <Item key={g.key} g={g} why={why} edit={edit} slug={slug} month={month} />
+                ))}
+                {edit && <AddGathering slug={slug} month={month} date={day.date} />}
             </td>
         </tr>
     );
 };
 
-const Item = ({ g, why }: { g: Gathering; why: boolean }) => (
-    <div style={{ marginBottom: ".35rem" }}>
+const Item = ({ g, why, edit, slug, month }: {
+    g: Gathering; why: boolean; edit: boolean; slug: string; month: string;
+}) => (
+    <div style={{ marginBottom: ".35rem",
+                  textDecoration: g.cancelled ? "line-through" : undefined,
+                  opacity: g.cancelled ? .55 : 1 }}>
         <span style={{
             display: "inline-block", minWidth: "3.4rem",
             fontVariantNumeric: "tabular-nums",
@@ -80,7 +92,9 @@ const Item = ({ g, why }: { g: Gathering; why: boolean }) => (
         }}>
             {g.time ?? "—:—"}
         </span>
-        <span>{g.title}</span>
+        <span style={{ borderBottom: g.edited ? "2px solid #c9a227" : undefined }}>
+            {g.title}
+        </span>
         {g.belongsTo && (
             <span style={{ color: "#777" }}> — {g.belongsTo}</span>
         )}
@@ -92,6 +106,7 @@ const Item = ({ g, why }: { g: Gathering; why: boolean }) => (
                     .map(s => s.label).join(", ")}
             </span>
         )}
+        {edit && <EditGathering slug={slug} month={month} g={g} />}
         {why && (
             <ul style={{
                 margin: ".2rem 0 .5rem 3.4rem", padding: 0, listStyle: "none",
@@ -118,9 +133,13 @@ const monthShift = (month: string, by: number) => {
 
 const Page = async ({ params, searchParams }: Props) => {
     const { slug, month } = await params;
-    const why = (await searchParams).why === "1";
-    const data = await parishMonth(slug, month);
+    const q = await searchParams;
+    const [why, edit] = [q.why === "1", q.edit === "1"];
+    const data = await parishSchedule(slug, month);
     if (!data) notFound();
+
+    const stale = data.edits.filter(e => e.status === "stale");
+    const orphaned = data.edits.filter(e => e.status === "orphaned");
 
     return (
         <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "1rem" }}>
@@ -150,10 +169,36 @@ const Page = async ({ params, searchParams }: Props) => {
                     <p style={{ color: "#777", fontSize: ".85rem", margin: ".75rem 0 0" }}>
                         Это ПРОЕКТ, выведенный из устава: что служится — сказал устав, во
                         сколько — приходское умолчание.{" "}
-                        <Link href={`/parish/${slug}/schedule/${month}${why ? "" : "?why=1"}`}>
+                        <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 0 : 1}&edit=${edit ? 1 : 0}`}>
                             {why ? "скрыть объяснения" : "показать, откуда что взялось"}
                         </Link>
+                        {" · "}
+                        <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 1 : 0}&edit=${edit ? 0 : 1}`}>
+                            {edit ? "закончить правку" : "поправить"}
+                        </Link>
                     </p>
+
+                    {(stale.length > 0 || orphaned.length > 0) && (
+                        <div style={{ margin: ".75rem 0 0", padding: ".5rem .75rem",
+                                      background: "#fdf6e3", fontSize: ".85rem" }}>
+                            {stale.map(e => (
+                                <div key={e._id} style={{ marginBottom: ".3rem" }}>
+                                    <b>{Number(e.date.slice(8))} числа</b> устав теперь
+                                    предлагает {e.now?.time ?? "без часа"} — у вас
+                                    поставлено {e.value.time ?? e.value.title}.
+                                    Правка держится.{" "}
+                                    <DropEdit slug={slug} id={e._id!} />
+                                </div>
+                            ))}
+                            {orphaned.map(e => (
+                                <div key={e._id} style={{ marginBottom: ".3rem" }}>
+                                    <b>{Number(e.date.slice(8))} числа</b> устав больше не
+                                    назначает того собрания, которое вы правили.{" "}
+                                    <DropEdit slug={slug} id={e._id!} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {data.failed.length > 0 && (
                         <p style={{ margin: ".75rem 0 0", padding: ".5rem .75rem",
@@ -169,7 +214,10 @@ const Page = async ({ params, searchParams }: Props) => {
                     <table style={{ width: "100%", borderCollapse: "collapse",
                                     marginTop: "1rem", fontSize: ".95rem" }}>
                         <tbody>
-                            {data.days.map(d => <Row key={d.date} day={d} why={why} />)}
+                            {data.days.map(d => (
+                                <Row key={d.date} day={d} why={why} edit={edit}
+                                     slug={slug} month={month} />
+                            ))}
                         </tbody>
                     </table>
 
