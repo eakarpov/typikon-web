@@ -78,6 +78,18 @@ const ApiDocs = () => (
         </section>
 
         <section className="flex flex-col gap-2">
+            <h2 className="text-lg font-bold">Нужен корпус целиком?</h2>
+            <p>
+                Не выбирайте его отсюда по записи: API отмерен и рассчитан на выборку, а не
+                на выкачку. Корпус выложен одним набором файлов —{" "}
+                <Link href="/data" className="text-amber-800 underline underline-offset-4">
+                    выгрузка
+                </Link>
+                : JSON Lines, контрольные суммы, лицензия на каждый слой.
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
             <h2 className="text-lg font-bold">Ключи и ограничения</h2>
             <p>
                 Корпус свободен, а вот силы сервера — нет: один нетерпеливый скрипт в

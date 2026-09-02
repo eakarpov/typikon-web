@@ -64,7 +64,9 @@
     "memories:import": "tsx src/scripts/import-memories.ts",
     "memories:review-prep": "tsx src/scripts/prepare-memory-review.ts",
     "parish:admin": "tsx src/scripts/parish-admin.ts",
-    "roles": "tsx src/scripts/roles.ts"
+    "roles": "tsx src/scripts/roles.ts",
+    "corpus:dump": "tsx src/scripts/build-corpus-dump.ts",
+    "release:data": "bash release-data.sh"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

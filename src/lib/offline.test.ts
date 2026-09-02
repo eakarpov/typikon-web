@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { formatBytes, plural } from "./offline";
+import { formatBytes } from "./offline";
+import { plural } from "@/utils/plural";
 
 // Числительные и размеры показываются человеку, а не машине: «2 страниц»
 // и «1.7 МБ» — это ошибки, которые видит каждый, кто открыл настройки.

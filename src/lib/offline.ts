@@ -5,6 +5,9 @@
 // сама, а просит воркера и ждёт ответа по MessageChannel: канал одноразовый,
 // ответ приходит ровно на свою просьбу, и одновременные нажатия не путаются.
 
+// Счёт по-русски нужен и здесь, и на странице выгрузки — живёт в utils/plural.
+export { plural } from "@/utils/plural";
+
 export type SavedPage = {
     /** Адрес без домена, как его видит браузер: «/calendar/march-30». */
     url: string;
@@ -122,18 +125,6 @@ export const formatBytes = (bytes: number) => {
     return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} МБ`;
 };
 
-/**
- * Русский счёт: одна страница, две страницы, пять страниц. Правило общее —
- * одиннадцать-четырнадцать идут по последней форме, несмотря на единицу в конце.
- */
-export const plural = (count: number, one: string, few: string, many: string) => {
-    const tens = count % 100;
-    if (tens >= 11 && tens <= 14) return many;
-    const units = count % 10;
-    if (units === 1) return one;
-    if (units >= 2 && units <= 4) return few;
-    return many;
-};
 
 export const formatSavedAt = (savedAt: number) =>
     new Date(savedAt).toLocaleDateString("ru-RU", {

@@ -85,3 +85,7 @@ next-env.d.ts
 
 package-lock.json
 scratch/
+
+# Выгрузка корпуса — собирается заново командой npm run corpus:dump
+data-dump/
+data-dump.zip

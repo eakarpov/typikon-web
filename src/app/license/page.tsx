@@ -73,6 +73,60 @@ const License = () => (
         </section>
 
         <section className="flex flex-col gap-2">
+            <h2 className="text-lg font-bold">Каталог храмов — ODbL, а не CC BY</h2>
+            <p>
+                Каталог храмов и престолов выведен из чужих открытых баз: 53 091 запись из{" "}
+                <a
+                    href="https://www.openstreetmap.org/copyright"
+                    className="text-amber-800 underline underline-offset-4"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    OpenStreetMap
+                </a>{" "}
+                и 11 763 из Wikidata. OSM распространяется под{" "}
+                <a
+                    href="https://opendatacommons.org/licenses/odbl/1-0/"
+                    className="text-amber-800 underline underline-offset-4"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    ODbL 1.0
+                </a>
+                : она требует указания источника и держит производные базы на тех же
+                условиях. Выложить каталог под CC BY 4.0 значило бы пересдать чужую базу на
+                своих условиях, поэтому он идёт отдельно и под ODbL. Наша работа здесь —
+                разбор посвящений, привязка к уставу и сведение со святыми — отдаётся вместе
+                с каталогом и на его условиях.
+            </p>
+            <p className="border-l-2 border-slate-300 pl-3 text-slate-700">
+                © участники OpenStreetMap (ODbL); данные Wikidata (CC0); разметка престолов —
+                проект «Уставные чтения» (typikon.su)
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+            <h2 className="text-lg font-bold">Библия: у каждого издания свои условия</h2>
+            <p>
+                Изданий пять, и происхождение у них разное. Наша работа во всех пяти одна:
+                разбор на книги, привязка к канону и согласование нумераций — таблица
+                соответствия «как напечатано» и «куда легло». Она покрывается условиями
+                корпуса. А набранный текст стиха наш только там, где набирали мы: румынская
+                кириллица 1688 года и китайский Новый Завет 1910 года.
+            </p>
+            <p>
+                Церковнославянская, латинская и греческая взяты готовыми оцифровками со
+                стороны. Сами издания в общественном достоянии по возрасту, но оцифровка —
+                чужая работа на своих условиях (у греческого Ветхого Завета это GPL-3.0), и
+                наша лицензия на неё не распространяется. Поэтому в{" "}
+                <Link href="/data" className="text-amber-800 underline underline-offset-4">
+                    выгрузке
+                </Link>{" "}
+                текст стиха отдаётся по двум изданиям, а согласование нумераций — по всем пяти.
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
             <h2 className="text-lg font-bold">Что не покрывается</h2>
             <p>
                 Сканы оригиналов в РГБ, НЭБ и других хранилищах, русские переводы на
@@ -92,7 +146,10 @@ const License = () => (
             </p>
         </section>
 
-        <p>
+        <p className="flex flex-row gap-4">
+            <Link href="/data" className="text-amber-800 underline underline-offset-4">
+                Выгрузка корпуса
+            </Link>
             <Link href="/about" className="text-amber-800 underline underline-offset-4">
                 О проекте
             </Link>
