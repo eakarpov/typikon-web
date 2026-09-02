@@ -6,6 +6,7 @@ import {
     BOOK_LABELS, SERVICE_LABELS, SIGN_LABELS, SOURCE_LABELS, UNIT_LABELS,
     labelOf, monthLabel,
 } from "@/utils/chantLabels";
+import { bookLanguageShort } from "@/utils/bookLanguages";
 
 // Форма поиска и сужения. Состояние держим не в компоненте, а в адресе
 // страницы: тогда найденное можно переслать ссылкой, а «назад» возвращает к
@@ -80,9 +81,16 @@ const Filters = ({ facets, params }: Props) => {
                     {select("sign", "любой знак", facets.signs, v => labelOf(SIGN_LABELS, v))}
                     {select("service", "любая служба", facets.services, v => labelOf(SERVICE_LABELS, v))}
                     {select("unit", "любой род", facets.units, v => labelOf(UNIT_LABELS, v))}
+                    {/* Язык предлагаем, только если языков и правда несколько:
+                        на одноязычном корпусе такой отбор был бы обманом. */}
+                    {facets.languages.length > 1 && select(
+                        "language", "любой язык",
+                        facets.languages.map(l => l.code),
+                        v => `${bookLanguageShort(String(v))} · ${
+                            facets.languages.find(l => l.code === v)?.count ?? 0}`)}
                     {Object.keys(params).some(k => k !== "q" && k !== "page" && params[k]) && (
                         <button
-                            onClick={() => push({ source: "", book: "", month: "", tone: "", sign: "", service: "", unit: "", memory: "" })}
+                            onClick={() => push({ source: "", book: "", month: "", tone: "", sign: "", service: "", unit: "", memory: "", language: "" })}
                             className="font-serif text-sm text-red-900 underline"
                         >
                             сбросить

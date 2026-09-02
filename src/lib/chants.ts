@@ -102,6 +102,16 @@ export interface ChantFilters {
     memoryId?: string | null;
     service?: string | null;
     unit?: string | null;
+    /**
+     * Язык ТЕКСТА, а не книги.
+     *
+     * Понадобился, когда корпус перестал быть славянским: сегодня в нём
+     * 123 тысячи славянских строк, 53 тысячи румынских, 34 греческих и 24
+     * английских. Отбором это не мешало — кириллический запрос румынских
+     * строк не находит и так, — но обратное неверно: «Domnului» отдаёт две
+     * тысячи румынских строк, и без отбора по языку сузить их нечем.
+     */
+    language?: string | null;
 }
 
 export interface ChantHit {
@@ -126,6 +136,10 @@ export interface ChantHit {
     akathist: string | null;
     stanza: number | null;
     stanzaKind: string | null;
+    /** Язык самой строки: корпус больше не одноязычен. */
+    language: string;
+    /** Издание, откуда строка, — у переводов их несколько на одно место. */
+    sourceBook: string | null;
 }
 
 export interface Condition {
@@ -164,6 +178,7 @@ export const conditionsFor = (filters: ChantFilters): Condition[] => {
     add("COALESCE(g.service, c.service) = ?", filters.service);
     add("ci.content_unit = ?", filters.unit);
     add("s.default_sign = ?", filters.sign);
+    add("ci.language = ?", filters.language);
     return out;
 };
 
@@ -241,7 +256,8 @@ export const searchChants = (
                COALESCE(g.tone, c.tone) AS tone,
                p.label AS position_label,
                s.default_sign AS sign,
-               a.title AS akathist_title, ci.stanza, ci.stanza_kind
+               a.title AS akathist_title, ci.stanza, ci.stanza_kind,
+               ci.language, g.source_book
         FROM hits h
         JOIN content_items ci ON ci.item_id = h.item_id
         LEFT JOIN groups g ON g.group_id = ci.group_id
@@ -274,6 +290,8 @@ export const searchChants = (
             akathist: r.akathist_title ?? null,
             stanza: r.stanza ?? null,
             stanzaKind: r.stanza_kind ?? null,
+            language: r.language ?? "cu_gr",
+            sourceBook: r.source_book ?? null,
         })),
     };
 };
@@ -286,6 +304,7 @@ export interface ChantFacets {
     signs: string[];
     services: string[];
     units: string[];
+    languages: { code: string; count: number }[];
 }
 
 /**
@@ -314,6 +333,13 @@ export const chantFacets = (): ChantFacets | null => {
         signs: column<string>("SELECT DISTINCT default_sign FROM memory_signs WHERE default_sign IS NOT NULL ORDER BY default_sign"),
         services: column<string>("SELECT DISTINCT service FROM groups WHERE service IS NOT NULL ORDER BY service"),
         units: column<string>("SELECT DISTINCT content_unit FROM content_items ORDER BY content_unit"),
+        // Языки берём с числом строк и по убыванию: корпус на них разложен
+        // очень неровно, и порядок по алфавиту поставил бы арабский с его
+        // тремя сотнями строк впереди славянского со ста двадцатью тысячами.
+        languages: (db.prepare(
+            `SELECT language, count(*) AS n FROM content_items
+              WHERE text IS NOT NULL GROUP BY language ORDER BY n DESC`,
+        ).all() as any[]).map(r => ({ code: r.language as string, count: r.n as number })),
     };
 };
 

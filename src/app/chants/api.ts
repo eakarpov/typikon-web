@@ -34,6 +34,7 @@ export const filtersFrom = (params: Record<string, string | undefined>): ChantFi
     service: params.service || null,
     unit: params.unit || null,
     memoryId: params.memory || null,
+    language: params.language || null,
 });
 
 /**
