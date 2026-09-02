@@ -1,0 +1,17 @@
+/* Отзвуки Писания в тексте песнопения.
+ *
+ * Краска приходит переменной, а не классом: тумблер в настройках чтения
+ * ставит --citations-mark в transparent, и слой гаснет без единой ветки в
+ * разметке (см. READING_SETTINGS в @/lib/settings/reading).
+ *
+ * Догадка помечена подчёркиванием, а не другим цветом: цвет читатель может
+ * и не различить, а выдавать трёхсловное созвучие за цитату нельзя. */
+.chant-citation {
+    background: var(--citations-mark, #fde68a);
+    color: inherit;
+}
+
+.chant-citation--guess {
+    background: none;
+    border-bottom: 1px dotted var(--citations-mark, #fde68a);
+}

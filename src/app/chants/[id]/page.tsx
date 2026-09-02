@@ -3,12 +3,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getChant, type ChantDetail } from "@/lib/chants";
+import { citationsOf, layoutCitations } from "@/lib/citations";
 import { csFont, myFont } from "@/utils/font";
 import {
     BOOK_LABELS, MARKER_LABELS, PLACEMENT_LABELS, SERVICE_LABELS, SIGN_LABELS,
     UNIT_LABELS, labelOf, memoryAddress, shortPosition, stanzaLabel,
 } from "@/utils/chantLabels";
 import Tune from "./Tune";
+import Text from "./Text";
+import Citations from "./Citations";
+import "./citations.css";
 
 // Страница одного песнопения.
 //
@@ -38,22 +42,6 @@ export async function generateMetadata(
         description: chant.text.replace(/\//g, " ").slice(0, 180),
     };
 }
-
-// Уставную кириллицу и румынскую обычным шрифтом не показать: в нём нет ни
-// титла, ни юса, и текст осыплется квадратами (тот же приём, что в Steps.tsx).
-const LANG_FONT: Record<string, string> = { "cu": "font-sans-serif", "ro_cyr": "font-sans-serif" };
-
-/** Текст песнопения. Косая черта — разрыв строки, как его печатает корпус. */
-const Text = ({ chant }: { chant: ChantDetail }) => (
-    <p className={`font-serif text-slate-800 leading-relaxed ${LANG_FONT[chant.language] || ""}`}>
-        {chant.text.split("/").map((part, i, all) => (
-            <React.Fragment key={i}>
-                {part.trim()}
-                {i < all.length - 1 && <br />}
-            </React.Fragment>
-        ))}
-    </p>
-);
 
 /**
  * Откуда песнопение. У строфы акафиста ничего этого нет — он не день книги и
@@ -111,6 +99,12 @@ const ChantPage = ({
     const chant = id ? getChant(id) : null;
     if (!chant) notFound();
 
+    // Смещения цитат посчитаны по той строке, у которой текст СВОЙ: Минея
+    // печатает ирмос зачином, а сам он лежит в Ирмологии, и приложи мы
+    // смещения Ирмология к зачину — подсветка уехала бы молча.
+    const citations = citationsOf(chant.textItemId) ?? [];
+    const parts = layoutCitations(chant.text, citations);
+
     return (
         <div className={`${myFont.variable} ${csFont.variable} pt-2`}>
             <div className="flex items-center gap-2 flex-wrap">
@@ -133,7 +127,7 @@ const ChantPage = ({
             <Badges chant={chant} />
 
             <div className="mt-4">
-                <Text chant={chant} />
+                <Text chant={chant} parts={parts} />
                 {chant.borrowed && (
                     // Текста в этой книге нет: она печатает зачин, а само
                     // песнопение лежит в Ирмологии или в соседнем каноне.
@@ -142,6 +136,8 @@ const ChantPage = ({
                     </p>
                 )}
             </div>
+
+            <Citations citations={citations} />
 
             {chant.canonId && (
                 <p className="mt-3">

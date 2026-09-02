@@ -348,6 +348,18 @@ export interface ChantDetail {
     text: string;
     /** Текста своего нет — он взят по ссылке (Ирмологий или соседний канон). */
     borrowed: boolean;
+    /**
+     * Чей текст показан: своя это строка или та, откуда текст взят по ссылке.
+     *
+     * Нужно всему, что считается ПО СМЕЩЕНИЯМ в тексте, — сейчас цитатам из
+     * Писания. Смещения посчитаны по той строке, у которой текст свой, и
+     * приложенные к чужой строке уехали бы молча: Минея печатает ирмос
+     * зачином, а сам он лежит в Ирмологии.
+     *
+     * null — текст пришёл из словаря формул (fixed_texts), а не из строки
+     * корпуса, и смещений на него нет вовсе.
+     */
+    textItemId: number | null;
     language: string;
     unit: string;
     marker: string | null;
@@ -391,7 +403,7 @@ export const getChant = (id: number): ChantDetail | null => {
     const row = db.prepare(`
         SELECT ci.item_id, ci.content_unit, ci.ode, ci.marker, ci.marker_alt,
                ci.placement, ci.repeat_count, ci.stanza, ci.stanza_kind,
-               ci.language, ci.text, ci.canon_id, ci.ref_id,
+               ci.language, ci.text, ci.canon_id, ci.ref_id, ci.ref_item_id,
                f.text AS from_dictionary, o.text AS from_item,
                g.podoben, g.group_label,
                COALESCE(g.tone, c.tone) AS tone,
@@ -419,6 +431,9 @@ export const getChant = (id: number): ChantDetail | null => {
         id: row.item_id,
         text: row.text ?? resolved ?? "",
         borrowed: row.text === null && resolved !== null,
+        textItemId: row.text !== null
+            ? row.item_id
+            : (row.from_item !== null ? (row.ref_item_id ?? null) : null),
         language: row.language ?? "cu_gr",
         unit: row.content_unit,
         marker: row.marker ?? null,

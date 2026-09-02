@@ -32,6 +32,21 @@ export interface ReadingSetting {
 
 export const READING_SETTINGS: ReadingSetting[] = [
     {
+        // Переменная хранит КРАСКУ, а не флаг: «не помечать» — это
+        // transparent, и слой гаснет без единой ветки в разметке и в CSS.
+        id: "citations",
+        key: "typikon-citations-layer",
+        cssVar: "--citations-mark",
+        label: "Отзвуки Писания",
+        hint: "Слова песнопения, взятые из Библии, помечаются прямо в тексте. "
+            + "Список стихов под песнопением остаётся в любом случае.",
+        fallback: "#fde68a",
+        options: [
+            { value: "#fde68a", label: "Помечать" },
+            { value: "transparent", label: "Не помечать" },
+        ],
+    },
+    {
         id: "fontSize",
         key: "typikon-reading-font-size",
         cssVar: "--reading-font-size",
