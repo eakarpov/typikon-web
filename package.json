@@ -66,6 +66,7 @@
     "parish:admin": "tsx src/scripts/parish-admin.ts",
     "roles": "tsx src/scripts/roles.ts",
     "bible:greek-nt": "tsx src/scripts/import-greek-nt.ts",
+    "bible:fix-swete": "tsx src/scripts/fix-swete-typos.ts",
     "corpus:dump": "tsx src/scripts/build-corpus-dump.ts",
     "release:data": "bash release-data.sh"
   },
