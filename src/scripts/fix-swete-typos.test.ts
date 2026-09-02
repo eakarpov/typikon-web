@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { CORRECTIONS, replaceNormalized } from "./fix-swete-typos";
+import { CORRECTIONS, replaceNormalized, toPolytonic } from "./fix-swete-typos";
 
 // Правки меняют текст Писания поштучно и вручную. Проверяется, что каждая
 // описана полно и что поиск не спотыкается о запись греческого разными знаками.
@@ -38,5 +38,22 @@ describe("поиск с оглядкой на нормализацию", () => {
 
     it("молчит, когда искомого нет", () => {
         assert.equal(replaceNormalized("ничего похожего", tonos, "x"), null);
+    });
+});
+
+describe("письмо издания", () => {
+    // Текст древнегреческий и набран политоникой: «ά» — U+1F71 (оксия). Тонос
+    // U+03AC — знак новогреческой монотонии, и посреди этого текста он чужой.
+    it("переводит современное ударение в старое", () => {
+        assert.equal(toPolytonic("άέήί"), "άέήί");
+        assert.equal(toPolytonic("όύώ"), "όύώ");
+    });
+
+    it("не трогает буквы без ударения и уже старые знаки", () => {
+        assert.equal(toPolytonic("αβά"), "αβά");
+    });
+
+    it("оставляет гравис и придыхания как есть", () => {
+        assert.equal(toPolytonic("ὶὸ"), "ὶὸ");
     });
 });
