@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import abcjs from "abcjs";
 import assert from "node:assert/strict";
 import { fitTune } from "@/lib/tunes/apply";
 import { parseChantText } from "@/lib/tunes/syllables";
@@ -34,10 +35,11 @@ test("подтекстовка связывает слоги слова дефи
     const abc = toAbc(fitted, scoresOf(found.tune, "staff"));
     const lyrics = abc.split("\n").filter(l => l.startsWith("w:"));
 
-    assert.equal(lyrics[0], "w: Храм все-све́-тел |");
+    // Части идут через пробел, дефис показывает, что слово продолжается.
+    assert.equal(lyrics[0], "w: Храм все- све́- тел |");
     // «хс» — две шумные, и слог они начинают вместе: правило деления
     // морфологии не знает и знать не обязано (см. splitWord).
-    assert.equal(lyrics[3], "w: пи-та́-ю-щи-хся |");
+    assert.equal(lyrics[3], "w: пи- та́- ю- щи- хся |");
 });
 
 test("нот в колене столько же, сколько слогов", () => {
@@ -72,12 +74,17 @@ test("партес идёт двумя станами, как его и печа
     assert.equal(abc.split("\n").filter(l => l.startsWith("w:")).length, 5);
 });
 
-test("подтекстовку можно снять, оставив одну мелодию", () => {
+test("текст ставится либо между станами, либо под каждым", () => {
     const { found, fitted } = fittedFor("obihod-partes", {
         tone: 1, podoben: null, genre: "stichera",
     });
-    const abc = toAbc(fitted, scoresOf(found.tune, "staff"), { lyrics: false });
-    assert.equal(abc.includes("w:"), false);
+    const scores = scoresOf(found.tune, "staff");
+    const count = (mode: "between" | "each") =>
+        toAbc(fitted, scores, { lyrics: mode }).split("\n").filter(l => l.startsWith("w:")).length;
+
+    // Пять колен: между станами — пять строк текста, под каждым станом — десять.
+    assert.equal(count("between"), 5);
+    assert.equal(count("each"), 10);
 });
 
 test("знамя повторяется на каждом слоге речитатива", () => {
@@ -112,7 +119,7 @@ test("распев держит свой слог подчёркиваниями
 
     // «Да веселя́тся Небе́сная» — распев сидит на «бе́», и подчёркивание держит
     // слог на второй его ноте, а «сна» остаётся при своей.
-    assert.equal(lyrics[0], "w: Да ве-се-ля́-тся Не-бе́ _-сна-я |");
+    assert.equal(lyrics[0], "w: Да ве- се- ля́- тся Не- бе́- _ сна- я |");
 
     // Нот в строке и слогов вместе с подчёркиваниями — поровну.
     const rows = abc.split("\n");
@@ -148,4 +155,36 @@ test("распев не растягивается на лишние слоги,
     ]);
     // Читок, остановка, спуск двумя половинками — и вторая группа с распева.
     assert.deepEqual(last.cells.map(c => c.steps[0]), [0, 0, 0, 0, 1, 2, 3, 4, 5, 6]);
+});
+
+test("abcjs разбирает подтекстовку и не теряет ни одного слога", () => {
+    // Проверка сквозная: собранный ABC отдаётся тому самому разбору, каким его
+    // читает рисующая библиотека, и сверяется, что КАЖДЫЙ слог достался ноте.
+    //
+    // Прежде подчёркивание стояло вплотную к следующему слогу («Спа́ _-се»), и
+    // abcjs читал «_-се» как один знак продления — последний слог каждого
+    // колена пропадал молча. Ни длины строк, ни число нот этого не показывали:
+    // в самой строке ABC слог был, а до нот не доходил.
+    const found = resolveIn("obihod-msk", { tone: 3, podoben: null, genre: "troparion" });
+    assert.ok(found);
+    const colons = parseChantText(found.tune.sample!.text);
+    const fitted = fitTune(found.tune, colons);
+    const abc = toAbc(fitted, scoresOf(found.tune, "staff"));
+
+    const parsed = (abcjs as unknown as { parseOnly: (s: string) => any[] }).parseOnly(abc);
+    const sung: string[] = [];
+    for (const line of parsed[0].lines ?? []) {
+        for (const staff of line.staff ?? []) {
+            // Текст несёт один голос; берём первый, у которого он есть.
+            const voice = (staff.voices ?? []).find((v: any[]) => v.some(el => el.lyric));
+            for (const el of voice ?? []) {
+                for (const part of el.lyric ?? []) {
+                    if (part.syllable && part.syllable !== "_") sung.push(part.syllable);
+                }
+            }
+        }
+    }
+
+    const expected = colons.flatMap(c => c.syllables.map(s => s.text));
+    assert.deepEqual(sung, expected);
 });

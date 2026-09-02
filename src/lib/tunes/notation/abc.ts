@@ -53,16 +53,25 @@ export const countNotes = (abc: string): number => (abc.match(ABC_NOTE) ?? []).l
  * РАСПЕВ ТРЕБУЕТ ПОДЧЁРКИВАНИЙ, и без них подтекстовка съезжает. ABC кладёт по
  * слогу НА НОТУ, а не на шаг напева: шаг с распевом несёт две-три ноты, и
  * лишние ноты утаскивали бы под себя следующие слоги. Отсюда «Спа-се-е» вместо
- * «Спа-а-се» и «Хри-сте-е» вместо «Хри-и-сте»: съезжало всё, что стояло после
- * первого же распева в колене. Подчёркивание держит слог на лишней ноте.
+ * «Спа-а-се»: съезжало всё, что стояло после первого же распева в колене.
+ * Подчёркивание держит слог на лишней ноте.
+ *
+ * ПОДЧЁРКИВАНИЕ — ОТДЕЛЬНОЕ СЛОВО, и это не украшательство разметки. Написанное
+ * вплотную к следующему слогу («Спа́ _-се») оно съедает его целиком: abcjs
+ * разбирает «_-се» как один знак продления и до «се» не доходит вовсе —
+ * последний слог каждого колена пропадал молча. Поэтому все части идут через
+ * пробел, а дефис продолжения слова ставится ПЕРЕД подчёркиванием: «Не-бе́- _
+ * сна-я».
  */
-const lyricsOf = (cells: { text: string; wordStart: boolean; notes: number }[]): string =>
-    cells
-        .map((cell, i) => {
-            const head = i === 0 ? "" : cell.wordStart ? " " : "-";
-            return head + cell.text + " _".repeat(Math.max(0, cell.notes - 1));
-        })
-        .join("");
+const lyricsOf = (cells: { text: string; wordStart: boolean; notes: number }[]): string => {
+    const tokens: string[] = [];
+    cells.forEach((cell, i) => {
+        const continues = i + 1 < cells.length && !cells[i + 1].wordStart;
+        tokens.push(cell.text + (continues ? "-" : ""));
+        for (let n = 1; n < cell.notes; n++) tokens.push("_");
+    });
+    return tokens.join(" ");
+};
 
 /**
  * Растянутые шаги, в которых стои́т не одна нота.
@@ -89,9 +98,20 @@ export const stretchIssues = (fitted: Fitted, score: Score): string[] => {
     return out;
 };
 
+/**
+ * Где стои́т текст.
+ *
+ * «between» — одной строкой между станами, как печатает обиход: текст в партесе
+ * один на всех, и читают его оба хора разом. «each» — под каждым станом, как
+ * набирают там, где хоры поют по разным листам.
+ *
+ * Совсем без текста напев не показываем: ноты обихода без слов не разучивают —
+ * распев в них держится за ударения, и без слогов не видно, за какие.
+ */
+export type LyricsMode = "between" | "each";
+
 export interface AbcOptions {
-    /** Показывать подтекстовку. Без неё видна одна мелодия — так удобно разучивать. */
-    lyrics?: boolean;
+    lyrics?: LyricsMode;
 }
 
 /**
@@ -139,7 +159,7 @@ export const toAbc = (fitted: Fitted, scores: Score[], options: AbcOptions = {})
     const staves = STAVES
         .map(voices => voices.filter(v => byVoice.has(v)))
         .filter(voices => voices.length > 0);
-    const lyrics = options.lyrics !== false;
+    const mode: LyricsMode = options.lyrics ?? "between";
 
     const key = scores[0].key || "C";
     // Заголовка в ABC нет: имя напева уже стоит над станом на странице, и
@@ -164,8 +184,10 @@ export const toAbc = (fitted: Fitted, scores: Score[], options: AbcOptions = {})
             `V:V${index} clef=${STAFF_CLEF[voice]}`
             + (i === 0 ? ` name="${staffName(voices)}"` : ""),
         ];
-        // Текст — под нижним голосом первого стана, то есть между станами.
-        const carries = lyrics && i === voices.length - 1 && index <= voices.length;
+        // Текст несёт нижний голос стана: под первым он встаёт между станами,
+        // под каждым — соответственно под каждым.
+        const lowest = i === voices.length - 1;
+        const carries = lowest && (mode === "each" || index <= voices.length);
         return [...declaration, ...voicePart(fitted, score, carries)];
     }));
 

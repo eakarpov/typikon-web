@@ -66,7 +66,7 @@ const TunePage = ({
         tune.order.tail.length ? tune.order.tail.map(i => i + 1).join(", ") : null,
     ].filter(Boolean).join("  ");
 
-    const noLyrics = searchParams.lyrics === "off";
+    const eachStaff = searchParams.lyrics === "each";
     const link = (patch: Record<string, string | undefined>) => {
         const next = new URLSearchParams();
         for (const [k, v] of Object.entries({ ...searchParams, ...patch })) if (v) next.set(k, v);
@@ -172,13 +172,13 @@ const TunePage = ({
                                 {NOTATION_LABELS[n]}
                             </Link>
                         ))}
-                        {notation === "staff" && (
+                        {notation === "staff" && scores.length > 1 && (
                             <>
-                                <Link href={link({ lyrics: undefined })} className={pill(!noLyrics)}>
+                                <Link href={link({ lyrics: undefined })} className={pill(!eachStaff)}>
                                     текст между строк
                                 </Link>
-                                <Link href={link({ lyrics: "off" })} className={pill(noLyrics)}>
-                                    без слов
+                                <Link href={link({ lyrics: "each" })} className={pill(eachStaff)}>
+                                    под каждой строкой
                                 </Link>
                             </>
                         )}
@@ -200,7 +200,7 @@ const TunePage = ({
                                     ))}
                                 </div>
                             )
-                            : <Staff abc={toAbc(fitted, scores, { lyrics: !noLyrics })} />}
+                            : <Staff abc={toAbc(fitted, scores, { lyrics: eachStaff ? "each" : "between" })} />}
                     </section>
 
                     {issues.length > 0 && (

@@ -22,7 +22,7 @@ interface Params {
     notation?: string;
     /** Выбранные варианты строк, через запятую: «1a,4a». */
     variant?: string;
-    /** «off» — показать одну мелодию, без слов. */
+    /** Где текст: «between» (по умолчанию) или «each» — под каждым станом. */
     lyrics?: string;
 }
 
@@ -217,21 +217,22 @@ const Tune = ({ chant, params }: { chant: ChantDetail; params: Params }) => {
                     );
                 })}
 
-                {notation === "staff" && (
-                    // Текст под нотами нужен не всегда: разучивая напев, поют по
-                    // мелодии, и слова только загораживают стан.
+                {notation === "staff" && scores.length > 1 && (
+                    // Обиход печатает текст между станами — оба хора читают его
+                    // разом. Под каждым станом набирают там, где хоры поют по
+                    // разным листам; это второй способ, а не отсутствие текста.
                     <Row label="текст">
                         <Pill
                             href={linkTo(chant.id, params, { lyrics: undefined })}
-                            active={params.lyrics !== "off"}
+                            active={params.lyrics !== "each"}
                         >
                             между строк
                         </Pill>
                         <Pill
-                            href={linkTo(chant.id, params, { lyrics: "off" })}
-                            active={params.lyrics === "off"}
+                            href={linkTo(chant.id, params, { lyrics: "each" })}
+                            active={params.lyrics === "each"}
                         >
-                            без слов
+                            под каждой
                         </Pill>
                     </Row>
                 )}
@@ -259,7 +260,7 @@ const Tune = ({ chant, params }: { chant: ChantDetail; params: Params }) => {
             <div className="mt-3">
                 {notation === "znamenny"
                     ? <Znamenny lines={toZnamenny(fitted, scores[0])} />
-                    : <Staff abc={toAbc(fitted, scores, { lyrics: params.lyrics !== "off" })} />}
+                    : <Staff abc={toAbc(fitted, scores, { lyrics: params.lyrics === "each" ? "each" : "between" })} />}
             </div>
 
             {notation === "znamenny" && (
