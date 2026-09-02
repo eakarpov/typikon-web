@@ -30,10 +30,13 @@ export async function generateMetadata({ params }: { params: { id: string[] } })
 
 /** Чем шаг является: по этому и сверяют раскладку со схемой. */
 const stepLabel = (step: Step): string =>
-    step.flex ? "читок"
-        : step.stress === "first" ? "распев ↑"
-            : step.stress === "last" ? "распев ↓"
-                : "—";
+    // Читок на самом распеве — остановка: нота со штрихом, стоящая на ударном
+    // слоге и повторяемая столько раз, сколько нужно тексту, а то и ни разу.
+    step.flex && step.stress ? "остановка"
+        : step.flex ? "читок"
+            : step.stress === "first" ? "распев ↑"
+                : step.stress === "last" ? "распев ↓"
+                    : "—";
 
 const TunePage = ({
     params, searchParams,

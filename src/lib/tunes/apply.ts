@@ -223,7 +223,9 @@ const placeBounds = (segments: Segment[], n: number) => {
     for (const { anchorAt, flexAt, anchor, steps } of segments) {
         if (anchor < 0) { startAt.push(null); endAt.push(null); continue; }
         startAt.push(flexAt >= 0 && flexAt < anchorAt ? null : anchor - anchorAt);
-        endAt.push(flexAt > anchorAt ? null : anchor + (steps.length - 1 - anchorAt));
+        // Читок НА самом распеве (остановка) тянется вправо: ударный слог он
+        // занимает обязательно, а повторы набегают после него.
+        endAt.push(flexAt >= anchorAt && flexAt >= 0 ? null : anchor + (steps.length - 1 - anchorAt));
     }
 
     segments.forEach((segment, i) => {
