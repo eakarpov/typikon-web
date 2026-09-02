@@ -4,6 +4,8 @@ import { expectedVerseCount } from "@/lib/bible/refs";
 import { referenceChapterLengths } from "@/utils/bibleVersification";
 import { booksForCanon, editionForLang, ResolvedVerse, versesForCanonRanges } from "@/lib/bible/query";
 import { pericopeResolvesDirectly, pericopeVersification, versificationLabel } from "@/utils/versification";
+import { absentInBook } from "@/lib/bible/absent";
+import { isVerseInRanges, verseOrder } from "@/utils/verses";
 
 // Зачало — это отрезок канона («Дан. 3:1–88»), а не отрезок конкретной книги
 // конкретного издания. Поэтому резолвится оно так: издание выбирается по языку,
@@ -26,6 +28,8 @@ const toPericopeVerse = (verse: ResolvedVerse) => ({
     // Как этот же стих напечатан в самом издании.
     nativeChapter: verse.chapter,
     nativeVerse: verse.verse,
+    // Стоит только у стихов, которых издание не печатает (@/lib/bible/absent).
+    ...(verse.absent ? { absent: verse.absent } : {}),
 });
 
 /**
@@ -55,21 +59,48 @@ export const resolvePericopeVerses = async (db: Db, pericope: any, lang: string)
     const canonId: string = pericope.bookSlug;
     const ranges = pericope.ranges || [];
 
-    const verses = await versesForCanonRanges(db, edition._id, canonId, ranges);
-    if (!verses.length) return null;
+    const found = await versesForCanonRanges(db, edition._id, canonId, ranges);
+    if (!found.length) return null;
+
+    // Стихи, которых издание не печатает, но которые попали в отрезок чтения.
+    // Ставятся на своё место по каноническому счёту и помечаются: иначе чтение
+    // молча окажется короче того, что читают рядом на другом языке, и читатель
+    // сочтёт это нашей недоработкой. Пустой список рангов означает книгу целиком.
+    const supplied = absentInBook(edition.code, canonId)
+        .filter((item) => !ranges.length || isVerseInRanges(item.chapter, item.verse, ranges))
+        .filter((item) => !found.some((v) => v.canonChapter === item.chapter
+            && v.canonVerse === item.verse))
+        .map((item) => ({
+            id: `absent:${edition.code}:${canonId}.${item.chapter}.${item.verse}`,
+            bookId: found[0].bookId,
+            chapter: item.chapter,
+            verse: item.verse,
+            canonChapter: item.chapter,
+            canonVerse: item.verse,
+            canonRef: `${canonId}.${item.chapter}.${item.verse}`,
+            content: item.content,
+            absent: { supplied: item.supplied, why: item.why },
+        }));
+
+    const verses = supplied.length
+        ? [...found, ...supplied].sort((a, b) =>
+            verseOrder(a.canonChapter, a.canonVerse) - verseOrder(b.canonChapter, b.canonVerse))
+        : found;
 
     // Покрытие меряем против эталонной версификации: издание может знать книгу, но
     // не знать половины отрезка — так румынский Даниил отдавал 33 стиха вместо 88,
     // и чтение обрывалось молча. Порог, а не строгое равенство, потому что издания
     // разбивают текст на стихи по-своему: у румынской Псалтири в девятом псалме
     // на стих меньше, и это не повод отнимать у читателя румынский текст.
+    // Меряем по НАЙДЕННЫМ, а не по показанным: восполненный стих издание не
+    // печатает, и засчитывать его в покрытие значило бы утверждать обратное.
     const expected = expectedVerseCount(ranges, referenceChapterLengths(canonId));
-    if (expected && verses.length < expected * COVERAGE_FLOOR) return null;
+    if (expected && found.length < expected * COVERAGE_FLOOR) return null;
 
     // Книга издания — та, где чтение НАЧИНАЕТСЯ: одну книгу канона издание может
     // собирать из нескольких своих (румынский Даниил собран из четырёх).
     const books = await booksForCanon(db, edition._id, canonId);
-    const startBook = books.find((book) => book._id.equals(verses[0].bookId)) ?? books[0] ?? null;
+    const startBook = books.find((book) => book._id.equals(found[0].bookId)) ?? books[0] ?? null;
 
     return {
         textId: startBook?._id.toString() ?? null,

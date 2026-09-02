@@ -253,12 +253,30 @@ const DayPartReading = ({
                             {verses.map((v: any) => (
                                 <span key={v.id}>
                                     <sup className="text-red-600 font-bold">{v.verse}</sup>{" "}
-                                    {renderVerseMarkup(v.content)}{" "}
+                                    {/* Стих, которого нет в самом издании: показан
+                                        приглушённо и с крестиком, а под чтением
+                                        сказано, откуда он и почему его нет. Молча
+                                        пропустить нельзя — чтение вышло бы короче
+                                        того, что читают рядом на другом языке. */}
+                                    {v.absent ? (
+                                        <span className="text-slate-500">
+                                            {renderVerseMarkup(v.content)}
+                                            <sup className="text-slate-500">†</sup>
+                                        </span>
+                                    ) : renderVerseMarkup(v.content)}{" "}
                                 </span>
                             ))}
                         </p>
                     ))
                 )}
+                {(item.pericope.verses || [])
+                    .filter((v: any) => v.absent)
+                    .map((v: any) => (
+                        <p key={`absent-${v.id}`} className="font-serif text-sm text-slate-500">
+                            † {v.chapter}:{v.verse} — этого стиха в издании нет:{" "}
+                            {v.absent.why} Здесь он показан по традиции, {v.absent.supplied}.
+                        </p>
+                    ))}
             </div>
         );
     };

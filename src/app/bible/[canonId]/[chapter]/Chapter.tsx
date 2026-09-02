@@ -15,23 +15,59 @@ const fontOf = (edition: EditionView) =>
 const chapterHref = (canonId: string, chapter: number, codes: string, base: string | null) =>
     `/bible/${canonId}/${chapter}?v=${codes}${base ? `&base=${base}` : ""}`;
 
+// Стих, которого в самом издании нет. Показывается приглушённо и с крестиком:
+// молча пропустить его нельзя (читатель сочтёт это нашей недоработкой), но и
+// выдавать за напечатанное — тоже. Что именно не так, сказано под текстом.
+const ABSENT_MARK = "†";
+
+const AbsentNote = ({
+    absent,
+    number,
+}: {
+    absent: { supplied: string; why: string };
+    number: string;
+}) => (
+    <p className="font-serif text-sm text-slate-500 mt-2">
+        {ABSENT_MARK} {number} — этого стиха в издании нет: {absent.why} Здесь он показан
+        по традиции, {absent.supplied}.
+    </p>
+);
+
 /** Одно издание — сплошным текстом, как читают книгу. */
 const SingleColumn = ({ data, edition }: { data: ChapterData; edition: EditionView }) => {
     const font = fontOf(edition);
 
+    const absent = data.rows
+        .map((row) => (row.cells[0]?.absent ? { row, absent: row.cells[0]!.absent! } : null))
+        .filter(Boolean) as Array<{ row: typeof data.rows[0]; absent: { supplied: string; why: string } }>;
+
     return (
-        <p className={`${font.wrapper} ${font.text} text-justify text-lg whitespace-pre-wrap`}>
-            {data.rows.map((row) => {
-                const cell = row.cells[0];
-                if (!cell) return null;
-                return (
-                    <span key={row.canonRef} id={`v${row.number}`}>
-                        <sup className="text-red-600 font-bold">{row.number}</sup>{" "}
-                        {cell.content}{" "}
-                    </span>
-                );
-            })}
-        </p>
+        <>
+            <p className={`${font.wrapper} ${font.text} text-justify text-lg whitespace-pre-wrap`}>
+                {data.rows.map((row) => {
+                    const cell = row.cells[0];
+                    if (!cell) return null;
+                    return (
+                        <span key={row.canonRef} id={`v${row.number}`}>
+                            <sup className="text-red-600 font-bold">{row.number}</sup>{" "}
+                            {cell.absent ? (
+                                <span className="text-slate-500">
+                                    {cell.content}
+                                    <sup className="text-slate-500">{ABSENT_MARK}</sup>
+                                </span>
+                            ) : cell.content}{" "}
+                        </span>
+                    );
+                })}
+            </p>
+            {absent.map(({ row, absent: mark }) => (
+                <AbsentNote
+                    key={row.canonRef}
+                    absent={mark}
+                    number={`${data.chapter}:${row.number}`}
+                />
+            ))}
+        </>
     );
 };
 
@@ -46,7 +82,14 @@ const SingleColumn = ({ data, edition }: { data: ChapterData; edition: EditionVi
  * Родной номер стиха подписан там, где он расходится с каноническим: по нему стих
  * ищут в бумажной книге, и молча показывать один номер вместо другого нельзя.
  */
-const ParallelColumns = ({ data }: { data: ChapterData }) => (
+const ParallelColumns = ({ data }: { data: ChapterData }) => {
+    const notes = data.rows.flatMap((row) => row.cells
+        .map((cell, index) => (cell?.absent
+            ? { key: `${row.canonRef}:${index}`, edition: data.editions[index], number: row.number, absent: cell.absent }
+            : null))
+        .filter(Boolean) as Array<{ key: string; edition: EditionView; number: number; absent: { supplied: string; why: string } }>);
+
+    return (
     <div className="overflow-x-auto">
         <table className="w-full table-fixed border-collapse">
             <thead>
@@ -92,7 +135,12 @@ const ParallelColumns = ({ data }: { data: ChapterData }) => (
                                             [{cell.chapter}:{cell.verse}]
                                         </span>
                                     )}
-                                    {cell.content}
+                                    {cell.absent ? (
+                                        <span className="text-slate-500">
+                                            {cell.content}
+                                            <sup className="text-slate-500">{ABSENT_MARK}</sup>
+                                        </span>
+                                    ) : cell.content}
                                 </td>
                             );
                         })}
@@ -100,8 +148,16 @@ const ParallelColumns = ({ data }: { data: ChapterData }) => (
                 ))}
             </tbody>
         </table>
+        {notes.map((note) => (
+            <AbsentNote
+                key={note.key}
+                absent={note.absent}
+                number={`${note.edition.shortTitle}, ${data.chapter}:${note.number}`}
+            />
+        ))}
     </div>
-);
+    );
+};
 
 const Chapter = ({
     data,

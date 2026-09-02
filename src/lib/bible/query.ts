@@ -10,6 +10,7 @@
 import { Db, ObjectId } from "mongodb";
 import { IVerseRange } from "@/utils/verses";
 import { rangesToCanonSortFilter } from "@/lib/bible/refs";
+import { AbsentVerse, absentInChapter } from "@/lib/bible/absent";
 import { BibleBook, BibleEdition, BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
 
 /** Стих в том виде, в каком его показывают: содержимое плюс обе нумерации. */
@@ -25,6 +26,12 @@ export interface ResolvedVerse {
     canonVerse: number;
     canonRef: string;
     content: string;
+    /**
+     * Стиха НЕТ в самом издании: показан по другому месту, чтобы читатель не
+     * принял пропуск издания за нашу недоработку. Откуда взят и почему его нет —
+     * в @/lib/bible/absent.
+     */
+    absent?: { supplied: string; why: string };
 }
 
 const toResolved = (doc: any): ResolvedVerse => ({
@@ -36,6 +43,21 @@ const toResolved = (doc: any): ResolvedVerse => ({
     canonVerse: doc.canonVerse,
     canonRef: doc.canonRef,
     content: doc.content ?? "",
+});
+
+/** Стих, которого издание не печатает, в том же виде, что и настоящий. */
+const toSupplied = (item: AbsentVerse, editionId: ObjectId, bookId: ObjectId): ResolvedVerse => ({
+    // Идентификатор синтетический и помечен: он не адрес документа в базе, и
+    // ходить по нему некуда — стиха там нет.
+    id: `absent:${item.edition}:${item.canonId}.${item.chapter}.${item.verse}`,
+    bookId,
+    chapter: item.chapter,
+    verse: item.verse,
+    canonChapter: item.chapter,
+    canonVerse: item.verse,
+    canonRef: `${item.canonId}.${item.chapter}.${item.verse}`,
+    content: item.content,
+    absent: { supplied: item.supplied, why: item.why },
 });
 
 export const editionByCode = async (db: Db, code: string): Promise<BibleEdition | null> =>
@@ -183,6 +205,28 @@ export const parallelChapter = async (
             row.cells.set(doc.editionId.toString(), toResolved(doc));
         }
         byRef.set(doc.canonRef, row);
+    });
+
+    // Стихи, которых издание не печатает. Ставятся ПОСЛЕ настоящих и только в
+    // пустую ячейку: если издание всё-таки отдало стих, спорить с базой таблица
+    // не вправе. При одном издании строки такого стиха нет вовсе — заводим её,
+    // иначе в греческом столбце глава молча шла бы 15, 17.
+    editions.forEach((edition) => {
+        absentInChapter(edition.code, canonId, chapter).forEach((item) => {
+            const canonRef = `${item.canonId}.${item.chapter}.${item.verse}`;
+            const row = byRef.get(canonRef) ?? { canonVerse: item.verse, cells: new Map() };
+            const key = edition._id.toString();
+            if (row.cells.has(key)) return;
+
+            // bookId нужен разметке шрифта; берём книгу этого издания, в которой
+            // стоят соседние стихи главы.
+            const neighbour = docs.find((doc) => doc.editionId.equals(edition._id)
+                && doc.canonId === canonId && doc.canonChapter === chapter);
+            if (!neighbour) return;
+
+            row.cells.set(key, toSupplied(item, edition._id, neighbour.bookId));
+            byRef.set(canonRef, row);
+        });
     });
 
     return [...byRef.entries()]

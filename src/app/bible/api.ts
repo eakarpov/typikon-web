@@ -6,7 +6,7 @@ import { bibleBook } from "@/utils/bibleBooks";
 import { referenceChapterCount } from "@/utils/bibleVersification";
 import {
     baseChapters, canonChaptersOf, chapterByBase, editionsByCodes, editionForLang,
-    parallelChapter, publicEditions,
+    parallelChapter, publicEditions, ResolvedVerse,
 } from "@/lib/bible/query";
 import { BibleEdition } from "@/lib/bible/schema";
 import { DEFAULT_BIBLE_SCOPE } from "@/utils/bibleScope";
@@ -101,6 +101,11 @@ export interface ChapterCell {
     chapter: number;
     verse: number;
     content: string;
+    /**
+     * Стиха нет в самом издании: показан по другому месту, чтобы пропуск издания
+     * не выглядел нашей недоработкой (@/lib/bible/absent).
+     */
+    absent?: { supplied: string; why: string };
 }
 
 export interface ChapterData {
@@ -121,8 +126,13 @@ export interface ChapterData {
     rows: Array<{ canonRef: string; number: number; cells: Array<ChapterCell | null> }>;
 }
 
-const toCell = (cell: { id: string; chapter: number; verse: number; content: string } | null) =>
-    cell && { id: cell.id, chapter: cell.chapter, verse: cell.verse, content: cell.content };
+const toCell = (cell: ResolvedVerse | null): ChapterCell | null => cell && {
+    id: cell.id,
+    chapter: cell.chapter,
+    verse: cell.verse,
+    content: cell.content,
+    ...(cell.absent ? { absent: cell.absent } : {}),
+};
 
 const loadChapter = async (
     canonId: string,
