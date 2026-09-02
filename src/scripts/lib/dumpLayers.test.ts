@@ -50,19 +50,40 @@ describe("разбор по правам", () => {
         });
     });
 
-    it("у файла со своей лицензией есть и указание источника, и её полный текст", () => {
-        // Файл, идущий не на условиях слоя, обязан нести всё, что нужно, чтобы им
-        // законно воспользоваться: GPL требует передавать копию лицензии (§4).
+    it("у файла со своей лицензией сказано, чем ссылаться, и она не повторяет слой", () => {
         LAYERS.forEach((layer) => layer.collections.forEach((collection) => {
             if (!collection.license) return;
             assert.ok(collection.attribution, `${collection.file}: нечем ссылаться`);
-            assert.ok(collection.license.file, `${collection.file}: нет текста лицензии`);
             assert.notEqual(
                 collection.license.id,
                 layer.license.id,
                 `${collection.file}: своя лицензия совпадает с лицензией слоя — тогда она лишняя`,
             );
         }));
+    });
+
+    it("копилефт несёт свой полный текст, а общественное достояние — нет", () => {
+        // Разница не формальная: GPL требует передавать копию лицензии вместе с
+        // работой (§4), а Public Domain Mark — заявление об отсутствии притязаний,
+        // передавать в нём нечего. Требовать текст у обоих значило бы не понимать,
+        // чем они отличаются.
+        LAYERS.forEach((layer) => layer.collections.forEach((collection) => {
+            const license = collection.license;
+            if (!license) return;
+            if (license.id.startsWith("GPL")) {
+                assert.ok(license.file, `${collection.file}: копилефт без полного текста лицензии`);
+            } else if (license.id === "PD") {
+                assert.equal(license.file, undefined,
+                    `${collection.file}: у общественного достояния нет текста, который надо передавать`);
+            }
+        }));
+    });
+
+    it("греческий Новый Завет уходит как общественное достояние", () => {
+        const bible = LAYERS.find((layer) => layer.id === "bible");
+        const grc = bible?.collections.find((c) => c.file === "bible-verses-grc-nt");
+        assert.equal(grc?.license?.id, "PD");
+        assert.equal(grc?.testament, "nt");
     });
 
     it("греческий Ветхий Завет уходит под лицензией оцифровщика", () => {
