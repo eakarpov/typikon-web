@@ -59,6 +59,11 @@ export async function GET(request: Request) {
                 search: "/api/v2/search?q=",
                 accents: "/api/v2/accents",
                 accent: "/api/v2/accents/{слово}",
+                // Песнопения тут не было с самого начала — недосмотр: ручка есть
+                // и работает, а в перечне её не значилось.
+                chants: "/api/v2/chants?q=",
+                incipits: "/api/v2/incipits?q=",
+                incipit: "/api/v2/incipits/{язык}/{зачин}",
                 pericopes: "/api/v2/pericopes",
                 signs: "/api/v2/signs",
                 news: "/api/v2/news",

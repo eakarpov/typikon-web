@@ -232,6 +232,62 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/incipits": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Указатель зачинов: поиск по первым словам",
+                description:
+                    "Зачин (инципит) — первые шесть слов песнопения без ударений: то, чем " +
+                    "текст опознают и на что ссылаются. Ищется ТОЛЬКО по началу, и этим " +
+                    "ручка отличается от /api/v2/chants, где слово находится где угодно " +
+                    "в тексте.\n\n" +
+                    "Ударения и церковнославянское написание набирать не нужно. Учтите, " +
+                    "что ключ сводит «й» к «и»: «Радуйся» ищется и находится как " +
+                    "«радуися».\n\n" +
+                    "Указатель целиком эта ручка не отдаёт — для этого есть выгрузка " +
+                    "корпуса на https://www.typikon.su/data.",
+                parameters: [
+                    { name: "q", in: "query", required: true, schema: { type: "string" }, example: "воду прошед", description: "Начало песнопения" },
+                    { name: "language", in: "query", required: false, schema: { type: "string", enum: ["cu_gr", "ro", "grc", "en", "et", "ar"] }, description: "Язык текста. Зачины разных языков не пересекаются: между языками инципит не отождествляет ничего" },
+                    { name: "unit", in: "query", required: false, schema: { type: "string" }, example: "irmos", description: "Род песнопения" },
+                    { name: "source", in: "query", required: false, schema: { type: "string", enum: ["book", "canon", "akathist", "prayer"] }, description: "Чем строка является в корпусе" },
+                    { name: "sort", in: "query", required: false, schema: { type: "string", enum: ["alpha", "uses"], default: "alpha" }, description: "По алфавиту или сперва часто встречающиеся" },
+                    ...pageParams,
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/IncipitList"),
+                    "400": errorResponse("Не указано начало песнопения или неизвестный язык"),
+                    "500": errorResponse("Корпус песнопений на сервере недоступен"),
+                },
+            },
+        },
+        "/api/v2/incipits/{language}/{incipit}": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Зачин по постоянному адресу",
+                description:
+                    "Все вхождения зачина в корпусе и все соответствия ему на других " +
+                    "языках. Ключ в адресе — сам зачин, как он лежит в корпусе; своего " +
+                    "идентификатора у зачина нет, ключ и есть идентификатор.\n\n" +
+                    "Соответствия разделены по тому, на чём держатся, и смешивать их " +
+                    "нельзя. В `declared` — заявленное изданием: у AGES греческий и " +
+                    "английский слои стоят на одном ключе издателя, и что одна строка " +
+                    "есть перевод другой, утверждает книга. В `supposed` — догадка по " +
+                    "совпавшему месту службы, и она БЫВАЕТ ЛОЖНОЙ: на одно место разные " +
+                    "книги ставят разное. Поле `evidence` говорит, на чём стоит связь.\n\n" +
+                    "Пустые `declared` и `supposed` значат «связь не построена», а не " +
+                    "«соответствия нет»: славянский связан с другими языками лишь на 9 %.",
+                parameters: [
+                    { name: "language", in: "path", required: true, schema: { type: "string", enum: ["cu_gr", "ro", "grc", "en", "et", "ar"] } },
+                    { name: "incipit", in: "path", required: true, schema: { type: "string" }, example: "воду прошед яко сушу и египетскаго" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/IncipitDetail"),
+                    "400": errorResponse("Неизвестный язык или неверно закодированный ключ"),
+                    "404": errorResponse("Зачин не найден"),
+                },
+            },
+        },
         "/api/v2/days/{alias}": {
             get: {
                 tags: ["Календарь"],
@@ -727,6 +783,81 @@ export const openapi = () => ({
                 },
             },
             ChantList: collection("#/components/schemas/Chant"),
+            Incipit: {
+                type: "object",
+                description: "Зачин в указателе",
+                properties: {
+                    incipit: { type: "string", description: "Ключ: шесть первых слов без ударений, строчными" },
+                    language: { type: "string" },
+                    uses: { type: "integer", description: "Сколько раз встречается в корпусе. У 91,6 % зачинов — один" },
+                    sampleId: { type: "integer", description: "Вхождение, по которому показан текст; его же можно взять в /api/v2/chants" },
+                    text: { type: "string", description: "Как напечатано, с ударениями" },
+                    unit: { type: ["string", "null"] },
+                    book: { type: ["string", "null"] },
+                    memory: { type: ["string", "null"] },
+                    akathist: { type: ["string", "null"] },
+                },
+            },
+            IncipitWitness: {
+                type: "object",
+                description: "Одно вхождение зачина: где именно в книге оно стоит",
+                properties: {
+                    id: { type: "integer", description: "Строка корпуса, она же /api/v2/chants" },
+                    language: { type: "string" },
+                    unit: { type: ["string", "null"] },
+                    ode: { type: ["integer", "null"] },
+                    stanza: { type: ["integer", "null"] },
+                    stanzaKind: { type: ["string", "null"] },
+                    marker: { type: ["string", "null"] },
+                    placement: { type: ["string", "null"] },
+                    tone: { type: ["integer", "null"] },
+                    service: { type: ["string", "null"] },
+                    position: { type: ["string", "null"] },
+                    memoryId: { type: ["string", "null"] },
+                    memory: { type: ["string", "null"] },
+                    book: { type: ["string", "null"] },
+                    month: { type: ["integer", "null"] },
+                    day: { type: ["integer", "null"] },
+                    paschaOffset: { type: ["integer", "null"] },
+                    weekday: { type: ["string", "null"] },
+                    akathist: { type: ["string", "null"] },
+                    canonId: { type: ["string", "null"] },
+                    sourceBook: { type: ["string", "null"] },
+                },
+            },
+            IncipitCorrespondence: {
+                type: "object",
+                description: "Соответствие на другом языке вместе с основанием связи",
+                properties: {
+                    id: { type: "integer" },
+                    language: { type: "string" },
+                    text: { type: "string" },
+                    incipit: { type: ["string", "null"] },
+                    method: { type: "string", enum: ["edition", "structure", "manual"], description: "edition — общий ключ издателя; structure — совпавшее место службы" },
+                    confidence: { type: "string", enum: ["certain", "candidate"] },
+                    evidence: { type: ["string", "null"], description: "На чём стоит связь, словами" },
+                },
+            },
+            IncipitDetail: {
+                type: "object",
+                description: "Зачин целиком: вхождения и соответствия",
+                properties: {
+                    incipit: { type: "string" },
+                    language: { type: "string" },
+                    uses: { type: "integer" },
+                    text: { type: "string" },
+                    borrowed: { type: "boolean", description: "Текста своего у строки нет — взят по ссылке из Ирмология или соседнего канона" },
+                    witnesses: { type: "array", items: { $ref: "#/components/schemas/IncipitWitness" } },
+                    correspondences: {
+                        type: "object",
+                        properties: {
+                            declared: { type: "array", items: { $ref: "#/components/schemas/IncipitCorrespondence" }, description: "Заявлено изданием" },
+                            supposed: { type: "array", items: { $ref: "#/components/schemas/IncipitCorrespondence" }, description: "Догадка по месту службы; бывает ложной" },
+                        },
+                    },
+                },
+            },
+            IncipitList: collection("#/components/schemas/Incipit"),
             SearchList: collection("#/components/schemas/SearchResult"),
             BookList: collection("#/components/schemas/Book"),
             MonthList: collection("#/components/schemas/Month"),

@@ -190,6 +190,56 @@ const ApiDocs = () => (
         </section>
 
         <section className="flex flex-col gap-3">
+            <h2 className="text-lg font-bold">Песнопения и зачины</h2>
+            <p className="text-sm text-slate-600">
+                Другой корпус, нежели тексты выше: там книги целиком, здесь службы,
+                разобранные по позициям. Обе ручки идут по всему корпусу и потому
+                требуют ключа, как и поиск.
+            </p>
+            <Endpoint path="/api/v2/chants?q=">
+                Поиск по певческим текстам Октоиха, Миней, Триодей и Ирмология — слово
+                находится где угодно в строке. Фильтры: <code>book</code>,{" "}
+                <code>month</code>, <code>day</code>, <code>tone</code>, <code>sign</code>,{" "}
+                <code>service</code>, <code>unit</code>, <code>memory</code>,{" "}
+                <code>source</code>.
+            </Endpoint>
+            <Endpoint path="/api/v2/incipits?q=">
+                Указатель зачинов: поиск по НАЧАЛУ песнопения. Зачин — первые шесть слов
+                без ударений, то, чем текст опознают. Учтите, что ключ сводит «й» к «и»:
+                «Радуйся» лежит как «радуися». Фильтры: <code>language</code>,{" "}
+                <code>unit</code>, <code>source</code>, <code>sort=alpha|uses</code>.
+            </Endpoint>
+            <Endpoint path="/api/v2/incipits/{language}/{incipit}">
+                Зачин по постоянному адресу: все его вхождения и соответствия на других
+                языках. Ключ — сам зачин; своего идентификатора у него нет и не нужно.
+            </Endpoint>
+            <p className="text-sm text-slate-600">
+                Соответствия разделены на <code>declared</code> и <code>supposed</code>, и
+                смешивать их нельзя. Первое заявлено изданием: у AGES греческий и английский
+                слои стоят на одном ключе издателя. Второе — догадка по совпавшему месту
+                службы, и она <b>бывает ложной</b>: на одно место разные книги ставят разное.
+                Пустые оба — значит связь не построена, а не что соответствия нет: славянский
+                связан с другими языками лишь на девять процентов.
+            </p>
+            <Example>{`curl -H "Authorization: Bearer КЛЮЧ" \\
+  "https://www.typikon.su/api/v2/incipits?q=воду+прошед&sort=uses&limit=1"
+
+{
+  "items": [ {
+    "incipit": "воду прошед яко сушу и египетскаго",
+    "language": "cu_gr",
+    "uses": 134,
+    "sampleId": 8711,
+    "text": "Во́ду проше́д я́ко су́шу, и еги́петскаго зла́ избежа́в…",
+    "unit": "irmos"
+  } ],
+  "total": 3,
+  "limit": 1,
+  "offset": 0
+}`}</Example>
+        </section>
+
+        <section className="flex flex-col gap-3">
             <h2 className="text-lg font-bold">Справочники</h2>
             <Endpoint path="/api/v2/pericopes">
                 Зачала: источник, книга, номер, диапазоны стихов и дни, когда читается.

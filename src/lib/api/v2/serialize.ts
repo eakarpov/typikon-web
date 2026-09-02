@@ -50,6 +50,80 @@ export const chantSummary = (hit: any) => ({
     stanzaKind: hit.stanzaKind ?? null,
 });
 
+/** Зачин в указателе: ключ, число вхождений и представительное из них. */
+export const incipitSummary = (row: any) => ({
+    incipit: row.incipit,
+    language: row.language,
+    uses: row.uses,
+    // По какому именно вхождению показан текст — чтобы за ним можно было
+    // сходить в /api/v2/chants и не гадать, которое из ста тридцати четырёх.
+    sampleId: row.sampleId,
+    text: row.text ?? "",
+    unit: row.unit ?? null,
+    book: row.book ?? null,
+    memory: row.memory ?? null,
+    akathist: row.akathist ?? null,
+});
+
+/** Одно вхождение зачина: где именно в книге оно стоит. */
+const incipitWitness = (w: any) => ({
+    id: w.id,
+    language: w.language,
+    unit: w.unit ?? null,
+    ode: w.ode ?? null,
+    stanza: w.stanza ?? null,
+    stanzaKind: w.stanzaKind ?? null,
+    marker: w.marker ?? null,
+    placement: w.placement ?? null,
+    tone: w.tone ?? null,
+    service: w.service ?? null,
+    position: w.position ?? null,
+    memoryId: w.memoryId ?? null,
+    memory: w.memory ?? null,
+    book: w.book ?? null,
+    month: w.month ?? null,
+    day: w.day ?? null,
+    paschaOffset: w.paschaOffset ?? null,
+    weekday: w.weekday ?? null,
+    akathist: w.akathist ?? null,
+    canonId: w.canonId ?? null,
+    sourceBook: w.sourceBook ?? null,
+});
+
+/**
+ * Соответствие на другом языке — вместе с тем, на чём оно держится.
+ *
+ * `method` и `confidence` отдаём НАРУЖУ намеренно, а не прячем за одним флагом
+ * «перевод». Клиент, которому связь нужна для сличения, обязан видеть разницу
+ * между заявленным издателем (`edition`/`certain`: у AGES греческий и
+ * английский слои стоят на одном ключе) и нашей догадкой по совпавшему месту
+ * службы (`structure`/`candidate`), которая бывает ложной. Отдать их
+ * вперемешку значило бы переложить нашу неуверенность на чужой продукт молча.
+ */
+const incipitCorrespondence = (t: any) => ({
+    id: t.id,
+    language: t.language,
+    text: t.text ?? "",
+    incipit: t.incipit ?? null,
+    method: t.method,
+    confidence: t.confidence,
+    evidence: t.evidence ?? null,
+});
+
+/** Зачин целиком: все вхождения и все соответствия, разделённые по доверию. */
+export const incipitDetail = (found: any) => ({
+    incipit: found.incipit,
+    language: found.language,
+    uses: found.uses,
+    text: found.text ?? "",
+    borrowed: Boolean(found.borrowed),
+    witnesses: (found.witnesses ?? []).map(incipitWitness),
+    correspondences: {
+        declared: (found.declared ?? []).map(incipitCorrespondence),
+        supposed: (found.supposed ?? []).map(incipitCorrespondence),
+    },
+});
+
 /** Текст в списке — без тела: именно оно раздувало ответы v1 до сотни килобайт. */
 export const textSummary = (doc: any) => ({
     id: id(doc._id ?? doc.id),
