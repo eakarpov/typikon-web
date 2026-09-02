@@ -20,6 +20,28 @@ const chapterHref = (canonId: string, chapter: number, codes: string, base: stri
 // выдавать за напечатанное — тоже. Что именно не так, сказано под текстом.
 const ABSENT_MARK = "†";
 
+/**
+ * Сколько песнопений отзывается на этот стих — ссылкой на сам отзвук.
+ *
+ * При нуле не рисуем ничего: пустая пометка у каждого второго стиха читается
+ * как поломка, а не как «здесь ничего нет». Слоя цитат в выложенном корпусе
+ * может не быть вовсе — тогда counts пуст, и глава выглядит как прежде.
+ */
+const Echoes = ({
+    canonId, chapter, verse, count,
+}: { canonId: string; chapter: number; verse: number; count: number | undefined }) => {
+    if (!count) return null;
+    return (
+        <Link
+            href={`/bible/${canonId}/${chapter}/${verse}`}
+            className="align-super text-[10px] font-serif text-sky-700 hover:underline ml-0.5"
+            title={`Звучит в песнопениях: ${count}`}
+        >
+            ♪{count}
+        </Link>
+    );
+};
+
 const AbsentNote = ({
     absent,
     number,
@@ -34,7 +56,9 @@ const AbsentNote = ({
 );
 
 /** Одно издание — сплошным текстом, как читают книгу. */
-const SingleColumn = ({ data, edition }: { data: ChapterData; edition: EditionView }) => {
+const SingleColumn = ({ data, edition, echoes }: {
+    data: ChapterData; edition: EditionView; echoes: Record<number, number>;
+}) => {
     const font = fontOf(edition);
 
     const absent = data.rows
@@ -49,7 +73,9 @@ const SingleColumn = ({ data, edition }: { data: ChapterData; edition: EditionVi
                     if (!cell) return null;
                     return (
                         <span key={row.canonRef} id={`v${row.number}`}>
-                            <sup className="text-red-600 font-bold">{row.number}</sup>{" "}
+                            <sup className="text-red-600 font-bold">{row.number}</sup>
+                            <Echoes canonId={data.canonId} chapter={data.chapter}
+                                    verse={row.number} count={echoes[row.number]} />{" "}
                             {cell.absent ? (
                                 <span className="text-slate-500">
                                     {cell.content}
@@ -82,7 +108,9 @@ const SingleColumn = ({ data, edition }: { data: ChapterData; edition: EditionVi
  * Родной номер стиха подписан там, где он расходится с каноническим: по нему стих
  * ищут в бумажной книге, и молча показывать один номер вместо другого нельзя.
  */
-const ParallelColumns = ({ data }: { data: ChapterData }) => {
+const ParallelColumns = ({ data, echoes }: {
+    data: ChapterData; echoes: Record<number, number>;
+}) => {
     const notes = data.rows.flatMap((row) => row.cells
         .map((cell, index) => (cell?.absent
             ? { key: `${row.canonRef}:${index}`, edition: data.editions[index], number: row.number, absent: cell.absent }
@@ -108,8 +136,10 @@ const ParallelColumns = ({ data }: { data: ChapterData }) => {
             <tbody>
                 {data.rows.map((row) => (
                     <tr key={row.canonRef} id={`v${row.number}`} className="align-top">
-                        <td className="text-red-600 font-bold font-serif text-sm pt-1">
+                        <td className="text-red-600 font-bold font-serif text-sm pt-1 whitespace-nowrap">
                             {row.number}
+                            <Echoes canonId={data.canonId} chapter={data.chapter}
+                                    verse={row.number} count={echoes[row.number]} />
                         </td>
                         {row.cells.map((cell, index) => {
                             const edition = data.editions[index];
@@ -165,6 +195,7 @@ const Chapter = ({
     allEditions,
     previous,
     next,
+    echoes,
 }: {
     data: ChapterData;
     codes: string;
@@ -172,6 +203,8 @@ const Chapter = ({
     allEditions: EditionView[];
     previous: { canonId: string; chapter: number; label: string } | null;
     next: { canonId: string; chapter: number; label: string } | null;
+    /** Сколько песнопений отзывается на каждый стих; пусто — слоя цитат нет. */
+    echoes: Record<number, number>;
 }) => (
     <div className="pt-2 space-y-3">
         <div className="font-serif text-sm">
@@ -212,9 +245,9 @@ const Chapter = ({
                 В выбранных изданиях этой главы нет.
             </p>
         ) : data.editions.length === 1 ? (
-            <SingleColumn data={data} edition={data.editions[0]} />
+            <SingleColumn data={data} edition={data.editions[0]} echoes={echoes} />
         ) : (
-            <ParallelColumns data={data} />
+            <ParallelColumns data={data} echoes={echoes} />
         )}
 
         <div className="flex justify-between font-serif text-sm pt-2">

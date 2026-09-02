@@ -7,6 +7,7 @@ import { bibleBook } from "@/utils/bibleBooks";
 import { referenceChapterCount } from "@/utils/bibleVersification";
 import { getBibleIndex, getChapter, neighbourBooks, resolveEditionCodes } from "@/app/bible/api";
 import Chapter from "@/app/bible/[canonId]/[chapter]/Chapter";
+import { echoCountsForChapter } from "@/lib/citations";
 
 // Страница зависит и от адреса (?v=...), и от cookie языка, поэтому остаётся
 // динамической; в базу за ней при этом не ходим — выборки кэшируются в api.ts.
@@ -76,6 +77,11 @@ const ChapterPage = async ({ params, searchParams }: Props) => {
     // выбранные, а снятую галочку надо ещё уметь поставить обратно.
     const { editions } = await getBibleIndex();
 
+    // Отзвуки берутся не из Монги, а из корпуса typikon-rules, и в кэш главы
+    // не идут: главу кэширует CacheTag.BIBLE, а корпус пересобирается своим
+    // чередом, и связывать их сроки жизни незачем.
+    const echoes = echoCountsForChapter(params.canonId, chapter) ?? {};
+
     return (
         <div className={myFont.variable}>
             <Chapter
@@ -84,6 +90,7 @@ const ChapterPage = async ({ params, searchParams }: Props) => {
                 allEditions={editions}
                 previous={step(params.canonId, chapter, data.chapters, false)}
                 next={step(params.canonId, chapter, data.chapters, true)}
+                echoes={echoes}
             />
         </div>
     );

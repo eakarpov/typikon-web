@@ -107,12 +107,6 @@ export const citationsOf = (itemId: number | null | undefined): Citation[] | nul
     return rows.map(toCitation).filter((c): c is Citation => c !== null);
 };
 
-/** Есть ли слой цитат в выложенном корпусе вообще. */
-export const citationsLayer = (): boolean => {
-    const db = rulesDb();
-    return !!db && hasCitations(db);
-};
-
 /**
  * Разложить текст песнопения на куски по цитатам и разрывам строк.
  *
