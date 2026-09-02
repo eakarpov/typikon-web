@@ -316,3 +316,107 @@ export const chantFacets = (): ChantFacets | null => {
         units: column<string>("SELECT DISTINCT content_unit FROM content_items ORDER BY content_unit"),
     };
 };
+
+export interface ChantDetail {
+    id: number;
+    text: string;
+    /** Текста своего нет — он взят по ссылке (Ирмологий или соседний канон). */
+    borrowed: boolean;
+    language: string;
+    unit: string;
+    marker: string | null;
+    markerAlt: string | null;
+    placement: string | null;
+    repeat: number;
+    ode: number | null;
+    stanza: number | null;
+    stanzaKind: string | null;
+    /** Глас — первый из трёх признаков, какими выбирается напев. */
+    tone: number | null;
+    /** Подобен, как его напечатала книга: с ударениями и заглавной буквы. */
+    podoben: string | null;
+    service: string | null;
+    position: string | null;
+    groupLabel: string | null;
+    memoryId: string | null;
+    memory: string | null;
+    book: string | null;
+    month: number | null;
+    day: number | null;
+    paschaOffset: number | null;
+    weekday: string | null;
+    memoryTone: number | null;
+    sign: string | null;
+    akathist: string | null;
+    canonId: string | null;
+}
+
+/**
+ * Одно песнопение целиком.
+ *
+ * Ссылки разрешаем здесь же, как это делают сборка устава и страница канона:
+ * книги печатают ирмос зачином, а полный текст лежит в Ирмологии. Напев без
+ * текста не разложить — раскладывать было бы нечего.
+ */
+export const getChant = (id: number): ChantDetail | null => {
+    const db = rulesDb();
+    if (!db) return null;
+
+    const row = db.prepare(`
+        SELECT ci.item_id, ci.content_unit, ci.ode, ci.marker, ci.marker_alt,
+               ci.placement, ci.repeat_count, ci.stanza, ci.stanza_kind,
+               ci.language, ci.text, ci.canon_id, ci.ref_id,
+               f.text AS from_dictionary, o.text AS from_item,
+               g.podoben, g.group_label,
+               COALESCE(g.tone, c.tone) AS tone,
+               COALESCE(g.service, c.service) AS service,
+               p.label AS position_label,
+               m.memory_id, m.label AS memory, m.book, m.month, m.day,
+               m.pascha_offset, m.weekday, m.tone AS memory_tone,
+               a.title AS akathist_title,
+               s.default_sign AS sign
+        FROM content_items ci
+        LEFT JOIN groups g ON g.group_id = ci.group_id
+        LEFT JOIN canons c ON c.canon_id = ci.canon_id
+        LEFT JOIN akathists a ON a.akathist_id = ci.akathist_id
+        LEFT JOIN fixed_texts f ON f.text_id = ci.ref_text_id
+        LEFT JOIN content_items o ON o.item_id = ci.ref_item_id
+        LEFT JOIN memories m ON m.memory_id = COALESCE(g.memory_id, c.memory_id)
+        LEFT JOIN positions p ON p.position_id = COALESCE(g.position_id, c.position_id)
+        LEFT JOIN memory_signs s ON s.memory_id = m.memory_id
+        WHERE ci.item_id = ?`).get(id) as any;
+    if (!row) return null;
+
+    const resolved = row.from_dictionary ?? row.from_item ?? null;
+
+    return {
+        id: row.item_id,
+        text: row.text ?? resolved ?? "",
+        borrowed: row.text === null && resolved !== null,
+        language: row.language ?? "cu_gr",
+        unit: row.content_unit,
+        marker: row.marker ?? null,
+        markerAlt: row.marker_alt ?? null,
+        placement: row.placement ?? null,
+        repeat: row.repeat_count ?? 1,
+        ode: row.ode ?? null,
+        stanza: row.stanza ?? null,
+        stanzaKind: row.stanza_kind ?? null,
+        tone: row.tone ?? null,
+        podoben: row.podoben ?? null,
+        service: row.service ?? null,
+        position: row.position_label ?? null,
+        groupLabel: row.group_label ?? null,
+        memoryId: row.memory_id ?? null,
+        memory: row.memory ?? null,
+        book: row.book ?? null,
+        month: row.month ?? null,
+        day: row.day ?? null,
+        paschaOffset: row.pascha_offset ?? null,
+        weekday: row.weekday ?? null,
+        memoryTone: row.memory_tone ?? null,
+        sign: row.sign ?? null,
+        akathist: row.akathist_title ?? null,
+        canonId: row.canon_id ?? null,
+    };
+};

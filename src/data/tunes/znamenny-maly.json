@@ -1,0 +1,425 @@
+{
+    "tunes": [
+        {
+            "id": "znamenny-maly/tone-1/stichera",
+            "traditionId": "znamenny-maly",
+            "locality": null,
+            "title": "Глас 1, стихиры",
+            "select": {
+                "kind": "tone",
+                "tone": 1,
+                "genre": "stichera"
+            },
+            "lines": [
+                {
+                    "label": "зачин",
+                    "steps": [
+                        {},
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "вычитывание",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "исход",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {},
+                        {}
+                    ]
+                }
+            ],
+            "order": {
+                "head": [
+                    0
+                ],
+                "cycle": [
+                    1
+                ],
+                "tail": [
+                    2
+                ]
+            },
+            "scores": [
+                {
+                    "notation": "znamenny",
+                    "voice": "edinoglas",
+                    "source": "заготовка: строение выверено по корпусу, мелодию нужно сверить с обиходом",
+                    "lines": [
+                        [
+                            "𜽒",
+                            "𜽐",
+                            "𜽖",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽖",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽖",
+                            "𜽜",
+                            "𜾋"
+                        ]
+                    ]
+                },
+                {
+                    "notation": "staff",
+                    "voice": "edinoglas",
+                    "key": "C",
+                    "source": "заготовка: строение выверено по корпусу, мелодию нужно сверить с обиходом",
+                    "lines": [
+                        [
+                            "F",
+                            "G",
+                            "A",
+                            "G"
+                        ],
+                        [
+                            "G",
+                            "A",
+                            "G"
+                        ],
+                        [
+                            "G",
+                            "A",
+                            "G",
+                            "F"
+                        ]
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "znamenny-maly/podoben/dome-evfrafov",
+            "traditionId": "znamenny-maly",
+            "locality": null,
+            "title": "Подобен «До́ме Евфра́фов», глас 2",
+            "select": {
+                "kind": "podoben",
+                "podoben": "До́ме Евфра́фов",
+                "tone": 2
+            },
+            "lines": [
+                {
+                    "label": "строка 1",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "строка 2",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "строка 3",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "строка 4",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "исход",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {},
+                        {}
+                    ]
+                }
+            ],
+            "order": {
+                "head": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                ],
+                "cycle": [],
+                "tail": []
+            },
+            "scores": [
+                {
+                    "notation": "znamenny",
+                    "voice": "edinoglas",
+                    "source": "заготовка: строение выверено по корпусу, мелодию нужно сверить с обиходом",
+                    "lines": [
+                        [
+                            "𜽐",
+                            "𜽖",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽞",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽖",
+                            "𜾒"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽯",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽖",
+                            "𜽜",
+                            "𜾋"
+                        ]
+                    ]
+                },
+                {
+                    "notation": "staff",
+                    "voice": "edinoglas",
+                    "key": "C",
+                    "source": "заготовка: строение выверено по корпусу, мелодию нужно сверить с обиходом",
+                    "lines": [
+                        [
+                            "A",
+                            "B",
+                            "A"
+                        ],
+                        [
+                            "A",
+                            "c",
+                            "B"
+                        ],
+                        [
+                            "G",
+                            "A",
+                            "G"
+                        ],
+                        [
+                            "A",
+                            "B",
+                            "A"
+                        ],
+                        [
+                            "G",
+                            "A",
+                            "G",
+                            "F"
+                        ]
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "znamenny-maly/podoben/dome-evfrafov/valaam",
+            "traditionId": "znamenny-maly",
+            "locality": "valaam",
+            "title": "Подобен «До́ме Евфра́фов», глас 2 (валаамский)",
+            "select": {
+                "kind": "podoben",
+                "podoben": "До́ме Евфра́фов",
+                "tone": 2
+            },
+            "lines": [
+                {
+                    "label": "строка 1",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "строка 2",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "строка 3",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "строка 4",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {}
+                    ]
+                },
+                {
+                    "label": "исход",
+                    "steps": [
+                        {
+                            "flex": true
+                        },
+                        {
+                            "stress": "last"
+                        },
+                        {},
+                        {}
+                    ]
+                }
+            ],
+            "order": {
+                "head": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                ],
+                "cycle": [],
+                "tail": []
+            },
+            "scores": [
+                {
+                    "notation": "znamenny",
+                    "voice": "edinoglas",
+                    "source": "заготовка: строение выверено по корпусу, мелодию нужно сверить с обиходом",
+                    "lines": [
+                        [
+                            "𜽐",
+                            "𜽞",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽞",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽖",
+                            "𜾒"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽖",
+                            "𜽝"
+                        ],
+                        [
+                            "𜽐",
+                            "𜽜",
+                            "𜽖",
+                            "𜾁"
+                        ]
+                    ]
+                },
+                {
+                    "notation": "staff",
+                    "voice": "edinoglas",
+                    "key": "C",
+                    "source": "заготовка: строение выверено по корпусу, мелодию нужно сверить с обиходом",
+                    "lines": [
+                        [
+                            "A",
+                            "c",
+                            "B"
+                        ],
+                        [
+                            "A",
+                            "c",
+                            "B"
+                        ],
+                        [
+                            "G",
+                            "A",
+                            "G"
+                        ],
+                        [
+                            "G",
+                            "B",
+                            "A"
+                        ],
+                        [
+                            "G",
+                            "F",
+                            "G",
+                            "F"
+                        ]
+                    ]
+                }
+            ]
+        }
+    ]
+}

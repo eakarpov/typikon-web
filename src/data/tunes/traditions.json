@@ -1,0 +1,56 @@
+{
+    "traditions": [
+        {
+            "id": "obihod-msk",
+            "title": "Обиход, московская традиция",
+            "note": "Четырёхголосный обиход московского распева; часть гласов поётся греческим.",
+            "voices": [
+                "soprano",
+                "alt",
+                "tenor",
+                "bas"
+            ],
+            "notations": [
+                "staff"
+            ]
+        },
+        {
+            "id": "znamenny-maly",
+            "title": "Знаменный распев, малый",
+            "note": "Одноголосие столпового обихода в малом (кратком) изводе — то, чем поётся будничная служба.",
+            "voices": [
+                "edinoglas"
+            ],
+            "notations": [
+                "znamenny",
+                "staff"
+            ]
+        },
+        {
+            "id": "obihod-partes",
+            "title": "Обиход партесный",
+            "note": "Четырёхголосная гармонизация обихода. Тропарь, стихира и ирмос одного гласа поются разными напевами.",
+            "voices": [
+                "soprano",
+                "alt",
+                "tenor",
+                "bas"
+            ],
+            "notations": [
+                "staff"
+            ]
+        }
+    ],
+    "localities": [
+        {
+            "id": "valaam",
+            "traditionId": "znamenny-maly",
+            "title": "валаамский"
+        },
+        {
+            "id": "kiev",
+            "traditionId": "obihod-partes",
+            "title": "киевский"
+        }
+    ]
+}

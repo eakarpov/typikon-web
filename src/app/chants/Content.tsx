@@ -1,8 +1,10 @@
 import React from "react";
+import Link from "next/link";
 import type { ChantHit } from "@/lib/chants";
 import type { ChantsPageData } from "./api";
 import { PAGE_SIZE } from "./api";
 import Filters from "./Filters";
+import { bookLanguageShort } from "@/utils/bookLanguages";
 import {
     BOOK_LABELS, MARKER_LABELS, PLACEMENT_LABELS, SERVICE_LABELS,
     SIGN_LABELS, UNIT_LABELS, dayOfMonth, labelOf, shortPosition, stanzaLabel,
@@ -42,6 +44,18 @@ const Origin = ({ hit }: { hit: ChantHit }) => {
             hit.tone ? `глас ${hit.tone}` : null,
             hit.ode ? `песнь ${hit.ode}` : null,
         ].filter(Boolean);
+
+    // Язык называем только у ПЕРЕВОДА. У славянского не называем: он тут по
+    // умолчанию, и метка при каждой строке была бы шумом — а вот греческая
+    // или румынская строка без метки читается как сбой выдачи.
+    //
+    // Издание рядом с языком — не педантизм: английских переводов на одно
+    // место бывает до четырёх, и это разные работы разных людей.
+    if (hit.language && hit.language !== "cu_gr") {
+        parts.push(bookLanguageShort(hit.language)
+            + (hit.sourceBook && hit.sourceBook.startsWith("en-")
+               ? ` (${hit.sourceBook.slice(3)})` : ""));
+    }
 
     return (
         // Полная подпись места — в title: сокращаем показ, а не сведения.
@@ -132,6 +146,15 @@ const Content = ({ data, params }: { data: ChantsPageData; params: Record<string
                                 <div className="font-serif text-sm text-slate-700 mb-1">{hit.memory}</div>
                                 <Snippet parts={hit.snippet} />
                                 <Badges hit={hit} />
+                                {/* Выдача показывает фрагмент, а песнопение поётся
+                                    целиком: за полным текстом и напевом — на
+                                    страницу песнопения. */}
+                                <Link
+                                    href={`/chants/${hit.id}`}
+                                    className="font-serif text-xs text-red-900 inline-block mt-1"
+                                >
+                                    целиком и с напевом →
+                                </Link>
                             </div>
                         ))}
                     </div>

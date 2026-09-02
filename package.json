@@ -76,6 +76,7 @@
     "@pdf-lib/fontkit": "^1.1.1",
     "@reduxjs/toolkit": "^2.5.1",
     "@vkid/sdk": "^2.4.1",
+    "abcjs": "^6.7.0",
     "better-sqlite3": "^12.10.0",
     "d3": "^7.9.0",
     "date-easter": "^1.0.2",
