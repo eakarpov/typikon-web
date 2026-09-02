@@ -63,6 +63,7 @@ const Layer = ({ layer }: { layer: DumpLayerInfo }) => {
                             <th className="pr-4 py-1 font-normal">что внутри</th>
                             <th className="pr-4 py-1 font-normal text-right">записей</th>
                             <th className="pr-4 py-1 font-normal text-right">размер</th>
+                            <th className="pr-4 py-1 font-normal">условия</th>
                             <th className="py-1 font-normal">sha256</th>
                         </tr>
                     </thead>
@@ -84,6 +85,23 @@ const Layer = ({ layer }: { layer: DumpLayerInfo }) => {
                                 <td className="pr-4 py-1 text-right tabular-nums">
                                     {formatBytes(file.bytes)}
                                 </td>
+                                {/* Условия показываются у каждого файла, а не только
+                                    у особенных: увидеть исключение можно лишь рядом
+                                    с правилом. Своё — жирным. */}
+                                <td className="pr-4 py-1">
+                                    {file.license ? (
+                                        <a
+                                            href={file.license.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="font-bold text-amber-800 underline underline-offset-4"
+                                        >
+                                            {file.license.id}
+                                        </a>
+                                    ) : (
+                                        <span className="text-slate-500">{layer.license.id}</span>
+                                    )}
+                                </td>
                                 <td className="py-1">
                                     <code className="text-xs text-slate-500">
                                         {file.sha256.slice(0, 12)}…
@@ -94,6 +112,24 @@ const Layer = ({ layer }: { layer: DumpLayerInfo }) => {
                     </tbody>
                 </table>
             </div>
+            {layer.files.some((file) => file.license) && (
+                <p className="text-slate-700">
+                    Где условия выделены — файл идёт <b>на своих</b>, не на условиях слоя.
+                    Полный их текст лежит рядом с данными, там же и указание источника.
+                </p>
+            )}
+            {layer.notShipped?.length ? (
+                <div className="flex flex-col gap-2">
+                    <h4 className="font-bold">Чего здесь нет и где это взять</h4>
+                    {layer.notShipped.map((pointer) => (
+                        <div key={pointer.what} className="border-l-2 border-slate-300 pl-3">
+                            <p className="font-bold">{pointer.what}</p>
+                            <p className="text-slate-700">{pointer.why}</p>
+                            <p className="text-slate-700">{pointer.where}</p>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
         </section>
     );
 };

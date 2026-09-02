@@ -24,23 +24,46 @@
 //   npm run corpus:dump -- --out путь       # в другое место
 import "@/scripts/lib/env";
 import { createHash } from "node:crypto";
-import { createWriteStream, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, createWriteStream, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createGzip } from "node:zlib";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import { join } from "node:path";
 import clientPromise from "@/lib/mongodb";
 import { addContent, createDraft, finalize } from "@/lib/accents/core";
+import { BIBLE_CANON } from "@/utils/bibleCanon";
 import { readChurchSlavonicCorpus } from "@/scripts/lib/corpus";
 import {
     CITATION,
     DumpCollection,
     DumpLayer,
+    DumpLicense,
     EXCLUDED,
     LAYERS,
     prepare,
     unclassified,
 } from "@/scripts/lib/dumpLayers";
+
+/** Полные тексты чужих лицензий — их GPL требует передавать вместе с работой. */
+const LICENSE_SOURCE = "licenses";
+
+// Новый Завет — три раздела канона; всё прочее Ветхий. Нужно ради греческого
+// издания: половины его взяты из разных мест и расходятся в правах.
+//
+// Ветхий отбирается ОТРИЦАНИЕМ («всё, что не Новый»), а не перечислением своих книг,
+// и это не стилистика. В греческом издании есть девять книг, которых нет в
+// славянском каноне вовсе — Оды, 4 Маккавейская, Еноха, Псалмы Соломона, Даниил и
+// Сусанна по Септуагинте, Товит по Синайскому списку. Перечисление канонических
+// книг выбросило бы их молча: 2 034 стиха, которые есть только здесь и ради которых
+// греческое издание отчасти и держат.
+const NT_SECTIONS = new Set(["gospel", "apostle", "revelation"]);
+const NT_CANON_IDS = BIBLE_CANON
+    .filter((book) => NT_SECTIONS.has(book.section))
+    .map((book) => book.id);
+
+const testamentFilter = (testament: "ot" | "nt") => (testament === "nt"
+    ? { canonId: { $in: NT_CANON_IDS } }
+    : { canonId: { $nin: NT_CANON_IDS } });
 
 const args = process.argv.slice(2);
 const outIndex = args.indexOf("--out");
@@ -54,6 +77,9 @@ interface FileReport {
     sha256: string;
     dropped?: Record<string, string>;
     note?: string;
+    /** Своя лицензия файла, если она не та, что у слоя. */
+    license?: DumpLicense;
+    attribution?: string;
 }
 
 /**
@@ -94,7 +120,12 @@ const writeCollection = async (
 
 const layerReadme = (layer: DumpLayer, files: FileReport[]) => {
     const rows = files
-        .map((f) => `| \`${f.file}.jsonl.gz\` | ${f.title} | ${f.records.toLocaleString("ru-RU")} |`)
+        .map((f) => `| \`${f.file}.jsonl.gz\` | ${f.title} | ${f.records.toLocaleString("ru-RU")} `
+            + `| ${f.license ? `**${f.license.id}**` : layer.license.id} |`)
+        .join("\n");
+
+    const pointers = (layer.pointers || [])
+        .map((p) => `### ${p.what}\n\n${p.why}\n\n${p.where}\n`)
         .join("\n");
 
     const dropped = files
@@ -127,13 +158,19 @@ const layerReadme = (layer: DumpLayer, files: FileReport[]) => {
         "",
         "Формат — JSON Lines, сжатый gzip: одна запись в строке.",
         "",
-        "| файл | что внутри | записей |",
-        "|---|---|---|",
+        "| файл | что внутри | записей | условия |",
+        "|---|---|---|---|",
         rows,
         "",
-        notes ? `## Замечания\n\n${notes}\n` : "",
-        dropped ? `## Поля, снятые перед выгрузкой\n\n${dropped}\n` : "",
-    ].filter(Boolean).join("\n");
+        "Где в колонке условий стоит не лицензия слоя — файл идёт на СВОИХ условиях,",
+        "и полный их текст лежит здесь же. Смотрите LICENSE.txt.",
+        "",
+        notes ? `## Замечания\n\n${notes}` : null,
+        dropped ? `## Поля, снятые перед выгрузкой\n\n${dropped}` : null,
+        pointers ? `## Чего здесь нет и где это взять\n\n${pointers}` : null,
+        // Пустые строки здесь — разделители абзацев, а не мусор: отфильтруй их
+        // заодно с необязательными разделами, и markdown склеит заголовок с текстом.
+    ].filter((part) => part !== null).join("\n");
 };
 
 const rootReadme = (layers: { layer: DumpLayer; files: FileReport[] }[], builtAt: string) => [
@@ -201,6 +238,32 @@ const run = async () => {
             .map((b) => [String(b._id), b.slug as string]),
     );
 
+    // Вторая проверка полноты — уже не по коллекциям, а по СТРОКАМ внутри той, что
+    // выгружается по частям. Деление Библии на заветы отбирает стихи запросом, и
+    // ошибка в отборе не падает, а тихо недодаёт: первый заход так потерял 2 034
+    // стиха девяти книг, которых нет в славянском каноне. Поэтому половины должны
+    // сойтись с целым — иначе сборка останавливается.
+    for (const collection of LAYERS.flatMap((layer) => layer.collections)) {
+        if (!collection.testament || !collection.edition) continue;
+
+        const editionId = editionByCode.get(collection.edition);
+        if (!editionId) throw new Error(`издание ${collection.edition} в базе не найдено`);
+
+        const verses = db.collection(collection.source!);
+        const total = await verses.countDocuments({ editionId });
+        const parts = await Promise.all((["ot", "nt"] as const).map(
+            (half) => verses.countDocuments({ editionId, ...testamentFilter(half) }),
+        ));
+
+        const sum = parts[0] + parts[1];
+        if (sum !== total) {
+            throw new Error(
+                `${collection.edition}: деление на заветы теряет стихи — `
+                + `${parts[0]} + ${parts[1]} = ${sum}, а всего ${total}`,
+            );
+        }
+    }
+
     /** Согласование нумераций: стих без текста, зато по всем изданиям сразу. */
     const concordance = async function* () {
         const cursor = db.collection("bible_verses")
@@ -233,6 +296,9 @@ const run = async () => {
             const id = editionByCode.get(collection.edition);
             if (!id) throw new Error(`издание ${collection.edition} в базе не найдено`);
             filter.editionId = id;
+        }
+        if (collection.testament) {
+            Object.assign(filter, testamentFilter(collection.testament));
         }
 
         const cursor = db.collection(collection.source!).find(filter).sort({ _id: 1 });
@@ -290,6 +356,8 @@ const run = async () => {
                 sha256: result.sha256,
                 dropped: collection.drop,
                 note: collection.note,
+                license: collection.license,
+                attribution: collection.attribution,
             });
 
             console.log(
@@ -298,11 +366,40 @@ const run = async () => {
             );
         }
 
+        // Своя лицензия на отдельный файл — не редкость, а объявленное устройство
+        // слоя, поэтому LICENSE.txt перечисляет все, какие в слое встретились.
+        const own = files.filter((file) => file.license);
+        const ownLines = own.length ? [
+            "",
+            "ОТДЕЛЬНЫЕ ФАЙЛЫ ИДУТ НА СВОИХ УСЛОВИЯХ:",
+            "",
+            ...own.flatMap((file) => [
+                `  ${file.file}.jsonl.gz — ${file.license!.name} (${file.license!.id})`,
+                `    ${file.license!.url}`,
+                ...(file.attribution ? [`    Как ссылаться: ${file.attribution}`] : []),
+                ...(file.license!.file ? [`    Полный текст лицензии: ${file.license!.file}`] : []),
+                "",
+            ]),
+        ] : [];
+
         writeFileSync(
             join(dir, "LICENSE.txt"),
-            `${layer.license.name} (${layer.license.id})\n${layer.license.url}\n\n`
-            + `Как ссылаться:\n${layer.attribution}\n`,
+            [
+                `${layer.license.name} (${layer.license.id})`,
+                layer.license.url,
+                "",
+                "Как ссылаться:",
+                layer.attribution,
+                ...ownLines,
+            ].join("\n") + "\n",
         );
+
+        // GPL требует передавать копию лицензии вместе с работой (§4) — ссылки мало.
+        new Set(own.map((file) => file.license!.file).filter(Boolean)).forEach((name) => {
+            const from = join(LICENSE_SOURCE, name!);
+            if (!existsSync(from)) throw new Error(`нет текста лицензии ${from}`);
+            copyFileSync(from, join(dir, name!));
+        });
         writeFileSync(join(dir, "README.md"), layerReadme(layer, files));
 
         built.push({ layer, files });
@@ -330,9 +427,14 @@ const run = async () => {
                 records: f.records,
                 bytes: f.bytes,
                 sha256: f.sha256,
+                // Лицензия у файла своя только когда она НЕ та, что у слоя: пусть
+                // разница бросается в глаза, а не тонет в повторе.
+                ...(f.license ? { license: f.license } : {}),
+                ...(f.attribution ? { attribution: f.attribution } : {}),
                 ...(f.dropped ? { droppedFields: f.dropped } : {}),
                 ...(f.note ? { note: f.note } : {}),
             })),
+            ...(layer.pointers ? { notShipped: layer.pointers } : {}),
         })),
         excluded: EXCLUDED,
     };

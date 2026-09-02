@@ -15,23 +15,41 @@ import { join } from "node:path";
 export const DUMP_DIR = process.env.DUMP_DIR || "/var/www/typikon-data";
 export const DUMP_URL = process.env.DUMP_URL || "/dump";
 
+export interface DumpLicense {
+    id: string;
+    name: string;
+    url: string;
+    file?: string;
+}
+
 export interface DumpFile {
     path: string;
     title: string;
     records: number;
     bytes: number;
     sha256: string;
+    /** Стоит только у файлов, чьи условия НЕ совпадают с условиями слоя. */
+    license?: DumpLicense;
+    attribution?: string;
     droppedFields?: Record<string, string>;
     note?: string;
+}
+
+/** Чего в слое нет и где это взять самому. */
+export interface DumpPointer {
+    what: string;
+    why: string;
+    where: string;
 }
 
 export interface DumpLayerInfo {
     id: string;
     title: string;
-    license: { id: string; name: string; url: string };
+    license: DumpLicense;
     attribution: string;
     rationale: string;
     files: DumpFile[];
+    notShipped?: DumpPointer[];
 }
 
 export interface DumpManifest {

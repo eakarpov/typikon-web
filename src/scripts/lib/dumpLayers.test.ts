@@ -50,6 +50,35 @@ describe("разбор по правам", () => {
         });
     });
 
+    it("у файла со своей лицензией есть и указание источника, и её полный текст", () => {
+        // Файл, идущий не на условиях слоя, обязан нести всё, что нужно, чтобы им
+        // законно воспользоваться: GPL требует передавать копию лицензии (§4).
+        LAYERS.forEach((layer) => layer.collections.forEach((collection) => {
+            if (!collection.license) return;
+            assert.ok(collection.attribution, `${collection.file}: нечем ссылаться`);
+            assert.ok(collection.license.file, `${collection.file}: нет текста лицензии`);
+            assert.notEqual(
+                collection.license.id,
+                layer.license.id,
+                `${collection.file}: своя лицензия совпадает с лицензией слоя — тогда она лишняя`,
+            );
+        }));
+    });
+
+    it("греческий Ветхий Завет уходит под лицензией оцифровщика", () => {
+        const bible = LAYERS.find((layer) => layer.id === "bible");
+        const grc = bible?.collections.find((c) => c.file === "bible-verses-grc-ot");
+        assert.equal(grc?.license?.id, "GPL-3.0");
+        assert.equal(grc?.testament, "ot");
+    });
+
+    it("о том, чего в слое нет, сказано, где это взять", () => {
+        LAYERS.forEach((layer) => (layer.pointers || []).forEach((pointer) => {
+            assert.ok(pointer.what && pointer.why && pointer.where,
+                `${layer.id}: указатель без «что», «почему» или «где»`);
+        }));
+    });
+
     it("отбор по изданию просит коллекцию-источник", () => {
         LAYERS.forEach((layer) => layer.collections.forEach((collection) => {
             if (collection.edition) {
