@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { CORRECTIONS, replaceNormalized, toPolytonic } from "./fix-swete-typos";
+import { CORRECTIONS, replaceNormalized } from "./fix-swete-typos";
 
 // Правки меняют текст Писания поштучно и вручную. Проверяется, что каждая
 // описана полно и что поиск не спотыкается о запись греческого разными знаками.
@@ -41,19 +41,19 @@ describe("поиск с оглядкой на нормализацию", () => {
     });
 });
 
-describe("письмо издания", () => {
-    // Текст древнегреческий и набран политоникой: «ά» — U+1F71 (оксия). Тонос
-    // U+03AC — знак новогреческой монотонии, и посреди этого текста он чужой.
-    it("переводит современное ударение в старое", () => {
-        assert.equal(toPolytonic("άέήί"), "άέήί");
-        assert.equal(toPolytonic("όύώ"), "όύώ");
+describe("запись издания", () => {
+    // Издание приведено к NFC: «ά» — U+03AC. Знаки «с оксией» из Greek Extended
+    // (U+1F71) канонически те же, но в тексте их больше нет, и правка не должна
+    // возвращать их обратно.
+    it("правки записаны в NFC", () => {
+        CORRECTIONS.forEach((fix) => {
+            assert.equal(fix.to, fix.to.normalize("NFC"), `${fix.canonRef}: «to» не в NFC`);
+        });
     });
 
-    it("не трогает буквы без ударения и уже старые знаки", () => {
-        assert.equal(toPolytonic("αβά"), "αβά");
-    });
-
-    it("оставляет гравис и придыхания как есть", () => {
-        assert.equal(toPolytonic("ὶὸ"), "ὶὸ");
+    it("находит написанное знаками Greek Extended и приводит к NFC", () => {
+        const oxia = "\u03ba\u03b1\u1f76 \u03c4\u1f78 \u03c0\u1f71\u03b6\u03b9\u03bf\u03bd";
+        const out = replaceNormalized(oxia, "καὶ τὸ πάζιον", "καὶ τοπάζιον".normalize("NFC"));
+        assert.equal(out, "καὶ τοπάζιον".normalize("NFC"));
     });
 });
