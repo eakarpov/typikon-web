@@ -94,6 +94,12 @@ interface SourceFile {
     canon?: string;
     /** Место колонки в параллельном виде. */
     order: number;
+    /**
+     * Отвечает ли это издание на свой язык. У языка их может быть несколько —
+     * румынская кириллица 1688 и синодальная 1914, — и «по умолчанию» должно быть
+     * ровно одно: по нему собираются чтения дня. Не сказано — считаем, что да.
+     */
+    isDefaultForLang?: boolean;
     books: SourceBook[];
 }
 
@@ -227,7 +233,11 @@ const main = async () => {
             code: source.code,
             langCode: source.langCode,
             language: source.language,
-            isDefaultForLang: true,
+            // Какое издание отвечает на выбранный язык. Прежде стояло жёсткое true, и
+            // это молчало, пока изданий было по одному на язык. Со вторым румынским
+            // оба стали «по умолчанию», и какое возьмут чтения, решал порядок в
+            // сортировке — то есть случай. Теперь это говорит сам файл издания.
+            isDefaultForLang: source.isDefaultForLang ?? true,
             title: source.title,
             shortTitle: source.shortTitle,
             versification: source.versification,
