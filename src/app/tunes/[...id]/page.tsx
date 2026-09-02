@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fitTune, groupsOf } from "@/lib/tunes/apply";
 import { parseChantText } from "@/lib/tunes/syllables";
-import { toAbc } from "@/lib/tunes/notation/abc";
+import { stretchIssues, toAbc } from "@/lib/tunes/notation/abc";
 import { toZnamenny } from "@/lib/tunes/notation/znamenny";
 import { tuneLibrary } from "@/lib/tunes/registry";
 import { scoresOf } from "@/lib/tunes/resolve";
@@ -37,6 +37,12 @@ const stepLabel = (step: Step): string =>
             : step.stress === "first" ? "распев ↑"
                 : step.stress === "last" ? "распев ↓"
                     : "—";
+
+/** Подсказка над слогом: какими шагами он поётся и что с ними сталось. */
+const hint = (steps: number[], label: string, held: boolean): string =>
+    `${steps.length > 1 ? "шаги" : "шаг"} ${steps.map(i => i + 1).join(", ")}: ${label}`
+    + (steps.length > 1 ? ", схлопнуты" : "")
+    + (held ? ", тянется" : "");
 
 const TunePage = ({
     params, searchParams,
@@ -74,6 +80,10 @@ const TunePage = ({
     const colons = tune.sample ? parseChantText(tune.sample.text) : [];
     const fitted = tune.sample ? fitTune(tune, colons) : null;
     const scores = scoresOf(tune, notation);
+    const issues = [
+        ...(fitted?.issues ?? []),
+        ...(fitted && notation === "staff" && scores[0] ? stretchIssues(fitted, scores[0]) : []),
+    ];
 
     return (
         <div className={`${myFont.variable} pt-2`}>
@@ -127,7 +137,7 @@ const TunePage = ({
                                         </td>
                                         <td className="py-0.5">
                                             {colon.cells.map((cell, j) => {
-                                                const step = (tune.lines[colon.line].steps)[cell.step];
+                                                const step = tune.lines[colon.line].steps[cell.steps[0]];
                                                 const mark = cell.flex ? "text-slate-400"
                                                     : step?.stress ? "text-red-900 font-bold"
                                                         : "text-slate-800";
@@ -135,7 +145,7 @@ const TunePage = ({
                                                     <span
                                                         key={j}
                                                         className={`${mark} ${cell.wordStart && j > 0 ? "ml-1.5" : ""}`}
-                                                        title={`шаг ${cell.step + 1}: ${stepLabel(step ?? {})}${cell.held ? ", тянется" : ""}`}
+                                                        title={hint(cell.steps, stepLabel(step ?? {}), cell.held)}
                                                     >
                                                         {cell.syllable}
                                                         {j === colon.cells.length - 1 ? colon.trailing : ""}
@@ -193,9 +203,9 @@ const TunePage = ({
                             : <Staff abc={toAbc(fitted, scores, { lyrics: !noLyrics })} />}
                     </section>
 
-                    {fitted.issues.length > 0 && (
+                    {issues.length > 0 && (
                         <ul className="text-[11px] text-amber-700 font-serif mt-2 list-disc pl-4">
-                            {fitted.issues.map((issue, i) => <li key={i}>{issue}</li>)}
+                            {issues.map((issue, i) => <li key={i}>{issue}</li>)}
                         </ul>
                     )}
                 </>

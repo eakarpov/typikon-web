@@ -15,7 +15,7 @@
 
 import type { Cell, Fitted } from "../apply";
 import type { Score } from "../types";
-import { contentFor } from "./content";
+import { cellContent, contentFor } from "./content";
 
 export interface ZnamennyCell {
     syllable: string;
@@ -38,7 +38,7 @@ export interface ZnamennyLine {
  * и стоит подряд. Лига здесь была бы приёмом линейной записи, чужим этому
  * письму.
  */
-const neumeFor = (cell: Cell, content: string[]): string => content[cell.step] ?? "";
+const neumeFor = (cell: Cell, content: string[]): string => cellContent(content, cell);
 
 export const toZnamenny = (fitted: Fitted, score: Score): ZnamennyLine[] =>
     fitted.colons.map(colon => {

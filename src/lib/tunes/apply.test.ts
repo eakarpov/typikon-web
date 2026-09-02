@@ -28,7 +28,7 @@ test("речитатив принимает всё, что не разобрал
     // Восемь слогов на три шага: первые шесть вычитываются на речитативе,
     // последние два — медианта.
     assert.equal(fitted.cells.length, 8);
-    assert.deepEqual(fitted.cells.map(c => c.step), [0, 0, 0, 0, 0, 0, 1, 2]);
+    assert.deepEqual(fitted.cells.map(c => c.steps[0]), [0, 0, 0, 0, 0, 0, 1, 2]);
     assert.equal(fitted.cells.filter(c => c.flex).length, 6);
 });
 
@@ -39,21 +39,22 @@ test("хвост держится за последний ударный сло�
     const issues: string[] = [];
     const fitted = fitColon(glasovoy.lines[1], colon, 1, 0, issues);
 
-    const stressAt = fitted.cells.findIndex(c => c.step === 1);
+    const stressAt = fitted.cells.findIndex(c => c.steps[0] === 1);
     assert.equal(fitted.cells[stressAt].syllable, "ду́");
     assert.deepEqual(issues, []);
 });
 
-test("ударение на последнем слоге: заударный шаг петь не на чем", () => {
-    // «зари́ сый» кончается ударным слогом... а вот «Васи́лие» — нет. Берём
-    // окситонное колено: после ударения слогов не остаётся, и последний шаг
-    // напева остаётся непропетым. Это не ошибка данных — так поётся.
+test("ударение на последнем слоге: шаги схлопываются на нём", () => {
+    // Окситонное колено: после ударения слогов не остаётся вовсе, и распев с
+    // исходом поются оба на одном слоге. Так это и звучит — распев там просто
+    // длиннее, — а не так, что исход пропадает.
     const [colon] = parseChantText("возопи́м");
     const issues: string[] = [];
     const fitted = fitColon(glasovoy.lines[1], colon, 1, 0, issues);
 
-    assert.equal(fitted.cells[fitted.cells.length - 1].step, 1);
-    assert.equal(fitted.unused, 1);
+    const last = fitted.cells[fitted.cells.length - 1];
+    assert.equal(last.syllable, "пи́м");
+    assert.deepEqual(last.steps, [1, 2]);
 });
 
 test("слогов больше, чем шагов хвоста: последний шаг тянется", () => {
@@ -65,7 +66,7 @@ test("слогов больше, чем шагов хвоста: последн�
 
     const last = fitted.cells[fitted.cells.length - 1];
     assert.equal(last.held, true);
-    assert.equal(last.step, 2);
+    assert.equal(last.steps[0], 2);
     assert.deepEqual(issues, []);
 });
 
@@ -183,7 +184,7 @@ test("распев садится и на первый ударный слог, 
 
     const cells = fitted.colons[0].cells;
     assert.deepEqual(cells.map(c => c.syllable), ["и", "Во", "скре́", "сша", "из", "ме́р", "твых"]);
-    assert.deepEqual(cells.map(c => c.step), [0, 1, 2, 3, 3, 4, 5]);
+    assert.deepEqual(cells.map(c => c.steps[0]), [0, 1, 2, 3, 3, 4, 5]);
     assert.deepEqual(fitted.issues, []);
 });
 
@@ -195,7 +196,7 @@ test("строка без начального распева начинаетс
     const cells = fitted.colons[0].cells;
     // «По-стра-да́-вша-и-По-гре» — семь слогов вычитываются на одной ноте.
     assert.equal(cells.filter(c => c.flex).length, 7);
-    assert.equal(cells.find(c => c.step === 1)?.syllable, "бе́");
+    assert.equal(cells.find(c => c.steps[0] === 1)?.syllable, "бе́");
     assert.deepEqual(fitted.issues, []);
 });
 
@@ -236,7 +237,7 @@ test("вариант заменяет одну строку, остальные 
 
     const plain = fitTune(tune, colons);
     assert.equal(plain.colons[0].variant, null);
-    assert.equal(plain.colons[0].cells[0].step, 0);
+    assert.equal(plain.colons[0].cells[0].steps[0], 0);
 
     const varied = fitTune(tune, colons, ["1a"]);
     assert.equal(varied.colons[0].variant, "1a");
@@ -266,7 +267,7 @@ test("в колене бывает две распевных группы под
     ]);
     // «и подаде мирови» вычитывается, «ве́лию» держится на остановке,
     // «ми́лость» получает конечный распев.
-    assert.deepEqual(cells.map(c => c.step), [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 3]);
+    assert.deepEqual(cells.map(c => c.steps[0]), [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 3]);
     assert.equal(cells[7].held, false);
     assert.equal(cells[8].held, true);
     assert.deepEqual(fitted.issues, []);

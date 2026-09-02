@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fitTune } from "@/lib/tunes/apply";
 import { parseChantText } from "@/lib/tunes/syllables";
-import { countNotes, toAbc } from "@/lib/tunes/notation/abc";
+import { countNotes, stretchIssues, toAbc } from "@/lib/tunes/notation/abc";
 import { toZnamenny } from "@/lib/tunes/notation/znamenny";
 import { resolveIn, scoresOf } from "@/lib/tunes/resolve";
 
@@ -122,4 +122,30 @@ test("распев держит свой слог подчёркиваниями
         const syllables = rows[i].slice(3).replace(" |", "").split(/[\s-]+/).filter(Boolean).length;
         assert.equal(syllables, notes, rows[i]);
     }
+});
+
+test("распев не растягивается на лишние слоги, а схлопывается на одном", () => {
+    // Прежде лишние слоги доставались последнему шагу, и он звучал ещё раз —
+    // а в нём стоял распев из пяти нот: «Су́-ще-му» получали по распеву каждый.
+    // Теперь лишние ШАГИ схлопываются в один слог, а лишние СЛОГИ, которым
+    // достался бы распев, видны как расхождение.
+    const found = resolveIn("obihod-msk", { tone: 3, podoben: null, genre: "troparion" });
+    assert.ok(found);
+    const [score] = scoresOf(found.tune, "staff");
+
+    const sample = fitTune(found.tune, parseChantText(found.tune.sample!.text));
+    assert.deepEqual(stretchIssues(sample, score), []);
+
+    // «сла́ву Бо́гу, Су́щему в Тро́ице» — заключительное колено другого тропаря
+    // того же гласа: остановка на «Су́», спуск на «ще-му», распев с «вТро́».
+    const other = fitTune(found.tune, parseChantText(
+        "Я́вльшуся Тебе́ во Иорда́не, Спа́се,// сла́ву Бо́гу, Су́щему в Тро́ице."));
+    assert.deepEqual(stretchIssues(other, score), []);
+
+    const last = other.colons[other.colons.length - 1];
+    assert.deepEqual(last.cells.map(c => c.syllable), [
+        "сла́", "ву", "Бо́", "гу", "Су́", "ще", "му", "вТро́", "и", "це",
+    ]);
+    // Читок, остановка, спуск двумя половинками — и вторая группа с распева.
+    assert.deepEqual(last.cells.map(c => c.steps[0]), [0, 0, 0, 0, 1, 2, 3, 4, 5, 6]);
 });

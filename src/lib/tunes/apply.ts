@@ -22,8 +22,13 @@ export interface Cell {
     syllable: string;
     stressed: boolean;
     wordStart: boolean;
-    /** Номер шага в строке напева; по нему запись достаёт своё содержание. */
-    step: number;
+    /**
+     * Шаги напева, спетые на этом слоге. Обычно один; несколько — когда слогов
+     * меньше, чем шагов, и лишние СХЛОПЫВАЮТСЯ в распев на одном слоге. Так
+     * обиход и поётся: «ми́лость» в конце тропаря забирает и распев, и половинку
+     * за ним, а целая остаётся «лости».
+     */
+    steps: number[];
     /** Шаг тянется на этом слоге дальше: слогов оказалось больше, чем шагов. */
     held: boolean;
     /** Слог пришёлся на речитатив. */
@@ -178,7 +183,12 @@ const placeAnchors = (segments: Segment[], stressed: number[], n: number) => {
         // отнял бы слог у исхода. Книга поёт его на «ме́ртвых» — то есть на
         // последнем ударении, ПОСЛЕ которого напев ещё умещается.
         const free = stressed.filter(i => !taken.has(i) && i > after && i < before);
-        const roomy = free.filter(i => i - pre >= 0 && i + post <= n - 1);
+        // Хватит ОДНОГО слога с каждой стороны: лишние шаги схлопнутся в
+        // распев на одном слоге, а вот совсем без слога шаг не спеть. Требуй мы
+        // по слогу на шаг, распев конца тропаря съезжал бы с «ми́лости» на
+        // «ве́лию» — только потому, что за ним стои́т ещё две ноты.
+        const roomy = free.filter(i =>
+            i - Math.min(pre, 1) >= 0 && i + Math.min(post, 1) <= n - 1);
         // Требование места — предпочтение, а не запрет: у колена может не быть
         // другого ударения вовсе («возопи́м»), и тогда распев садится на него, а
         // лишние шаги остаются непропетыми — это видно в unused.
@@ -267,11 +277,12 @@ export const fitColon = (
     const steps = line.steps;
     const syllables = colon.syllables;
     const n = syllables.length;
-    const cell = (i: number, step: number, held = false, flex = false): Cell => ({
+    const cell = (i: number, steps: number | number[], held = false, flex = false): Cell => ({
         syllable: syllables[i].text,
         stressed: syllables[i].stressed,
         wordStart: syllables[i].wordStart,
-        step, held, flex,
+        steps: typeof steps === "number" ? [steps] : steps,
+        held, flex,
     });
 
     const fixed = !steps.some(s => s.flex);
@@ -317,6 +328,23 @@ export const fitColon = (
         // Без читка отрезок не растягивается: за его шагами сразу начинается
         // область, где последний шаг тянется на лишние слоги.
         const tailStart = flexAt < 0 ? head.length : Math.max(head.length, m - tail.length);
+        // Растянутый шаг — всегда повод сказать. Повторяться имеет право один
+        // читок; всякий другой шаг, доставшийся лишним слогам, звучит своим
+        // содержанием ещё раз, а в нём может стоять распев из четырёх нот — и
+        // тогда он удвоится целиком. Это не подгонка длины, это ошибка данных.
+        const spare = m - own.length;
+        // Слогов меньше, чем шагов, а читка нет — лишние шаги схлопываются в
+        // распев на слоге с ударением: он первый в отрезке, и распев по природе
+        // своей на нём и стои́т.
+        if (spare < 0 && flexAt < 0) {
+            for (let k = 0; k < m; k++) {
+                const i = segment.start + k;
+                const from = k === 0 ? 0 : own.length - (m - k);
+                const to = k === 0 ? own.length - (m - 1) : from + 1;
+                cells.push(cell(i, Array.from({ length: to - from }, (_, j) => offset + from + j)));
+            }
+            continue;
+        }
         for (let k = 0; k < m; k++) {
             const i = segment.start + k;
             if (k < head.length) {

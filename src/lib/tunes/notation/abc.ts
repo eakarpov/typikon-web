@@ -12,7 +12,7 @@
 
 import type { Fitted } from "../apply";
 import type { Score } from "../types";
-import { contentFor } from "./content";
+import { cellContent, contentFor } from "./content";
 import { VOICE_LABELS, type Voice } from "../types";
 
 /**
@@ -64,6 +64,31 @@ const lyricsOf = (cells: { text: string; wordStart: boolean; notes: number }[]):
         })
         .join("");
 
+/**
+ * Растянутые шаги, в которых стои́т не одна нота.
+ *
+ * Растягиваться — то есть звучать ещё раз на лишнем слоге — имеет право только
+ * читок: он для того и заведён, и в нём одна нота. Всякий другой шаг, которому
+ * достался лишний слог, повторяет своё содержание целиком, а в нём может
+ * стоять распев из четырёх нот. Именно так удваивался конечный распев тропаря:
+ * «Су́-ще-му» получали по распеву каждый.
+ *
+ * Проверка живёт здесь, а не в раскладке: сколько нот в шаге, знает запись, а
+ * раскладка нотации не знает и знать не должна — она одна на крюки и на ноты.
+ */
+export const stretchIssues = (fitted: Fitted, score: Score): string[] => {
+    const out: string[] = [];
+    fitted.colons.forEach((colon, at) => {
+        const content = contentFor(score, colon);
+        const bad = colon.cells.some(cell =>
+            cell.held && !cell.flex && countNotes(cellContent(content, cell)) > 1);
+        if (bad) {
+            out.push(`колено ${at + 1}: распев растянут на лишние слоги — он повторится целиком`);
+        }
+    });
+    return out;
+};
+
 export interface AbcOptions {
     /** Показывать подтекстовку. Без неё видна одна мелодия — так удобно разучивать. */
     lyrics?: boolean;
@@ -81,13 +106,13 @@ const voicePart = (fitted: Fitted, score: Score, lyrics: boolean): string[] => {
 
     for (const colon of fitted.colons) {
         const content = contentFor(score, colon);
-        const notes = colon.cells.map(cell => content[cell.step] ?? "z").join(" ");
+        const notes = colon.cells.map(cell => cellContent(content, cell) || "z").join(" ");
         out.push(`${notes} |`);
         if (lyrics) {
             out.push("w: " + lyricsOf(colon.cells.map(c => ({
                 text: c.syllable,
                 wordStart: c.wordStart,
-                notes: countNotes(content[c.step] ?? "z"),
+                notes: countNotes(cellContent(content, c) || "z"),
             }))) + " |");
         }
     }

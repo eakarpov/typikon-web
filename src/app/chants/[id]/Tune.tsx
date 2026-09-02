@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ChantDetail } from "@/lib/chants";
 import { fitTune } from "@/lib/tunes/apply";
 import { hasColonMarkup, parseChantText } from "@/lib/tunes/syllables";
-import { toAbc } from "@/lib/tunes/notation/abc";
+import { stretchIssues, toAbc } from "@/lib/tunes/notation/abc";
 import { toZnamenny, type ZnamennyLine } from "@/lib/tunes/notation/znamenny";
 import { localitiesOf, resolveIn, scoresOf, tuneOffers } from "@/lib/tunes/resolve";
 import { NOTATION_LABELS, type Notation } from "@/lib/tunes/types";
@@ -149,6 +149,11 @@ const Tune = ({ chant, params }: { chant: ChantDetail; params: Params }) => {
     const fitted = fitTune(tune, parseChantText(chant.text), picked);
     const scores = scoresOf(tune, notation);
     const source = scores.find(s => s.source)?.source;
+    // Расхождения раскладки со схемой плюс те, что видны только по нотам.
+    const issues = [
+        ...fitted.issues,
+        ...(notation === "staff" && scores[0] ? stretchIssues(fitted, scores[0]) : []),
+    ];
 
     return (
         <section className="mt-6 border-t border-slate-200 pt-4">
@@ -272,11 +277,11 @@ const Tune = ({ chant, params }: { chant: ChantDetail; params: Params }) => {
                 <p className="text-[11px] text-slate-400 font-serif mt-2">Запись: {source}.</p>
             )}
 
-            {fitted.issues.length > 0 && (
+            {issues.length > 0 && (
                 // Не прячем и не подгоняем: несовпадение напева с текстом —
                 // это сообщение правщику данных.
                 <ul className="text-[11px] text-amber-700 font-serif mt-2 list-disc pl-4">
-                    {fitted.issues.map((issue, i) => <li key={i}>{issue}</li>)}
+                    {issues.map((issue, i) => <li key={i}>{issue}</li>)}
                 </ul>
             )}
         </section>
