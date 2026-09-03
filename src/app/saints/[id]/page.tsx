@@ -6,6 +6,8 @@ import { getItems, getLinkedNoble, getMemory, getMentions } from "@/app/saints/[
 import Content from "@/app/saints/[id]/Content";
 import { myFont } from "@/utils/font";
 import { dneslovIdsOf, getSaintByAddress, type Saint } from "@/lib/saints";
+import { memoriesOfSaint } from "@/lib/memories";
+import { dedicationsOfSaint } from "@/lib/temples";
 
 // Адрес страницы святого — наш слуг (`saints.slug`). Номер памяти святцев
 // (/saints/3030) остаётся рабочим навсегда и уводит постоянным редиректом: такие
@@ -65,6 +67,11 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
         getMemory(known[0]),
         getMentions(known),
         getLinkedNoble(known),
+        // Досье: службы, назначенные этому лицу книгами, и храмы, ему посвящённые.
+        // Ни то, ни другое не собирается заново — обе связи уже проставлены и до
+        // сих пор просто не сходились на одной странице.
+        memoriesOfSaint(known),
+        dedicationsOfSaint(known),
     ]);
 
     return (
@@ -76,7 +83,18 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
                     itemPromise={itemPromise}
                     // Только простые поля: дальше клиентский компонент, и документ
                     // Mongo целиком туда не сериализуется (ObjectId, Date).
-                    naming={{ name: saint?.name ?? null, altNames: saint?.altNames ?? [] }}
+                    facts={{
+                        name: saint?.name ?? null,
+                        altNames: saint?.altNames ?? [],
+                        type: saint?.type ?? null,
+                        orders: saint?.orders ?? [],
+                        baseYear: saint?.baseYear ?? null,
+                        memoryDates: saint?.memoryDates ?? [],
+                        roundelUrl: saint?.roundelUrl ?? null,
+                        images: (saint?.images ?? []).map((img) => ({
+                            url: img.url, thumbUrl: img.thumbUrl ?? null, title: img.title ?? null,
+                        })),
+                    }}
                 />
             </Suspense>
         </div>

@@ -12,6 +12,7 @@
 
 import { orthodoxEaster } from "date-easter";
 import clientPromise from "@/lib/mongodb";
+import { cached, CacheTag } from "@/lib/cache";
 
 export interface TempleFeast {
     month?: number;
@@ -419,3 +420,41 @@ export const getDedicationsWithCounts = async () => {
         .filter((c) => bySlug.has(c.slug))
         .map((c) => ({ ...bySlug.get(c.slug)!, count: c.count } as any));
 };
+
+export interface SaintDedication {
+    slug: string;
+    short: string;
+    label: string;
+    /** Сколько храмов в каталоге с этим престолом. */
+    count: number;
+}
+
+/**
+ * Посвящения, за которыми стоит этот святой, с числом храмов — для его карточки.
+ *
+ * Связь берём из ВЫВЕРЕННОГО списка `dedications.saints`: тот же, что показывает
+ * страница посвящения. Кандидаты (`saintCandidates`) сюда не идут — Ильинскому
+ * храму сопоставитель предлагает «Илию Севастийского» вместо пророка, и на
+ * карточке святого такая догадка выглядела бы как факт (см. build-dedications.ts).
+ *
+ * Храмы считаются тем же условием `filterOf`, каким отбирает указатель: иначе
+ * число на карточке и выдача /temples?dedication= говорили бы разное.
+ */
+export const dedicationsOfSaint = cached(async (dneslovIds: string[]): Promise<SaintDedication[]> => {
+    const ids = [...new Set((dneslovIds ?? []).filter(Boolean).map(String))];
+    if (!ids.length) return [];
+
+    const dedications = await (await clientPromise).db("typikon").collection("dedications")
+        .find({ "saints.dneslovId": { $in: ids } },
+            { projection: { _id: 0, slug: 1, short: 1, label: 1 } })
+        .toArray();
+    if (!dedications.length) return [];
+
+    const temples = await collection();
+    const counts = await Promise.all(dedications.map((d: any) =>
+        temples.countDocuments(filterOf({ dedication: d.slug }))));
+
+    return dedications
+        .map((d: any, i) => ({ slug: d.slug, short: d.short ?? d.slug, label: d.label ?? d.short ?? d.slug, count: counts[i] }))
+        .sort((a, b) => b.count - a.count);
+}, ["saint-dedications"], [CacheTag.TEMPLES, CacheTag.SAINTS]);

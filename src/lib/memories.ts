@@ -143,3 +143,48 @@ export const getLinkedSaint = cached(async (memoryId: string) => {
         .findOne({ "externals.id": String(link.dneslovId) });
     return saint ? JSON.parse(JSON.stringify(saint)) : null;
 }, ["memory-saint"], [CacheTag.MEMORIES, CacheTag.SAINTS]);
+
+/** Строка памяти на карточке святого: адрес книги и знак службы, больше ничего. */
+export interface SaintMemoryRow {
+    memoryId: string;
+    label: string;
+    /** Адрес книги словами — тот же, что и на странице памяти (addressOf). */
+    address: string;
+    /** Код знака; подпись к нему — SIGN_LABELS, они и на показе, и в корпусе одни. */
+    sign: string | null;
+}
+
+/**
+ * Памяти, отнесённые к этому лицу, — обратная сторона getLinkedSaint.
+ *
+ * Только ВЫВЕРЕННЫЕ связи, по той же причине: кандидат сопоставителя — догадка,
+ * и на карточке святого она выглядела бы как сведение о службе, которой ему,
+ * может, никто не назначал. Оттого у большинства святых раздел пока пуст: из
+ * 653 связей выверено 88, остальные ждут разбора в /admin/mentions.
+ *
+ * Номеров святцев у записи бывает несколько (две памяти, сведённые нами в одно
+ * лицо), поэтому на входе набор, а не номер.
+ */
+export const memoriesOfSaint = cached(async (dneslovIds: string[]): Promise<SaintMemoryRow[]> => {
+    const ids = [...new Set((dneslovIds ?? []).filter(Boolean).map(String))];
+    if (!ids.length) return [];
+
+    const db = (await clientPromise).db("typikon");
+    const links = await db.collection("memory_saint_links")
+        .find({ dneslovId: { $in: ids }, status: "approved" }, { projection: { memoryId: 1 } })
+        .toArray();
+    const memoryIds = [...new Set(links.map((l: any) => l.memoryId).filter(Boolean))];
+    if (!memoryIds.length) return [];
+
+    const rows = await db.collection("memories")
+        .find({ _id: { $in: memoryIds as any[] } }, { projection: { serviceRefs: 0, "sign.sources": 0 } })
+        .sort({ book: 1, month: 1, day: 1, paschaOffset: 1, tone: 1, _id: 1 })
+        .toArray();
+
+    return (JSON.parse(JSON.stringify(rows)) as Memory[]).map((m) => ({
+        memoryId: m.memoryId,
+        label: m.label,
+        address: addressOf(m),
+        sign: m.sign?.default ?? null,
+    }));
+}, ["saint-memories"], [CacheTag.MEMORIES, CacheTag.SAINTS]);
