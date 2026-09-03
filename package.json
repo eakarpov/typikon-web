@@ -40,6 +40,7 @@
     "api:token": "tsx src/scripts/api-token.ts",
     "news:import-about": "tsx src/scripts/import-about-news.ts",
     "dneslov:sync": "tsx src/scripts/sync-dneslov.ts",
+    "parish:move": "tsx src/scripts/move-parish-to-users.ts",
     "saints:slugs": "tsx src/scripts/assign-saint-slugs.ts",
     "saints:name": "tsx src/scripts/set-saint-name.ts",
     "saints:slug": "tsx src/scripts/set-saint-slug.ts",

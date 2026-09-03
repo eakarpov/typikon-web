@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/mongodb";
+import { parishDb } from "./db";
 import { guessTimezone } from "@/lib/timezones";
 import type { Temple } from "@/lib/temples";
 import { DEFAULT_RULES } from "./presets";
@@ -29,7 +29,7 @@ export interface StoredSettings {
 }
 
 const collection = async () =>
-    (await clientPromise).db("typikon").collection<StoredSettings>("parishSettings");
+    (await parishDb()).collection<StoredSettings>("parishSettings");
 
 export const storedSettings = async (templeSlug: string) =>
     (await collection()).findOne({ _id: templeSlug } as never);

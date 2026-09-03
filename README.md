@@ -20,8 +20,9 @@
   `npm run release:db -- bible_verses`. Части: `dneslov_names`, `bible_verses`, `texts`,
   `temples`, `rest`.
 - Приходское (`parishSettings`, `parishEdits`, `parishSchedules`, `templeClaims`,
-  `templeAdmins`) в выкладку не входит: это данные приходов, они живут только на проде,
-  и `mongorestore --drop` пустым дампом их бы стёр.
+  `templeAdmins`) лежит в базе `typikon-users`, а не в `typikon`: это данные приходов,
+  они пишутся только на проде, и `mongorestore --drop` пустым дампом их бы стёр.
+  Перенос с прежнего места — `npm run parish:move` (на сервере, один раз).
 
 # Лицензии
 

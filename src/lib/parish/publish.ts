@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/mongodb";
+import { parishDb } from "./db";
 import type { ParishDay } from "./types";
 
 // «ЭТОТ МЕСЯЦ ГОТОВ».
@@ -34,7 +34,7 @@ export interface ParishSchedule {
 }
 
 const collection = async () =>
-    (await clientPromise).db("typikon").collection<ParishSchedule>("parishSchedules");
+    (await parishDb()).collection<ParishSchedule>("parishSchedules");
 
 const idOf = (parishSlug: string, month: string) => `${parishSlug}:${month}`;
 

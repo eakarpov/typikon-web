@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import clientPromise from "@/lib/mongodb";
+import { parishDb } from "./db";
 import { decrypt } from "@/lib/authorize/sessions";
 import { getItem } from "@/app/profile/api";
 import { userCan } from "@/lib/rights";
@@ -43,7 +44,7 @@ export interface TempleAdmin {
 }
 
 const collection = async () =>
-    (await clientPromise).db("typikon").collection<TempleAdmin>("templeAdmins");
+    (await parishDb()).collection<TempleAdmin>("templeAdmins");
 
 const idOf = (templeSlug: string, userId: string) => `${templeSlug}:${userId}`;
 

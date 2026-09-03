@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/mongodb";
+import { parishDb } from "./db";
 import type { Gathering, ParishDay, Part } from "./types";
 
 // ПРАВКА ОТВЕТСТВЕННОГО — «проект, который остаётся поправить, а не
@@ -45,7 +45,7 @@ export interface ParishEdit {
 export type EditStatus = "active" | "stale" | "orphaned";
 
 const collection = async () =>
-    (await clientPromise).db("typikon").collection<ParishEdit>("parishEdits");
+    (await parishDb()).collection<ParishEdit>("parishEdits");
 
 export const editsOf = async (parishSlug: string, month: string) =>
     (await collection()).find({ parishSlug, month }).sort({ createdAt: 1 }).toArray();

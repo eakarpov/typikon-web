@@ -35,18 +35,13 @@ SSH_OPTS="-o ServerAliveInterval=30 -o ServerAliveCountMax=10"
 #   всё остальное   11 МБ
 HEAVY="dneslov_names bible_verses texts temples"
 
-# ПРИХОДСКОЕ НЕ ВЕЗЁМ.
+# ПРИХОДСКОГО ЗДЕСЬ НЕТ — и это нарочно.
 #
-# Эти коллекции наполняются на проде — приходами, а не нами: у нас локально они
-# пустые все до одной (см. src/lib/parish/*, писать в них умеет только сайт).
-# А mongorestore --drop сносит всякую коллекцию, которая есть в дампе, включая
-# пустую: пустой parishSettings.bson стирал бы приходам часовые пояса и их
-# собственные правила, templeClaims — неразобранные заявки на храмы,
-# templeAdmins — права, по которым приход вообще входит в свою страницу.
-#
-# Это не «забыли перечислить», а решение: их место на проде, и оттуда их берёт
-# npm run sync:db, а не наоборот.
-PARISH="parishSettings parishEdits parishSchedules templeClaims templeAdmins"
+# Настройки приходов, расписания, заявки и права ответственных лежат в
+# `typikon-users`, куда эта выкладка не заглядывает вовсе (см. src/lib/parish/db.ts).
+# Пока они лежали в `typikon`, каждая выкладка везла на сервер ПУСТЫЕ коллекции,
+# и `--drop` стирал приходам всё, что они о себе сказали. Перечислять их здесь
+# в исключениях больше незачем: они не в этой базе.
 
 ssh_run() { sshpass -f <(printf '%s\n' $PASSWORD) ssh $SSH_OPTS $USERNAME@$HOST "$@"; }
 scp_put() { sshpass -f <(printf '%s\n' $PASSWORD) scp $SSH_OPTS "$1" $USERNAME@$HOST:"$2"; }
@@ -91,7 +86,7 @@ for part in $PARTS; do
         # принимает без единого слова и НЕ ИСКЛЮЧАЕТ ничего — проверено на 100.9.5.
         # С ней «остаток» оказывался полной базой, и приходское ехало вместе с ним.
         set --
-        for c in $HEAVY $PARISH; do set -- "$@" "--excludeCollection=$c"; done
+        for c in $HEAVY; do set -- "$@" "--excludeCollection=$c"; done
         send_part rest "$@"
         continue
     fi

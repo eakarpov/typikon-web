@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import clientPromise from "@/lib/mongodb";
+import { parishDb } from "./db";
 import type { Temple } from "@/lib/temples";
 
 // ЗАЯВКА НА ВЕДЕНИЕ РАСПИСАНИЯ.
@@ -66,7 +66,7 @@ export interface TempleClaim {
 }
 
 const collection = async () =>
-    (await clientPromise).db("typikon").collection<TempleClaim>("templeClaims");
+    (await parishDb()).collection<TempleClaim>("templeClaims");
 
 /**
  * Знак для сайта. Не тайна и не ключ: им ничего не открыть, он только

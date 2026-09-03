@@ -36,7 +36,8 @@ const main = async () => {
         console.error(`храма ${templeSlug} нет — проверьте slug на /temples`);
         process.exit(1);
     }
-    const admins = db.collection("templeAdmins");
+    // Права — в typikon-users, а не в typikon: см. src/lib/parish/db.ts.
+    const admins = users.collection("templeAdmins");
 
     if (flag("list") || (!arg("user") && !arg("email"))) {
         const rows = await admins.find({ templeSlug }).sort({ addedAt: 1 }).toArray();
