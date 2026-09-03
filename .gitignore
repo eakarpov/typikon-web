@@ -20,7 +20,7 @@ chinese/
 contents/
 memories/
 
-nobles.db
+/nobles.db
 *.db.bak.*
 
 NOTES.md
@@ -33,28 +33,32 @@ NOTES.md
 
 script-data/*
 
+# Все дампы и архивы ниже — В КОРНЕ, и косая черта в начале не украшение:
+# без неё правило ловит такое же имя в любом каталоге. Правило `db.*` без
+# черты уже съело `src/lib/parish/db.ts` — файл лежал на диске, сборка у себя
+# шла, а в репозиторий он не попадал, и ломалось у следующего, кто склонирует.
 /db/
-db.*
+/db.*
 /db-download/
-db-download.*
+/db-download.*
 
 # Части базы: собираются заново при каждом release-db.sh
 /db-*/
-db-*.zip
+/db-*.zip
 
 /meta-db/
-meta-db.*
+/meta-db.*
 
 /news-db/
-news-db.*
+/news-db.*
 
 /csl-db/
-csl-db.*
+/csl-db.*
 
 # Архивы выкладки корпуса песнопений и службы устава — собираются заново
 # при каждом релизе, как и все прочие выше.
-rules-db.*
-ordo.zip
+/rules-db.*
+/ordo.zip
 
 # idea
 /.idea/
