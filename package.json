@@ -70,6 +70,7 @@
     "bible:fix-swete": "tsx src/scripts/fix-swete-typos.ts",
     "bible:normalize": "tsx src/scripts/normalize-bible-unicode.ts",
     "corpus:dump": "tsx src/scripts/build-corpus-dump.ts",
+    "citations:stats": "tsx src/scripts/build-citation-stats.ts",
     "release:data": "bash release-data.sh"
   },
   "dependencies": {

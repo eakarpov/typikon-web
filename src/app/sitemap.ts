@@ -4,6 +4,7 @@ import clientPromise from "@/lib/mongodb";
 import {TextReadiness} from "@/utils/texts";
 import {BIBLE_CANON} from "@/utils/bibleCanon";
 import {REFERENCE_VERSIFICATION} from "@/utils/bibleVersification";
+import { podobnyIndex } from "@/lib/podobny/store";
 
 // Карта сайта строится из базы, а не лежит статикой в public/: раньше файл
 // генерировался внешним сервисом и с 2024 года не обновлялся, поэтому новые
@@ -32,6 +33,14 @@ const STATIC_ROUTES = [
     // десятых за адресом стоит одна строка корпуса — карта сайта разбухла бы
     // в шестьдесят раз ради страниц, которых никто не ищет.
     { path: "/incipits", priority: 0.6 },
+    // Свод цитируемости: сам он и 77 страниц книг канона — их немного, и каждая
+    // отвечает на свой вопрос («сколько Бытия звучит в службах»), так что в
+    // указателе им место. Страницы книг добавляются ниже, из самого канона.
+    { path: "/otzvuki", priority: 0.6 },
+    // Указатель подобнов; сами подобны — ниже, из корпуса: их 497, и за каждым
+    // стоит от одной до тысячи семисот стихир, то есть страница со своим
+    // содержанием, а не переадресация.
+    { path: "/podobny", priority: 0.6 },
     { path: "/triodion", priority: 0.8 },
     { path: "/penticostarion", priority: 0.8 },
     { path: "/rest-readings", priority: 0.8 },
@@ -194,6 +203,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             ...saints.map((saint) =>
                 entry(`/saints/${saintAddresses[String(saint._id)] ?? saint._id}`, saint.updatedAt, 0.6, "monthly")),
             ...bibleChapters,
+            ...BIBLE_CANON.map((book) =>
+                entry(`/otzvuki/${book.id}`, new Date(), 0.5, "monthly")),
+            // Корпуса на сервере может не быть — тогда и подобнов в карте нет,
+            // а карта строится: остальные разделы от него не зависят.
+            ...(podobnyIndex() ?? []).map((unit) =>
+                entry(`/podobny/${unit.slug}`, new Date(), 0.5, "monthly")),
         ]);
     } catch (e) {
         console.error(e);

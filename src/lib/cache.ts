@@ -30,6 +30,9 @@ export const CacheTag = {
     // на прошедшую дату не меняется вовсе), а правила и правки прихода —
     // тем же тегом, потому что расписание пересчитывается из них разом.
     PARISH: "parish",
+    // Свод цитируемости: считается скриптом по корпусу (citations:stats) и
+    // меняется ровно тогда, когда на сервер приезжает новый файл корпуса.
+    CITATIONS: "citations",
 } as const;
 
 export type CacheTagValue = typeof CacheTag[keyof typeof CacheTag];
