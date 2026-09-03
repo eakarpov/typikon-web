@@ -38,6 +38,10 @@ db.*
 /db-download/
 db-download.*
 
+# Части базы: собираются заново при каждом release-db.sh
+/db-*/
+db-*.zip
+
 /meta-db/
 meta-db.*
 

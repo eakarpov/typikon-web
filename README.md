@@ -15,6 +15,13 @@
 
 - Архивация осуществляется раз в день. Удаляется через 7 дней по крону.
 - Скачивание локально происходит через команду `npm run sync:db`, загрузка локальной версии - через `npm run release:db`
+- Выкладка идёт по частям — по одному ssh-сеансу на тяжёлую коллекцию, иначе сеанс не
+  доживал до конца mongorestore. Оборвалась одна часть — повторяется она одна:
+  `npm run release:db -- bible_verses`. Части: `dneslov_names`, `bible_verses`, `texts`,
+  `temples`, `rest`.
+- Приходское (`parishSettings`, `parishEdits`, `parishSchedules`, `templeClaims`,
+  `templeAdmins`) в выкладку не входит: это данные приходов, они живут только на проде,
+  и `mongorestore --drop` пустым дампом их бы стёр.
 
 # Лицензии
 
