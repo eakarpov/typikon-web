@@ -13,6 +13,7 @@
 import { orthodoxEaster } from "date-easter";
 import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
+import { quantile, spreadOf } from "@/lib/geoSpread";
 
 export interface TempleFeast {
     month?: number;
@@ -300,6 +301,28 @@ export const getDedicationCounts = async (): Promise<{ slug: string; short: stri
 /** Ниже этого числа храмов выводов не делаем — показываем только карту. */
 export const ENOUGH_FOR_STATS = 10;
 
+/**
+ * Ниже этого числа ДАТИРОВАННЫХ храмов ось времени не показываем.
+ *
+ * Порог выше, чем у мер (ENOUGH_FOR_STATS), и нарочно: мера по десятку точек
+ * хотя бы честно называет своё число, а движущаяся карта по десятку точек на
+ * три века показывает не распространение почитания, а полноту каталога — и
+ * показывает убедительно, чем и опасна. С этим порогом раздел появляется у 38
+ * посвящений из 133.
+ */
+export const ENOUGH_FOR_DIFFUSION = 30;
+
+/**
+ * Год, которому можно верить: не будущий и не из первых веков, где число в
+ * Wikidata почти всегда значит не постройку, а предание об основании.
+ *
+ * Условие названо один раз и здесь, потому что по нему считаются И числа
+ * раздела, И точки на оси времени. Разойдись они — в шапке карты стояло бы
+ * одно число датированных, а на самой карте лежало бы другое.
+ */
+export const isTempleYear = (year: unknown): year is number =>
+    typeof year === "number" && year > 300 && year <= new Date().getUTCFullYear();
+
 export interface DedicationStats {
     /** Сколько храмов с этим престолом в каталоге. */
     count: number;
@@ -320,16 +343,6 @@ export interface DedicationStats {
     countries: { code: string; count: number; share: number; lift: number }[];
 }
 
-const quantile = (sorted: number[], p: number): number =>
-    sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))];
-
-/** Расстояние по земле, км. Точности «сколько сотен вёрст» хватает с запасом. */
-const distanceKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const dLat = (lat2 - lat1) * 111;
-    const dLon = (lon2 - lon1) * 111 * Math.cos(((lat1 + lat2) / 2) * Math.PI / 180);
-    return Math.hypot(dLat, dLon);
-};
-
 export const getDedicationStats = async (slug: string): Promise<DedicationStats> => {
     const temples = await collection();
     const where = { ...filterOf({ dedication: slug }) };
@@ -349,17 +362,14 @@ export const getDedicationStats = async (slug: string): Promise<DedicationStats>
     const count = rows.length;
     if (!count) return { count: 0, center: null, radiusMedianKm: null, radius80Km: null, years: null, decades: [], countries: [] };
 
-    const lats = rows.map((t: any) => t.latitude).sort((a, b) => a - b);
-    const lons = rows.map((t: any) => t.longitude).sort((a, b) => a - b);
-    const center = { lat: quantile(lats, 0.5), lon: quantile(lons, 0.5) };
-
-    const distances = rows
-        .map((t: any) => distanceKm(center.lat, center.lon, t.latitude, t.longitude))
-        .sort((a, b) => a - b);
+    // Ареал считает @/lib/geoSpread — тот же код, которым его на каждом шаге
+    // пересчитывает ось времени на карте. Две копии этой арифметики разошлись
+    // бы, и страница показывала бы два разных ареала одного посвящения.
+    const spread = spreadOf(rows.map((t: any) => ({ lat: t.latitude, lon: t.longitude })));
 
     const yearList = rows
         .map((t: any) => t.year)
-        .filter((y: unknown): y is number => typeof y === "number" && y > 300 && y <= new Date().getUTCFullYear())
+        .filter(isTempleYear)
         .sort((a: number, b: number) => a - b);
 
     const buckets = new Map<number, number>();
@@ -387,9 +397,7 @@ export const getDedicationStats = async (slug: string): Promise<DedicationStats>
 
     return {
         count,
-        center,
-        radiusMedianKm: Math.round(quantile(distances, 0.5)),
-        radius80Km: Math.round(quantile(distances, 0.8)),
+        ...spread,
         years: yearList.length >= ENOUGH_FOR_STATS
             ? {
                 median: quantile(yearList, 0.5),
@@ -458,3 +466,56 @@ export const dedicationsOfSaint = cached(async (dneslovIds: string[]): Promise<S
         .map((d: any, i) => ({ slug: d.slug, short: d.short ?? d.slug, label: d.label ?? d.short ?? d.slug, count: counts[i] }))
         .sort((a, b) => b.count - a.count);
 }, ["saint-dedications"], [CacheTag.TEMPLES, CacheTag.SAINTS]);
+
+// ── Ось времени: датированные храмы посвящения ───────────────────────────────
+//
+// Отдаются ПОШТУЧНО и разом, а не гнёздами по видимой рамке, как на обычной
+// карте. Причина простая: ползунок должен переставляться мгновенно, а сеть
+// этого не даёт. Датированных у самого крупного посвящения 838 — их дешевле
+// привезти один раз целиком, чем ходить на сервер на каждый полувек.
+
+/** Больше этого на карту не отдаём: дальше страдает и объём, и читаемость. */
+export const DIFFUSION_LIMIT = 3000;
+
+export interface DatedTemple {
+    x: number;
+    y: number;
+    year: number;
+    /** Слуг и имя — чтобы по точке открывалась карточка, как и на соседней карте. */
+    s: string;
+    n: string;
+}
+
+/**
+ * Датированные храмы одного посвящения, по возрастанию года.
+ *
+ * Отбор — тем же `filterOf`, что и весь раздел, и тем же условием года
+ * (`isTempleYear`), по которому считается `years.known` в мерах выше. Иначе в
+ * шапке карты стояло бы «838 из 4 445», а на карте лежало бы другое число, и
+ * поймать это расхождение было бы нечем.
+ */
+export const datedTemplesOf = cached(async (dedication: string): Promise<DatedTemple[]> => {
+    if (!dedication) return [];
+    const temples = await collection();
+    const rows = await temples
+        .find(
+            {
+                ...filterOf({ dedication }),
+                year: { $type: "number", $gt: 300, $lte: new Date().getUTCFullYear() },
+                latitude: { $type: "number" },
+                longitude: { $type: "number" },
+            },
+            { projection: { _id: 0, latitude: 1, longitude: 1, year: 1, slug: 1, name: 1 } },
+        )
+        .sort({ year: 1 })
+        .limit(DIFFUSION_LIMIT)
+        .toArray();
+
+    return rows.map((t: any) => ({
+        x: Math.round(t.longitude * 1e5) / 1e5,
+        y: Math.round(t.latitude * 1e5) / 1e5,
+        year: t.year,
+        s: t.slug ?? "",
+        n: t.name ?? "",
+    }));
+}, ["dated-temples"], [CacheTag.TEMPLES]);

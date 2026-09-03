@@ -4,13 +4,14 @@ import { notFound } from "next/navigation";
 import { myFont } from "@/utils/font";
 import { setMeta } from "@/lib/meta";
 import {
-    ENOUGH_FOR_STATS, feastDate, formatFeastDate, getDedication, getDedicationStats,
+    ENOUGH_FOR_DIFFUSION, ENOUGH_FOR_STATS, feastDate, formatFeastDate, getDedication, getDedicationStats,
 } from "@/lib/temples";
 import { SIGN_LABELS } from "@/utils/chantLabels";
 import { countryLabel } from "@/utils/jurisdictions";
 import { temples as templesCount } from "@/utils/plural";
 import YearChart from "@/app/dedications/YearChart";
 import DedicationMap from "@/app/dedications/[slug]/DedicationMap";
+import DiffusionMap from "@/app/dedications/[slug]/DiffusionMap";
 
 // География посвящения: где почитание живёт и когда оно разошлось.
 //
@@ -138,6 +139,40 @@ const DedicationPage = async ({ params }: { params: { slug: string } }) => {
                 <h2 className="font-serif text-lg mb-1">Где стоят</h2>
                 <DedicationMap dedication={params.slug} />
             </section>
+
+            {/* КАК РАСХОДИЛОСЬ — та же география, провёрнутая по полувекам.
+                Показываем только там, где датированных хватает: по десятку точек
+                на три века движущаяся карта показывает полноту каталога, а не
+                почитание, и показывает убедительно — тем и опасна. */}
+            {stats.years && stats.years.known >= ENOUGH_FOR_DIFFUSION && (
+                <section className="mb-6">
+                    <h2 className="font-serif text-lg mb-1">Как расходилось</h2>
+                    {/* Доля датированных — в шапке раздела, а не сноской внизу:
+                        читатель должен знать, какую часть каталога он видит,
+                        ДО того, как сделает вывод из увиденного. */}
+                    <p className="font-serif text-slate-600 mb-2">
+                        На карте только датированные храмы: {stats.years.known} из {stats.count}.
+                        Год известен лишь у записей Wikidata — у записей OpenStreetMap
+                        его нет ни у одной.
+                    </p>
+                    <DiffusionMap dedication={params.slug} />
+                    <div className="font-serif text-sm text-slate-500 mt-2">
+                        <p>
+                            Год здесь — год ЗДАНИЯ, а не первого храма этого посвящения на
+                            этом месте: сгоревший деревянный храм XVI века приходит на карту
+                            каменным XIX-го. Оттого «появление» на карте может отставать от
+                            почитания на век и больше — у Серафима Саровского самый ранний
+                            датированный храм 1890 года при прославлении 1903-го, и это год
+                            постройки, а не посвящения.
+                        </p>
+                        <p className="mt-1">
+                            Пустое место на карте значит «нет датированных записей», а не
+                            «нет почитания»: во всём каталоге года нет почти у девяти храмов
+                            из десяти. Поэтому «где кончается ареал» здесь — вопрос, а не ответ.
+                        </p>
+                    </div>
+                </section>
+            )}
 
             {stats.countries.length > 1 && (
                 <section className="mb-6">
