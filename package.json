@@ -25,6 +25,7 @@
     "db:link-index": "tsx src/scripts/link-index-citations.ts",
     "db:anonymize-logs": "tsx src/scripts/anonymize-meta-logs.ts",
     "db:book-languages": "tsx src/scripts/set-book-languages.ts",
+    "db:import-vmch": "NODE_ENV=development tsx src/scripts/import-vmch.ts",
     "db:lib-fond": "tsx src/scripts/fetch-lib-fond.ts",
     "match:akathists": "tsx src/scripts/match-akathist-saints.ts",
     "export:akathist-saints": "tsx src/scripts/export-akathist-saints.ts",
@@ -70,6 +71,8 @@
     "bible:fix-swete": "tsx src/scripts/fix-swete-typos.ts",
     "bible:normalize": "tsx src/scripts/normalize-bible-unicode.ts",
     "corpus:dump": "tsx src/scripts/build-corpus-dump.ts",
+    "citations:stats": "tsx src/scripts/build-citation-stats.ts",
+    "health:snapshot": "tsx src/scripts/take-health-snapshot.ts",
     "release:data": "bash release-data.sh"
   },
   "dependencies": {

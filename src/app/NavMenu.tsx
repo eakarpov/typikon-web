@@ -94,6 +94,12 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     Календарные чтения
                 </Link>
                 <Link
+                    href="/trapeza"
+                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/trapeza`) && `text-red-600`}`}
+                >
+                    Трапеза
+                </Link>
+                <Link
                     href="/calculator"
                     className={`cursor-pointer min-w-fit font-serif ${pathname === `/calculator` && `text-red-600`}`}
                 >
@@ -117,10 +123,12 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         { href: "/canons", label: "Каноны" },
                         { href: "/akathists", label: "Акафисты" },
                         { href: "/prayers", label: "Молитвы" },
-                        // Указатель, а не собрание: он ничего не содержит сам, а
-                        // ведёт в «Песнопения» — и потому стоит последним в
-                        // группе, к книгам которой отсылает.
+                        // Указатели, а не собрания: они ничего не содержат сами, а
+                        // ведут в «Песнопения» — и потому стоят последними в
+                        // группе, к книгам которой отсылают. Зачин — вход по
+                        // первым словам, подобен — по тому, чем поётся.
                         { href: "/incipits", label: "Зачины" },
+                        { href: "/podobny", label: "Подобны" },
                     ]}
                 />
                 {/* Вспомогательное при чтении. Сюда же со временем переедет

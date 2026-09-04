@@ -1,6 +1,6 @@
 import { buildCalendar, knownTimezone, type CalendarEvent } from "@/lib/ical";
 import { parishView } from "@/lib/parish/schedule";
-import { isoDate } from "@/lib/parish/engine";
+import { isoDate } from "@/lib/ordo";
 
 // ПОДПИСНОЙ КАЛЕНДАРЬ ПРИХОДА. Прихожанин подписывается телефоном один раз, и
 // расписание приезжает в тот календарь, которым он уже пользуется, — без

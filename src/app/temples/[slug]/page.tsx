@@ -191,6 +191,16 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
                 {" "}— если вы из этого прихода
             </p>
 
+            {/* Виджет — то, что приход может взять НЕ спрашивая никого: ни
+                заявки, ни ключа. Стоит рядом с приглашением вести расписание,
+                потому что зовёт того же человека — ведущего приходский сайт. */}
+            <p className="font-serif text-sm text-slate-500">
+                <a href="/widget" className="text-amber-800 hover:underline">
+                    Поставить чтения дня на сайт прихода
+                </a>
+                {" "}— рамкой, одной строкой кода
+            </p>
+
             <MyTemple slug={temple.slug} name={temple.name} />
 
             <TempleMap latitude={temple.latitude} longitude={temple.longitude} name={temple.name} />
