@@ -45,6 +45,10 @@ const STATIC_ROUTES = [
     // рамка (/embed/day) в карту не идёт и закрыта от индексации: это не
     // страница, а вставка, и в выдаче ей делать нечего.
     { path: "/widget", priority: 0.5 },
+    // Именины: сам раздел здесь, а страницы имён — ниже, из указателя. Их
+    // тысяча с небольшим, и за каждой стоит вопрос, который задают поиску
+    // словами: «когда именины у Николая».
+    { path: "/imeniny", priority: 0.6 },
     // Указатель подобнов; сами подобны — ниже, из корпуса: их 497, и за каждым
     // стоит от одной до тысячи семисот стихир, то есть страница со своим
     // содержанием, а не переадресация.
@@ -160,6 +164,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // в карте остаётся номер: страница по нему работает.
         const saintAddresses = await saintSlugs(saints.map((saint: any) => String(saint._id)));
 
+        // Указатель имён строит скрипт (names:index); может и не быть — тогда
+        // страниц имён в карте просто не будет, а раздел останется.
+        const names = await db.collection("name_index")
+            .find({}, { projection: { name: 1 } })
+            .toArray()
+            .catch(() => [] as Array<{ name: string }>);
+
         const days = await db.collection("days")
             .find({ alias: { $nin: ["", null] } }, { projection: { alias: 1, updatedAt: 1, paschal: 1 } })
             .toArray();
@@ -213,6 +224,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             ...bibleChapters,
             ...BIBLE_CANON.map((book) =>
                 entry(`/otzvuki/${book.id}`, new Date(), 0.5, "monthly")),
+            ...names.map((name) =>
+                entry(`/imeniny/${encodeURIComponent(name.name)}`, new Date(), 0.5, "monthly")),
             // Корпуса на сервере может не быть — тогда и подобнов в карте нет,
             // а карта строится: остальные разделы от него не зависят.
             ...(podobnyIndex() ?? []).map((unit) =>

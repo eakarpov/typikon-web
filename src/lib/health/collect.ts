@@ -377,7 +377,32 @@ const linksGroup = async (): Promise<MetricGroup> => {
         ? num((corpus.prepare("SELECT count(*) AS n FROM akathists").get() as { n: number }).n)
         : 0;
 
+    // Сколько святых попало в указатель имён: считаем по самим записям, а не
+    // по числу имён — у одного святого имён бывает два («Андрони́к и Иу́ния»).
+    const indexed = await db.collection("name_index")
+        .aggregate([{ $unwind: "$saints" }, { $group: { _id: "$saints.slug" } }, { $count: "n" }])
+        .toArray().catch(() => []);
+    const namedSaints = (indexed[0] as { n: number } | undefined)?.n ?? 0;
+
+    const names = await db.collection("name_index").countDocuments().catch(() => 0);
+    // Считаем лиц и соборы: у ризы, храма и места имени нет по существу, и
+    // включать их в недостачу значило бы вечно держать строку ненулевой.
+    const saints = await db.collection("saints")
+        .countDocuments({ $or: [{ type: { $in: ["Identity", "Council"] } }, { type: null }] });
+
     const metrics: Metric[] = [
+        {
+            id: "saint-name",
+            label: "Святые без разобранного имени",
+            gap: names ? Math.max(0, saints - namedSaints) : saints,
+            total: saints,
+            note: names
+                ? "Имя выведено разбором заголовка святцев — своего указателя имён у собрания "
+                    + "нет. Оставшиеся имени и не имеют: «14 000 младенцев», «Райфские», "
+                    + "родительские субботы. Пересчитывается npm run names:index."
+                : "Указатель имён ни разу не строился: npm run names:index -- --write",
+            href: "/imeniny",
+        },
         {
             id: "memory-saint",
             label: "Памяти без святого",
