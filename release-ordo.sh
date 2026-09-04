@@ -61,3 +61,14 @@ sshpass -f <(printf '%s\n' $PASSWORD) scp ordo.zip $USERNAME@$HOST:~/ordo.zip
 sshpass -f <(printf '%s\n' $PASSWORD) scp "$RULES_SRC/typikon-ordo.service" $USERNAME@$HOST:~/typikon-ordo.service
 
 sshpass -f <(printf '%s\n' $PASSWORD) ssh $USERNAME@$HOST "REMOTE_DIR='$REMOTE_DIR' bash -s" < ordo-remote.sh
+
+# КЭШ ОТВЕТОВ УСТАВА СБРАСЫВАЕТСЯ ЗДЕСЬ. Сайт держит ответ движка на дату час
+# (тег `ordo`: трапеза, а дальше и всё, что встанет на движок). Правила устава
+# только что переехали — и без этого сброса сайт до часа отвечал бы прежними,
+# причём именно в тот час, когда правку и пришли посмотреть.
+echo "сбрасываю кэш ответов устава…"
+curl -sS -X POST "${REVALIDATE_URL:-https://www.typikon.su}/api/revalidate" \
+     -H 'Content-Type: application/json' \
+     -H "x-revalidate-token: $REVALIDATE_TOKEN" \
+     -d '{"tags":["ordo"]}' \
+  || echo "  кэш сбросить не удалось — сайт отдаст прежнее не дольше часа"

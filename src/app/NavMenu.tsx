@@ -94,6 +94,12 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     Календарные чтения
                 </Link>
                 <Link
+                    href="/trapeza"
+                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/trapeza`) && `text-red-600`}`}
+                >
+                    Трапеза
+                </Link>
+                <Link
                     href="/calculator"
                     className={`cursor-pointer min-w-fit font-serif ${pathname === `/calculator` && `text-red-600`}`}
                 >

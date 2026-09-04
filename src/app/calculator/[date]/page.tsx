@@ -7,6 +7,7 @@ import {cookies} from "next/headers";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 import {notFound} from "next/navigation";
 import MyTempleToday from "@/app/components/MyTempleToday";
+import TrapezaToday from "@/app/components/TrapezaToday";
 
 type Props = {
     params: { date: string };
@@ -49,6 +50,7 @@ const CalculatorDate = async ({ params: { date } }: Props) => {
                 поэтому строка приходит отдельным запросом и не мешает
                 странице дня оставаться общей для всех. */}
             <MyTempleToday date={date} />
+            <TrapezaToday date={date} />
             <Suspense fallback={<div>Loading...</div>}>
                 {/* @ts-expect-error Async Server Component */}
                 <Content date={date} resultPromise={resultPromise} />
