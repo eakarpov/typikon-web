@@ -5,6 +5,7 @@ import { bibleBook } from "@/utils/bibleBooks";
 import { BIBLE_SECTIONS, type BibleSection } from "@/utils/bibleCanon";
 import { plural } from "@/utils/plural";
 import { coveragePercent, type BookStats } from "@/lib/otzvuki/core";
+import { cached, CacheTag } from "@/lib/cache";
 import { citationBooks, citationSummary, citationTop, corpusStamp, stampMatches } from "@/lib/otzvuki/store";
 import { TopVerses } from "@/app/otzvuki/TopVerses";
 
@@ -31,6 +32,12 @@ export const metadata: Metadata = {
         "Чем богослужение читает Писание: какие книги и стихи звучат в песнопениях " +
         "и чтениях церковного года, а какие места не звучат вовсе.",
 };
+
+// Кэшируем здесь, а не в выборке: `unstable_cache` работает только внутри
+// запроса, а те же выборки читает и панель здоровья, и прогон снимков.
+const summaryOf = cached(citationSummary, ["otzvuki-summary"], [CacheTag.CITATIONS]);
+const booksOf = cached(citationBooks, ["otzvuki-books"], [CacheTag.CITATIONS]);
+const topOf = cached(citationTop, ["otzvuki-top"], [CacheTag.CITATIONS]);
 
 const n = (value: number) => value.toLocaleString("ru-RU");
 
@@ -92,9 +99,9 @@ const Head = () => (
 
 const Otzvuki = async ({ searchParams }: { searchParams: { sort?: string } }) => {
     const [summary, books, top] = await Promise.all([
-        citationSummary(),
-        citationBooks(),
-        citationTop(),
+        summaryOf(),
+        booksOf(),
+        topOf(),
     ]);
 
     if (!summary || !books.length) {

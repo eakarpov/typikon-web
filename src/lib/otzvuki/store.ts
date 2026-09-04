@@ -1,5 +1,4 @@
 import clientPromise from "@/lib/mongodb";
-import { cached, CacheTag } from "@/lib/cache";
 import { rulesDb } from "@/lib/rulesDb";
 import type { BookStats, CitationSummary, CorpusStamp, TopStats } from "@/lib/otzvuki/core";
 
@@ -29,14 +28,19 @@ const collection = async () =>
 // Документ книги хранится под собственным canonId, а сводка и топ — под
 // служебными ключами. Разводить их по коллекциям незачем: читаются они всегда
 // вместе, а пересчитываются одним прогоном.
-const readSummary = async (): Promise<CitationSummary | null> => {
+// ВЫБОРКИ ЗДЕСЬ СЫРЫЕ, А КЭШ — НА СТРАНИЦАХ. Обёртка `cached` — это
+// `unstable_cache`, а он живёт только внутри запроса: скрипт, зовущий такую
+// функцию, падает с «incrementalCache missing». Свод же читает не одна
+// страница: его спрашивает и панель здоровья, и прогон снимков. Поэтому
+// кэширует тот, кто внутри запроса, — как это сделано в разделе ударений.
+export const citationSummary = async (): Promise<CitationSummary | null> => {
     const doc = await (await collection()).findOne({ _id: SUMMARY_ID as never });
     if (!doc) return null;
     const { _id, ...rest } = doc as any;
     return rest as CitationSummary;
 };
 
-const readBook = async (canonId: string): Promise<BookStats | null> => {
+export const citationBook = async (canonId: string): Promise<BookStats | null> => {
     const doc = await (await collection()).findOne({ _id: canonId as never });
     if (!doc) return null;
     const { _id, ...rest } = doc as any;
@@ -46,7 +50,7 @@ const readBook = async (canonId: string): Promise<BookStats | null> => {
 // Книг 86, и вместе с картами глав это мегабайты. Своду нужны одни итоги,
 // поэтому карта и молчащие отрезки из выборки списка исключены проекцией:
 // страница книги дочитает их своим запросом.
-const readBooks = async (): Promise<BookStats[]> => {
+export const citationBooks = async (): Promise<BookStats[]> => {
     const docs = await (await collection())
         .find(
             { _id: { $nin: [SUMMARY_ID, TOP_ID] } as never },
@@ -59,17 +63,13 @@ const readBooks = async (): Promise<BookStats[]> => {
     });
 };
 
-const readTop = async (): Promise<TopStats | null> => {
+export const citationTop = async (): Promise<TopStats | null> => {
     const doc = await (await collection()).findOne({ _id: TOP_ID as never });
     if (!doc) return null;
     const { _id, ...rest } = doc as any;
     return rest as TopStats;
 };
 
-export const citationSummary = cached(readSummary, ["otzvuki-summary"], [CacheTag.CITATIONS]);
-export const citationBooks = cached(readBooks, ["otzvuki-books"], [CacheTag.CITATIONS]);
-export const citationBook = cached(readBook, ["otzvuki-book"], [CacheTag.CITATIONS]);
-export const citationTop = cached(readTop, ["otzvuki-top"], [CacheTag.CITATIONS]);
 
 // Отпечаток лежащего рядом корпуса — чтобы страница могла сказать, что свод
 // описывает уже не его. Три `max()` по первичным ключам: они едут внутри файла

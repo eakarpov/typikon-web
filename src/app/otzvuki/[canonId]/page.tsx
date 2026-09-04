@@ -5,6 +5,7 @@ import { myFont } from "@/utils/font";
 import { bibleBook } from "@/utils/bibleBooks";
 import { referenceChapterLengths } from "@/utils/bibleVersification";
 import { coveragePercent, type BookStats, type SilentRun } from "@/lib/otzvuki/core";
+import { cached, CacheTag } from "@/lib/cache";
 import { citationBook } from "@/lib/otzvuki/store";
 import BookMap from "@/app/otzvuki/[canonId]/BookMap";
 
@@ -16,6 +17,9 @@ import BookMap from "@/app/otzvuki/[canonId]/BookMap";
 // Разница видна только картой, и она же превращает число в наблюдение.
 
 export const dynamic = "force-dynamic";
+
+// Кэш — на странице, а не в выборке: см. @/lib/otzvuki/store.
+const bookOf = cached(citationBook, ["otzvuki-book"], [CacheTag.CITATIONS]);
 
 const n = (value: number) => value.toLocaleString("ru-RU");
 
@@ -78,7 +82,7 @@ const Legend = () => (
 
 const BookPage = async ({ params }: Props) => {
     const book = bibleBook(params.canonId);
-    const stats = await citationBook(params.canonId);
+    const stats = await bookOf(params.canonId);
     if (!book || !stats) notFound();
 
     const lengths = referenceChapterLengths(params.canonId);

@@ -71,6 +71,7 @@
     "bible:normalize": "tsx src/scripts/normalize-bible-unicode.ts",
     "corpus:dump": "tsx src/scripts/build-corpus-dump.ts",
     "citations:stats": "tsx src/scripts/build-citation-stats.ts",
+    "health:snapshot": "tsx src/scripts/take-health-snapshot.ts",
     "release:data": "bash release-data.sh"
   },
   "dependencies": {
