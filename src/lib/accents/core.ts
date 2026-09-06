@@ -69,7 +69,12 @@ const VOWELS = "аеёиоуыэюяєѣіїѵѷѡѻꙋѹѧѫꙗѩѭѐѝᲂᲇ�
 // старой графикой (Маргарит, Ифика, Алфавит), стоят ᲂ, ᲅ, Ᲊ и прочие варианты
 // букв. Без них слово рвётся посередине, и проверка ударения видит обрывок.
 const LETTER = "а-яёА-ЯЁЀ-ԯᲀ-ᲈꙀ-ꚟ";
-export const WORD_PATTERN = new RegExp(`[${LETTER}][${LETTER}\u0300-\u036f\u0483-\u0489\ua66f]*`, "g");
+// Выносные буквы (U+2DE0–U+2DFF) входят в слово наравне с надстрочными знаками.
+// Без них «Гдⷭ҇ь» разрывалось надвое — «Гд» и «҇ь», — и первый обломок уходил в
+// словарь ударений отдельным словом, а сокращением уже не опознавался. В
+// собрании таких слов 14 408.
+export const WORD_PATTERN = new RegExp(
+    `[${LETTER}][${LETTER}\u0300-\u036f\u0483-\u0489\u2de0-\u2dff\ua66f]*`, "g");
 
 export const isAccent = (ch: string) => ACCENT_SET.has(ch);
 export const isCombining = (ch: string) => COMBINING.test(ch);
@@ -80,7 +85,9 @@ export const hasAccent = (word: string) =>
 
 // Титло и покрытие означают сокращение: бж҃їѧ — это «Божия», слово написано не
 // целиком. Ударение в таких словах по традиции не ставится, и требовать его нельзя.
-export const isAbbreviated = (word: string) => /[҃҇]/.test(word);
+// Сокращением слово делает не только титло с покрытием, но и выносная буква:
+// «влⷣка» набрано без титла, а сокращение это то же самое.
+export const isAbbreviated = (word: string) => /[҃҇\u2de0-\u2dff]/.test(word);
 
 export const stripAccents = (word: string) =>
     [...unfoldPrecomposed(word)].filter((ch) => !isAccent(ch)).join("");

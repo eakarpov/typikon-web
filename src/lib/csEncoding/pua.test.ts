@@ -35,9 +35,11 @@ test("после сведения слово находится по гражд�
     // Ради этого всё и затевалось: «ять короткая» не сводилась ни к ѣ, ни к е,
     // и слово не искалось.
     const withPua = "мнѡѕ\uE0ECⷨ";
-    assert.notEqual(normalizeChurchSlavonic(withPua), "мнозем".slice(0, 5) + "ⷨ");
+    assert.match(normalizeChurchSlavonic(withPua), /\uE0EC/);
     const folded = foldPua(withPua, { letters: true }).text;
-    assert.equal(normalizeChurchSlavonic(folded), "мнозе" + "ⷨ");
+    // Выносная ⷨ при сведении отбрасывается: она написана над строкой и в
+    // линейный порядок не встаёт.
+    assert.equal(normalizeChurchSlavonic(folded), "мнозе");
 });
 
 test("частная область распознаётся во всех трёх плоскостях", () => {
