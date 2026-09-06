@@ -64,6 +64,12 @@ test("вывод о шрифте: церковнославянский, общи
     const general = verdictOf(make([0x430, 0x431, 0x432]));
     assert.equal(general.kind, "unicode-general");
 
+    // Латинский шрифт: кириллицы нет вовсе — но это не делает его дореформенным.
+    // На этом разбор однажды и ошибся, записав Source Sans Pro в дореформенные.
+    const latin = verdictOf(make([0x41, 0x42, 0x61]));
+    assert.equal(latin.kind, "unicode-general");
+    assert.match(latin.title, /без кириллицы/);
+
     // Дореформенный: раскладка по байтам, юникодной кириллицы нет.
     const legacy = verdictOf(make([0x41, 0x42], {
         cmap: { platform: 3, encoding: 0, format: 4, label: "символьная раскладка Windows (байты в частной области)", legacy: true },

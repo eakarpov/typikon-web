@@ -146,8 +146,11 @@ export const verdictOf = (font: FontInfo): Verdict => {
     const why: string[] = [];
     const warnings: string[] = [];
 
-    if (font.cmap?.legacy || !cyrillic) {
-        why.push(`таблица соответствий — ${font.cmap?.label ?? "не найдена"}`);
+    // Дореформенным шрифт делает раскладка, а не бедность: судим по таблице
+    // соответствий. Отсутствие кириллицы само по себе значит лишь, что шрифт
+    // не для кириллицы, — латинских шрифтов таких большинство.
+    if (font.cmap?.legacy) {
+        why.push(`таблица соответствий — ${font.cmap.label}`);
         if (!cyrillic) why.push("кириллицы по юникодным кодам в шрифте нет");
         return {
             kind: "legacy",
@@ -155,6 +158,16 @@ export const verdictOf = (font: FontInfo): Verdict => {
             why,
             warnings: ["Текст, набранный таким шрифтом, без перекодировки не читается ничем, "
                 + "кроме него самого."],
+        };
+    }
+
+    if (!cyrillic) {
+        return {
+            kind: "unicode-general",
+            title: "Юникодный шрифт без кириллицы: для церковнославянского не годится вовсе",
+            why: [`таблица соответствий — ${font.cmap?.label ?? "не найдена"}`,
+                "кириллической «а» (U+0430) в шрифте нет"],
+            warnings: [],
         };
     }
 
