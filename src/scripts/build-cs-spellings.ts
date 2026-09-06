@@ -85,7 +85,7 @@ const main = async () => {
 
     const stats = {
         corpusTexts: 0, corpusTokens: 0, dictForms: 0, bibleTokens: 0,
-        leadingMark: 0, shortened: 0, dropped: 0, defective: 0,
+        leadingMark: 0, shortened: 0, dropped: 0, defective: 0, dictDuplicates: 0,
     };
 
     // Отложенная десятая часть: без неё проверка мерит, как собрание
@@ -141,11 +141,27 @@ const main = async () => {
             const key = civilKey(spelling);
             if (!key || /[^а-яё]/.test(key)) continue;
             stats.dictForms++;
-            take(key).x.push({
+            const place = take(key);
+            const candidate: DictVariant = {
                 w: spelling,
                 l: String(lexeme.name ?? ""),
                 p: String(form.properties ?? ""),
-            });
+            };
+            // В словаре у одной лексемы формы нередко лежат дважды: с ударением
+            // и без («госпо́ди» и «господи»). Безударный дубль читателю
+            // предлагать нечего, и в указателе он только весит.
+            const twin = place.x.findIndex((v) =>
+                v.l === candidate.l && v.p === candidate.p
+                && lettersOnly(v.w) === lettersOnly(candidate.w));
+            if (twin >= 0) {
+                const kept = place.x[twin];
+                const keptMarks = kept.w.length - lettersOnly(kept.w).length;
+                const freshMarks = candidate.w.length - lettersOnly(candidate.w).length;
+                if (freshMarks > keptMarks) place.x[twin] = candidate;
+                stats.dictDuplicates++;
+                continue;
+            }
+            place.x.push(candidate);
         }
     }
 
@@ -223,7 +239,8 @@ const main = async () => {
     console.log("\n=== Источники ===");
     console.log(`собрание: ${stats.corpusTexts} текстов, ${stats.corpusTokens.toLocaleString("ru")} словоупотреблений`
         + (has("--check") ? ` (отложено ${holdout.size} текстов)` : ""));
-    console.log(`словарь: ${lexems.length.toLocaleString("ru")} лексем, ${stats.dictForms.toLocaleString("ru")} форм`);
+    console.log(`словарь: ${lexems.length.toLocaleString("ru")} лексем, ${stats.dictForms.toLocaleString("ru")} форм`
+        + ` (безударных дублей свёрнуто: ${stats.dictDuplicates.toLocaleString("ru")})`);
     console.log(`Библия: ${stats.bibleTokens.toLocaleString("ru")} словоупотреблений`);
     console.log(`ключей в указателе: ${index.size.toLocaleString("ru")} (из собрания ${corpusKeys.toLocaleString("ru")})`);
     console.log(`сокращений под титлом и с выносными: ${stats.shortened.toLocaleString("ru")}`);
@@ -301,8 +318,12 @@ const main = async () => {
             ...(place.t.size ? {
                 t: [...place.t.entries()].sort((a, b) => b[1] - a[1]).map(([w, n]) => ({ w, n })),
             } : {}),
+            // Согласие считается ПО БУКВАМ. Словарь не несёт ни звательц (их в
+            // формах нет вовсе), ни того же ударения, что собрание, и сравнение
+            // написаний целиком давало ложное расхождение: «ᲂу҆слы́ши» собрания
+            // против «ᲂуслы́ши» словаря — одно и то же слово.
             a: place.c.size && place.x.length
-                ? place.x.some((v) => v.w === ranked(place)[0].spelling)
+                ? place.x.some((v) => lettersOnly(v.w) === ranked(place)[0].letters)
                 : null,
         }));
         // Перезапись целиком, а не долив: исчезнувшие из корпуса написания
