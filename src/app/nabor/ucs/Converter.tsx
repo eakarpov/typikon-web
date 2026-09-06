@@ -75,8 +75,8 @@ const Converter = () => {
         setFileError("");
         if (!file) return;
         if (file.size > MAX_BYTES) {
-            setFileError(`Файл больше пяти мегабайт (${(file.size / 1024 / 1024).toFixed(1)} МБ). `
-                + "Столько не бывает даже у целой книги — похоже, это не текст.");
+            setFileError(`Файл превышает пять мегабайт (${(file.size / 1024 / 1024).toFixed(1)} МБ) `
+                + "— объём, превосходящий целую книгу.");
             return;
         }
         file.arrayBuffer().then((buffer) => {
@@ -122,8 +122,8 @@ const Converter = () => {
                         className="font-serif text-sm"
                     />
                     <p className="font-serif text-xs text-slate-500">
-                        Байты приходят как есть — это честная дорога: ничего не потеряно
-                        по пути, и разобрать можно всё, что в файле стоит.
+                        Байты читаются без промежуточных преобразований: ничего не
+                        утрачено по пути, и разбору доступно всё содержимое файла.
                     </p>
                     {fileError && <p className="font-serif text-sm text-red-700">{fileError}</p>}
                 </div>
@@ -133,7 +133,7 @@ const Converter = () => {
                         rows={5}
                         value={pasted}
                         onChange={(e) => { setPasted(e.target.value); setChosen(null); setCopied(false); }}
-                        placeholder="Вставьте текст, который выглядит мусором"
+                        placeholder="Вставьте текст, который отображается неверно"
                         aria-label="Вставленный текст"
                         className="font-serif border border-slate-300 rounded p-2 w-full"
                     />
@@ -152,9 +152,9 @@ const Converter = () => {
                     </p>
                     {source.lost > 0 && !refuse && (
                         <p className="font-serif text-sm text-amber-700">
-                            {source.lost.toLocaleString("ru")} знаков потерялось ещё до того, как
-                            текст попал сюда: этим байтам в кодовой странице браузера не нашлось
-                            места. Вставка такого не чинит — нужен исходный файл.
+                            {source.lost.toLocaleString("ru")} знаков утрачено до передачи текста
+                            сюда: этим байтам не нашлось соответствия в кодовой странице браузера.
+                            Вставка их не восстанавливает — требуется исходный файл.
                         </p>
                     )}
                 </div>
@@ -163,13 +163,14 @@ const Converter = () => {
             {refuse && (
                 <div className="border-l-2 border-amber-300 pl-3 py-1">
                     <p className="font-serif text-slate-800">
-                        <strong>Этот текст уже в юникоде.</strong> В нём стоят титла, звательца
-                        или выносные буквы — знаки, которых в дореформенном наборе не бывает.
+                        <strong>Текст уже представлен в юникоде.</strong> В нём присутствуют
+                        титла, звательца или выносные буквы — знаки, отсутствующие в
+                        дореформенном наборе.
                     </p>
                     <p className="font-serif text-sm text-slate-600 mt-1">
-                        Перекодировать его во второй раз значит испортить необратимо, поэтому
-                        не станем. Если он выглядит неправильно, дело не в кодировке —
-                        посмотрите <Link href="/nabor/znaki" className="text-red-900 hover:underline">
+                        Повторное преобразование исказило бы его необратимо и потому не
+                        выполняется. Если текст отображается неверно, причина не в кодировке:
+                        см. <Link href="/nabor/znaki" className="text-red-900 hover:underline">
                             разбор по знакам</Link> или <Link href="/nabor/shrift"
                             className="text-red-900 hover:underline">проверку шрифта</Link>.
                     </p>
@@ -225,15 +226,16 @@ const Converter = () => {
                     )}
                     {result.footnotes.length > 0 && (
                         <p className="font-serif text-sm text-slate-600">
-                            Вынуто сносок: {result.footnotes.length}. В тексте они остались номерами
-                            в фигурных скобках, а сами лежат отдельно — так их печатает HIP.
+                            Извлечено сносок: {result.footnotes.length}. В тексте они обозначены
+                            номерами в фигурных скобках, а содержание вынесено отдельно — так они
+                            и записаны в HIP.
                         </p>
                     )}
                     {result.dropped.length > 0 && (
                         <p className="font-serif text-sm text-slate-600">
-                            Выброшено из шапки издания: «{result.dropped[0].slice(0, 80)}…».
-                            Это не текст книги, а подпись оцифровщика — она вынута,
-                            но не потеряна: здесь она и показана.
+                            Извлечено из шапки издания: «{result.dropped[0].slice(0, 80)}…».
+                            Это не текст книги, а сведения об оцифровке; они вынесены из текста,
+                            но не утрачены и приведены здесь.
                         </p>
                     )}
 
