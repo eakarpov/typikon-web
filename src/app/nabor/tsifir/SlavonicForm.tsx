@@ -96,11 +96,18 @@ const Word = ({ token, chosen, onChoose }: {
     if (token.kind === "plain") return <>{token.text}</>;
     if (token.kind === "ambiguous") return <Ambiguous token={token} chosen={chosen} onChoose={onChoose} />;
     if (token.kind === "byRule") {
+        // Серым и с точками: указатель этого слова не знает, и написание
+        // выведено правилом. Слово при этом всё равно доведено до
+        // церковнославянской графики — иначе готовый текст нельзя списать
+        // целиком, в нём осталось бы гражданское вкрапление.
+        const applied = token.rules?.length
+            ? `Дописано: ${token.rules.map((r) => RULE_LABELS[r] ?? r).join(", ")}. `
+            : "Правилу в нём менять нечего. ";
         return (
             <span
-                className="font-sans-serif underline decoration-dotted underline-offset-4 decoration-slate-400"
-                title={"По правилу: указателю это слово неизвестно. Дописано: "
-                    + `${token.rules?.map((r) => RULE_LABELS[r] ?? r).join(", ")}. `
+                className="font-sans-serif text-slate-500 underline decoration-dotted
+                           underline-offset-4 decoration-slate-400"
+                title={`По правилу: указателю это слово неизвестно. ${applied}`
                     + "Ять, омега и і при этом не восстановлены"}
             >
                 {token.text}
@@ -128,7 +135,14 @@ const Word = ({ token, chosen, onChoose }: {
         );
     }
     if (token.kind === "untouched") {
-        return <span className="text-slate-500" title={token.why}>{token.text}</span>;
+        // Киноварь и уже церковнославянское набраны как есть; серым помечается
+        // то, что мы намеренно не трогали.
+        const cs = token.why !== "киноварь";
+        return (
+            <span className={cs ? "font-sans-serif text-slate-500" : "text-slate-500"} title={token.why}>
+                {token.text}
+            </span>
+        );
     }
     return <span className="font-sans-serif">{token.text}</span>;
 };

@@ -1,6 +1,6 @@
 import { WORD_PATTERN } from "@/lib/accents/core";
 import {
-    byRule, civilKey, csCanonical, DOMINANCE, hasChurchSlavonicGraphics, matchCase, type RuleName,
+    byRule, civilKey, csCanonical, DOMINANCE, hasChurchSlavonicGraphics, sentenceCase, type RuleName,
 } from "@/lib/cslav/core";
 import { GOVERNMENT, narrowVariants } from "@/lib/cslav/grammar";
 import { plural } from "@/utils/plural";
@@ -116,6 +116,11 @@ const rubricRanges = (text: string): Array<[number, number]> => {
     return ranges;
 };
 
+// Конец предложения: точка, восклицательный и вопросительный знаки, многоточие
+// и перевод строки. Двоеточие и точка с запятой сюда не входят — после них
+// предложение продолжается.
+const SENTENCE_BREAK = /[.!?…\n\r]/;
+
 const PSILI = "҆";
 const VOWELS = "аеиоуыэюяєѣіѵꙋѡѧꙗᲂ";
 
@@ -167,7 +172,7 @@ export const wordsToLookUp = (text: string): string[] => {
 // написание не подтверждено словарём.
 const NOISE = 3;
 
-const variantsOf = (answer: CslAnswer, word: string): CslVariant[] => {
+const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): CslVariant[] => {
     const out: CslVariant[] = [];
 
     const dictForms = new Set(answer.lexicon.map((v) => lettersOnly(v.w)));
@@ -177,7 +182,7 @@ const variantsOf = (answer: CslAnswer, word: string): CslVariant[] => {
         const { form } = withPsili(v.w);
         out.push({
             spelling: v.w,
-            applied: matchCase(word, form),
+            applied: sentenceCase(word, form, atSentenceStart),
             count: v.n,
             texts: v.d,
             share: Number((v.n / corpusTotal).toFixed(3)),
@@ -204,7 +209,7 @@ const variantsOf = (answer: CslAnswer, word: string): CslVariant[] => {
         const { form } = withPsili(v.w);
         out.push({
             spelling: v.w,
-            applied: matchCase(word, form),
+            applied: sentenceCase(word, form, atSentenceStart),
             count: 0,
             texts: 0,
             share: 0,
@@ -220,7 +225,7 @@ const variantsOf = (answer: CslAnswer, word: string): CslVariant[] => {
         const { form } = withPsili(v.w);
         out.push({
             spelling: v.w,
-            applied: matchCase(word, form),
+            applied: sentenceCase(word, form, atSentenceStart),
             count: v.n,
             texts: 0,
             share: 0,
@@ -279,6 +284,11 @@ export const convertWithAnswers = (
     // всё, что сложнее, — уже не управление.
     let preposition: string | null = null;
 
+    // Прописная в церковнославянском отмечает начало предложения, и только его:
+    // ни имя, ни священное слово её не несут. Значит регистр берётся отсюда, а
+    // не с гражданского слова, где «Бог» и «Иоанн» стоят по русской норме.
+    let atSentenceStart = true;
+
     for (const match of text.matchAll(new RegExp(WORD_PATTERN.source, "gu"))) {
         const word = match[0];
         const at = match.index!;
@@ -290,6 +300,13 @@ export const convertWithAnswers = (
         // словом значит, что это уже другое место в предложении.
         const carried = preposition;
         const governing = /^\s*$/.test(gap) ? carried : null;
+
+        // Знак конца предложения или перевод строки в промежутке — начало новой
+        // фразы. Считывается один раз: выходов из разбора слова много, и забыть
+        // сбросить признак проще всего на одном из них.
+        if (SENTENCE_BREAK.test(gap)) atSentenceStart = true;
+        const first = atSentenceStart;
+        atSentenceStart = false;
 
         // Само это слово может быть предлогом для следующего. Запоминаем сразу,
         // до всех ветвлений: выходов из разбора слова много, и забыть на одном
@@ -310,7 +327,7 @@ export const convertWithAnswers = (
 
         expected++;
         const answer = byWord.get(key);
-        const variants = answer ? variantsOf(answer, word) : [];
+        const variants = answer ? variantsOf(answer, word, first) : [];
 
         if (variants.length && settled(answer!)) {
             const best = variants[0];
@@ -324,7 +341,7 @@ export const convertWithAnswers = (
             const short = settings.titla ? shortestOf(answer!) : null;
             if (short) {
                 tokens.push({
-                    text: matchCase(word, short.w),
+                    text: sentenceCase(word, short.w, first),
                     kind: "byDictionary",
                     source: best.source,
                     rules: [...rules, "титло"],
@@ -373,14 +390,12 @@ export const convertWithAnswers = (
             untouched++;
             continue;
         }
+        // Неизвестное слово всё равно доводится правилом — и когда правилу в
+        // нём нечего менять. Иначе в готовом тексте остаётся гражданское
+        // вкрапление, и списать его целиком нельзя.
         const ruled = byRule(word);
-        if (!ruled.applied.length) {
-            tokens.push({ text: word, kind: "untouched", why: "указатель этого слова не знает" });
-            untouched++;
-            continue;
-        }
         tokens.push({
-            text: matchCase(word, ruled.form),
+            text: sentenceCase(word, ruled.form, first),
             kind: "byRule",
             source: "rule",
             rules: ruled.applied,

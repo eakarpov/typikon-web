@@ -1,7 +1,7 @@
 import { convertWithAnswers, wordsToLookUp, type ConvertOptions, type ConvertResult } from "@/lib/cslav/convert";
 import { lookupSpellings } from "@/lib/cslav/store";
 import { lookupWords } from "@/lib/accents/store";
-import { byRule, matchCase } from "@/lib/cslav/core";
+import { byRule, sentenceCase } from "@/lib/cslav/core";
 import { DOMINANCE_FOR_ACCENTS, accentedByDictionary } from "@/lib/cslav/accents";
 
 // Шов между чистой разметкой и базой — единственное место, где они встречаются.
@@ -41,7 +41,11 @@ export const convertText = async (
         // прикладывается правило: иначе пришлось бы считать гласные в форме,
         // где диграф ука записан двумя знаками, и счёт разошёлся бы.
         const ruledAgain = byRule(accented);
-        token.text = matchCase(token.original!, ruledAgain.form);
+        // Регистр уже решён разметкой по положению слова в тексте: прописная
+        // стоит только в начале предложения. Перечитываем его с готового
+        // токена, чтобы не заводить второй счёт того же самого.
+        const atSentenceStart = token.text !== token.text.toLocaleLowerCase("ru");
+        token.text = sentenceCase(token.original!, ruledAgain.form, atSentenceStart);
         token.rules = [...(ruledAgain.applied ?? []), "ударение"];
     }
 
