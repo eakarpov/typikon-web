@@ -17,6 +17,7 @@ const hex = (cp: number) => `U+${cp.toString(16).toUpperCase().padStart(4, "0")}
 const KIND_COLORS: Record<Verdict["kind"], string> = {
     "unicode-cs": "border-slate-300",
     "unicode-general": "border-amber-300",
+    "ucs-layout": "border-amber-300",
     legacy: "border-amber-300",
 };
 

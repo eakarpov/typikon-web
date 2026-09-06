@@ -56,6 +56,8 @@ test("вывод о шрифте: церковнославянский, общи
         codepoints: new Map(codes.map((cp) => [cp, 1])),
         glyphNames: new Map(),
         glyphCount: codes.length,
+        tables: ["GPOS", "cmap", "glyf", "head", "name"],
+        widths: new Map(),
         layout: { gpos: true, markToBase: true, markToMark: true, gsub: true, features: ["mark"] },
         ...extra,
     });
@@ -76,6 +78,36 @@ test("вывод о шрифте: церковнославянский, общи
     }));
     assert.equal(legacy.kind, "legacy");
     assert.ok(legacy.warnings[0].includes("перекодировки"));
+});
+
+test("раскладка UCS опознаётся по совпадению примет", () => {
+    // Шрифты Ирмология объявляют юникодную таблицу, но кладут в неё набор
+    // кодовой страницы CP1251, а церковнославянские знаки ставят по местам
+    // латиницы и цифр: «a» — это «а́», «x» — «ѯ», «9» — «ж҃». По таблице
+    // соответствий это не видно, и опознаётся оно совпадением трёх примет.
+    const ucs: FontInfo = {
+        format: "truetype",
+        names: { family: "Hirmos Ucs8" },
+        cmap: { platform: 3, encoding: 1, format: 4, label: "юникод, основная плоскость", legacy: false },
+        cmaps: [],
+        // Набор CP1251: латиница, кириллица и типографские знаки — 224 кода.
+        codepoints: new Map([...Array.from({ length: 95 }, (_, i) => [0x20 + i, 1] as [number, number]),
+            ...Array.from({ length: 64 }, (_, i) => [0x410 + i, 1] as [number, number])]),
+        glyphNames: new Map(),
+        glyphCount: 224,
+        tables: ["GPOS", "cmap", "glyf", "head", "kern", "name", "post"],
+        widths: new Map(),
+        layout: { gpos: true, markToBase: false, markToMark: false, gsub: false, features: [] },
+    };
+    const verdict = verdictOf(ucs);
+    assert.equal(verdict.kind, "ucs-layout");
+    assert.ok(verdict.why.some((w) => /kern/.test(w)), verdict.why.join(" | "));
+    assert.ok(verdict.warnings[0].includes("перекодировать"));
+
+    // Наши собственные шрифты под примету не подпадают: у них есть и знаки,
+    // и привязка.
+    assert.notEqual(verdictOf(monomakh).kind, "ucs-layout");
+    assert.notEqual(verdictOf(oldStandard).kind, "ucs-layout");
 });
 
 test("полнота знаков ещё не делает шрифт пригодным", () => {

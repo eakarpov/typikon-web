@@ -31,6 +31,8 @@ export interface FontInfo {
     format: "truetype" | "cff" | "collection" | "unknown";
     names: {
         family?: string;
+        /** Строка авторского права: часто в ней же объявлены и условия. */
+        copyright?: string;
         subfamily?: string;
         version?: string;
         designer?: string;
@@ -44,7 +46,11 @@ export interface FontInfo {
     codepoints: Map<number, number>;
     /** Номер глифа → имя, если шрифт их называет. */
     glyphNames: Map<number, string>;
+    /** Ширина глифа в единицах шрифта. Нулевая — знак не занимает места в строке. */
+    widths: Map<number, number>;
     glyphCount: number;
+    /** Имена таблиц шрифта: по их набору видно поколение файла. */
+    tables: string[];
     layout: {
         gpos: boolean;
         /** Прикрепление надстрочного знака к букве (lookup 4). */
@@ -77,7 +83,8 @@ const decodeName = (view: DataView, offset: number, length: number, platform: nu
 };
 
 const NAME_IDS: Record<number, keyof FontInfo["names"]> = {
-    1: "family", 2: "subfamily", 5: "version", 9: "designer", 13: "license", 14: "licenseUrl",
+    0: "copyright", 1: "family", 2: "subfamily", 5: "version", 9: "designer",
+    13: "license", 14: "licenseUrl",
 };
 
 const readNames = (view: DataView, offset: number): FontInfo["names"] => {
@@ -239,6 +246,24 @@ const readLayout = (view: DataView, gpos?: number, gsub?: number): FontInfo["lay
     };
 };
 
+// Ширины глифов из hmtx. Нужны для одного вопроса: занимает ли знак место в
+// строке. Надстрочный знак в юникодном шрифте имеет нулевую ширину; в
+// дореформенном он был обычной литерой и ставился кернингом.
+const readWidths = (view: DataView, hheaOffset: number, hmtxOffset: number, glyphs: number): Map<number, number> => {
+    const widths = new Map<number, number>();
+    const count = view.getUint16(hheaOffset + 34);
+    let last = 0;
+    for (let gid = 0; gid < glyphs; gid++) {
+        if (gid < count) {
+            const at = hmtxOffset + gid * 4;
+            if (at + 2 > view.byteLength) break;
+            last = view.getUint16(at);
+        }
+        widths.set(gid, last);
+    }
+    return widths;
+};
+
 /** Разбор шрифтового файла. Бросает, если это не шрифт. */
 export const readFont = (data: ArrayBuffer): FontInfo => {
     const view = new DataView(data);
@@ -293,6 +318,9 @@ export const readFont = (data: ArrayBuffer): FontInfo => {
     const postTable = tables.get("post");
     const glyphNames = postTable ? readPost(view, postTable.offset, postTable.length) : new Map<number, string>();
     const maxp = tables.get("maxp");
+    const glyphCount = maxp ? view.getUint16(maxp.offset + 4) : 0;
+    const hhea = tables.get("hhea");
+    const hmtx = tables.get("hmtx");
 
     return {
         format,
@@ -301,7 +329,9 @@ export const readFont = (data: ArrayBuffer): FontInfo => {
         cmaps,
         codepoints,
         glyphNames,
-        glyphCount: maxp ? view.getUint16(maxp.offset + 4) : 0,
+        glyphCount,
+        tables: [...tables.keys()].sort(),
+        widths: hhea && hmtx ? readWidths(view, hhea.offset, hmtx.offset, glyphCount) : new Map(),
         layout: readLayout(view, tables.get("GPOS")?.offset, tables.get("GSUB")?.offset),
     };
 };

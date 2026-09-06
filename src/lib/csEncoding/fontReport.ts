@@ -118,7 +118,7 @@ export const missingFor = (font: FontInfo, text: string): MissingChar[] => {
         .sort((a, b) => b.count - a.count);
 };
 
-export type FontKind = "legacy" | "unicode-cs" | "unicode-general";
+export type FontKind = "legacy" | "ucs-layout" | "unicode-cs" | "unicode-general";
 
 export interface Verdict {
     kind: FontKind;
@@ -158,6 +158,30 @@ export const verdictOf = (font: FontInfo): Verdict => {
             why,
             warnings: ["Текст, набранный таким шрифтом, без перекодировки не читается ничем, "
                 + "кроме него самого."],
+        };
+    }
+
+    // Раскладка UCS — случай, которого не видно по таблице соответствий: она
+    // юникодная, но церковнославянские знаки положены по местам латиницы и цифр
+    // (по нашей таблице «a» — это «а́», «x» — «ѯ», «9» — «ж҃»). Опознаётся не
+    // одной приметой, а их совпадением: набор ровно кодовой страницы CP1251,
+    // ни одного церковнославянского знака юникода, привязки надстрочных нет,
+    // а кернинг задан старой таблицей kern. Так сделаны шрифты Ирмология.
+    const csAnywhere = font.codepoints.has(0x483) || font.codepoints.has(0x463)
+        || superscripts > 0 || font.codepoints.has(0x2ded);
+    if (cyrillic && !csAnywhere && font.codepoints.size < 300 && !font.layout.markToBase) {
+        return {
+            kind: "ucs-layout",
+            title: "Похоже на раскладку UCS: церковнославянские знаки стоят по местам латиницы и цифр",
+            why: [
+                `объявлено ${font.codepoints.size} знаков — примерно набор кодовой страницы CP1251`,
+                "ни одного церковнославянского знака юникода: ни титла, ни ять, ни выносных",
+                font.tables.includes("kern")
+                    ? "кернинг задан старой таблицей kern — так ставили надстрочные до юникода"
+                    : "привязки надстрочных знаков нет",
+            ],
+            warnings: ["Текст, набранный таким шрифтом, в юникоде значит не то, что показывает: "
+                + "буква «a» в нём — это «а́». Его нужно перекодировать, а не менять шрифт."],
         };
     }
 
