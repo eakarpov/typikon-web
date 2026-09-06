@@ -58,6 +58,7 @@ const STATIC_ROUTES = [
     { path: "/nabor", priority: 0.5 },
     { path: "/nabor/ucs", priority: 0.5 },
     { path: "/nabor/znaki", priority: 0.4 },
+    { path: "/nabor/pua", priority: 0.4 },
     { path: "/nabor/shrift", priority: 0.4 },
     { path: "/nabor/tsifir", priority: 0.4 },
     // Указатель подобнов; сами подобны — ниже, из корпуса: их 497, и за каждым

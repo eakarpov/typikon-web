@@ -72,6 +72,8 @@ const Znaki = () => (
         <section className="max-w-2xl">
             <h2 className="font-serif font-bold text-sm">Что рядом</h2>
             <p className="font-serif text-sm text-slate-600 mt-1">
+                Свести частные коды к общепринятой юникодной записи — <Link href="/nabor/pua"
+                    className="text-red-900 hover:underline">частные коды в юникод</Link>.
                 Если строка не читается целиком, причина не в знаках, а в кодировке —{" "}
                 <Link href="/nabor/ucs" className="text-red-900 hover:underline">перекодировка</Link>.
                 Если знаки верны, а на экране заполнители — <Link href="/nabor/shrift"

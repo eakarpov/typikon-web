@@ -1,4 +1,5 @@
 import { normalizeChurchSlavonic } from "@/utils/churchSlavonic";
+import { foldPua } from "@/lib/csEncoding/pua";
 
 // Поиск идёт не по самому тексту, а по его нормализованной копии.
 //
@@ -19,16 +20,23 @@ export interface SearchFieldsSource {
     poems?: string | null;
 }
 
+// Частные коды сводятся ДО нормализации, и притом полностью, вместе с вариантами
+// начертаний. Для показа текста такое сведение было бы правкой набора, и потому
+// в самом тексте оно остаётся на выбор читателя; здесь же строится копия для
+// поиска, и различие «ять короткая — ѣ» ей только мешает: 20 текстов «Маргарита»
+// набраны шрифтовыми кодами, и без сведения слова из них не находятся вовсе.
+const forSearch = (text: string) => normalizeChurchSlavonic(foldPua(text, { letters: true }).text);
+
 export const buildSearchFields = (doc: SearchFieldsSource) => ({
-    searchName: normalizeChurchSlavonic([doc.name, doc.description].filter(Boolean).join(" ")),
-    searchContent: normalizeChurchSlavonic(
+    searchName: forSearch([doc.name, doc.description].filter(Boolean).join(" ")),
+    searchContent: forSearch(
         [doc.content, doc.poems, doc.author, doc.translator].filter(Boolean).join(" "),
     ),
 });
 
 // Запрос приводим к тому же виду, что и текст, — иначе «Стра́жи» не найдёт «стражи».
 export const normalizeQuery = (query: string) =>
-    normalizeChurchSlavonic(query).replace(/\s+/g, " ").trim();
+    forSearch(query).replace(/\s+/g, " ").trim();
 
 // Обратная карта к нормализации: под какими буквами может прятаться нормализованная.
 const VARIANTS: Record<string, string> = {

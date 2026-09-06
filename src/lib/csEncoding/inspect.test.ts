@@ -37,7 +37,7 @@ test("чужая буква внутри слова", () => {
 });
 
 test("знак частной области — след старой перекодировки", () => {
-    assert.ok(flags("аб").includes("private-use"));
+    assert.ok(flags("а\uE000б").includes("private-use"));
 });
 
 test("два ударения на одной букве", () => {
