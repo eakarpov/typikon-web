@@ -20,7 +20,8 @@ interface SpellingDocument {
     c?: Array<{ w: string; n: number; d: number }>;
     x?: Array<{ w: string; l: string; p: string }>;
     b?: Array<{ w: string; n: number }>;
-    t?: Array<{ w: string; n: number }>;
+    /** Сокращения; o: 1 — дониконовское, синодальному набору не годится. */
+    t?: Array<{ w: string; n: number; o?: 1 }>;
     a: boolean | null;
 }
 

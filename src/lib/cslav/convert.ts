@@ -3,6 +3,7 @@ import {
     byRule, civilKey, csCanonical, DOMINANCE, hasChurchSlavonicGraphics, sentenceCase, type RuleName,
 } from "@/lib/cslav/core";
 import { GOVERNMENT, narrowVariants } from "@/lib/cslav/grammar";
+import { contractByStem, TITLA_CONTRACTIONS } from "@/lib/cslav/titla";
 import { plural } from "@/utils/plural";
 
 // Разметка гражданского текста церковнославянскими написаниями.
@@ -87,7 +88,8 @@ export interface CslAnswer {
     corpus: Array<{ w: string; n: number; d: number }>;
     lexicon: Array<{ w: string; l: string; p: string }>;
     bible: Array<{ w: string; n: number }>;
-    titlo: Array<{ w: string; n: number }>;
+    /** Сокращения под титлом; o: 1 — дониконовское. */
+    titlo: Array<{ w: string; n: number; o?: 1 }>;
 }
 
 export interface ConvertOptions {
@@ -146,8 +148,12 @@ const withPsili = (word: string): { form: string; added: boolean } => {
 // описка набора, а не принятое сокращение.
 const TITLO_NOISE = 3;
 
+// ДОНИКОНОВСКИЕ СОКРАЩЕНИЯ НЕ ПРЕДЛАГАЮТСЯ. Перевод идёт в синодальное
+// написание, а старопечатный набор сокращал ради места что угодно: «ᲂу҆́мѡⷨ» —
+// это «ᲂу҆́момъ» с поднятой над строкой м. Извод размечен при сборке указателя
+// (см. titloEra), и в собрании такого 6 097 вхождений против 45 376 синодальных.
 const shortestOf = (answer: CslAnswer): { w: string; n: number } | null => {
-    const best = answer.titlo[0];
+    const best = answer.titlo.find((v) => !v.o);
     return best && best.n >= TITLO_NOISE ? best : null;
 };
 
@@ -329,33 +335,59 @@ export const convertWithAnswers = (
         const answer = byWord.get(key);
         const variants = answer ? variantsOf(answer, word, first) : [];
 
+        // Сокращение под титлом — по явному запросу и только
+        // засвидетельствованное: как напечатано в книгах, так и предлагаем.
+        // Само оно не строится: сокращать или нет — выбор издателя, а не
+        // орфография, и одно и то же слово в одной книге под титлом, а в
+        // другой полностью.
+        //
+        // Спрашивается РАНЬШЕ спора о написании, и это существенно. Сокращение
+        // спор снимает: «хрⷭ҇то́во» не содержит ни и, ни і, о которых спор шёл, —
+        // и держать слово спорным, имея готовое печатное сокращение, незачем.
+        // Оно же — единственное написание там, где слово в книгах полностью не
+        // печатается вовсе.
+        const short = settings.titla && answer ? shortestOf(answer) : null;
+        if (short) {
+            const spelling = variants[0]?.spelling ?? word;
+            tokens.push({
+                text: sentenceCase(word, short.w, first),
+                kind: "byDictionary",
+                source: variants[0]?.source ?? "corpus",
+                rules: ["титло"],
+                why: `«${spelling}» под титлом; так напечатано ${short.n} `
+                    + plural(short.n, "раз", "раза", "раз"),
+            });
+            byDictionary++;
+            continue;
+        }
+
         if (variants.length && settled(answer!)) {
             const best = variants[0];
             const rules: RuleName[] = withPsili(best.spelling).added ? ["звательце"] : [];
 
-            // Сокращение под титлом — по явному запросу и только
-            // засвидетельствованное: как напечатано в книгах, так и предлагаем.
-            // Само оно не строится: сокращать или нет — выбор издателя, а не
-            // орфография, и одно и то же слово в одной книге под титлом, а в
-            // другой полностью.
-            const short = settings.titla ? shortestOf(answer!) : null;
-            if (short) {
+            // Сокращения в книгах нет, но основа сокращается в них всегда:
+            // собрание наше — книги аскетические, не богослужебные, и
+            // «пребл҃же́нне» в нём просто не встречается. Строим по образцу.
+            const built = settings.titla ? contractByStem(best.applied) : null;
+            if (built) {
                 tokens.push({
-                    text: sentenceCase(word, short.w, first),
+                    text: built.form,
                     kind: "byDictionary",
                     source: best.source,
                     rules: [...rules, "титло"],
-                    why: `«${best.spelling}» под титлом; так напечатано ${short.n} `
-                        + plural(short.n, "раз", "раза", "раз"),
+                    why: `сокращения этого слова в книгах нет; построено по образцу основы`
+                        + ` «${built.stem}» → «${TITLA_CONTRACTIONS[built.stem]}»`,
                 });
-            } else {
-                tokens.push({
-                    text: best.applied,
-                    kind: "byDictionary",
-                    source: best.source,
-                    rules: rules.length ? rules : undefined,
-                });
+                byDictionary++;
+                continue;
             }
+
+            tokens.push({
+                text: best.applied,
+                kind: "byDictionary",
+                source: best.source,
+                rules: rules.length ? rules : undefined,
+            });
             byDictionary++;
             continue;
         }

@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-    expandSkeleton, expandTitlo, fitsSkeleton, hasSuperscript, titloSkeleton,
+    contractByStem, expandSkeleton, expandTitlo, fitsContraction, fitsSkeleton, hasSuperscript,
+    titloEra, titloSkeleton,
 } from "@/lib/cslav/titla";
 
 test("основа раскрывается вместе с окончанием", () => {
@@ -64,4 +65,40 @@ test("переставляется только выносная", () => {
     // выносная, и ровно её перестановку правило и допускает.
     assert.equal(fitsSkeleton("всхе", "все", "весх"), false);
     assert.equal(fitsSkeleton("всхе", "все", "всех"), true);
+});
+
+test("извод сокращения различается по тому, опущены ли буквы", () => {
+    // Дониконовский набор поднимал букву над строкой ради места: опустишь её —
+    // и выйдет то же слово целиком. Синодальный сокращает священное слово,
+    // опуская буквы.
+    assert.equal(titloEra("ᲂу҆́мѡⷨ", "умом"), "old");
+    assert.equal(titloEra("ѡⷮ", "от"), "old");
+    assert.equal(titloEra("быⷭ҇", "бысть"), "old");
+    assert.equal(titloEra("гдⷭ҇ь", "господь"), "synodal");
+    assert.equal(titloEra("хрⷭ҇то́во", "христово"), "synodal");
+    // Основа считается где бы ни стояла — и после приставки.
+    assert.equal(titloEra("пребл҃же́нне", "преблаженне"), "synodal");
+});
+
+test("под титлом опущены буквы: костяк укладывается в слово по порядку", () => {
+    assert.equal(fitsContraction("бжственней", "божественней"), true);
+    // Края слова титло не съедает.
+    assert.equal(fitsContraction("гди", "господа"), false);
+    // И половины слова тоже: сверка берёт только то, где опущено меньше
+    // половины букв, — иначе под «гди» подойдёт пол-словаря. Глубокие
+    // сокращения священных имён покрыты выверенными основами, а не сверкой.
+    assert.equal(fitsContraction("гдь", "господь"), false);
+});
+
+test("сокращение строится по засвидетельствованному образцу основы", () => {
+    // Собрание наше — книги аскетические, и «пребл҃же́нне» в нём не встречается,
+    // хотя основа «блаж» сокращается в них всегда.
+    assert.equal(contractByStem("преблаже́нне")?.form, "пребл҃же́нне");
+    assert.equal(contractByStem("пресвѧта́ѧ")?.form, "прест҃а́ѧ");
+    assert.equal(contractByStem("боже́ственнѣй")?.form, "бж҃е́ственнѣй");
+    // Длинная основа берётся первой: «бг҃оро́дица» синодальная печать не знает.
+    assert.equal(contractByStem("богоро́дица")?.form, "бцⷣа");
+    // Уже сокращённое второй раз не сокращается.
+    assert.equal(contractByStem("хрⷭ҇то́во"), null);
+    assert.equal(contractByStem("воззва́хъ"), null);
 });

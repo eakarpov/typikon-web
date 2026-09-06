@@ -5,7 +5,7 @@ import path from "node:path";
 import { civilKey, csCanonical, byRule, matchCase, DOMINANCE } from "@/lib/cslav/core";
 import { WORD_PATTERN, findAccentIssues } from "@/lib/accents/core";
 import {
-    expandTitlo, expandSkeleton, fitsSkeleton, hasSuperscript, titloSkeleton,
+    expandTitlo, expandSkeleton, fitsContraction, fitsSkeleton, hasSuperscript, titloEra, titloSkeleton,
 } from "@/lib/cslav/titla";
 import { csNumeral } from "@/lib/csEncoding/numerals";
 
@@ -50,7 +50,8 @@ interface Entry {
     c: Map<string, { n: number; texts: Set<string>; forms: Map<string, number> }>;
     x: DictVariant[];
     b: Map<string, number>;
-    t: Map<string, number>;
+    /** Сокращения: написание → сколько раз и какого извода. */
+    t: Map<string, { n: number; old: boolean }>;
 }
 
 const entry = (): Entry => ({ c: new Map(), x: [], b: new Map(), t: new Map() });
@@ -93,9 +94,14 @@ const main = async () => {
     };
 
     /** Сокращение под ключ полного слова. */
-    const link = (full: string, spelling: string) => {
+    const link = (full: string, spelling: string, old: boolean, times = 1) => {
         const at = take(full);
-        at.t.set(spelling, (at.t.get(spelling) ?? 0) + 1);
+        const seen = at.t.get(spelling) ?? { n: 0, old };
+        seen.n += times;
+        // Извод решается написанием, а не книгой: одно и то же сокращение в
+        // старопечатной книге и в синодальной — одно и то же сокращение.
+        seen.old = seen.old && old;
+        at.t.set(spelling, seen);
     };
 
     const stats = {
@@ -103,6 +109,7 @@ const main = async () => {
         leadingMark: 0, shortened: 0, dropped: 0, defective: 0, dictDuplicates: 0,
         titloLinked: 0, titloUnknown: 0, numerals: 0,
         titloByStem: 0, titloByTable: 0, titloByWord: 0, titloByOrder: 0,
+        titloByContraction: 0, titloRejected: 0, titloOld: 0, titloSynodal: 0,
     };
 
     // Отложенная десятая часть: без неё проверка мерит, как собрание
@@ -159,52 +166,6 @@ const main = async () => {
         }
     }
 
-    // --- 1а. Сокращения к полным словам --------------------------------------
-    //
-    // ПОРЯДОК ПРОВЕРОК СУЩЕСТВЕН, и он не одинаков для двух таблиц. Под титлом
-    // стоит и сокращение, и число («кз҃» — это 27), а по буквам они
-    // неразличимы. Выверенные основы идут ПЕРЕД цифирью: костяк «гди» читается
-    // числом как 15, и обратный порядок стоил 13 тысяч связок — цифирь
-    // разобрала «бг҃ъ» как 5. Таблица костяков идёт ПОСЛЕ цифири: её ключи
-    // короткие, и «г҃і» (126 вхождений — нумерация глав в Лествице) она
-    // прочитала бы как «господи» вместо тринадцати.
-    //
-    // ПОСЛЕ ЧИСЕЛ — СВЕРКА С СОБРАНИЕМ, и только для слов с выносной буквой.
-    // Там опущенная буква ставит слово на место сама («нашиⷯ» → «нашихъ»), и
-    // догадки в этом нет: набор букв сходится, первая буква сохранена, строчные
-    // идут в том же порядке. Слово под одним титлом, без выносной, так не
-    // сверяется — там буквы опущены, и подбор был бы гаданием.
-    const byBag = new Map<string, string[]>();
-    for (const full of fullKeys) {
-        const bag = [...full].sort().join("");
-        const at = byBag.get(bag) ?? [];
-        at.push(full);
-        byBag.set(bag, at);
-    }
-
-    for (const spelling of pending) {
-        const key = civilKey(spelling);
-
-        const byStem = expandTitlo(key);
-        if (byStem) { link(civilKey(byStem), spelling); stats.titloByStem++; continue; }
-
-        if (csNumeral(spelling, { thousands: true, sign: "titlo" }) !== null) { stats.numerals++; continue; }
-
-        const skeleton = titloSkeleton(spelling);
-        const byTable = expandSkeleton(skeleton);
-        if (byTable) { link(civilKey(byTable), spelling); stats.titloByTable++; continue; }
-
-        if (!hasSuperscript(spelling)) { stats.titloUnknown++; continue; }
-        const lowered = skeleton.replace(/ъ$/, "");
-        if (fullKeys.has(lowered)) { link(lowered, spelling); stats.titloByWord++; continue; }
-
-        const same = (byBag.get([...lowered].sort().join("")) ?? [])
-            .filter((candidate) => fitsSkeleton(lowered, key, candidate));
-        if (same.length === 1) { link(same[0], spelling); stats.titloByOrder++; continue; }
-        stats.titloUnknown++;
-    }
-    stats.titloLinked = stats.titloByStem + stats.titloByTable + stats.titloByWord + stats.titloByOrder;
-
     // --- 2. Словарь ----------------------------------------------------------
     const lexems = await client.db(DICT_DB).collection("lexems")
         .find({}, { projection: { name: 1, properties: 1, forms: 1 } }).toArray() as any[];
@@ -240,6 +201,8 @@ const main = async () => {
         }
     }
 
+    const bibleShort: string[] = [];
+
     // --- 3. Библия -----------------------------------------------------------
     const biblePath = value("--bible")
         ?? path.join(process.cwd(), "..", "typikon-rules", "raw", "bible-cs.json");
@@ -251,7 +214,12 @@ const main = async () => {
                 const word = raw.replace(LEADING_MARK, "");
                 const spelling = csCanonical(word.toLowerCase());
                 const key = civilKey(spelling);
-                if (!key || /[^а-яё]/.test(key) || isShortened(spelling)) continue;
+                if (!key || /[^а-яё]/.test(key)) continue;
+                // Сокращения Библии — лучшее свидетельство синодального извода:
+                // это печать синодальной эпохи, и что сокращено там, то
+                // сокращается и у нас. Их 13 542 при 474 видах, и все до одного
+                // суть сокращения священных слов.
+                if (isShortened(spelling)) { bibleShort.push(spelling); continue; }
                 stats.bibleTokens++;
                 const place = take(key);
                 place.b.set(spelling, (place.b.get(spelling) ?? 0) + 1);
@@ -259,6 +227,90 @@ const main = async () => {
         }
     } else {
         console.log(`Библия не найдена (${biblePath}) — третий источник пропущен.`);
+    }
+
+    // --- 4. Сокращения к полным словам ---------------------------------------
+    //
+    // Разбор отложен до конца всех трёх проходов нарочно: раскрытие костяка
+    // проверяется тем, СУЩЕСТВУЕТ ЛИ полученное слово, а список слов к концу
+    // первого прохода ещё не собран. Проверка не формальность: основа «бж»
+    // раскрывала «бж҃е́ственнѣй» в «божственнѣй» — в слово, которого нет, — и
+    // сокращение уходило под несуществующий ключ, а «божественнѣй» в указателе
+    // не заводилось вовсе.
+    //
+    // ПОРЯДОК ПРОВЕРОК СУЩЕСТВЕН, и он не одинаков для двух таблиц. Под титлом
+    // стоит и сокращение, и число («кз҃» — это 27), а по буквам они неразличимы.
+    // Выверенные основы идут ПЕРЕД цифирью: костяк «гди» читается числом как 15,
+    // и обратный порядок стоил 13 тысяч связок — цифирь разобрала «бг҃ъ» как 5.
+    // Таблица костяков идёт ПОСЛЕ цифири: её ключи коротки, и «г҃і» (126
+    // вхождений — нумерация глав в Лествице) она прочитала бы как «господи»
+    // вместо тринадцати.
+    //
+    // Сверки две, и они о разном. Первая — для выносной, ОПУЩЕННОЙ в строку:
+    // букв столько же, не на месте одна. Вторая — для титла, где буквы ОПУЩЕНЫ:
+    // букв меньше, и сходиться должен порядок. Обе принимают ответ, только если
+    // он единственный.
+    const known = new Set(index.keys());
+
+    const byBag = new Map<string, string[]>();
+    const byEnds = new Map<string, string[]>();
+    for (const full of known) {
+        const bag = [...full].sort().join("");
+        (byBag.get(bag) ?? byBag.set(bag, []).get(bag)!).push(full);
+        const ends = `${full[0]}${full[full.length - 1]}`;
+        (byEnds.get(ends) ?? byEnds.set(ends, []).get(ends)!).push(full);
+    }
+
+    /** К какому полному слову ведёт сокращение; null — не разобрано. */
+    const resolve = (spelling: string): string | null | "numeral" => {
+        const key = civilKey(spelling);
+        const accept = (word: string | null) => (word && known.has(civilKey(word)) ? civilKey(word) : null);
+
+        const byStem = accept(expandTitlo(key));
+        if (byStem) { stats.titloByStem++; return byStem; }
+        if (expandTitlo(key)) stats.titloRejected++;
+
+        if (csNumeral(spelling, { thousands: true, sign: "titlo" }) !== null) return "numeral";
+
+        const skeleton = titloSkeleton(spelling);
+        const byTable = accept(expandSkeleton(skeleton));
+        if (byTable) { stats.titloByTable++; return byTable; }
+
+        if (hasSuperscript(spelling)) {
+            const lowered = skeleton.replace(/ъ$/, "");
+            if (known.has(lowered)) { stats.titloByWord++; return lowered; }
+            const same = (byBag.get([...lowered].sort().join("")) ?? [])
+                .filter((candidate) => fitsSkeleton(lowered, key, candidate));
+            if (same.length === 1) { stats.titloByOrder++; return same[0]; }
+        }
+
+        // Титло опустило буквы: ищем единственное слово, в которое костяк
+        // укладывается по порядку. Края слова титло не съедает, и поиск идёт
+        // среди слов с теми же первой и последней буквами.
+        const ends = `${key[0]}${key[key.length - 1]}`;
+        const fits = (byEnds.get(ends) ?? []).filter((candidate) => fitsContraction(key, candidate));
+        if (fits.length === 1) { stats.titloByContraction++; return fits[0]; }
+        return null;
+    };
+
+    const resolved = new Map<string, string | null | "numeral">();
+    const linkAll = (spellings: string[], forceSynodal: boolean) => {
+        for (const spelling of spellings) {
+            if (!resolved.has(spelling)) resolved.set(spelling, resolve(spelling));
+            const full = resolved.get(spelling)!;
+            if (full === "numeral") { stats.numerals++; continue; }
+            if (!full) { stats.titloUnknown++; continue; }
+            const old = forceSynodal ? false : titloEra(spelling, full);
+            link(full, spelling, old === "old");
+        }
+    };
+    linkAll(pending, false);
+    linkAll(bibleShort, true);
+    stats.titloLinked = stats.shortened + bibleShort.length - stats.numerals - stats.titloUnknown;
+    for (const place of index.values()) {
+        for (const seen of place.t.values()) {
+            if (seen.old) stats.titloOld += seen.n; else stats.titloSynodal += seen.n;
+        }
     }
 
     // --- Разрешение спора ----------------------------------------------------
@@ -318,14 +370,21 @@ const main = async () => {
         + ` (безударных дублей свёрнуто: ${stats.dictDuplicates.toLocaleString("ru")})`);
     console.log(`Библия: ${stats.bibleTokens.toLocaleString("ru")} словоупотреблений`);
     console.log(`ключей в указателе: ${index.size.toLocaleString("ru")} (из собрания ${corpusKeys.toLocaleString("ru")})`);
-    console.log(`сокращений под титлом и с выносными: ${stats.shortened.toLocaleString("ru")}`
-        + ` (связано с полным словом ${stats.titloLinked.toLocaleString("ru")},`
+    const shortened = stats.shortened + bibleShort.length;
+    console.log(`сокращений под титлом и с выносными: ${shortened.toLocaleString("ru")}`
+        + ` (собрание ${stats.shortened.toLocaleString("ru")},`
+        + ` Библия ${bibleShort.length.toLocaleString("ru")})`);
+    console.log(`   связано с полным словом ${stats.titloLinked.toLocaleString("ru")},`
         + ` цифирь ${stats.numerals.toLocaleString("ru")},`
-        + ` костяк не раскрылся у ${stats.titloUnknown.toLocaleString("ru")})`);
-    console.log(`   из них: по основам ${stats.titloByStem.toLocaleString("ru")}`
+        + ` костяк не раскрылся у ${stats.titloUnknown.toLocaleString("ru")}`);
+    console.log(`   разобрано видов написаний: по основам ${stats.titloByStem.toLocaleString("ru")}`
         + ` · по таблице костяков ${stats.titloByTable.toLocaleString("ru")}`
         + ` · сверкой с собранием ${stats.titloByWord.toLocaleString("ru")}`
-        + ` · с перестановкой выносной ${stats.titloByOrder.toLocaleString("ru")}`);
+        + ` · с перестановкой выносной ${stats.titloByOrder.toLocaleString("ru")}`
+        + ` · с опущенными буквами ${stats.titloByContraction.toLocaleString("ru")}`);
+    console.log(`   отвергнуто раскрытий в несуществующее слово: ${stats.titloRejected.toLocaleString("ru")} видов`);
+    console.log(`   извод: синодальных ${stats.titloSynodal.toLocaleString("ru")},`
+        + ` дониконовских ${stats.titloOld.toLocaleString("ru")}`);
     console.log(`слов с блуждающим ведущим знаком: ${stats.leadingMark.toLocaleString("ru")}`);
     console.log(`отброшено как не слово: ${stats.dropped.toLocaleString("ru")}`);
     console.log(`отброшено с дефектом набора: ${stats.defective.toLocaleString("ru")}`);
@@ -398,7 +457,11 @@ const main = async () => {
                     .map(([w, n]): BibleVariant => ({ w, n })),
             } : {}),
             ...(place.t.size ? {
-                t: [...place.t.entries()].sort((a, b) => b[1] - a[1]).map(([w, n]) => ({ w, n })),
+                // o: 1 — дониконовское сокращение. Синодальный набор так не
+                // пишет, и предлагать его переводу нельзя; в указателе оно
+                // остаётся свидетельством собрания.
+                t: [...place.t.entries()].sort((a, b) => b[1].n - a[1].n)
+                    .map(([w, seen]) => ({ w, n: seen.n, ...(seen.old ? { o: 1 } : {}) })),
             } : {}),
             // Согласие считается ПО БУКВАМ. Словарь не несёт ни звательц (их в
             // формах нет вовсе), ни того же ударения, что собрание, и сравнение
