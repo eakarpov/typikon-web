@@ -14,7 +14,7 @@
 //   npx tsx src/scripts/verify-split.ts --fix    // привести books.texts в согласие с bookId
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
-import { normalizeHip } from "@/scripts/lib/hip";
+import { normalizeHip } from "@/lib/csEncoding/hip";
 
 const FIX = process.argv.includes("--fix");
 

@@ -20,7 +20,7 @@ import path from "path";
 import clientPromise from "@/lib/mongodb";
 import { buildSearchFields } from "@/lib/search";
 import { revalidateContent } from "@/scripts/lib/revalidate";
-import { normalizeHip, type Stats } from "@/scripts/lib/hip";
+import { normalizeHip, type Stats } from "@/lib/csEncoding/hip";
 
 const APPLY = process.argv.includes("--apply");
 const DIR = process.argv.find((a) => a.startsWith("--dir="))?.slice("--dir=".length);

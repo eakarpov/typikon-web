@@ -1,6 +1,13 @@
 // Чистая логика приведения текстов orthlib (формат HIP) к юникоду нашего корпуса.
 // Вынесена отдельно от скрипта, чтобы её можно было звать из split-book и из тестов,
 // не поднимая подключение к базе.
+//
+// Живёт в lib, а не в scripts, с тех пор как её зовёт страница /nabor/ucs: в
+// scripts по соседству лежит env, Mongo и better-sqlite3, и первый же случайный
+// импорт оттуда уехал бы в браузерный бандл. Правило то же, что у
+// @/lib/razbor/labels: через границу клиента ходят только типы да чистые словари.
+
+import { csNumeral } from "@/lib/csEncoding/numerals";
 
 const TITLO = "҃";
 const OXIA = "́";
@@ -200,32 +207,8 @@ export const normalizeHip = (
     return { content: s, footnotes, dropped, stats };
 };
 
-// Церковнославянские числа: буква = значение, число = сумма букв.
-const DIGITS: Record<string, number> = {
-    "а": 1, "в": 2, "г": 3, "д": 4, "є": 5, "е": 5, "ѕ": 6, "з": 7, "и": 8, "ѳ": 9,
-    "і": 10, "и́": 10, "к": 20, "л": 30, "м": 40, "н": 50, "ѯ": 60, "ѻ": 70, "о": 70,
-    "п": 80, "ч": 90, "р": 100, "с": 200, "т": 300, "ꙋ": 400, "у": 400, "ф": 500,
-    "х": 600, "ѱ": 700, "ѡ": 800, "ц": 900,
-};
-
-// Титло снимаем, а знак тысячи оставляем: он множит следующую букву на 1000.
-const stripMarks = (s: string) =>
-    s.normalize("NFD").replace(/[̀-ͯ҃-҉]/g, "").normalize("NFC");
-
 // Число без титла — не число, а слово: «безъ числа̀» не должно читаться как 341.
-export const csNumber = (label: string): number | null => {
-    if (!label.includes(TITLO) && !label.includes(THOUSAND)) return null;
-
-    let sum = 0;
-    let thousands = false;
-    for (const c of stripMarks(label).toLowerCase()) {
-        if (c === THOUSAND) {
-            thousands = true;
-            continue;
-        }
-        if (!(c in DIGITS)) continue;
-        sum += thousands ? DIGITS[c] * 1000 : DIGITS[c];
-        thousands = false;
-    }
-    return sum || null;
-};
+// Снисходительно (чужая буква пропускается) и со знаком тысячи: разбираются
+// подписи книг, где рядом с числом стоит что угодно. Таблица — общая, в ./numerals.
+export const csNumber = (label: string): number | null =>
+    csNumeral(label, { thousands: true, sign: "titlo" });

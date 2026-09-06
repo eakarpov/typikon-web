@@ -33,7 +33,7 @@ import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { buildSearchFields } from "@/lib/search";
 import { revalidateContent } from "@/scripts/lib/revalidate";
-import { normalizeHip, bump, type Stats } from "@/scripts/lib/hip";
+import { normalizeHip, bump, type Stats } from "@/lib/csEncoding/hip";
 
 const APPLY = process.argv.includes("--apply");
 const FORCE = process.argv.includes("--force");
