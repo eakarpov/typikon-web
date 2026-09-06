@@ -57,7 +57,15 @@ export const csCanonical = (word: string): string => {
 };
 
 /** Какие правила приложены к слову, когда словарь промолчал. */
-export type RuleName = "юс" | "ук" | "ер" | "звательце";
+export type RuleName = "юс" | "ук" | "ер" | "звательце" | "от";
+
+// Приставка «от» пишется лигатурой ѿ, а корневое «от» — обычными буквами:
+// «ѿи҆дѐ», но «ѻ҆те́цъ». Замерено по собранию: через ѿ — 12 700
+// словоупотреблений, иначе — 850, и эти 850 сплошь корневые. Корни выписаны
+// отсюда же, а не из головы: 156 ключей сводятся к десятку основ.
+const OT_ROOTS = [
+    "ец", "ц", "ч", "рок", "роч", "роц", "рав", "яг", "ай", "ец",
+];
 
 export interface RuleResult {
     form: string;
@@ -83,18 +91,31 @@ const PSILI = "҆";
 export const byRule = (word: string): RuleResult => {
     const applied: RuleName[] = [];
 
+    // Приставка «от» — лигатурой; корень — нет.
+    let source = word;
+    let prefix = "";
+    const low = word.toLocaleLowerCase("ru");
+    // Предлог «от» сам по себе — тоже приставка: в собрании он 7 725 раз пишется ѿ.
+    if (low.startsWith("от") && !OT_ROOTS.some((root) => low.slice(2).startsWith(root))) {
+        prefix = "ѿ";
+        source = word.slice(2);
+        applied.push("от");
+    }
+
     // Юс и ук ставит toChurchSlavonic — единственный в проекте код в эту
     // сторону, выверенный порождением парадигм. Второе его написание здесь
     // немедленно разошлось бы с первым.
-    let form = toChurchSlavonic(word);
-    if (/[ѧꙗ]/.test(form) && !/[ѧꙗ]/.test(word)) applied.push("юс");
-    if (/[ᲂуꙋ]/.test(form) && !/[ᲂꙋ]/.test(word)) applied.push("ук");
+    let form = toChurchSlavonic(source);
+    if (/[ѧꙗ]/.test(form) && !/[ѧꙗ]/.test(source)) applied.push("юс");
+    if (/[ᲂуꙋ]/.test(form) && !/[ᲂꙋ]/.test(source)) applied.push("ук");
 
     // Конечный ер после согласной.
     if (/[бвгджзклмнпрстфхцчшщ]$/i.test(form)) {
         form += "ъ";
         applied.push("ер");
     }
+
+    if (prefix) return { form: prefix + form, applied };
 
     // Звательце над начальной гласной. Ставится после буквы: это надстрочный
     // знак, а не буква.

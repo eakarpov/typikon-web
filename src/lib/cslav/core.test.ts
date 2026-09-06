@@ -70,3 +70,18 @@ test("уже церковнославянское написание опозн�
     assert.equal(hasChurchSlavonicGraphics("тебе"), false);
     assert.equal(hasChurchSlavonicGraphics("Господи"), false);
 });
+
+test("приставка «от» пишется лигатурой, корневое — нет", () => {
+    // Замерено по собранию: через ѿ — 12 700 словоупотреблений, иначе — 850,
+    // и эти 850 сплошь корневые: «ѻ҆те́цъ», «ѻ҆́трокъ», «ѻ҆тцы̀».
+    assert.equal(byRule("отиде").form, "ѿиде");
+    assert.equal(byRule("отступих").form, "ѿстꙋпихъ");
+    assert.equal(byRule("от").form, "ѿ");
+    assert.ok(byRule("отиде").applied.includes("от"));
+
+    // Корень лигатуры не берёт, зато берёт звательце.
+    assert.equal(byRule("отец").form, "о҆тецъ");
+    assert.equal(byRule("отрок").form, "о҆трокъ");
+    assert.equal(byRule("отцы").form, "о҆тцы");
+    assert.ok(!byRule("отец").applied.includes("от"));
+});
