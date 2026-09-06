@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeHip, csNumber } from "@/scripts/lib/hip";
+import { normalizeHip, csNumber } from "@/lib/csEncoding/hip";
 
 const clean = (raw: string) => normalizeHip(raw).content;
 

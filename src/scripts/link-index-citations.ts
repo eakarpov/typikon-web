@@ -17,7 +17,7 @@ import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { buildSearchFields } from "@/lib/search";
 import { revalidateContent } from "@/scripts/lib/revalidate";
-import { csNumber } from "@/scripts/lib/hip";
+import { csNumber } from "@/lib/csEncoding/hip";
 
 const APPLY = process.argv.includes("--apply");
 

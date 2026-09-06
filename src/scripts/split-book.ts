@@ -33,7 +33,7 @@ import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { buildSearchFields } from "@/lib/search";
 import { revalidateContent } from "@/scripts/lib/revalidate";
-import { normalizeHip, csNumber } from "@/scripts/lib/hip";
+import { normalizeHip, csNumber } from "@/lib/csEncoding/hip";
 
 const APPLY = process.argv.includes("--apply");
 const BOOK = process.argv.find((a) => a.startsWith("--book="))?.slice("--book=".length);
