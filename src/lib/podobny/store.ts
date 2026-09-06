@@ -21,21 +21,41 @@ const UPPER_BOUND = String.fromCodePoint(0x10ffff);
 
 let cache: PodobenUnit[] | undefined;
 
+// Ключ AGES (`groups.podoben_key`) появился в корпусе 2026-09-03, а корпус
+// выкладывается отдельно от сайта: на сервере может стоять сборка постарше,
+// и тогда столбца просто нет. Спросить его там — уронить не страницу
+// подобнов, а всю сборку: указатель зовёт ещё и sitemap. Поэтому спрашиваем
+// схему, как @/lib/citations спрашивает про слой цитат.
+//
+// Без ключа единицей остаётся имя внутри своего языка (см. core.ts): греческий
+// с румынским разойдутся по своим страницам, счёт по каждой верен, и связка
+// вернётся сама, как только корпус доедет.
+let keyed: boolean | undefined;
+const hasPodobenKey = (db: any): boolean => {
+    if (keyed === undefined) {
+        keyed = (db.prepare("PRAGMA table_info(groups)").all() as Array<{ name: string }>)
+            .some((c) => c.name === "podoben_key");
+    }
+    return keyed;
+};
+
 const load = (): PodobenUnit[] | null => {
     const db = rulesDb();
     if (!db) return null;
+
+    const key = hasPodobenKey(db);
 
     // Два счёта, а не один, и они не взаимозаменяемы: `groups` — сколько раз
     // книга подписала подобном место, `items` — сколько стихир на него
     // поётся. Различаются они втрое, и страницы ведут счёт стихирами.
     const rows = db.prepare(`
-        SELECT g.language, g.podoben, g.podoben_key AS podobenKey, g.tone,
+        SELECT g.language, g.podoben, ${key ? "g.podoben_key" : "NULL"} AS podobenKey, g.tone,
                count(DISTINCT g.group_id) AS groups,
                count(ci.item_id) AS items
         FROM groups g
         LEFT JOIN content_items ci ON ci.group_id = g.group_id
         WHERE g.podoben IS NOT NULL AND length(g.podoben) > 0
-        GROUP BY g.language, g.podoben, g.podoben_key, g.tone
+        GROUP BY g.language, g.podoben, g.tone${key ? ", g.podoben_key" : ""}
     `).all() as PodobenRow[];
 
     return podobenUnits(rows);
@@ -77,6 +97,9 @@ export const getPodoben = (slug: string): PodobenUnit | null => {
  * строки, где она стоит, находятся по ключу.
  */
 const selectorOf = (unit: PodobenUnit) => {
+    // Про столбец здесь не спрашиваем: ключ у единицы берётся только из
+    // выборки выше, и в корпусе без `podoben_key` он у всех пуст — условие
+    // тогда не строится вовсе.
     const pairs = unit.spellings.filter((s) => !s.artefact);
     const sql = [
         ...(unit.agesKey ? ["g.podoben_key = ?"] : []),
