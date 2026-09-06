@@ -15,30 +15,13 @@
  * титла — единственное, что отличает цифирь от обычного слова, и без этого
  * условия починка резала бы текст по живому.
  */
-const VALUES: Record<string, number> = {
-    "а": 1, "в": 2, "г": 3, "д": 4, "є": 5, "е": 5, "ѕ": 6, "з": 7, "и": 8, "ѳ": 9,
-    "і": 10, "к": 20, "л": 30, "м": 40, "н": 50, "ѯ": 60, "ѻ": 70, "о": 70, "п": 80, "ч": 90,
-    "р": 100, "с": 200, "т": 300, "у": 400, "ᲂу": 400, "ф": 500, "х": 600,
-    "ѱ": 700, "ѡ": 800, "ц": 900,
-};
+import { csNumeral } from "@/lib/csEncoding/numerals";
 
-const TITLO = /[҃҄҆҇]/;
-/** Надстрочное и прочие пометы, к значению не относящиеся. */
-const MARKS = /[̀-ͯ҃-҉ⷠ-ⷿ꙯-ꙿ]/g;
-
-/** Число из цифири; null — если это не цифирь или в ней нет титла. */
-export const cyrillicNumeral = (token: string): number | null => {
-    if (!TITLO.test(token)) return null;
-    const letters = token.replace(MARKS, "").replace(/[.,:;]/g, "").toLowerCase();
-    if (!letters) return null;
-    let sum = 0;
-    for (const ch of letters) {
-        const value = VALUES[ch];
-        if (value === undefined) return null;
-        sum += value;
-    }
-    return sum || null;
-};
+/** Число из цифири; null — если это не цифирь или в ней нет пометы. */
+export const cyrillicNumeral = (token: string): number | null =>
+    // Строго: чужая буква значит, что это не число, и резать по нему текст нельзя.
+    // Таблица значений — одна на проект, в @/lib/csEncoding/numerals.
+    csNumeral(token, { strict: true });
 
 /**
  * Ищет в тексте цифирь, равную ожидаемому номеру, и делит по ней надвое.
