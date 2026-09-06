@@ -47,6 +47,17 @@ const Index = async ({ selected }: { selected: string }) => {
                 стоит тот же стих румынского — даже там, где издания разбили текст по-разному.
             </p>
 
+            <p className="font-serif text-sm text-slate-600">
+                {/* Вход в свод стоит здесь, а не в шапке: это утверждение о Писании,
+                    и спрашивают его, глядя на список книг. */}
+                Отдельно —{" "}
+                <Link href="/otzvuki" className="text-red-900 hover:underline">
+                    свод цитируемости
+                </Link>
+                : сколько каждой книги звучит в песнопениях и чтениях церковного года и что
+                не звучит вовсе.
+            </p>
+
             <div className="font-serif">
                 <p className="font-bold">Издания</p>
                 <ul className="mt-1 space-y-1">

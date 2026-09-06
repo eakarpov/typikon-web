@@ -30,6 +30,9 @@ const nextConfig = {
       "/texting/:path+",
       "/search",
       "/calculator/:date",
+      // Рамка виджета: её содержимое уже есть на своих страницах, и в выдаче
+      // она была бы их двойником без шапки.
+      "/embed/:path*",
     ].map((source) => ({
       source,
       headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],

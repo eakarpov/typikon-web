@@ -248,6 +248,66 @@ export interface OrdoMemory {
     book: string | null;
 }
 
+/**
+ * Правило поста на день — строка `typikon_fasting`, выбранная движком.
+ *
+ * Правил бывает больше одного, и по двум разным причинам: где книга разводит
+ * монаха и мирянина, ответов два (`who`); где расходятся главы — тоже два
+ * (`disputed`). Сводить их в один нельзя: это разные разрешения, а не оговорка
+ * к одному.
+ */
+export interface OrdoFastingRule {
+    ruleId: number;
+    chapter: number;
+    /**
+     * Человеческое имя правила — и оно БЫВАЕТ ШИРЕ АДРЕСА. «Богоявление в
+     * среду или пяток» стояло на правиле, у которого дня седмицы в адресе не
+     * было вовсе, и правило срабатывало в понедельник. Строить по ярлыку
+     * ответ «почему выбрано» нельзя: только по адресным полям ниже.
+     */
+    label: string;
+    /** Кому сказан ответ: monah | mirianin | null — всем. */
+    who: "monah" | "mirianin" | null;
+    allow: string;
+    allowLabel: string;
+    meals: number | null;
+    dishes: number | null;
+    /** devyatyi-chas | vecher | null */
+    until: string | null;
+
+    // Адрес правила: чем именно оно назвало этот день.
+    period: string | null;
+    periodLabel: string | null;
+    postWeek: number | null;
+    /** Слово книги: воскресенье здесь `nedelya`, а не `voskresenie`. */
+    weekday: string | null;
+    triod: string | null;
+    feastMonth: number | null;
+    feastDay: number | null;
+    /** Знак — НИЖНЯЯ ГРАНИЦА, а не равенство (наше чтение, не книжное). */
+    sign: string | null;
+    prestol: boolean;
+
+    citation: string;
+    /**
+     * НЕ ПРИЗНАК ЧЕСТНОСТИ. Стоит у всех правил подряд, включая то, что
+     * выведено нами: цитата затычки в книге находится — она оттуда и взята,
+     * сказана только о другом. «Чьё это правило» спрашивают у `ourReading`.
+     */
+    citationVerified: boolean;
+    /** Оговорка записи. Показывается всегда и дословно. */
+    note: string | null;
+    /** Наш вывод, а не слова книги. */
+    ourReading: boolean;
+    /** Общее правило, взятое сословию, о котором книга здесь молчит. */
+    inherited: boolean;
+    /** Сколько признаков дня правило назвало — этим оно и выбрано. */
+    score: number;
+    markLabel: string;
+    /** Главы книги расходятся об этом дне: правило не одно. */
+    disputed: boolean;
+}
+
 export interface OrdoVariant {
     key: string;
     label: string;
@@ -258,7 +318,10 @@ export interface OrdoVariant {
     mark: string;
     markLabel: string;
     citationVerified: boolean;
+    /** Одной строкой, как её собирает движок: для подписи в расписании. */
     fastingLabel: string | null;
+    /** Те же правила разобранными — для страницы, которая объясняет, а не подписывает. */
+    fasting: OrdoFastingRule[];
     /** Храмовая глава — непусто, если сегодня престольный праздник прихода. */
     hram: Record<string, any> | null;
     services: OrdoDayService[];
@@ -292,6 +355,35 @@ const service = (raw: any): OrdoDayService => ({
     placementWhy: raw.placement_why ?? null,
 });
 
+const fastingRule = (raw: any): OrdoFastingRule => ({
+    ruleId: raw.rule_id,
+    chapter: raw.chapter,
+    label: raw.label,
+    who: raw.who || null,
+    allow: raw.allow,
+    allowLabel: raw.allow_label ?? raw.allow,
+    meals: raw.meals ?? null,
+    dishes: raw.dishes ?? null,
+    until: raw.until || null,
+    period: raw.period || null,
+    periodLabel: raw.period_label ?? null,
+    postWeek: raw.post_week ?? null,
+    weekday: raw.weekday || null,
+    triod: raw.triod || null,
+    feastMonth: raw.feast_month ?? null,
+    feastDay: raw.feast_day ?? null,
+    sign: raw.sign || null,
+    prestol: Boolean(raw.prestol),
+    citation: raw.citation ?? "",
+    citationVerified: Boolean(raw.citation_verified),
+    note: raw.note || null,
+    ourReading: Boolean(raw.our_reading),
+    inherited: Boolean(raw.inherited),
+    score: raw.score ?? 0,
+    markLabel: raw.mark_label ?? "",
+    disputed: Boolean(raw.disputed),
+});
+
 const variant = (raw: any): OrdoVariant => ({
     key: raw.key,
     label: raw.label,
@@ -303,6 +395,9 @@ const variant = (raw: any): OrdoVariant => ({
     markLabel: raw.mark_label,
     citationVerified: raw.citation_verified !== false,
     fastingLabel: raw.fasting_label ?? null,
+    // `?? []` не для красоты: сайт и движок выкатываются порознь, и «служба
+    // отвечает прежней сборкой» — рабочее состояние, а не поломка
+    fasting: (raw.fasting ?? []).map(fastingRule),
     hram: raw.hram ?? null,
     services: (raw.services ?? []).map(service),
     stoyaniya: (raw.stoyaniya ?? []).map((s: any) => ({
@@ -347,4 +442,75 @@ export const ordoDay = async (
         })),
         variants: (d.variants ?? []).map(variant),
     };
+};
+
+// —— Месяц дат разом ————————————————————————————————————————————————
+//
+// Живёт здесь, а не у прихода, откуда переехало: месячная сетка нужна и
+// расписанию прихода, и трапезе, и тянуть приходский модуль в общий раздел
+// ради восьми строк было бы неправильно.
+
+/** Сколько дат спрашиваем разом. Столько же, сколько в /calendar.ics: движок
+ *  отвечает за миллисекунды, но занимать им весь пул соединений незачем. */
+const CONCURRENCY = 8;
+
+export interface OrdoRangeResult {
+    days: Map<string, OrdoDay>;
+    /** Даты, на которые движок не ответил. */
+    failed: string[];
+}
+
+export const ordoRange = async (
+    dates: string[],
+    opts?: { ustav?: string | null; prestoly?: OrdoPrestol[] },
+): Promise<OrdoRangeResult> => {
+    const days = new Map<string, OrdoDay>();
+    const ask = async (d: string) => {
+        try {
+            return await ordoDay(d, { ustav: opts?.ustav ?? undefined, prestoly: opts?.prestoly });
+        } catch (e) {
+            console.error(`ordo: не удалось спросить устав про ${d}`, e);
+            return null;
+        }
+    };
+
+    for (let i = 0; i < dates.length; i += CONCURRENCY) {
+        const chunk = dates.slice(i, i + CONCURRENCY);
+        const got = await Promise.all(chunk.map(async d => [d, await ask(d)] as const));
+        for (const [d, day] of got) if (day) days.set(d, day);
+    }
+
+    // ВТОРОЙ ЗАХОД — ПО ОДНОМУ. Первый сбой почти всегда не «движок не знает
+    // этого дня», а «мы спросили восьмерых разом и не дождались»: клиент рвёт
+    // соединение по таймауту, и в логе службы остаётся broken pipe. Повтор
+    // поодиночке стоит миллисекунды и снимает почти все такие потери; то, что
+    // не ответило и во второй раз, — уже настоящий сбой, и о нём говорится.
+    const failed: string[] = [];
+    for (const d of dates.filter(x => !days.has(x))) {
+        const day = await ask(d);
+        if (day) days.set(d, day); else failed.push(d);
+    }
+    return { days, failed };
+};
+
+const pad = (n: number) => String(n).padStart(2, "0");
+export const isoDate = (d: Date) =>
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+
+/**
+ * Даты месяца — и ещё один день сверх него.
+ *
+ * Лишний день не про запас: вечернее стояние первого числа СЛЕДУЮЩЕГО месяца
+ * ложится на вечер последнего числа этого. Не спросив его, расписание
+ * оборвалось бы на пустом вечере — том самом, в который приход придёт.
+ */
+export const monthDates = (year: number, month: number): string[] => {
+    const out: string[] = [];
+    const d = new Date(Date.UTC(year, month - 1, 1));
+    while (d.getUTCMonth() === month - 1) {
+        out.push(isoDate(d));
+        d.setUTCDate(d.getUTCDate() + 1);
+    }
+    out.push(isoDate(d));
+    return out;
 };

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getChant, type ChantDetail } from "@/lib/chants";
 import { citationsOf, layoutCitations } from "@/lib/citations";
+import { podobenSlugOf } from "@/lib/podobny/store";
 import { csFont, myFont } from "@/utils/font";
 import {
     BOOK_LABELS, MARKER_LABELS, PLACEMENT_LABELS, SERVICE_LABELS, SIGN_LABELS,
@@ -66,25 +67,32 @@ const Origin = ({ chant }: { chant: ChantDetail }) => {
     );
 };
 
+const BADGE_CLASS = "text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-serif";
+
 const Badges = ({ chant }: { chant: ChantDetail }) => {
     const badges = [
         labelOf(UNIT_LABELS, chant.unit),
         labelOf(PLACEMENT_LABELS, chant.placement),
         labelOf(MARKER_LABELS, chant.marker),
         labelOf(SIGN_LABELS, chant.sign),
-        // Подобен — не украшение подписи, а то, чем песнопение поётся; ставим
-        // его в один ряд с родом и знаком, а не прячем в примечание.
-        chant.podoben ? `подобен «${chant.podoben}»` : "",
         chant.repeat > 1 ? `${chant.repeat} раза` : "",
     ].filter(Boolean);
 
+    // Подобен — не украшение подписи, а то, чем песнопение поётся; ставим его
+    // в один ряд с родом и знаком, а не прячем в примечание. И ведём отсюда в
+    // указатель: подпись знает имя подобна, а указатель — что им поётся ещё.
+    const podobenSlug = chant.podoben ? podobenSlugOf(chant.language, chant.podoben) : null;
+
     return (
         <div className="flex flex-wrap gap-1 mt-2">
-            {badges.map(b => (
-                <span key={b} className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-serif">
-                    {b}
-                </span>
-            ))}
+            {badges.map(b => <span key={b} className={BADGE_CLASS}>{b}</span>)}
+            {chant.podoben && (
+                podobenSlug
+                    ? <Link href={`/podobny/${podobenSlug}`} className={`${BADGE_CLASS} hover:text-red-900`}>
+                        подобен «{chant.podoben}»
+                    </Link>
+                    : <span className={BADGE_CLASS}>подобен «{chant.podoben}»</span>
+            )}
         </div>
     );
 };
