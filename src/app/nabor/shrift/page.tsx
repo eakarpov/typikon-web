@@ -82,6 +82,8 @@ const Shrift = () => (
                 <Link href="/nabor/ucs" className="text-red-900 hover:underline">перекодировка</Link>.
                 Установить, что именно стоит в строке, — <Link href="/nabor/znaki"
                     className="text-red-900 hover:underline">разбор по знакам</Link>.
+                Проверить не установленный шрифт, а сам файл — <Link href="/nabor/font"
+                    className="text-red-900 hover:underline">разбор шрифтового файла</Link>.
             </p>
         </section>
     </div>

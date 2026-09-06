@@ -60,6 +60,7 @@ const STATIC_ROUTES = [
     { path: "/nabor/znaki", priority: 0.4 },
     { path: "/nabor/pua", priority: 0.4 },
     { path: "/nabor/shrift", priority: 0.4 },
+    { path: "/nabor/font", priority: 0.4 },
     { path: "/nabor/tsifir", priority: 0.4 },
     // Указатель подобнов; сами подобны — ниже, из корпуса: их 497, и за каждым
     // стоит от одной до тысячи семисот стихир, то есть страница со своим
