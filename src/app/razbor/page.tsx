@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { myFont, csFont } from "@/utils/font";
+import { myFont, csFontVariables } from "@/utils/font";
 import Form from "@/app/razbor/Form";
 
 // Разбор набранного текста — для того, кто набирает, а не для того, кто читает.
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 const Razbor = () => (
-    <div className={`${myFont.variable} ${csFont.variable} pt-2 flex flex-col gap-5`}>
+    <div className={`${myFont.variable} ${csFontVariables} pt-2 flex flex-col gap-5`}>
         <div>
             <h1 className="font-bold font-serif">Разбор набранного текста</h1>
             <p className="font-serif text-slate-800 mt-2 max-w-2xl">

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { myFont, csFont } from "@/utils/font";
+import { myFont, csFontVariables } from "@/utils/font";
 import NumeralForm from "@/app/nabor/tsifir/NumeralForm";
 import CivilForm from "@/app/nabor/tsifir/CivilForm";
 
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 const Tsifir = () => (
-    <div className={`${myFont.variable} ${csFont.variable} pt-2 flex flex-col gap-6`}>
+    <div className={`${myFont.variable} ${csFontVariables} pt-2 flex flex-col gap-6`}>
         <div className="max-w-2xl">
             <h1 className="font-bold font-serif">Цифирь и гражданка</h1>
             <p className="font-serif text-slate-800 mt-2">

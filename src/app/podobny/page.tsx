@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { myFont, csFont } from "@/utils/font";
+import { myFont, csFontVariables } from "@/utils/font";
 import Content from "./Content";
 import { podobnyData } from "./api";
 
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 const Podobny = ({ searchParams }: { searchParams: Record<string, string | undefined> }) => (
-    <div className={`${myFont.variable} ${csFont.variable} pt-2`}>
+    <div className={`${myFont.variable} ${csFontVariables} pt-2`}>
         <h1 className="font-bold font-serif mb-2">Подобны</h1>
         <Suspense>
             <Content data={podobnyData(searchParams)} params={searchParams} />

@@ -4,7 +4,7 @@ import CountMeta from "@/app/meta/CountMeta";
 import {settingsBootScript} from "@/lib/settings/reading";
 import {Metadata, Viewport} from "next";
 import CommonMeta from "@/app/components/CommonMeta";
-import {myFont} from "@/utils/font";
+import {myFont, csFontVariables} from "@/utils/font";
 import NavMenu from "@/app/NavMenu";
 import StoreProvider from "@/app/StoreProvider";
 import AuthorizeChecker from "@/app/AuthorizeChecker";
@@ -59,8 +59,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+    // Семейства церковнославянских шрифтов объявляются на самом <html>, и это не
+    // мелочь: выбор читателя приезжает переменной --cs-font, которую настройки
+    // ставят тоже на <html>. Объяви мы семейства ниже, на теле, ссылка
+    // var(--font-ponomar) внутри --cs-font разрешалась бы там, где этих
+    // переменных ещё нет, и выбор молча оставался бы без действия. Объявление
+    // само по себе ничего не стоит: браузер скачивает лишь то семейство,
+    // которым что-то набрано.
     return (
-    <html lang="ru">
+    <html lang="ru" className={csFontVariables}>
       <head>
           {/*
             * Настройки чтения раскладываются по CSS-переменным до первой отрисовки.

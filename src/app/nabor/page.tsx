@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { memo } from "react";
 import Link from "next/link";
-import { myFont, csFont } from "@/utils/font";
+import { myFont, csFontVariables } from "@/utils/font";
 
 // Указатель раздела: инструменты для того, кто НАБИРАЕТ церковнославянский, а не
 // читает его.
@@ -108,7 +108,7 @@ const NEARBY: Array<{ href: string; title: string; what: string }> = [
 ];
 
 const Nabor = () => (
-    <div className={`${myFont.variable} ${csFont.variable} pt-2 flex flex-col gap-6`}>
+    <div className={`${myFont.variable} ${csFontVariables} pt-2 flex flex-col gap-6`}>
         <div className="max-w-2xl">
             <h1 className="font-bold font-serif">Церковнославянский набор</h1>
             <p className="font-serif text-slate-800 mt-2">

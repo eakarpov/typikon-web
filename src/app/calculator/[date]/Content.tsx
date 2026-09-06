@@ -4,7 +4,7 @@ import {ICalcDayResult} from "@/lib/calcDay";
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import {formatDateISO} from "@/utils/dates";
-import {csFont, myFont} from "@/utils/font";
+import {csFontVariables, myFont} from "@/utils/font";
 import OfflineSave from "@/app/components/save/OfflineSave";
 
 const Content = async ({ date, resultPromise }: { date: string; resultPromise: Promise<ICalcDayResult | null> }) => {
@@ -15,7 +15,7 @@ const Content = async ({ date, resultPromise }: { date: string; resultPromise: P
     const nextDate = formatDateISO(new Date(+dateObj + 1000 * 60 * 60 * 24));
 
     return (
-        <div className={`${myFont.variable} ${csFont.variable} flex flex-col`}>
+        <div className={`${myFont.variable} ${csFontVariables} flex flex-col`}>
             <div className="flex flex-row justify-center font-serif">
                 <Link href={`/calculator/${prevDate}`}>
                     <p className="flex flex-row items-center cursor-pointer">

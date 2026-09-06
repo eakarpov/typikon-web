@@ -2,7 +2,7 @@
 
 import {useMemo, useState} from "react";
 import {orthodoxEaster} from "date-easter";
-import {csFont, myFont} from "@/utils/font";
+import {csFontVariables, myFont} from "@/utils/font";
 import DayFullContent from "@/app/components/DayFullContent";
 import DayMemories from "@/app/components/DayMemories";
 
@@ -86,7 +86,7 @@ const Editor = () => {
                 </div>
             )}
             {data && (
-                <div className={`${myFont.variable} ${csFont.variable}`}>
+                <div className={`${myFont.variable} ${csFontVariables}`}>
                     <p>
                         День - {data.day?.name}. Число (по старому стилю) - {new Date(data.date).toLocaleDateString()}
                     </p>

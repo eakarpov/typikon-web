@@ -9,8 +9,10 @@ module.exports = {
         serif: [
           'var(--font-old-standard)',
         ],
+        // Выбор читателя приезжает в --cs-font (см. src/lib/settings/reading);
+        // без выбора остаётся Мономах — он полнее прочих по составу знаков.
         'sans-serif': [
-          'var(--font-monomakh)',
+          'var(--cs-font, var(--font-monomakh))',
         ],
       }
     },

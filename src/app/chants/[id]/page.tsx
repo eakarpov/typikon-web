@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getChant, type ChantDetail } from "@/lib/chants";
 import { citationsOf, layoutCitations } from "@/lib/citations";
 import { podobenSlugOf } from "@/lib/podobny/store";
-import { csFont, myFont } from "@/utils/font";
+import { csFontVariables, myFont } from "@/utils/font";
 import {
     BOOK_LABELS, MARKER_LABELS, PLACEMENT_LABELS, SERVICE_LABELS, SIGN_LABELS,
     UNIT_LABELS, labelOf, memoryAddress, shortPosition, stanzaLabel,
@@ -114,7 +114,7 @@ const ChantPage = ({
     const parts = layoutCitations(chant.text, citations);
 
     return (
-        <div className={`${myFont.variable} ${csFont.variable} pt-2`}>
+        <div className={`${myFont.variable} ${csFontVariables} pt-2`}>
             <div className="flex items-center gap-2 flex-wrap">
                 <Link href="/chants" className="font-serif text-sm text-red-900">← к песнопениям</Link>
                 {/* Раздел не закончен, и сказать об этом надо на самой странице,

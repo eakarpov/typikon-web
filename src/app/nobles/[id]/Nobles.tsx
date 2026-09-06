@@ -7,7 +7,7 @@ import {useRouter} from "next/navigation";
 
 import 'family-chart/styles/family-chart.css';
 import NobleContemporaries from "@/app/nobles/[id]/NobleContemporaries";
-import {csFont} from "@/utils/font";
+import {csFontVariables} from "@/utils/font";
 import {Tree} from "family-chart/dist/types/layout/calculate-tree";
 
 const Nobles = ({ value }: {value: any}) => {
@@ -232,7 +232,7 @@ const Nobles = ({ value }: {value: any}) => {
     }, []);
 
     return (
-        <div className={`flex ${csFont.variable}`} style={{ flexDirection: "column"}}>
+        <div className={`flex ${csFontVariables}`} style={{ flexDirection: "column"}}>
             <div className="flex flex-row">
                 <div className="w-1/2">
                     <NobleCard

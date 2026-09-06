@@ -11,7 +11,7 @@ import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
 import TextNote from "@/app/reading/[id]/TextNote";
 import {useRouterHash} from "@/app/reading/[id]/useRouterHash";
-import {csFont, myFont} from "@/utils/font";
+import {csFontVariables, myFont} from "@/utils/font";
 
 const customStyles = {
     content: {
@@ -555,7 +555,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                             data-report-container
                             data-paragraph-index={paragraphIndex}
                             className={`reading-text ${
-                                item.csSource ? csFont.variable : ""
+                                item.csSource ? csFontVariables : ""
                             } ${item.newUi ? "" : "whitespace-pre-wrap"} text-justify text-lg ${
                                 item.csSource ? "font-sans-serif" : "font-serif"
                             } first-letter:text-red-600`}

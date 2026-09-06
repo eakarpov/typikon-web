@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { csFont } from "@/utils/font";
+import { csFontVariables } from "@/utils/font";
 import { needsChurchFont } from "@/utils/bookLanguages";
 import type { ChapterData, EditionView } from "@/app/bible/api";
 import EditionPicker from "@/app/bible/EditionPicker";
@@ -9,7 +9,7 @@ import EditionPicker from "@/app/bible/EditionPicker";
 // по содержимому.
 const fontOf = (edition: EditionView) =>
     needsChurchFont(edition.language)
-        ? { wrapper: csFont.variable, text: "font-sans-serif" }
+        ? { wrapper: csFontVariables, text: "font-sans-serif" }
         : { wrapper: "", text: "font-serif" };
 
 const chapterHref = (canonId: string, chapter: number, codes: string, base: string | null) =>

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { csFont, myFont } from "@/utils/font";
+import { csFontVariables, myFont } from "@/utils/font";
 import { getPodoben } from "@/lib/podobny/store";
 import Content from "./Content";
 import { podobenData } from "./api";
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const PodobenPage = ({ params, searchParams }: Props) => (
-    <div className={`${myFont.variable} ${csFont.variable} pt-2`}>
+    <div className={`${myFont.variable} ${csFontVariables} pt-2`}>
         <Suspense>
             <Content data={podobenData(params.slug, searchParams)} slug={params.slug} params={searchParams} />
         </Suspense>

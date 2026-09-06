@@ -1,20 +1,32 @@
-import test from "node:test";
+import test, { before } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+// @ts-ignore — у wawoff2 нет типов; здесь он нужен только тестам.
+import { decompress } from "wawoff2";
 import { readFont, type FontInfo } from "@/lib/csEncoding/font";
 import { coverageOf, missingFor, puaOf, verdictOf } from "@/lib/csEncoding/fontReport";
 
 // Проверяем на шрифтах, которые лежат в самом хранилище: Мономах — наш
 // церковнославянский, Old Standard — обычный шрифт с засечками. Второй нужен не
 // меньше первого: разбор должен отличать одно от другого.
-const load = (name: string) => {
+//
+// Лежат они в woff2, а разбор читает несжатые таблицы, — поэтому здесь файл
+// сперва распаковывается. Это не обход ограничения, а его подтверждение: то же
+// самое пришлось бы сделать и странице, вздумай мы разбирать woff2.
+const load = async (name: string) => {
     const buf = fs.readFileSync(path.join(process.cwd(), "public/fonts", name));
-    return readFont(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer);
+    const raw = Buffer.from(await decompress(buf));
+    return readFont(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength) as ArrayBuffer);
 };
 
-const monomakh = load("Monomakh-Regular.ttf");
-const oldStandard = load("OldStandard-Regular.otf");
+// Ленивое чтение: верхнеуровневого await здесь нет — сборка тестов идёт в CJS.
+let monomakh: FontInfo;
+let oldStandard: FontInfo;
+before(async () => {
+    monomakh = await load("Monomakh-Regular.woff2");
+    oldStandard = await load("OldStandard-Regular.woff2");
+});
 
 test("шрифт читается: имя, начертание, число знаков", () => {
     assert.equal(monomakh.names.family, "Monomakh");

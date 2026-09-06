@@ -1,6 +1,6 @@
 import React from "react";
 import type { OrdoStep } from "@/lib/ordo";
-import { csFont, myFont } from "@/utils/font";
+import { csFontVariables, myFont } from "@/utils/font";
 
 // Отрисовка собранного последования.
 //
@@ -168,7 +168,7 @@ const Step = ({ step }: { step: OrdoStep }) => {
 const Steps = ({ steps }: { steps: OrdoStep[] }) => (
     // Переменные обоих шрифтов нужны здесь разом: гражданский текст и
     // уставная кириллица стоят в одной выдаче через строку.
-    <div className={`${myFont.variable} ${csFont.variable} flex flex-col`}>
+    <div className={`${myFont.variable} ${csFontVariables} flex flex-col`}>
         {steps.map((step, i) => <Step key={i} step={step} />)}
     </div>
 );

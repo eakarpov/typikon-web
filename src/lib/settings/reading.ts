@@ -62,6 +62,24 @@ export const READING_SETTINGS: ReadingSetting[] = [
         ],
     },
     {
+        // Семейства объявлены в @/utils/font; сюда идёт готовая переменная,
+        // и потому список здесь — про выбор, а не про загрузку.
+        id: "csFont",
+        key: "typikon-cs-font",
+        cssVar: "--cs-font",
+        label: "Церковнославянский шрифт",
+        hint: "Касается только текстов, набранных церковнославянской графикой. "
+            + "Мономах полнее прочих: у него единственного все 32 выносные буквы "
+            + "и все уставные начертания.",
+        fallback: "var(--font-monomakh)",
+        options: [
+            { value: "var(--font-monomakh)", label: "Мономах", hint: "научный полуустав, полнее прочих по составу знаков" },
+            { value: "var(--font-ponomar)", label: "Пономарь", hint: "современный синодальный набор" },
+            { value: "var(--font-triodion)", label: "Триодь", hint: "гарнитура патриархийных репринтов" },
+            { value: "var(--font-fedorovsk)", label: "Фёдоровский", hint: "допечатный извод, по шрифту Ивана Фёдорова" },
+        ],
+    },
+    {
         id: "lineHeight",
         key: "typikon-reading-line-height",
         cssVar: "--reading-line-height",

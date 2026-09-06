@@ -1,7 +1,7 @@
 import {getItem} from "@/app/weeks/[id]/api";
 import Content from "@/app/weeks/[id]/Content";
 import {Suspense} from "react";
-import {csFont, myFont} from "@/utils/font";
+import {csFontVariables, myFont} from "@/utils/font";
 import {Metadata} from "next";
 import {cookies} from "next/headers";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
@@ -38,7 +38,7 @@ const PenticostarionItem = async ({ params: { id }}: { params: {id: string}}) =>
     const itemPromise = getItem(id, lang);
 
     return (
-      <div className={`${myFont.variable} ${csFont.variable}`}>
+      <div className={`${myFont.variable} ${csFontVariables}`}>
           <Suspense fallback={<div>Loading...</div>}>
               {/* @ts-expect-error Async Server Component */}
               <Content itemPromise={itemPromise} />
