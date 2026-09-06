@@ -24,6 +24,8 @@ const RULE_LABELS: Record<string, string> = {
     "ер": "конечный ер",
     "звательце": "звательце",
     "от": "приставка ѿ",
+    "ударение": "ударение по словарю",
+    "титло": "сокращение под титлом",
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -117,6 +119,14 @@ const Word = ({ token, chosen, onChoose }: {
             </span>
         );
     }
+    if (token.rules?.includes("титло")) {
+        return (
+            <span className="font-sans-serif underline decoration-dotted underline-offset-4 decoration-sky-500"
+                  title={token.why}>
+                {token.text}
+            </span>
+        );
+    }
     if (token.kind === "untouched") {
         return <span className="text-slate-500" title={token.why}>{token.text}</span>;
     }
@@ -126,13 +136,14 @@ const Word = ({ token, chosen, onChoose }: {
 const SlavonicForm = () => {
     const [text, setText] = useState("");
     const [rule, setRule] = useState(true);
+    const [titla, setTitla] = useState(false);
     const [result, setResult] = useState<ConvertResult | null>(null);
     const [chosen, setChosen] = useState<Record<number, string>>({});
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const convert = async (value = text, withRule = rule) => {
+    const convert = async (value = text, withRule = rule, withTitla = titla) => {
         if (!value.trim()) return;
         setBusy(true);
         setError("");
@@ -140,7 +151,7 @@ const SlavonicForm = () => {
             const response = await fetch("/api/cslav/convert", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: value, rule: withRule }),
+                body: JSON.stringify({ text: value, rule: withRule, titla: withTitla }),
             });
             const data = await response.json();
             if (!response.ok) { setError(data.error ?? "Не вышло"); setResult(null); }
@@ -189,9 +200,20 @@ const SlavonicForm = () => {
                     <input
                         type="checkbox"
                         checked={rule}
-                        onChange={(e) => { setRule(e.target.checked); if (result) convert(text, e.target.checked); }}
+                        onChange={(e) => { setRule(e.target.checked); if (result) convert(text, e.target.checked, titla); }}
                     />
                     дописывать по правилу
+                </label>
+                <label
+                    className="font-serif text-sm text-slate-600 flex items-center gap-1"
+                    title="Только засвидетельствованные сокращения: как напечатано в книгах"
+                >
+                    <input
+                        type="checkbox"
+                        checked={titla}
+                        onChange={(e) => { setTitla(e.target.checked); if (result) convert(text, rule, e.target.checked); }}
+                    />
+                    сокращать под титлом
                 </label>
             </div>
 

@@ -31,6 +31,8 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     const text = typeof body?.text === "string" ? body.text : "";
     const rule = body?.rule !== false;
+    const accents = body?.accents !== false;
+    const titla = body?.titla === true;
 
     if (!text.trim()) {
         return NextResponse.json({ error: "Пустой текст" }, { status: 400 });
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     try {
-        return NextResponse.json(await convertText(text, { rule }));
+        return NextResponse.json(await convertText(text, { rule, accents, titla }));
     } catch (e) {
         console.error(e);
         return NextResponse.json({ error: "Не удалось перевести" }, { status: 500 });

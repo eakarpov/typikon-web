@@ -3,6 +3,7 @@ import {
     byRule, civilKey, csCanonical, DOMINANCE, hasChurchSlavonicGraphics, matchCase, type RuleName,
 } from "@/lib/cslav/core";
 import { GOVERNMENT, narrowByPreposition } from "@/lib/cslav/grammar";
+import { plural } from "@/utils/plural";
 
 // Разметка гражданского текста церковнославянскими написаниями.
 //
@@ -58,6 +59,13 @@ export interface CslToken {
     rules?: RuleName[];
     /** Почему не тронуто — или чем решён спор. */
     why?: string;
+    /**
+     * Исходное гражданское слово — только у пришедших правилом.
+     *
+     * Нужно, чтобы служба могла спросить о нём словарь ударений: правило даёт
+     * буквы, но не ударение, а словарь ударений знает гражданские написания.
+     */
+    original?: string;
 }
 
 export interface ConvertResult {
@@ -85,9 +93,13 @@ export interface CslAnswer {
 export interface ConvertOptions {
     /** Дописывать позиционные правила там, где словарь молчит. */
     rule: boolean;
+    /** Ставить ударение словам, пришедшим правилом (делает служба). */
+    accents: boolean;
+    /** Предлагать сокращение под титлом там, где оно засвидетельствовано. */
+    titla: boolean;
 }
 
-const DEFAULTS: ConvertOptions = { rule: true };
+const DEFAULTS: ConvertOptions = { rule: true, accents: true, titla: false };
 
 const lettersOnly = (word: string) =>
     word.normalize("NFD").replace(/[̀-ͯ҃-҉]/g, "").normalize("NFC");
@@ -123,6 +135,15 @@ const withPsili = (word: string): { form: string; added: boolean } => {
         ? `${first}у${PSILI}${rest.slice(1)}`
         : `${first}${PSILI}${rest}`;
     return { form, added: true };
+};
+
+// Сокращение берётся самое частое и только если оно не единично: единичное —
+// описка набора, а не принятое сокращение.
+const TITLO_NOISE = 3;
+
+const shortestOf = (answer: CslAnswer): { w: string; n: number } | null => {
+    const best = answer.titlo[0];
+    return best && best.n >= TITLO_NOISE ? best : null;
 };
 
 /** Слова, о которых стоит спрашивать указатель. */
@@ -293,8 +314,31 @@ export const convertWithAnswers = (
 
         if (variants.length && settled(answer!)) {
             const best = variants[0];
-            const psili = withPsili(best.spelling).added ? (["звательце"] as RuleName[]) : undefined;
-            tokens.push({ text: best.applied, kind: "byDictionary", source: best.source, rules: psili });
+            const rules: RuleName[] = withPsili(best.spelling).added ? ["звательце"] : [];
+
+            // Сокращение под титлом — по явному запросу и только
+            // засвидетельствованное: как напечатано в книгах, так и предлагаем.
+            // Само оно не строится: сокращать или нет — выбор издателя, а не
+            // орфография, и одно и то же слово в одной книге под титлом, а в
+            // другой полностью.
+            const short = settings.titla ? shortestOf(answer!) : null;
+            if (short) {
+                tokens.push({
+                    text: matchCase(word, short.w),
+                    kind: "byDictionary",
+                    source: best.source,
+                    rules: [...rules, "титло"],
+                    why: `«${best.spelling}» под титлом; так напечатано ${short.n} `
+                        + plural(short.n, "раз", "раза", "раз"),
+                });
+            } else {
+                tokens.push({
+                    text: best.applied,
+                    kind: "byDictionary",
+                    source: best.source,
+                    rules: rules.length ? rules : undefined,
+                });
+            }
             byDictionary++;
             continue;
         }
@@ -339,6 +383,7 @@ export const convertWithAnswers = (
             kind: "byRule",
             source: "rule",
             rules: ruled.applied,
+            original: word,
         });
         byRuleCount++;
     }

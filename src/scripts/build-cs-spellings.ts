@@ -4,6 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { civilKey, csCanonical, byRule, matchCase, DOMINANCE } from "@/lib/cslav/core";
 import { WORD_PATTERN, findAccentIssues } from "@/lib/accents/core";
+import { expandTitlo } from "@/lib/cslav/titla";
+import { csNumeral } from "@/lib/csEncoding/numerals";
 
 // Указатель «гражданское написание → церковнославянское».
 //
@@ -91,6 +93,7 @@ const main = async () => {
     const stats = {
         corpusTexts: 0, corpusTokens: 0, dictForms: 0, bibleTokens: 0,
         leadingMark: 0, shortened: 0, dropped: 0, defective: 0, dictDuplicates: 0,
+        titloLinked: 0, titloUnknown: 0, numerals: 0,
     };
 
     // Отложенная десятая часть: без неё проверка мерит, как собрание
@@ -115,12 +118,30 @@ const main = async () => {
             if (!key || /[^а-яё]/.test(key)) { stats.dropped++; continue; }
             stats.corpusTokens++;
 
-            const place = take(key);
             if (isShortened(spelling)) {
                 stats.shortened++;
-                place.t.set(spelling, (place.t.get(spelling) ?? 0) + 1);
+                // Сокращение кладём под ключ ПОЛНОГО слова, а не своего костяка:
+                // спрашивают у указателя «господи», а показать надо «гдⷭ҇и».
+                // Костяк раскрывается таблицей титл, перенесённой из корпуса.
+                // Порядок проверок существен. Под титлом стоит и сокращение, и
+                // число («кз҃» — это 27), а по буквам они неразличимы: костяк
+                // «гди» читается цифирью как 15. Поэтому сперва спрашиваем
+                // выверенную таблицу сокращений, и только то, чего она не знает,
+                // пробуем прочесть числом. Обратный порядок стоил 13 тысяч
+                // связок: цифирь разобрала «бг҃ъ» как 5.
+                const expanded = expandTitlo(key);
+                if (!expanded) {
+                    if (csNumeral(spelling, { thousands: true, sign: "titlo" }) !== null) stats.numerals++;
+                    else stats.titloUnknown++;
+                    continue;
+                }
+                const full = civilKey(expanded);
+                const at = take(full);
+                at.t.set(spelling, (at.t.get(spelling) ?? 0) + 1);
+                stats.titloLinked++;
                 continue;
             }
+            const place = take(key);
             // Дефекты набора в указатель не пускаем: двойная вария, ударение
             // не над гласной и прочее, что находит findAccentIssues.
             if (findAccentIssues(spelling).length) { stats.defective++; continue; }
@@ -248,7 +269,10 @@ const main = async () => {
         + ` (безударных дублей свёрнуто: ${stats.dictDuplicates.toLocaleString("ru")})`);
     console.log(`Библия: ${stats.bibleTokens.toLocaleString("ru")} словоупотреблений`);
     console.log(`ключей в указателе: ${index.size.toLocaleString("ru")} (из собрания ${corpusKeys.toLocaleString("ru")})`);
-    console.log(`сокращений под титлом и с выносными: ${stats.shortened.toLocaleString("ru")}`);
+    console.log(`сокращений под титлом и с выносными: ${stats.shortened.toLocaleString("ru")}`
+        + ` (связано с полным словом ${stats.titloLinked.toLocaleString("ru")},`
+        + ` цифирь ${stats.numerals.toLocaleString("ru")},`
+        + ` костяк не раскрылся у ${stats.titloUnknown.toLocaleString("ru")})`);
     console.log(`слов с блуждающим ведущим знаком: ${stats.leadingMark.toLocaleString("ru")}`);
     console.log(`отброшено как не слово: ${stats.dropped.toLocaleString("ru")}`);
     console.log(`отброшено с дефектом набора: ${stats.defective.toLocaleString("ru")}`);

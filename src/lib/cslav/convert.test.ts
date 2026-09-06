@@ -146,3 +146,26 @@ test("управление рвётся знаком препинания", () =
     // «к, тебе» — это уже не управление, а два места предложения.
     assert.equal(convertWithAnswers("к, тебе", map).byGrammar, 0);
 });
+
+test("сокращение под титлом — по запросу и только засвидетельствованное", () => {
+    const map = answers(["господи", answer("господи", {
+        lexicon: [{ w: "го́споди", l: "госпо́дь", p: "sg,loc|pl,nom" }],
+        titlo: [{ w: "гдⷭ҇и", n: 150 }, { w: "гдⷭи", n: 49 }],
+    })]);
+
+    // По умолчанию не сокращаем: сокращать или нет — выбор издателя.
+    assert.equal(toPlainText(convertWithAnswers("Господи", map).tokens), "Го́споди");
+
+    const short = convertWithAnswers("Господи", map, { titla: true });
+    assert.equal(toPlainText(short.tokens), "Гдⷭ҇и");
+    assert.ok(short.tokens[0].rules?.includes("титло"));
+    assert.match(short.tokens[0].why!, /150 раз/);
+});
+
+test("единичное сокращение не предлагается", () => {
+    const map = answers(["слово", answer("слово", {
+        corpus: [{ w: "сло́во", n: 90, d: 40 }],
+        titlo: [{ w: "слⷪ҇во", n: 1 }],
+    })]);
+    assert.equal(toPlainText(convertWithAnswers("слово", map, { titla: true }).tokens), "сло́во");
+});
