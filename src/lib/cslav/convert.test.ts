@@ -108,3 +108,41 @@ test("единичное написание не предлагается: эт�
     const spellings = got.tokens[0].variants!.map((v) => v.spelling);
     assert.ok(!spellings.includes("тѣбѣ"), spellings.join(", "));
 });
+
+test("предлог решает спор о написании", () => {
+    const tebe = answer("тебе", {
+        corpus: [{ w: "тебѣ̀", n: 550, d: 127 }, { w: "тебѐ", n: 258, d: 80 }],
+        lexicon: [
+            { w: "тебе́", l: "ты́", p: "acc" },
+            { w: "тебє́", l: "ты́", p: "gen" },
+            { w: "тебѣ́", l: "ты́", p: "dat/loc" },
+        ],
+    });
+    const map = answers(["тебе", tebe]);
+
+    const dative = convertWithAnswers("к тебе", map);
+    assert.equal(dative.byGrammar, 1);
+    // Сам предлог тоже переводится правилом: «к» → «къ».
+    assert.equal(toPlainText(dative.tokens), "къ тебѣ̀");
+    assert.match(dative.tokens.find((t) => t.kind === "byGrammar")!.why!, /дательного/);
+
+    const genitive = convertWithAnswers("от тебе", map);
+    assert.equal(toPlainText(genitive.tokens), "ѿ тебє́");
+
+    // Предлог с двумя падежами сужает, но выбор оставляет человеку.
+    const both = convertWithAnswers("на тебе", map);
+    assert.equal(both.ambiguous, 1);
+    assert.match(both.tokens.find((t) => t.kind === "ambiguous")!.why!, /винительного или местного/);
+
+    // Без предлога — спор как был.
+    assert.equal(convertWithAnswers("тебе", map).ambiguous, 1);
+});
+
+test("управление рвётся знаком препинания", () => {
+    const map = answers(["тебе", answer("тебе", {
+        corpus: [{ w: "тебѣ̀", n: 550, d: 127 }, { w: "тебѐ", n: 258, d: 80 }],
+        lexicon: [{ w: "тебе́", l: "ты́", p: "acc" }, { w: "тебѣ́", l: "ты́", p: "dat/loc" }],
+    })]);
+    // «к, тебе» — это уже не управление, а два места предложения.
+    assert.equal(convertWithAnswers("к, тебе", map).byGrammar, 0);
+});

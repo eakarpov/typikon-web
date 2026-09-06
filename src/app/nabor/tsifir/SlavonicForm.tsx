@@ -62,7 +62,7 @@ const Ambiguous = ({ token, chosen, onChoose }: {
                 onClick={() => setOpen(!open)}
                 className={`font-sans-serif underline decoration-dotted underline-offset-4 ${
                     chosen ? "decoration-amber-700" : "bg-amber-100 decoration-amber-800"}`}
-                title="Написаний несколько — выберите"
+                title={token.why ? `Написаний несколько: ${token.why}` : "Написаний несколько — выберите"}
             >
                 {chosen ?? token.text}
             </button>
@@ -100,6 +100,18 @@ const Word = ({ token, chosen, onChoose }: {
                 title={"По правилу: указателю это слово неизвестно. Дописано: "
                     + `${token.rules?.map((r) => RULE_LABELS[r] ?? r).join(", ")}. `
                     + "Ять, омега и і при этом не восстановлены"}
+            >
+                {token.text}
+            </span>
+        );
+    }
+    if (token.kind === "byGrammar") {
+        // Отдельное начертание: спор был, и решён он не частотой, а падежом.
+        // Читатель вправе видеть, где за него решили и на каком основании.
+        return (
+            <span
+                className="font-sans-serif underline decoration-dotted underline-offset-4 decoration-emerald-600"
+                title={`Выбрано по грамматике: ${token.why}`}
             >
                 {token.text}
             </span>
@@ -204,8 +216,10 @@ const SlavonicForm = () => {
                     </p>
 
                     <p className="font-serif text-sm text-slate-600">
-                        Переведено {result.byDictionary + result.byRule + result.ambiguous} из {result.expected}
+                        Переведено {result.byDictionary + result.byGrammar + result.byRule + result.ambiguous}
+                        {" из "}{result.expected}
                         {": "}по словарю {result.byDictionary}
+                        {result.byGrammar > 0 && <>, по грамматике {result.byGrammar}</>}
                         {result.byRule > 0 && <>, по правилу {result.byRule}</>}
                         {result.ambiguous > 0 && <>, спорных {result.ambiguous} — нажмите, чтобы выбрать</>}
                         {result.untouched > 0 && <>. Не тронуто {result.untouched}</>}

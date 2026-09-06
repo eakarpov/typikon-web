@@ -2,6 +2,7 @@ import { WORD_PATTERN } from "@/lib/accents/core";
 import {
     byRule, civilKey, csCanonical, DOMINANCE, hasChurchSlavonicGraphics, matchCase, type RuleName,
 } from "@/lib/cslav/core";
+import { GOVERNMENT, narrowByPreposition } from "@/lib/cslav/grammar";
 
 // Разметка гражданского текста церковнославянскими написаниями.
 //
@@ -39,6 +40,8 @@ export type CslTokenKind =
     | "plain"
     /** Переведено по засвидетельствованному написанию. */
     | "byDictionary"
+    /** Спор решён падежом: предлог требует определённой формы. */
+    | "byGrammar"
     /** Переведено позиционным правилом: ять и омега при этом не восстановлены. */
     | "byRule"
     /** Написаний несколько, и выбор за человеком. */
@@ -53,13 +56,14 @@ export interface CslToken {
     source?: CslSource;
     /** Какие правила приложены — у byRule и у словарных форм без звательца. */
     rules?: RuleName[];
-    /** Почему не тронуто. */
+    /** Почему не тронуто — или чем решён спор. */
     why?: string;
 }
 
 export interface ConvertResult {
     tokens: CslToken[];
     byDictionary: number;
+    byGrammar: number;
     byRule: number;
     ambiguous: number;
     untouched: number;
@@ -243,16 +247,34 @@ export const convertWithAnswers = (
     const tokens: CslToken[] = [];
     let cursor = 0;
     let byDictionary = 0;
+    let byGrammar = 0;
     let byRuleCount = 0;
     let ambiguous = 0;
     let untouched = 0;
     let expected = 0;
 
+    // Предлог, стоящий перед разбираемым словом. Держим его отдельно, а не
+    // ищем назад по токенам: между предлогом и словом бывает только пробел, и
+    // всё, что сложнее, — уже не управление.
+    let preposition: string | null = null;
+
     for (const match of text.matchAll(new RegExp(WORD_PATTERN.source, "gu"))) {
         const word = match[0];
         const at = match.index!;
-        if (at > cursor) tokens.push({ text: text.slice(cursor, at), kind: "plain" });
+        const gap = at > cursor ? text.slice(cursor, at) : "";
+        if (gap) tokens.push({ text: gap, kind: "plain" });
         cursor = at + word.length;
+
+        // Управление рвётся всем, кроме пробела: запятая между предлогом и
+        // словом значит, что это уже другое место в предложении.
+        const carried = preposition;
+        const governing = /^\s*$/.test(gap) ? carried : null;
+
+        // Само это слово может быть предлогом для следующего. Запоминаем сразу,
+        // до всех ветвлений: выходов из разбора слова много, и забыть на одном
+        // из них проще всего.
+        const key = civilKey(word);
+        preposition = key in GOVERNMENT ? key : null;
 
         if (inRubric(at)) {
             tokens.push({ text: word, kind: "untouched", why: "киноварь" });
@@ -266,7 +288,7 @@ export const convertWithAnswers = (
         }
 
         expected++;
-        const answer = byWord.get(civilKey(word));
+        const answer = byWord.get(key);
         const variants = answer ? variantsOf(answer, word) : [];
 
         if (variants.length && settled(answer!)) {
@@ -277,8 +299,27 @@ export const convertWithAnswers = (
             continue;
         }
         if (variants.length > 1) {
-            tokens.push({ text: variants[0].applied, kind: "ambiguous", variants });
-            ambiguous++;
+            // Спор о написании — это спор о падеже, и предлог его задаёт.
+            const narrowed = narrowByPreposition(variants, governing);
+            const ordered = narrowed?.variants ?? variants;
+            if (narrowed?.decided) {
+                tokens.push({
+                    text: ordered[0].applied,
+                    kind: "byGrammar",
+                    source: ordered[0].source,
+                    variants: ordered,
+                    why: narrowed.why,
+                });
+                byGrammar++;
+            } else {
+                tokens.push({
+                    text: ordered[0].applied,
+                    kind: "ambiguous",
+                    variants: ordered,
+                    why: narrowed?.why,
+                });
+                ambiguous++;
+            }
             continue;
         }
 
@@ -304,7 +345,7 @@ export const convertWithAnswers = (
 
     if (cursor < text.length) tokens.push({ text: text.slice(cursor), kind: "plain" });
 
-    return { tokens, byDictionary, byRule: byRuleCount, ambiguous, untouched, expected };
+    return { tokens, byDictionary, byGrammar, byRule: byRuleCount, ambiguous, untouched, expected };
 };
 
 /** Готовый текст с учётом выбранного человеком. */
