@@ -77,6 +77,17 @@ const Accents = () => {
                     <Sources />
                 </Suspense>
             </section>
+
+            <section className="max-w-2xl">
+                <h2 className="font-serif font-bold text-sm">Что рядом</h2>
+                <p className="font-serif text-sm text-slate-600 mt-1">
+                    Если текст набран гражданкой и его надо перевести в церковнославянское
+                    написание целиком — ять, омега, юс, ер и звательце, — это{" "}
+                    <Link href="/nabor/tsifir" className="text-red-900 hover:underline">
+                        соседний инструмент</Link>: он стоит на том же собрании и
+                    ударения ставит этим же словарём.
+                </p>
+            </section>
         </div>
     );
 };

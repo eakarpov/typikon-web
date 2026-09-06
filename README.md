@@ -19,6 +19,12 @@
   доживал до конца mongorestore. Оборвалась одна часть — повторяется она одна:
   `npm run release:db -- bible_verses`. Части: `dneslov_names`, `bible_verses`, `texts`,
   `temples`, `rest`.
+- Словарь церковнославянского (`typikon-csl`) выкладывается отдельно: `npm run release-csl`
+  дампит базу целиком и везёт архивом. С указателем написаний
+  (`spellings`, 158 532 ключа) база весит около 88 МБ вместо прежних 70. Указатель
+  производный: он пересобирается из собрания и словаря командой
+  `npm run cslav:build -- --apply`, и на сервере это делать не нужно — он приезжает
+  дампом. А вот `npm run db:search-index` после правок свёртки написаний нужен и там.
 - Приходское (`parishSettings`, `parishEdits`, `parishSchedules`, `templeClaims`,
   `templeAdmins`) лежит в базе `typikon-users`, а не в `typikon`: это данные приходов,
   они пишутся только на проде, и `mongorestore --drop` пустым дампом их бы стёр.
