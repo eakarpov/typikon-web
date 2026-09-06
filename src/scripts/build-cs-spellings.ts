@@ -4,7 +4,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { civilKey, csCanonical, byRule, matchCase, DOMINANCE } from "@/lib/cslav/core";
 import { WORD_PATTERN, findAccentIssues } from "@/lib/accents/core";
-import { expandTitlo } from "@/lib/cslav/titla";
+import {
+    expandTitlo, expandSkeleton, fitsSkeleton, hasSuperscript, titloSkeleton,
+} from "@/lib/cslav/titla";
 import { csNumeral } from "@/lib/csEncoding/numerals";
 
 // Указатель «гражданское написание → церковнославянское».
@@ -90,16 +92,29 @@ const main = async () => {
         return fresh;
     };
 
+    /** Сокращение под ключ полного слова. */
+    const link = (full: string, spelling: string) => {
+        const at = take(full);
+        at.t.set(spelling, (at.t.get(spelling) ?? 0) + 1);
+    };
+
     const stats = {
         corpusTexts: 0, corpusTokens: 0, dictForms: 0, bibleTokens: 0,
         leadingMark: 0, shortened: 0, dropped: 0, defective: 0, dictDuplicates: 0,
         titloLinked: 0, titloUnknown: 0, numerals: 0,
+        titloByStem: 0, titloByTable: 0, titloByWord: 0, titloByOrder: 0,
     };
 
     // Отложенная десятая часть: без неё проверка мерит, как собрание
     // воспроизводит само себя. Берём по остатку от деления, чтобы состав
     // отложенного не менялся от прогона к прогону.
     const holdout = new Set<string>();
+
+    // Сокращения и полные слова собираются в одном проходе, а связываются во
+    // втором: чтобы сверить костяк с полным словом, надо сперва дочитать все
+    // полные слова.
+    const pending: string[] = [];
+    const fullKeys = new Set<string>();
 
     // --- 1. Собрание ---------------------------------------------------------
     const texts = await client.db(CORPUS_DB).collection("texts")
@@ -119,28 +134,16 @@ const main = async () => {
             stats.corpusTokens++;
 
             if (isShortened(spelling)) {
-                stats.shortened++;
                 // Сокращение кладём под ключ ПОЛНОГО слова, а не своего костяка:
                 // спрашивают у указателя «господи», а показать надо «гдⷭ҇и».
-                // Костяк раскрывается таблицей титл, перенесённой из корпуса.
-                // Порядок проверок существен. Под титлом стоит и сокращение, и
-                // число («кз҃» — это 27), а по буквам они неразличимы: костяк
-                // «гди» читается цифирью как 15. Поэтому сперва спрашиваем
-                // выверенную таблицу сокращений, и только то, чего она не знает,
-                // пробуем прочесть числом. Обратный порядок стоил 13 тысяч
-                // связок: цифирь разобрала «бг҃ъ» как 5.
-                const expanded = expandTitlo(key);
-                if (!expanded) {
-                    if (csNumeral(spelling, { thousands: true, sign: "titlo" }) !== null) stats.numerals++;
-                    else stats.titloUnknown++;
-                    continue;
-                }
-                const full = civilKey(expanded);
-                const at = take(full);
-                at.t.set(spelling, (at.t.get(spelling) ?? 0) + 1);
-                stats.titloLinked++;
+                // Раскрытие отложено до конца прохода: часть костяков сверяется
+                // с полными словами собрания, а их список к этой минуте ещё не
+                // собран (см. resolveShortened).
+                stats.shortened++;
+                pending.push(spelling);
                 continue;
             }
+            fullKeys.add(key);
             const place = take(key);
             // Дефекты набора в указатель не пускаем: двойная вария, ударение
             // не над гласной и прочее, что находит findAccentIssues.
@@ -155,6 +158,52 @@ const main = async () => {
             place.c.set(letters, seen);
         }
     }
+
+    // --- 1а. Сокращения к полным словам --------------------------------------
+    //
+    // ПОРЯДОК ПРОВЕРОК СУЩЕСТВЕН, и он не одинаков для двух таблиц. Под титлом
+    // стоит и сокращение, и число («кз҃» — это 27), а по буквам они
+    // неразличимы. Выверенные основы идут ПЕРЕД цифирью: костяк «гди» читается
+    // числом как 15, и обратный порядок стоил 13 тысяч связок — цифирь
+    // разобрала «бг҃ъ» как 5. Таблица костяков идёт ПОСЛЕ цифири: её ключи
+    // короткие, и «г҃і» (126 вхождений — нумерация глав в Лествице) она
+    // прочитала бы как «господи» вместо тринадцати.
+    //
+    // ПОСЛЕ ЧИСЕЛ — СВЕРКА С СОБРАНИЕМ, и только для слов с выносной буквой.
+    // Там опущенная буква ставит слово на место сама («нашиⷯ» → «нашихъ»), и
+    // догадки в этом нет: набор букв сходится, первая буква сохранена, строчные
+    // идут в том же порядке. Слово под одним титлом, без выносной, так не
+    // сверяется — там буквы опущены, и подбор был бы гаданием.
+    const byBag = new Map<string, string[]>();
+    for (const full of fullKeys) {
+        const bag = [...full].sort().join("");
+        const at = byBag.get(bag) ?? [];
+        at.push(full);
+        byBag.set(bag, at);
+    }
+
+    for (const spelling of pending) {
+        const key = civilKey(spelling);
+
+        const byStem = expandTitlo(key);
+        if (byStem) { link(civilKey(byStem), spelling); stats.titloByStem++; continue; }
+
+        if (csNumeral(spelling, { thousands: true, sign: "titlo" }) !== null) { stats.numerals++; continue; }
+
+        const skeleton = titloSkeleton(spelling);
+        const byTable = expandSkeleton(skeleton);
+        if (byTable) { link(civilKey(byTable), spelling); stats.titloByTable++; continue; }
+
+        if (!hasSuperscript(spelling)) { stats.titloUnknown++; continue; }
+        const lowered = skeleton.replace(/ъ$/, "");
+        if (fullKeys.has(lowered)) { link(lowered, spelling); stats.titloByWord++; continue; }
+
+        const same = (byBag.get([...lowered].sort().join("")) ?? [])
+            .filter((candidate) => fitsSkeleton(lowered, key, candidate));
+        if (same.length === 1) { link(same[0], spelling); stats.titloByOrder++; continue; }
+        stats.titloUnknown++;
+    }
+    stats.titloLinked = stats.titloByStem + stats.titloByTable + stats.titloByWord + stats.titloByOrder;
 
     // --- 2. Словарь ----------------------------------------------------------
     const lexems = await client.db(DICT_DB).collection("lexems")
@@ -273,6 +322,10 @@ const main = async () => {
         + ` (связано с полным словом ${stats.titloLinked.toLocaleString("ru")},`
         + ` цифирь ${stats.numerals.toLocaleString("ru")},`
         + ` костяк не раскрылся у ${stats.titloUnknown.toLocaleString("ru")})`);
+    console.log(`   из них: по основам ${stats.titloByStem.toLocaleString("ru")}`
+        + ` · по таблице костяков ${stats.titloByTable.toLocaleString("ru")}`
+        + ` · сверкой с собранием ${stats.titloByWord.toLocaleString("ru")}`
+        + ` · с перестановкой выносной ${stats.titloByOrder.toLocaleString("ru")}`);
     console.log(`слов с блуждающим ведущим знаком: ${stats.leadingMark.toLocaleString("ru")}`);
     console.log(`отброшено как не слово: ${stats.dropped.toLocaleString("ru")}`);
     console.log(`отброшено с дефектом набора: ${stats.defective.toLocaleString("ru")}`);

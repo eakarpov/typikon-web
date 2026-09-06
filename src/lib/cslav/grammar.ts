@@ -64,6 +64,8 @@ export const GOVERNMENT: Record<string, Government> = {
 
 const CASES = new Set(["nom", "gen", "dat", "acc", "ins", "loc"]);
 
+const tagsOf = (properties: string) => new Set(properties.split(/[,|/\s]+/));
+
 /** Падежи, которые допускает помета словаря: «brev,sg,m/n,gen» → {gen}. */
 export const casesOf = (properties: string): Set<string> => {
     const found = new Set<string>();
@@ -72,6 +74,9 @@ export const casesOf = (properties: string): Set<string> => {
     }
     return found;
 };
+
+/** Звательный: помета словаря «sg,voc». */
+export const isVocative = (properties?: string) => !!properties && tagsOf(properties).has("voc");
 
 export const CASE_NAMES: Record<string, string> = {
     nom: "именительного", gen: "родительного", dat: "дательного",
@@ -119,5 +124,77 @@ export const narrowByPreposition = (
         decided: rule.decides && fitting.length === 1,
         why: `предлог «${preposition}» требует ${names}`
             + ` (в собрании так в ${percent}% случаев из ${rule.samples.toLocaleString("ru")})`,
+    };
+};
+
+/**
+ * Звательный против местного.
+ *
+ * ОТКУДА СПОР. Свёртка ѣ→е кладёт звательный и местный в один ключ там, где
+ * звательный оканчивается на -е: «сы́не» и «сы́нѣ» → «сыне», «хрісте́» и
+ * «хрістѣ́» → «христе». Совпадение настоящее, а не изъян ключа. Звательные на
+ * -о («влады́ко») и на -че («ѻ́тче») не сталкиваются ни с чем: местный у них
+ * «влады́цѣ», «ѻтцѣ́». Спорных ключей такого рода в указателе 124.
+ *
+ * ЧЕМ РЕШАЕТСЯ. Местный падеж предложный по определению и без предлога в
+ * церковнославянском не употребляется; форма без предлога, совпадающая с ним, —
+ * это либо обращение, либо наречие. Отсюда правило: есть предлог — местный,
+ * нет предлога — звательный.
+ *
+ * ЧИСЛА. После предлога местный берёт 99% (588 против 6 звательных по
+ * собранию). Обратный счёт — 197 звательных против 709 местных без предлога —
+ * ЗАВЫШЕН омографами-наречиями: «до́брѣ» (203) и «совершеннѣ» (113) стоят в
+ * словаре отдельными лексемами, «до́брѣ» и вовсе без грамматических помет, и
+ * падежом там не пахнет. За вычетом наречий счёт звательного и складывается.
+ *
+ * ГДЕ ПРАВИЛО МОЛЧИТ. Только там, где спор идёт ровно между звательным и
+ * местным: если хоть один соперник размечен другим падежом или не размечен
+ * вовсе, выбор остаётся человеку.
+ */
+export const narrowByVocative = (
+    variants: CslVariant[],
+    preposition: string | null,
+): Narrowed | null => {
+    const vocative = variants.filter((v) => isVocative(v.properties));
+    if (!vocative.length || vocative.length === variants.length) return null;
+
+    const rest = variants.filter((v) => !vocative.includes(v));
+    if (!rest.every((v) => casesOf(v.properties ?? "").has("loc"))) return null;
+
+    if (preposition && preposition in GOVERNMENT) {
+        return {
+            variants: [...rest, ...vocative],
+            decided: rest.length === 1,
+            why: `после предлога «${preposition}» звательный не стоит`
+                + " (в собрании 588 местных против 6 звательных)",
+        };
+    }
+    return {
+        variants: [...vocative, ...rest],
+        decided: vocative.length === 1,
+        why: "без предлога это обращение: местный падеж предложный"
+            + " и сам по себе не употребляется",
+    };
+};
+
+/**
+ * Оба сужения разом — звательное сперва, предложное следом.
+ *
+ * Порядок существен: звательный отводится до разбора управления, иначе предлог
+ * с двумя падежами («о», «въ») оставит спор нерешённым, хотя после предлога
+ * звательного не бывает вовсе.
+ */
+export const narrowVariants = (
+    variants: CslVariant[],
+    preposition: string | null,
+): Narrowed | null => {
+    const vocative = narrowByVocative(variants, preposition);
+    const government = narrowByPreposition(vocative?.variants ?? variants, preposition);
+    if (!government) return vocative;
+    if (!vocative) return government;
+    return {
+        variants: government.variants,
+        decided: government.decided || vocative.decided,
+        why: `${vocative.why}; ${government.why}`,
     };
 };

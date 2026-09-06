@@ -2,7 +2,7 @@ import { WORD_PATTERN } from "@/lib/accents/core";
 import {
     byRule, civilKey, csCanonical, DOMINANCE, hasChurchSlavonicGraphics, matchCase, type RuleName,
 } from "@/lib/cslav/core";
-import { GOVERNMENT, narrowByPreposition } from "@/lib/cslav/grammar";
+import { GOVERNMENT, narrowVariants } from "@/lib/cslav/grammar";
 import { plural } from "@/utils/plural";
 
 // Разметка гражданского текста церковнославянскими написаниями.
@@ -343,8 +343,9 @@ export const convertWithAnswers = (
             continue;
         }
         if (variants.length > 1) {
-            // Спор о написании — это спор о падеже, и предлог его задаёт.
-            const narrowed = narrowByPreposition(variants, governing);
+            // Спор о написании — это спор о падеже: его задаёт предлог, а где
+            // предлога нет — само его отсутствие (звательный против местного).
+            const narrowed = narrowVariants(variants, governing);
             const ordered = narrowed?.variants ?? variants;
             if (narrowed?.decided) {
                 tokens.push({
