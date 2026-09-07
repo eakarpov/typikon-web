@@ -1,4 +1,5 @@
 import { normalizeHip, type Stats } from "@/lib/csEncoding/hip";
+import { translitToUnicode } from "@/lib/csEncoding/translit";
 import { UCS_BYTES, UCS_UNDEFINED } from "@/lib/csEncoding/ucsTable";
 import { plural } from "@/utils/plural";
 
@@ -14,7 +15,9 @@ export type Source =
     /** HIP в исходном восьмибитном виде: CP1251 плюс ASCII-надстрочные. */
     | "hip8"
     /** HIP, каким его отдаёт orthlib: буквы уже юникодом, разметка осталась. */
-    | "hip";
+    | "hip"
+    /** Транслитерация: буквы юникодом, надстрочные латиницей и цифрами. */
+    | "translit";
 
 export interface ConvertResult {
     text: string;
@@ -30,6 +33,33 @@ export const SOURCE_LABELS: Record<Source, string> = {
     ucs: "UCS — раскладка шрифта",
     hip8: "HIP восьмибитный",
     hip: "HIP с orthlib",
+    translit: "Транслитерация — надстрочные латиницей",
+};
+
+/**
+ * Снять разметку страницы, если она есть.
+ *
+ * Скрипты и стили выбрасываются вместе с содержимым: их слова латиницей
+ * («Background», «Georgia», «Arial») переложились бы наравне с текстом. Замер по
+ * Октоиху: без этого «a» насчитывалось 30 466 раз вместо тысяч.
+ */
+const stripMarkup = (raw: string): { text: string; tags: number } => {
+    if (!/<[a-z!/][^>]*>/i.test(raw)) return { text: raw, tags: 0 };
+    let tags = 0;
+    // Строчная разметка снимается БЕЗ пробела, блочная — с переводом строки.
+    // Иначе рвётся слово: буквица набрана отдельным элементом
+    // (<span class="color-red">Р</span>а́дꙋйсѧ), и пробел на её месте даёт «Р» и
+    // «а́дꙋйсѧ» порознь. Та же беда была при разборе Минеи.
+    const text = raw
+        .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
+        .replace(/<head[\s\S]*?<\/head>/gi, " ")
+        .replace(/<\/?(p|div|br|li|tr|td|h[1-6]|blockquote|table|hr)\b[^>]*>/gi,
+            () => { tags++; return "\n"; })
+        .replace(/<[^>]+>/g, () => { tags++; return ""; })
+        .replace(/&nbsp;?/g, " ")
+        .replace(/&[a-z]+;/g, " ")
+        .replace(/[ \t]+/g, " ");
+    return { text, tags };
 };
 
 // Разметка HIP: по ней видно, что текст всё-таки не готовый юникод.
@@ -82,6 +112,18 @@ const ucsToUnicode = (bytes: Uint8Array): ConvertResult => {
 export const convertBytes = (bytes: Uint8Array, source: Source): ConvertResult => {
     if (source === "ucs") return ucsToUnicode(bytes);
 
+    if (source === "translit") {
+        // Такие тексты чаще всего приходят страницами сайта, и разметку надо
+        // снять до перекладки: иначе имена шрифтов и стилей («Background»,
+        // «Georgia») переложатся наравне с текстом и дадут мусор.
+        const raw = new TextDecoder("utf-8").decode(bytes);
+        const { text: body, tags } = stripMarkup(raw);
+        const { text, changed } = translitToUnicode(body);
+        const stats: Stats = { "знаков переложено": changed };
+        if (tags) stats["снято разметки"] = tags;
+        return { text, stats, footnotes: [], dropped: [] };
+    }
+
     const raw = source === "hip8" ? decodeCp1251(bytes) : new TextDecoder("utf-8").decode(bytes);
     const { content, footnotes, dropped, stats } = normalizeHip(raw, { hip8: source === "hip8" });
     return { text: content, stats, footnotes, dropped };
@@ -89,6 +131,7 @@ export const convertBytes = (bytes: Uint8Array, source: Source): ConvertResult =
 
 const FORMS: Record<string, [string, string, string]> = {
     "знаков переложено": ["знак переложен", "знака переложено", "знаков переложено"],
+    "снято разметки": ["место разметки", "места разметки", "мест разметки"],
     "пустых мест в раскладке": ["пустое место в раскладке", "пустых места в раскладке", "пустых мест в раскладке"],
     буквы: ["буква", "буквы", "букв"],
     выносные: ["выносная", "выносные", "выносных"],

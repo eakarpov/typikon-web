@@ -23,6 +23,11 @@ export interface Guess {
 const HIP8_MARKS = /['=~]/g;
 const HIP_MARKUP = /\/\/|\{[^}]{0,40}\}|<::|%[([]|\\[а-яa-z]|_[а-яa-z]/gi;
 
+// Транслитерация: латинская буква или цифра, приставленная к кириллической
+// справа. Примета верная — в обычном тексте такое соседство почти не
+// встречается, а здесь оно и есть способ записи надстрочного знака.
+const TRANSLIT_MARKS = /[\u0400-\u04ff][0-9a-zA-Z\u2122\u2030\u00a7\u2020]/g;
+
 const count = (s: string, re: RegExp) => (s.match(re) ?? []).length;
 
 export const guess = (bytes: Uint8Array): Guess[] => {
@@ -71,6 +76,17 @@ export const guess = (bytes: Uint8Array): Guess[] => {
             evidence: [
                 isUtf8(bytes) ? "байты складываются в правильный UTF-8" : "на UTF-8 не похоже",
                 `${hipMarkup.toLocaleString("ru")} мест издательской разметки HIP`,
+            ],
+        },
+        {
+            source: "translit",
+            share: share(count(new TextDecoder("utf-8").decode(bytes), TRANSLIT_MARKS) * 4
+                + (isUtf8(bytes) ? total * 0.1 : 0)),
+            evidence: [
+                `${count(new TextDecoder("utf-8").decode(bytes), TRANSLIT_MARKS).toLocaleString("ru")}`
+                    + " мест, где к кириллической букве приставлена латинская или цифра"
+                    + " — так записывается надстрочный знак",
+                isUtf8(bytes) ? "байты складываются в правильный UTF-8" : "на UTF-8 не похоже",
             ],
         },
     ];
