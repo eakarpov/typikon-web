@@ -30,6 +30,7 @@ const RULE_LABELS: Record<string, string> = {
 
 const SOURCE_LABELS: Record<string, string> = {
     corpus: "по собранию",
+    menaion: "по Минее",
     lexicon: "по словарю",
     bible: "по Библии",
     rule: "по правилу",

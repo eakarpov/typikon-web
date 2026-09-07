@@ -149,6 +149,29 @@ export const expandTitlo = (skeleton: string): string | null => {
     return null;
 };
 
+/**
+ * Раскрытия, где основа стоит НЕ в начале слова: «преблженне» → «преблаженне».
+ *
+ * Приставочные сокращения — «пребл҃же́нне», «всест҃а́ѧ», «приснодв҃о»,
+ * «ᲂу҆бл҃жа́емъ» — expandTitlo не берёт: он ищет основу от первой буквы. В Минее
+ * таких 28 тысяч, и они же прежде читались числом («пребл҃же́нне» выходило 325).
+ *
+ * Ответ не один, а список: какое из раскрытий верно, решает не эта таблица, а
+ * проверка на существование слова — она в сборке указателя, где список слов и
+ * собран. Порядок — от длинной основы к короткой, от начала слова к концу.
+ */
+export const expandAnywhere = (skeleton: string): string[] => {
+    const out: string[] = [];
+    const stems = Object.keys(TITLA_STEMS).sort((a, b) => b.length - a.length);
+    for (const stem of stems) {
+        for (let at = 1; at + stem.length <= skeleton.length; at++) {
+            if (!skeleton.startsWith(stem, at)) continue;
+            out.push(skeleton.slice(0, at) + TITLA_STEMS[stem] + skeleton.slice(at + stem.length));
+        }
+    }
+    return out;
+};
+
 // --- Костяк с опущенной выносной ------------------------------------------
 //
 // ЗАЧЕМ ВТОРОЙ КОСТЯК. Общая свёртка (@/utils/churchSlavonic) выносную букву

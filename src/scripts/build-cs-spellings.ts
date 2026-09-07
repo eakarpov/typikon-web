@@ -5,7 +5,8 @@ import path from "node:path";
 import { civilKey, csCanonical, byRule, matchCase, DOMINANCE } from "@/lib/cslav/core";
 import { WORD_PATTERN, findAccentIssues } from "@/lib/accents/core";
 import {
-    expandTitlo, expandSkeleton, fitsContraction, fitsSkeleton, hasSuperscript, titloEra, titloSkeleton,
+    expandTitlo, expandAnywhere, expandSkeleton, fitsContraction, fitsSkeleton, hasSacredStem, hasSuperscript,
+    titloEra, titloSkeleton,
 } from "@/lib/cslav/titla";
 import { csNumeral } from "@/lib/csEncoding/numerals";
 
@@ -46,15 +47,27 @@ interface BibleVariant { w: string; n: number }
 const lettersOnly = (word: string) =>
     word.normalize("NFD").replace(/[\u0300-\u036f\u0483-\u0489]/g, "").normalize("NFC");
 
+type Attested = Map<string, { n: number; texts: Set<string>; forms: Map<string, number> }>;
+
 interface Entry {
-    c: Map<string, { n: number; texts: Set<string>; forms: Map<string, number> }>;
+    c: Attested;
+    /**
+     * Минея церковнославянским шрифтом — четвёртый источник, отдельно от «c».
+     *
+     * Извод тот же, что у собрания (синодальный), но оцифровка ЧУЖАЯ (azbyka),
+     * и в выгрузку она пойти не может; собрание же выкладывается. Поэтому поле
+     * своё. Оно же и главное свидетельство служебной титлы: книги нашего
+     * собрания аскетические, и «бцⷣа», «прест҃а́ѧ», «пребл҃же́нне» встречаются
+     * только здесь.
+     */
+    m: Attested;
     x: DictVariant[];
     b: Map<string, number>;
     /** Сокращения: написание → сколько раз и какого извода. */
     t: Map<string, { n: number; old: boolean }>;
 }
 
-const entry = (): Entry => ({ c: new Map(), x: [], b: new Map(), t: new Map() });
+const entry = (): Entry => ({ c: new Map(), m: new Map(), x: [], b: new Map(), t: new Map() });
 
 const argv = process.argv.slice(2);
 const has = (flag: string) => argv.includes(flag);
@@ -110,6 +123,7 @@ const main = async () => {
         titloLinked: 0, titloUnknown: 0, numerals: 0,
         titloByStem: 0, titloByTable: 0, titloByWord: 0, titloByOrder: 0,
         titloByContraction: 0, titloRejected: 0, titloOld: 0, titloSynodal: 0,
+        menaionDays: 0, menaionTokens: 0, menaionShortened: 0, titloByPrefix: 0,
     };
 
     // Отложенная десятая часть: без неё проверка мерит, как собрание
@@ -229,6 +243,52 @@ const main = async () => {
         console.log(`Библия не найдена (${biblePath}) — третий источник пропущен.`);
     }
 
+    // --- 3а. Минея церковнославянским шрифтом --------------------------------
+    //
+    // Пара к гражданской Минее, которую разбирает корпус (raw/menaion): azbyka
+    // выкладывает одно издание дважды, страница на день. Сверка сентября
+    // показала 93,2% совпадения по свёртке, а остаток объясним — цифирь, где
+    // гражданское издание пишет числа цифрами; расхождения ы/и и ѧ/я между
+    // изданиями; и сокращения, которых у нас нечем раскрыть. Последние и есть
+    // то, ради чего книга берётся.
+    const menaionShort: string[] = [];
+    const menaionRoot = value("--menaion")
+        ?? path.join(process.cwd(), "..", "typikon-rules", "raw", "menaion-cu");
+    if (fs.existsSync(menaionRoot)) {
+        for (const month of fs.readdirSync(menaionRoot).sort()) {
+            const days = path.join(menaionRoot, month, "text");
+            if (!fs.existsSync(days)) continue;
+            for (const file of fs.readdirSync(days).sort()) {
+                const alias = `${month}/${file.replace(/\.txt$/, "")}`;
+                const raw = fs.readFileSync(path.join(days, file), "utf8");
+                // Заголовок обхода (URL, TITLE) отрезается: это не книга.
+                const body = raw.split("-".repeat(40)).slice(1).join("-".repeat(40));
+                stats.menaionDays++;
+                for (const token of wordsOf(body)) {
+                    const word = token.replace(LEADING_MARK, "");
+                    const spelling = csCanonical(word.toLowerCase());
+                    const key = civilKey(spelling);
+                    if (!key || /[^а-яё]/.test(key)) continue;
+                    if (isShortened(spelling)) { stats.menaionShortened++; menaionShort.push(spelling); continue; }
+                    if (findAccentIssues(spelling).length) continue;
+                    stats.menaionTokens++;
+                    const place = take(key);
+                    const letters = lettersOnly(spelling);
+                    const seen = place.m.get(letters)
+                        ?? { n: 0, texts: new Set<string>(), forms: new Map<string, number>() };
+                    seen.n += 1;
+                    seen.texts.add(alias);
+                    seen.forms.set(spelling, (seen.forms.get(spelling) ?? 0) + 1);
+                    place.m.set(letters, seen);
+                }
+            }
+        }
+        console.log(`Минея ЦС: ${stats.menaionDays} дней, ${stats.menaionTokens.toLocaleString("ru")}`
+            + ` словоупотреблений, сокращений ${stats.menaionShortened.toLocaleString("ru")}`);
+    } else {
+        console.log(`Минея ЦС не найдена (${menaionRoot}) — четвёртый источник пропущен.`);
+    }
+
     // --- 4. Сокращения к полным словам ---------------------------------------
     //
     // Разбор отложен до конца всех трёх проходов нарочно: раскрытие костяка
@@ -270,7 +330,21 @@ const main = async () => {
         if (byStem) { stats.titloByStem++; return byStem; }
         if (expandTitlo(key)) stats.titloRejected++;
 
-        if (csNumeral(spelling, { thousands: true, sign: "titlo" }) !== null) return "numeral";
+        // Основа не в начале слова: приставочные сокращения. Ответ принимается
+        // только единственный — из нескольких раскрытий, дающих существующее
+        // слово, выбирать нечем.
+        const anywhere = [...new Set(expandAnywhere(key).map(accept).filter(Boolean) as string[])];
+        if (anywhere.length === 1) { stats.titloByPrefix++; return anywhere[0]; }
+
+        // Числом читается не всё, над чем стоит титло. Буквы цифири — обычные
+        // буквы, и csNumeral прочтёт числом любое слово из них: «пребл҃же́нне»
+        // выходило 325, «приснодв҃о» — 584, «всест҃а́ѧ» — 708. В Минее таких
+        // ложных чтений набралось 23 436. Отсюда две границы: число не длиннее
+        // пяти букв (самое длинное у нас «҂аѱѯ҃д» — 1764) и не несёт выверенной
+        // основы. Основа проверяется от трёх букв: у коротких она совпала бы
+        // случайно.
+        const numeralLike = key.length <= 5 && !(key.length >= 3 && hasSacredStem(key));
+        if (numeralLike && csNumeral(spelling, { thousands: true, sign: "titlo" }) !== null) return "numeral";
 
         const skeleton = titloSkeleton(spelling);
         const byTable = accept(expandSkeleton(skeleton));
@@ -302,11 +376,12 @@ const main = async () => {
             if (!full) { stats.titloUnknown++; continue; }
             const old = forceSynodal ? false : titloEra(spelling, full);
             link(full, spelling, old === "old");
+            stats.titloLinked++;
         }
     };
     linkAll(pending, false);
     linkAll(bibleShort, true);
-    stats.titloLinked = stats.shortened + bibleShort.length - stats.numerals - stats.titloUnknown;
+    linkAll(menaionShort, true);
     for (const place of index.values()) {
         for (const seen of place.t.values()) {
             if (seen.old) stats.titloOld += seen.n; else stats.titloSynodal += seen.n;
@@ -315,8 +390,8 @@ const main = async () => {
 
     // --- Разрешение спора ----------------------------------------------------
     interface Ranked { spelling: string; letters: string; n: number; d: number }
-    const ranked = (place: Entry): Ranked[] =>
-        [...place.c.entries()]
+    const ranked = (source: Attested): Ranked[] =>
+        [...source.entries()]
             .map(([letters, seen]) => ({
                 letters,
                 // Начертание с ударением — самое частое в группе.
@@ -327,7 +402,7 @@ const main = async () => {
             .sort((a, b) => b.n - a.n || b.d - a.d);
 
     const settled = (place: Entry): { best: Ranked | null; disputed: boolean } => {
-        const list = ranked(place);
+        const list = ranked(place.c);
         if (!list.length) return { best: null, disputed: false };
         if (list.length === 1) return { best: list[0], disputed: false };
         const [best, rival] = list;
@@ -353,7 +428,7 @@ const main = async () => {
     for (const [key, place] of index) {
         if (!place.c.size) continue;
         corpusKeys++;
-        const list = ranked(place);
+        const list = ranked(place.c);
         const tokens = list.reduce((sum, v) => sum + v.n, 0);
         allTokens += tokens;
         if (settled(place).disputed) {
@@ -370,14 +445,16 @@ const main = async () => {
         + ` (безударных дублей свёрнуто: ${stats.dictDuplicates.toLocaleString("ru")})`);
     console.log(`Библия: ${stats.bibleTokens.toLocaleString("ru")} словоупотреблений`);
     console.log(`ключей в указателе: ${index.size.toLocaleString("ru")} (из собрания ${corpusKeys.toLocaleString("ru")})`);
-    const shortened = stats.shortened + bibleShort.length;
+    const shortened = stats.shortened + bibleShort.length + menaionShort.length;
     console.log(`сокращений под титлом и с выносными: ${shortened.toLocaleString("ru")}`
         + ` (собрание ${stats.shortened.toLocaleString("ru")},`
-        + ` Библия ${bibleShort.length.toLocaleString("ru")})`);
+        + ` Библия ${bibleShort.length.toLocaleString("ru")},`
+        + ` Минея ${menaionShort.length.toLocaleString("ru")})`);
     console.log(`   связано с полным словом ${stats.titloLinked.toLocaleString("ru")},`
         + ` цифирь ${stats.numerals.toLocaleString("ru")},`
         + ` костяк не раскрылся у ${stats.titloUnknown.toLocaleString("ru")}`);
     console.log(`   разобрано видов написаний: по основам ${stats.titloByStem.toLocaleString("ru")}`
+        + ` · по основе внутри слова ${stats.titloByPrefix.toLocaleString("ru")}`
         + ` · по таблице костяков ${stats.titloByTable.toLocaleString("ru")}`
         + ` · сверкой с собранием ${stats.titloByWord.toLocaleString("ru")}`
         + ` · с перестановкой выносной ${stats.titloByOrder.toLocaleString("ru")}`
@@ -449,7 +526,10 @@ const main = async () => {
         const documents = [...index.entries()].map(([key, place]) => ({
             _id: key as any,
             ...(place.c.size ? {
-                c: ranked(place).map((v): CorpusVariant => ({ w: v.spelling, n: v.n, d: v.d })),
+                c: ranked(place.c).map((v): CorpusVariant => ({ w: v.spelling, n: v.n, d: v.d })),
+            } : {}),
+            ...(place.m.size ? {
+                m: ranked(place.m).map((v): CorpusVariant => ({ w: v.spelling, n: v.n, d: v.d })),
             } : {}),
             ...(place.x.length ? { x: place.x } : {}),
             ...(place.b.size ? {
@@ -468,7 +548,7 @@ const main = async () => {
             // написаний целиком давало ложное расхождение: «ᲂу҆слы́ши» собрания
             // против «ᲂуслы́ши» словаря — одно и то же слово.
             a: place.c.size && place.x.length
-                ? place.x.some((v) => lettersOnly(v.w) === ranked(place)[0].letters)
+                ? place.x.some((v) => lettersOnly(v.w) === ranked(place.c)[0].letters)
                 : null,
         }));
         // Перезапись целиком, а не долив: исчезнувшие из корпуса написания

@@ -17,7 +17,7 @@ import { plural } from "@/utils/plural";
 // ничего не выбрано.
 
 /** Откуда взято написание. */
-export type CslSource = "corpus" | "lexicon" | "bible" | "rule";
+export type CslSource = "corpus" | "menaion" | "lexicon" | "bible" | "rule";
 
 export interface CslVariant {
     /** Написание как оно есть в источнике. */
@@ -86,6 +86,8 @@ export interface CslAnswer {
     /** Сходятся ли словарь и собрание. */
     agree: boolean | null;
     corpus: Array<{ w: string; n: number; d: number }>;
+    /** Минея церковнославянским шрифтом — главное свидетельство служебной титлы. */
+    menaion: Array<{ w: string; n: number; d: number }>;
     lexicon: Array<{ w: string; l: string; p: string }>;
     bible: Array<{ w: string; n: number }>;
     /** Сокращения под титлом; o: 1 — дониконовское. */
@@ -178,12 +180,21 @@ export const wordsToLookUp = (text: string): string[] => {
 // написание не подтверждено словарём.
 const NOISE = 3;
 
+// Собрание ведёт, Минея говорит там, где оно молчит: книги собрания наши и
+// выкладываются, Минея — чужая оцифровка служебной книги. Частоты их не
+// складываются, и источник виден в каждом варианте.
+const attestedOf = (answer: CslAnswer) =>
+    (answer.corpus.length
+        ? answer.corpus.map((v) => ({ ...v, source: "corpus" as const }))
+        : answer.menaion.map((v) => ({ ...v, source: "menaion" as const })));
+
 const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): CslVariant[] => {
     const out: CslVariant[] = [];
 
     const dictForms = new Set(answer.lexicon.map((v) => lettersOnly(v.w)));
-    const corpusTotal = answer.corpus.reduce((sum, v) => sum + v.n, 0) || 1;
-    for (const v of answer.corpus) {
+    const attested = attestedOf(answer);
+    const corpusTotal = attested.reduce((sum, v) => sum + v.n, 0) || 1;
+    for (const v of attested) {
         if (v.n < NOISE && !dictForms.has(lettersOnly(v.w))) continue;
         const { form } = withPsili(v.w);
         out.push({
@@ -192,7 +203,7 @@ const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): 
             count: v.n,
             texts: v.d,
             share: Number((v.n / corpusTotal).toFixed(3)),
-            source: "corpus",
+            source: v.source,
         });
     }
 
@@ -253,15 +264,16 @@ const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): 
  */
 const settled = (answer: CslAnswer): boolean => {
     const dictForms = new Set(answer.lexicon.map((v) => lettersOnly(v.w)));
+    const attested = attestedOf(answer);
 
-    if (answer.corpus.length > 1) {
-        const [best, rival] = answer.corpus;
+    if (attested.length > 1) {
+        const [best, rival] = attested;
         if (dictForms.size === 1 && dictForms.has(lettersOnly(best.w))) return true;
         return best.n >= DOMINANCE * rival.n && best.d >= DOMINANCE * rival.d;
     }
-    if (answer.corpus.length === 1) {
-        // Собрание знает одно написание; словарь может знать другие падежи.
-        return dictForms.size <= 1 || dictForms.has(lettersOnly(answer.corpus[0].w));
+    if (attested.length === 1) {
+        // Книги знают одно написание; словарь может знать другие падежи.
+        return dictForms.size <= 1 || dictForms.has(lettersOnly(attested[0].w));
     }
     return dictForms.size === 1 || (dictForms.size === 0 && answer.bible.length === 1);
 };
