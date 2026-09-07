@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {TextType} from "@/utils/texts";
 import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
+import {reportError} from "@/lib/reportError";
 
 export const getTriodicItem = async (searchTriodion: any) => {
     try {
@@ -72,6 +73,6 @@ export const getTriodicItem = async (searchTriodion: any) => {
             .toArray();
         return days[0];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/calc/getTriodion#getTriodicItem", source: "api" });
     }
 };

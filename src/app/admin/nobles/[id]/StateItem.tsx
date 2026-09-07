@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from "react";
+import type {PickerProps} from "@/app/admin/nobles/[id]/types";
 
 const NobleItem = ({
                        value,
                        setValue,
                        placeholder,
-                   }) => {
+                   }: PickerProps) => {
 
     const [father, setFather] = useState<any|null>(null);
 

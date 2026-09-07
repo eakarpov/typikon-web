@@ -2,6 +2,7 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {getAggregationAddField} from "@/utils/database";
+import {reportError} from "@/lib/reportError";
 
 export const getItem = async (id: string, inWeek: boolean) => {
     try {
@@ -79,6 +80,6 @@ export const getItem = async (id: string, inWeek: boolean) => {
             .toArray();
         return days[0];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/days/[id]/api#getItem" });
     }
 };

@@ -1,4 +1,5 @@
 import {init} from "@/lib/sqlite";
+import {reportError} from "@/lib/reportError";
 
 export const getItems = async () => {
     try {
@@ -8,7 +9,7 @@ export const getItems = async () => {
 
         return [data, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/nobles/families/api#getItems" });
         return [null, {error: e}];
     }
 };

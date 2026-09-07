@@ -12,6 +12,7 @@ import {
     type Tier,
 } from "@/lib/api/v2/tokens";
 import { forgetCachedTokens, tokensCollection } from "@/lib/api/v2/tokenStore";
+import {reportError} from "@/lib/reportError";
 
 // Выпуск ключа администратором. От самовыпуска в профиле отличается тем, что здесь
 // можно задать тариф и любые частные числа: так выдаются ключи приложению и партнёрам.
@@ -92,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             allowance: allowanceFor(doc as ApiToken),
         });
     } catch (e) {
-        console.error("admin api-tokens", e);
+        reportError(e, { where: "pages/api/admin/api-tokens", source: "api" });
         res.status(400).json({ error: e instanceof Error ? e.message : "Не удалось выпустить ключ" });
     }
 }

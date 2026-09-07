@@ -1,6 +1,7 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import clientPromise from "@/lib/mongodb";
 import {resolvePericopeVerses} from "@/lib/pericopes";
+import {reportError} from "@/lib/reportError";
 
 // Поиск зачал по человекочитаемым признакам, а не по ObjectId:
 //   GET /api/v1/pericopes?source=gospel&bookSlug=matfeya&number=51&variant=а&lang=cs
@@ -46,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json(base);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/pericopes/index#handler", source: "api" });
         res.status(400).end();
     }
 }

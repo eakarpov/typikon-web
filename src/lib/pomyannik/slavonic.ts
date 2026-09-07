@@ -5,6 +5,7 @@ import { convertText } from "@/lib/cslav/service";
 import { toPlainText } from "@/lib/cslav/convert";
 import { hasChurchSlavonicGraphics } from "@/lib/cslav/core";
 import { lexiconKeys } from "@/lib/pomyannik/names";
+import {reportError} from "@/lib/reportError";
 
 // ИМЯ В ЗАПИСКЕ ПИШУТ ЦЕРКОВНОСЛАВЯНСКИМ И В РОДИТЕЛЬНОМ ПАДЕЖЕ: не «Иоанн», а
 // «ѡ здра́вїи їѡа́нна». Обе перемены сайту по силам — словарь личных имён с
@@ -85,7 +86,7 @@ const byConversion = async (name: string): Promise<{ text: string } | null> => {
     } catch (e) {
         // Перевод — украшение записки, а не её суть. Сбой словаря не должен
         // мешать подать имя: ниже оно уйдёт гражданкой.
-        console.error(`помянник: не удалось перевести имя «${name}»`, e);
+        reportError(e, { where: "lib/pomyannik/slavonic: не удалось перевести имя", extra: { name } });
         return null;
     }
 };

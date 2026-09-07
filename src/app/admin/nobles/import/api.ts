@@ -1,4 +1,5 @@
 import {init} from "@/lib/sqlite";
+import {reportError} from "@/lib/reportError";
 
 export const getBatches = async () => {
     try {
@@ -17,7 +18,7 @@ export const getBatches = async () => {
 
         return [data, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/nobles/import/api#getBatches" });
         return [null, {error: e}];
     }
 };

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
+import type {PickerProps} from "@/app/admin/nobles/[id]/types";
 
 const getData = (item: any) => {
-    console.log(123, item);
     return `${item.person?.name} (${item.startDate} - ${item.endDate})`;
 }
 
@@ -9,7 +9,7 @@ const RuleItem = ({
     value,
     setValue,
     placeholder,
-}) => {
+}: PickerProps) => {
 
     const [father, setFather] = useState<any|null>(null);
 

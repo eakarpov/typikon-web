@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 const loadCommons = async (): Promise<[any, any]> => {
     try {
@@ -15,7 +16,7 @@ const loadCommons = async (): Promise<[any, any]> => {
 
         return [days.map(d => ({ ...d, id: d._id.toString() })), null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/commons/api#loadCommons" });
         return [null, { error: "Ошибка при загрузке данных" }];
     }
 };

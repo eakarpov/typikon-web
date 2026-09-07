@@ -1,5 +1,6 @@
 import captcha from "trek-captcha";
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const store: { [key: string]: { token: string; buffer: Uint8Array} } = {};
 
@@ -35,7 +36,7 @@ export const readCaptcha = async (ip: string): Promise<any> => {
 
         return log && log[0];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/captcha#readCaptcha" });
         return e;
     }
 };
@@ -76,7 +77,7 @@ export const writeCaptcha = async (obj: any): Promise<any> => {
             return;
         }
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/captcha#writeCaptcha" });
         return e;
     }
 };

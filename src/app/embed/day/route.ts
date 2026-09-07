@@ -4,6 +4,7 @@ import { DAY_SLOT_ORDER, TextType, valueTitle } from "@/utils/texts";
 import { MONTH_OF } from "@/utils/chantLabels";
 import { formatDateISO } from "@/utils/dates";
 import { readOptions, renderEmbed, type EmbedDay, type EmbedReading } from "@/lib/embed/day";
+import {reportError} from "@/lib/reportError";
 
 // Виджет чтений для чужого сайта: `<iframe src="…/embed/day">`.
 //
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
     } catch (e) {
         // Виджет стоит на чужом сайте: пятисотка там выглядит поломкой этого
         // сайта. Отдаём рамку с честной строкой и кодом 200.
-        console.error("embed: не удалось рассчитать день", e);
+        reportError(e, { where: "embed/day: не удалось рассчитать день", source: "api" });
     }
 
     // Названный день не меняется никогда, сегодняшний — меняется в полночь.

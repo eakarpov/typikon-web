@@ -368,6 +368,38 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/concordance": {
+            get: {
+                tags: ["Библия"],
+                summary: "Согласование нумераций: где стих стоит в каждом издании",
+                description:
+                    "Пара «глава:стих» ничего не значит, пока не сказано, чьим счётом она " +
+                    "названа: у румынской Псалтири в девятом псалме на стих меньше, чем у " +
+                    "славянской, а греческие Притчи идут в 29 главах против славянского 31. " +
+                    "Ручка отвечает, где один и тот же стих стоит в каждом издании.\n\n" +
+                    "Это соответствие МЕСТА, а не текста: пары может не оказаться вовсе, а " +
+                    "разорванный надвое стих даёт в издании два места.\n\n" +
+                    "Без ref — описание ручки и список изданий. Всю таблицу (192 106 строк) " +
+                    "берите файлом из выгрузки: https://www.typikon.su/data",
+                parameters: [
+                    {
+                        name: "ref", in: "query", required: false,
+                        schema: { type: "string" }, example: "psaltir.9.13",
+                        description: "Адрес стиха как книга.глава.стих. Канонический, если не указан from",
+                    },
+                    {
+                        name: "from", in: "query", required: false,
+                        schema: { type: "string" }, example: "grc-lxx-pat",
+                        description: "Код издания, в чьём собственном счёте дан ref",
+                    },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/Concordance"),
+                    "400": errorResponse("Адрес стиха задан неверно"),
+                    "404": errorResponse("Такого стиха нет"),
+                },
+            },
+        },
         "/api/v2/signs": {
             get: {
                 tags: ["Справочники"],
@@ -552,6 +584,37 @@ export const openapi = () => ({
                 properties: {
                     items: { type: "array", items: { $ref: "#/components/schemas/BibleEdition" } },
                     total: { type: "integer" },
+                },
+            },
+            Concordance: {
+                type: "object",
+                properties: {
+                    canonRef: {
+                        type: "string", example: "psaltir.9.13",
+                        description: "Канонический адрес — тот же, которым названы зачала",
+                    },
+                    editions: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                edition: { type: "string", example: "ro-1688" },
+                                book: { type: "string", description: "Слуг книги В ЭТОМ издании" },
+                                places: {
+                                    type: "array",
+                                    description: "Мест больше одного, если издание разорвало стих",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            book: { type: "string" },
+                                            chapter: { type: "integer" },
+                                            verse: { type: "integer" },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             },
             BibleVerse: {

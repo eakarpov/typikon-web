@@ -1,4 +1,5 @@
 // Клиент к службе сборки последования (проект typikon-rules, src/ordo_service.py).
+import {reportError} from "@/lib/reportError";
 //
 // Почему служба, а не свой код. Устав — не выборка, а конструктор: какие
 // песнопения поются сегодня, сколько их и откуда они берутся, решают правила,
@@ -91,7 +92,7 @@ const ask = async <T>(
         }
         return await response.json() as T;
     } catch (e) {
-        console.error("ordo service is not reachable:", e);
+        reportError(e, { where: "lib/ordo: служба устава недоступна" });
         return null;
     }
 };
@@ -469,7 +470,7 @@ export const ordoRange = async (
         try {
             return await ordoDay(d, { ustav: opts?.ustav ?? undefined, prestoly: opts?.prestoly });
         } catch (e) {
-            console.error(`ordo: не удалось спросить устав про ${d}`, e);
+            reportError(e, { where: "lib/ordo: не удалось спросить устав про день", extra: { date: d } });
             return null;
         }
     };

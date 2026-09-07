@@ -1,4 +1,5 @@
 import { OAuth2Client } from "google-auth-library";
+import {reportError} from "@/lib/reportError";
 
 const client = new OAuth2Client();
 
@@ -14,7 +15,7 @@ export const verifyGoogleIdToken = async (idToken: string) => {
         });
         return ticket.getPayload();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/verifyGoogleToken#verifyGoogleIdToken" });
         return undefined;
     }
 };

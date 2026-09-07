@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 const loadBook = async (id: string): Promise<[any, any]> => {
     try {
@@ -39,7 +40,7 @@ const loadBook = async (id: string): Promise<[any, any]> => {
             .toArray();
         return [books[0], null];
     } catch (e: any) {
-        console.error(e);
+        reportError(e, { where: "app/library/[id]/api#loadBook" });
         return [null, e];
     }
 };
@@ -62,7 +63,7 @@ export const getBibleEditionCode = cachedTuple(async (id: string): Promise<[stri
             .findOne({ bookId: new ObjectId(id) }, { projection: { code: 1 } });
         return [(edition?.code as string) ?? null, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/library/[id]/api#getBibleEditionCode" });
         return [null, null];
     }
 }, ["library-bible-edition"], [CacheTag.BIBLE]);

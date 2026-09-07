@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export interface MentionCandidate {
     id: string;
@@ -68,7 +69,7 @@ export const getGroups = async (): Promise<[SaintGroup[] | null, any]> => {
         const list = [...groups.values()].sort((a, b) => (b.pending - a.pending) || (b.candidates.length - a.candidates.length));
         return [list, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/mentions/api#getGroups" });
         return [null, { error: e }];
     }
 };
@@ -79,7 +80,7 @@ export const getAppliedCount = async (): Promise<number> => {
         const db = client.db("typikon");
         return await db.collection("mentionCandidates").countDocuments({ status: "applied" });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/mentions/api#getAppliedCount" });
         return 0;
     }
 };

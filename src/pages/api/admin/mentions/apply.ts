@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from "@/lib/mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 // Переносит подтверждённые кандидаты в texts — то, что показывает /saints/[id]
 // ("упоминается в чтениях", getMentions) и блок связей на странице чтения.
@@ -75,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ links, texts: byText.size });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/mentions/apply#handler", source: "api" });
         res.status(500).end();
     }
 }

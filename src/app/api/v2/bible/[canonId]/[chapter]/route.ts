@@ -6,6 +6,7 @@ import { bibleBook } from "@/utils/bibleBooks";
 import {
     baseChapters, chapterByBase, editionsByCodes, parallelChapter, publicEditions,
 } from "@/lib/bible/query";
+import {reportError} from "@/lib/reportError";
 
 // Глава Библии, при желании — сразу в нескольких изданиях.
 //
@@ -113,7 +114,7 @@ export async function GET(
             })),
         }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/bible/[canonId]/[chapter]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить главу");
     }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { consume, clientIpFromHeaders } from "@/lib/rateLimit";
 import { markText } from "@/lib/accents/service";
 import type { Genre } from "@/lib/accents/mark";
+import {reportError} from "@/lib/reportError";
 
 // Разметка текста для страниц сайта: /accents и подсказка в отекстовке.
 //
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     try {
         return NextResponse.json(await markText(text, genre));
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/accents/mark/route#POST", source: "api" });
         return NextResponse.json({ error: "Не удалось разметить" }, { status: 500 });
     }
 }

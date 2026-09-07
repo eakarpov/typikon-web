@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 const loadMonth = async (id: string): Promise<[any, any]> => {
     try {
@@ -55,7 +56,7 @@ const loadMonth = async (id: string): Promise<[any, any]> => {
             .toArray();
         return [months[0], null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/months/[id]/api#loadMonth" });
         return [null, {error: "Ошибка при загрузке данных"}];
     }
 };

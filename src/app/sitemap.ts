@@ -5,6 +5,7 @@ import {TextReadiness} from "@/utils/texts";
 import {BIBLE_CANON} from "@/utils/bibleCanon";
 import {REFERENCE_VERSIFICATION} from "@/utils/bibleVersification";
 import { podobnyIndex } from "@/lib/podobny/store";
+import {reportError} from "@/lib/reportError";
 
 // Карта сайта строится из базы, а не лежит статикой в public/: раньше файл
 // генерировался внешним сервисом и с 2024 года не обновлялся, поэтому новые
@@ -80,6 +81,10 @@ const STATIC_ROUTES = [
     { path: "/license", priority: 0.4 },
     { path: "/api", priority: 0.4 },
     { path: "/data", priority: 0.5 },
+    // Согласование библейских нумераций. Отдельным адресом, а не строкой на
+    // странице выгрузки: ищут его словами («соответствие нумерации Септуагинты
+    // и синодальной»), и ссылаться будут на страницу, а не на файл внутри архива.
+    { path: "/versification", priority: 0.6 },
     { path: "/contact", priority: 0.4 },
 ];
 
@@ -248,7 +253,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 entry(`/podobny/${unit.slug}`, new Date(), 0.5, "monthly")),
         ]);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/sitemap#sitemap" });
         // Пустая карта хуже устаревшей, но лучше пятисотки на /sitemap.xml.
         return STATIC_ROUTES.map(({ path, priority }) =>
             entry(path, new Date(), priority, "daily"));

@@ -3,6 +3,7 @@ import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
 import { chantSummary } from "@/lib/api/v2/serialize";
 import { MIN_QUERY_LENGTH, searchChants } from "@/lib/chants";
+import {reportError} from "@/lib/reportError";
 
 // Поиск по певческим текстам книг: Октоих, Минеи, Триоди, Ирмологий.
 //
@@ -60,7 +61,7 @@ export async function GET(request: Request) {
         return respondCollection(found.items.map(chantSummary),
             { total: found.total, limit, offset }, { maxAge: 300, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/chants/route#GET", source: "api" });
         return fail("internal", "Поиск не удался");
     }
 }

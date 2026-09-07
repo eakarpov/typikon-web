@@ -1,6 +1,7 @@
 import { ObjectId, type Collection } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { TOKENS_COLLECTION, TOKENS_DB, hashToken, type ApiToken } from "@/lib/api/v2/tokens";
+import {reportError} from "@/lib/reportError";
 
 // Хранение ключей. Сам ключ в базе не лежит — только sha256 от него: дамп базы доступа
 // не даёт. Обратная сторона в том, что показать владельцу ключ второй раз мы не можем,
@@ -61,5 +62,5 @@ export const touchToken = (id: ObjectId) => {
 
     tokensCollection()
         .then((tokens) => tokens.updateOne({ _id: id }, { $set: { lastUsedAt: new Date() } }))
-        .catch((e) => console.error("api-token touch", e));
+        .catch((e) => reportError(e, { where: "lib/api/v2/tokenStore: не удалось отметить ключ", source: "api" }));
 };

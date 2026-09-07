@@ -52,7 +52,6 @@ const CalculatorDate = async ({ params: { date } }: Props) => {
             <MyTempleToday date={date} />
             <TrapezaToday date={date} />
             <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
                 <Content date={date} resultPromise={resultPromise} />
             </Suspense>
         </div>

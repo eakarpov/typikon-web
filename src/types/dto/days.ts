@@ -8,6 +8,8 @@ export interface MonthDTO {
 export interface DayDTO extends WithParts {
     id: string;
     alias: string;
+    /** Название дня; заводится пустой строкой, у 759 дней база держит его всегда. */
+    name: string;
     subnames: string[];
     updatedAt: string;
 

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { checkRightsBack } from "@/lib/admin/back";
 import { deletePost, listAll, updatePost } from "@/lib/news/posts";
 import type { NewsStatus, NewsType } from "@/types/dto/news";
+import {reportError} from "@/lib/reportError";
 
 // Правка и удаление новости.
 //
@@ -64,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ item: post, items: await listAll() });
     } catch (e) {
-        console.error("admin news update", e);
+        reportError(e, { where: "pages/api/admin/news/[id]", source: "api" });
         res.status(500).json({ error: "Не удалось сохранить новость" });
     }
 }

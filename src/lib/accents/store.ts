@@ -6,6 +6,7 @@ import {
     type CorpusVariant,
     type LexiconVariant,
 } from "@/lib/accents/core";
+import {reportError} from "@/lib/reportError";
 
 export { MARK_NAMES };
 export type { AccentAnswer, CorpusVariant, LexiconVariant };
@@ -196,7 +197,7 @@ export const coverageFor = async (alias: string | null | undefined): Promise<Acc
     } catch (e) {
         // Словарь мог не доехать на этот сервер — страница чтения от этого
         // не должна ломаться, просто не предложит показ.
-        console.error("accents: не удалось прочитать покрытие", e);
+        reportError(e, { where: "lib/accents/store: не удалось прочитать покрытие" });
         return null;
     }
 };

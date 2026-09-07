@@ -33,7 +33,6 @@ const Library = async () => {
                     Часть текстов ещё не отекстована — <Link href="/texting" className="text-amber-800">помогите проекту с отекстовкой</Link>.
                 </p>
                 <Suspense fallback={<div>Loading...</div>}>
-                    {/* @ts-expect-error Async Server Component */}
                     <Content itemsPromise={itemsData} />
                 </Suspense>
             </div>

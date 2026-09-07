@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {aggregationTextWithBook, getAggregationAddField} from "@/utils/database";
 import {TextType} from "@/utils/texts";
+import {reportError} from "@/lib/reportError";
 
 export const getCalendarItem = async (date: Date) => {
     try {
@@ -70,6 +71,6 @@ export const getCalendarItem = async (date: Date) => {
             .toArray();
         return days[0];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/calc/getCalenar#getCalendarItem", source: "api" });
     }
 };

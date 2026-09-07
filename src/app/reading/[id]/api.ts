@@ -9,6 +9,7 @@ import {coverageFor} from "@/lib/accents/store";
 import {markText} from "@/lib/accents/service";
 import {libFondCipher, libFondUrl, type LibFondSource} from "@/lib/libFond";
 import {bibleRedirectTarget} from "@/lib/bible/query";
+import {reportError} from "@/lib/reportError";
 
 // Библейские книги здесь больше не живут: они переехали в собственные коллекции
 // (@/lib/bible/schema), а прежние адреса отвечают редиректом — см. getBibleRedirect
@@ -64,7 +65,7 @@ export const getItem = async (id: string): Promise<[any, any, boolean]> => {
 
         return [res, null, shouldRedirect && res.alias];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/reading/[id]/api#getItem" });
         return [null, e, false];
     }
 };
@@ -125,7 +126,7 @@ export const getDayByText = async (id: string): Promise<[DayDTO|null, boolean]> 
     try {
         return [await loadDayByText(id), false];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/reading/[id]/api#getDayByText" });
         return [null, true];
     }
 };
@@ -199,7 +200,7 @@ export const getTextSource = cached(async (link: string | null): Promise<LibFond
         const doc = await client.db("typikon").collection("sources").findOne({ url });
         return { url, title: doc?.title || null, cipher: doc?.cipher || cipher };
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/reading/[id]/api#getTextSource" });
         return { url, title: null, cipher };
     }
 }, ["text-source"], [CacheTag.TEXTS]);
@@ -243,7 +244,7 @@ export const getTextLinks = async (item: any): Promise<TextLinks> => {
             mentions: mentionIds.map((id) => ({ dneslovId: id, slug: slugs[id] ?? null, title: titleOf(id) })),
         };
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/reading/[id]/api#getTextLinks" });
         return { memory: null, mentions: [] };
     }
 };
@@ -290,7 +291,7 @@ export const getAccentedView = async (item: any, wanted: boolean): Promise<Accen
 
         return await buildAccentedView(item.alias, item.content);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/reading/[id]/api#getAccentedView" });
         return null;
     }
 };

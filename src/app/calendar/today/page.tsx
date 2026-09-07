@@ -33,7 +33,6 @@ const AdminTextId = async () => {
             </h1>
             <div className={myFont.variable}>
                 <Suspense fallback={<div>Loading...</div>}>
-                    {/* @ts-expect-error Async Server Component */}
                     <Content itemPromise={itemPromise} />
                 </Suspense>
             </div>

@@ -15,7 +15,6 @@ const AdminEditor = ({ value }: any) => {
         });
     };
     const onSubmitSave = () => {
-        console.log(alias);
         fetch(`/api/admin/months/${value.id}`, {
             method: "POST",
             headers: {

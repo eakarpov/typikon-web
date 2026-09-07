@@ -77,7 +77,6 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
     return (
         <div className={myFont.variable}>
             <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
                 <Content
                     id={known[0] ?? address}
                     itemPromise={itemPromise}

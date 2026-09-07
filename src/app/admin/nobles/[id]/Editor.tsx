@@ -24,7 +24,7 @@ const AdminEditor = ({ value }: any) => {
     const [churchName, setChurchName] = useState(value.churchName || "");
     const [csName, setCsName] = useState(value.csName || "");
     const [info, setInfo] = useState(value.info || "");
-    const [links, setLinks] = useState(value.links ? JSON.parse(value.links) : []);
+    const [links, setLinks] = useState<string[]>(value.links ? JSON.parse(value.links) : []);
     const [birthDateMarker, setBirthDateMarker] = useState(value.birthDateMarker || 0);
     const [deathDateMarker, setDeathDateMarker] = useState(value.deathDateMarker || 0);
     const [rank, setRank] = useState(value.rank || 0);

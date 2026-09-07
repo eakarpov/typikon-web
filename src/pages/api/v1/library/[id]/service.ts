@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {reportError} from "@/lib/reportError";
 
 const getItem = async (id: string): Promise<[any, any]> => {
     try {
@@ -38,7 +39,7 @@ const getItem = async (id: string): Promise<[any, any]> => {
             .toArray();
         return [books[0], null];
     } catch (e: any) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/library/[id]/service#getItem", source: "api" });
         return [null, e];
     }
 };

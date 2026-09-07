@@ -3,6 +3,7 @@ import Link from "next/link";
 import Markdown from "react-markdown";
 import { myFont } from "@/utils/font";
 import { listPublished } from "@/lib/news/posts";
+import { dateLabel, typeLabel } from "@/lib/news/format";
 import { LIST_REVALIDATE } from "@/lib/cache";
 import MarkSeen from "@/app/news/MarkSeen";
 import type { NewsPostDTO } from "@/types/dto/news";
@@ -19,14 +20,6 @@ export const metadata: Metadata = {
 // Двадцать записей на страницу: в ленте лежит вся история версий с 2023 года, и
 // вываливать её целиком незачем — за нею есть страницы.
 const PAGE_SIZE = 20;
-
-export const typeLabel: Record<NewsPostDTO["type"], string> = {
-    update: "Обновление",
-    announcement: "Объявление",
-};
-
-export const dateLabel = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "";
 
 const NewsPage = async ({ searchParams }: { searchParams?: { page?: string } }) => {
     const requested = Number(searchParams?.page);

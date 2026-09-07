@@ -4,6 +4,7 @@ import {aggregationDayWithMonth, aggregationTextWithBook, getAggregationAddField
 import {getTodayDate} from "@/utils/dates";
 import {resolveDayPericopes} from "@/lib/pericopes";
 import {DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
+import {reportError} from "@/lib/reportError";
 
 export const getItem = async (lang: string = DEFAULT_BIBLE_LANGUAGE, date?: string) => {
     try {
@@ -51,7 +52,7 @@ export const getItem = async (lang: string = DEFAULT_BIBLE_LANGUAGE, date?: stri
         const resolved = await resolveDayPericopes(db, days[0], lang);
         return [resolved, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/calendar/today/api#getItem" });
         return [null, { error: "Ошибка"}];
     }
 };

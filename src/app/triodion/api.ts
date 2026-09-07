@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 const loadTriodionWeeks = async (): Promise<[any, any]> => {
     try {
@@ -67,7 +68,7 @@ const loadTriodionWeeks = async (): Promise<[any, any]> => {
 
         return [weeks, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/triodion/api#loadTriodionWeeks" });
         return [null, {error: "Ошибка при загрузке данных"}];
     }
 };

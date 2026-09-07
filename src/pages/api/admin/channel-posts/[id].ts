@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 const EDITABLE_FIELDS = ["text", "imageUrl", "hashtags", "status", "targets"] as const;
 
@@ -39,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .updateOne({ _id: new ObjectId(id) }, { $set: update });
         res.status(200).end();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/channel-posts/[id]#handler", source: "api" });
         res.status(500).end();
     }
 }

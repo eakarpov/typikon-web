@@ -103,7 +103,7 @@ const TextLinksContent = async ({ item }: { item: any }) => {
                 </Row>
             )}
 
-            {href && (
+            {day && href && (
                 <Row label="Читается в день:">
                     <Link className="font-serif text-amber-800 hover:underline" href={href}>
                         {day.name || day.alias || "Календарь"}
@@ -119,7 +119,6 @@ const TextLinksContent = async ({ item }: { item: any }) => {
 // текст в ожидании незачем: блок дорисуется отдельно.
 const TextLinks = ({ item }: { item: any }) => (
     <Suspense fallback={null}>
-        {/* @ts-expect-error Async Server Component */}
         <TextLinksContent item={item} />
     </Suspense>
 );

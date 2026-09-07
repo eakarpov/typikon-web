@@ -138,7 +138,6 @@ const AdminEditor = ({ value }: any) => {
         }
         // @ts-ignore
         if (!CSS.highlights) {
-            console.log("CSS highlight is not supported");
             return;
         }
         // @ts-ignore
@@ -225,7 +224,10 @@ const AdminEditor = ({ value }: any) => {
     const onSubmit = () => {
         setIsSaved(false);
         const fNotes = footNotesToArray(footnotes);
-        if (fNotes.includes(undefined)) {
+        // Проверка на непришедшую сноску. Сейчас сработать не может:
+        // footNotesToArray собирает строки и пустых значений не отдаёт, — но
+        // тип у неё Nullable<string>[], и проверка написана по типу.
+        if (fNotes.some((note) => note == null)) {
             alert("Error with footnotes");
         }
         const mainProcess = fetch(`/api/admin/texts/${value.id}`, {

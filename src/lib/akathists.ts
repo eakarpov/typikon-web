@@ -1,5 +1,6 @@
 import { rulesDb } from "@/lib/rulesDb";
 import { normalizeQuery } from "@/lib/search";
+import {reportError} from "@/lib/reportError";
 
 // Указатель акафистов корпуса typikon-rules и сборка акафиста по строфам.
 //
@@ -190,7 +191,7 @@ export const akathistsOfSaint = (dneslovId: string): AkathistRow[] => {
         WHERE a.dneslov_id = ?
         GROUP BY a.akathist_id ORDER BY a.title`).all(dneslovId) as any[]).map(rowOf);
     } catch (e) {
-        console.error(`корпус typikon-rules недоступен (акафисты памяти ${dneslovId}):`, e);
+        reportError(e, { where: "lib/akathists: корпус typikon-rules недоступен", extra: { dneslovId } });
         return [];
     }
 };

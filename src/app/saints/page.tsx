@@ -127,7 +127,6 @@ const Saints = ({ searchParams }: { searchParams?: { page?: string; q?: string }
                     )}
                 </form>
                 <Suspense key={`${query}:${page}`} fallback={<div>Loading...</div>}>
-                    {/* @ts-expect-error Async Server Component */}
                     <SaintsList page={page} query={query} />
                 </Suspense>
             </div>

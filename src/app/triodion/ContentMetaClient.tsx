@@ -1,12 +1,13 @@
 'use client';
 import {memo, useEffect, useState} from "react";
+import {reportClientError} from "@/lib/reportClientError";
 
 interface IMeta {
     totalCount: number;
     totalUsers: number;
 }
 
-let controller;
+let controller: AbortController | undefined;
 
 const ContentMetaClient = () => {
     const [meta, setMeta] = useState<IMeta|null>(null);
@@ -27,7 +28,7 @@ const ContentMetaClient = () => {
                 setMeta(data);
             }).catch((error: Error) => {
                 if (!(error instanceof DOMException && error.name === "AbortError")) {
-                    console.log(error.message);
+                    reportClientError(error, "triodion: счётчик собрания");
                 }
             });
     }, []);

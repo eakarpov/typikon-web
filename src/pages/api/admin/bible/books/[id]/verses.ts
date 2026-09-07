@@ -6,6 +6,7 @@ import { parseBulkVerseText } from "@/utils/verses";
 import { canonSort, formatCanonRef } from "@/lib/bible/refs";
 import { mappingsFor, toCanonRef } from "@/lib/bible/mappings";
 import { BibleBook, BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
+import {reportError} from "@/lib/reportError";
 
 // Стихи одной книги издания: показать и заменить целиком.
 //
@@ -96,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ count: rows.length });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/bible/books/[id]/verses#handler", source: "api" });
         res.status(400).end();
     }
 }

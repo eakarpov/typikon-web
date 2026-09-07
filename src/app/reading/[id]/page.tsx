@@ -45,7 +45,6 @@ const ReadingItem = async ({ params: { id }, searchParams: { accents } }: Props)
     return (
       <div className={myFont.variable}>
           <Suspense fallback={<div>Loading...</div>}>
-              {/* @ts-expect-error Async Server Component */}
               <Content itemPromise={itemPromise} showAccents={accents === "1"} />
           </Suspense>
       </div>

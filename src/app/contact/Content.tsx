@@ -86,7 +86,7 @@ const Content = () => {
                 value={captcha}
                 onChange={e => setCaptcha(e.target.value)}
             />
-            <img style={{ width: 300 }} src={img} />
+            <img style={{ width: 300 }} src={img ?? undefined} />
 
             <div className="flex items-start">
                 <button onClick={onSend}>Отправить</button>

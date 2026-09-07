@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { normalizeChurchSlavonic } from "@/utils/churchSlavonic";
 import { partOfSpeech } from "@/lib/morphology/tags";
+import {reportError} from "@/lib/reportError";
 
 // Поиск по лемме. Ключ — поле lexems.search: это лемма, приведённая к гражданке
 // (ѣ→е, ѡ→о, і→и, ꙋ→у, ѳ→ф) и без конечного ъ. Поэтому запрос приводим тем же
@@ -64,7 +65,7 @@ export const searchData = async (query: string): Promise<[Found[] | null, string
 
         return [items, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/dictionary/api#searchData" });
         return [null, "Словарь сейчас недоступен."];
     }
 };

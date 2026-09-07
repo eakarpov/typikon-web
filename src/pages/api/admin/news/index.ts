@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { checkRightsBack } from "@/lib/admin/back";
 import { createPost, listAll } from "@/lib/news/posts";
 import type { NewsStatus, NewsType } from "@/types/dto/news";
+import {reportError} from "@/lib/reportError";
 
 // Заведение новости. Правка и удаление — в [id].ts.
 
@@ -39,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ item: post, items: await listAll() });
     } catch (e) {
-        console.error("admin news create", e);
+        reportError(e, { where: "pages/api/admin/news", source: "api" });
         res.status(500).json({ error: "Не удалось создать новость" });
     }
 }

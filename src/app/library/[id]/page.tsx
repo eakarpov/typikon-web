@@ -56,7 +56,6 @@ const Library = async ({ params: { id }}: { params: {id: string}}) => {
     return (
         <div className={myFont.variable}>
             <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
                 <Content itemPromise={itemPromise} />
             </Suspense>
         </div>

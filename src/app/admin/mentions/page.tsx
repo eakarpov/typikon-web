@@ -10,7 +10,6 @@ const AdminMentions = () => {
     return (
         <div className="flex flex-col">
             <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
                 <Content groupsPromise={groupsData} appliedPromise={appliedData} />
             </Suspense>
         </div>

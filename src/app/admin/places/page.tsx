@@ -11,7 +11,6 @@ const PlacesAdmin = () => {
                 Это страница элемента
             </p>
             <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
                 <AdminEditorManager itemPromise={itemPromise} />
             </Suspense>
         </div>

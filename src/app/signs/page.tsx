@@ -32,7 +32,6 @@ const RestReadings = ({ searchParams }: { searchParams: ISearchParams }) => {
         <div>
             <div className={myFont.variable}>
                 <Suspense fallback={<div>Loading...</div>}>
-                    {/* @ts-expect-error Async Server Component */}
                     <Content itemsPromise={itemsData} searchParams={searchParams} />
                 </Suspense>
             </div>

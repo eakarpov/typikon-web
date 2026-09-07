@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export interface IDayMemory {
     id: string;
@@ -39,7 +40,7 @@ export const getDayMemories = async (month: number, date: number): Promise<IDayM
             secondary: secondary as IDayMemory[],
         };
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/signs/dayMemories#getDayMemories" });
         return {default: null, secondary: []};
     }
 };

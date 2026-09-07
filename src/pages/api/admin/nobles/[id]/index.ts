@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 import {init} from "@/lib/sqlite";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -63,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error", e);
+            reportError(e, { where: "pages/api/admin/nobles/[id]/index#handler", source: "api" });
             res.status(400).end();
         }
     } else {
@@ -77,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 data,
             });
         } catch (e) {
-            console.log("mongodb error", e);
+            reportError(e, { where: "pages/api/admin/nobles/[id]/index#handler", source: "api" });
             res.status(400).end();
         }
     }

@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 import {init} from "@/lib/sqlite";
+import type {NobleRow, RuleRow} from "@/lib/nobles/types";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -16,17 +18,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const id = req.query.id as string;
             const db = await init();
 
-            const data = await db.prepare(`select * from rules where id=?`).get(id);
+            const data = await db.prepare(`select * from rules where id=?`).get(id) as RuleRow | undefined;
 
-            const person = await db.prepare(`select * from nobles where id=?`).get(data.personId);
+            if (!data) {
+                res.status(400).end();
+                return;
+            }
 
-            data.person = person;
+            const person = await db.prepare(`select * from nobles where id=?`).get(data.personId) as NobleRow | undefined;
 
             res.json({
-                data,
+                data: { ...data, person },
             });
         } catch (e) {
-            console.log("mongodb error", e);
+            reportError(e, { where: "pages/api/admin/nobles/rules/[id]#handler", source: "api" });
             res.status(400).end();
         }
     }

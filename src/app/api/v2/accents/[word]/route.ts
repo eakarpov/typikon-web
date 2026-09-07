@@ -1,6 +1,7 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { lookupWord } from "@/lib/accents/store";
+import {reportError} from "@/lib/reportError";
 
 // Ударение одного слова.
 //
@@ -34,7 +35,7 @@ export async function GET(request: Request, { params }: { params: { word: string
     try {
         return respond(await lookupWord(word), { maxAge: 86400, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/accents/[word]/route#GET", source: "api" });
         return fail("internal", "Словарь ударений недоступен");
     }
 }

@@ -4,6 +4,7 @@ import {TextType} from "@/utils/texts";
 import {aggregationDayWithMonth, aggregationTextWithBook, getAggregationAddField} from "@/utils/database";
 import {resolveDayPericopes} from "@/lib/pericopes";
 import {DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
+import {reportError} from "@/lib/reportError";
 
 export const getItem = async (date: Date, lang: string = DEFAULT_BIBLE_LANGUAGE) => {
     try {
@@ -50,7 +51,7 @@ export const getItem = async (date: Date, lang: string = DEFAULT_BIBLE_LANGUAGE)
         const resolved = await resolveDayPericopes(db, days[0], lang);
         return [resolved, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/calendar/[date]/service#getItem", source: "api" });
         return [null, { error: "Ошибка"}];
     }
 };

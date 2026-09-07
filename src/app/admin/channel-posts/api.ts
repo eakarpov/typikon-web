@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const getItems = async (): Promise<[any[] | null, any]> => {
     try {
@@ -15,7 +16,7 @@ export const getItems = async (): Promise<[any[] | null, any]> => {
 
         return [posts.map(({ _id, ...post }) => ({ ...post, id: _id.toString() })), null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/channel-posts/api#getItems" });
         return [null, { error: e }];
     }
 };

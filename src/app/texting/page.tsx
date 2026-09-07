@@ -28,7 +28,6 @@ const Texting = async () => {
                     предложите свой вариант текста — после проверки администратором он попадёт на сайт.
                 </p>
                 <Suspense fallback={<div>Loading...</div>}>
-                    {/* @ts-expect-error Async Server Component */}
                     <Content itemsPromise={itemsData} />
                 </Suspense>
             </div>

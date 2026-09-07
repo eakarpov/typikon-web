@@ -1,5 +1,6 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import {init} from "@/lib/sqlite";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -191,7 +192,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             res.status(200).end();
         } catch (error) {
-            console.log(error);
+            reportError(error, { where: "pages/api/admin/nobles/sync", source: "api" });
             res.status(400).end();
         }
         return;

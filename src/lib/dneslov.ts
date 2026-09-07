@@ -13,6 +13,7 @@
 // Не путать с src/scripts/lib/dneslov.ts: тот — для скриптов (undici, обход TLS,
 // подробные логи в консоль), этот — для рендера страниц.
 import { cached, CacheTag } from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 // Сутки: имя святого в святцах не меняется годами, а мы платим за каждый промах
 // походом наружу. Тег SAINTS оставлен на случай, если понадобится сбросить руками.
@@ -81,7 +82,7 @@ export const saintTitle = async (id: string): Promise<string | null> => {
     try {
         return await loadTitle(id);
     } catch (e) {
-        console.error(`dneslov: не удалось получить имя памяти ${id}`, e);
+        reportError(e, { where: "lib/dneslov: не удалось получить имя памяти", extra: { id } });
         return null;
     }
 };
@@ -171,7 +172,7 @@ export const saintMemory = async (id: string): Promise<any | null> => {
     try {
         return await loadMemory(id);
     } catch (e) {
-        console.error(`dneslov: не удалось получить память ${id}`, e);
+        reportError(e, { where: "lib/dneslov: не удалось получить память", extra: { id } });
         return null;
     }
 };

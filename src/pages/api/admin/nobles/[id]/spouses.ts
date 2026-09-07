@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 import {init} from "@/lib/sqlite";
+import type {CoupleRow, NobleRow} from "@/lib/nobles/types";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -15,7 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const db = await init();
 
-            const nobleData = await db.prepare(`select * from nobles where id= ?`).get(id);
+            const nobleData = await db.prepare(`select * from nobles where id= ?`).get(id) as NobleRow | undefined;
+
+            if (!nobleData) {
+                res.status(400).end();
+                return;
+            }
 
             const isMale = !!nobleData.gender;
 
@@ -35,7 +42,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             const insertMany = db.transaction((cats) => {
                 for (const item of cats) {
-                    console.log(item);
                     insert.run(
                         isMale ? id : item.person,
                         isMale ? item.person : id,
@@ -49,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error", e);
+            reportError(e, { where: "pages/api/admin/nobles/[id]/spouses#handler", source: "api" });
             res.status(400).end();
         }
     } else {
@@ -57,14 +63,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const id = req.query.id as string;
             const db = await init();
 
-            const data = await db.prepare(`select * from nobles where id= ?`).get(id);
+            const data = await db.prepare(`select * from nobles where id= ?`).get(id) as NobleRow | undefined;
+
+            if (!data) {
+                res.status(400).end();
+                return;
+            }
 
             const isMale = !!data.gender;
 
             const result = await db.prepare(`select * from couples where husbandId = ? or wifeId = ?`).all(
                 id,
                 id
-            );
+            ) as CoupleRow[];
 
             const answer = result
                 .filter((item) => isMale ? item.husbandId === parseInt(id) : item.wifeId === parseInt(id) );
@@ -72,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 data: answer,
             });
         } catch (e) {
-            console.log("mongodb error", e);
+            reportError(e, { where: "pages/api/admin/nobles/[id]/spouses#handler", source: "api" });
             res.status(400).end();
         }
     }

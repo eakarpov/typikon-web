@@ -3,6 +3,7 @@ import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
 import { listPublished } from "@/lib/news/posts";
 import { newsItem } from "@/lib/api/v2/serialize";
+import {reportError} from "@/lib/reportError";
 
 // Новости сайта наружу: приложение показывает «что нового» тем же списком, что и сайт,
 // а не своим, который пришлось бы обновлять вместе с выпуском.
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
         // Десять минут: новость выходит раз в недели, но узнать о ней хочется в тот же день.
         return respondCollection(items.map(newsItem), { total, limit, offset }, { maxAge: 600, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/news/route#GET", source: "api" });
         return fail("internal", "Не удалось получить новости");
     }
 }

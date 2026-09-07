@@ -3,6 +3,7 @@ import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
 import {cached, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 const loadTriodionDay = cached(async (id: string) => {
     const client = await clientPromise;
@@ -47,7 +48,7 @@ export const getItem = async (id: string): Promise<any> => {
     try {
         return await loadTriodionDay(id);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/triodion/[id]/api#getItem" });
         return {};
     }
 };

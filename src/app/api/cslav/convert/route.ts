@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { consume, clientIpFromHeaders } from "@/lib/rateLimit";
 import { convertText } from "@/lib/cslav/service";
+import {reportError} from "@/lib/reportError";
 
 // Перевод гражданского написания в церковнославянское.
 //
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     try {
         return NextResponse.json(await convertText(text, { rule, accents, titla }));
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/cslav/convert/route#POST", source: "api" });
         return NextResponse.json({ error: "Не удалось перевести" }, { status: 500 });
     }
 }

@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import {reportError} from "@/lib/reportError";
 
 type SqliteDb = ReturnType<typeof Database>;
 
@@ -32,7 +33,7 @@ const open = (): SqliteDb | null => {
         // Файла может не быть — например, корпус ещё не выкладывали на этот
         // сервер. Это не повод ронять сайт: разделы, которым он нужен, скажут
         // об этом сами, а всё остальное работает как работало.
-        console.error("corpus of typikon-rules is not available:", e);
+        reportError(e, { where: "lib/rulesDb: корпус typikon-rules недоступен" });
         return null;
     }
 };

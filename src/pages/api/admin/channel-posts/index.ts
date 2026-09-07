@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -59,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             posts.map(({ _id, ...post }) => ({ ...post, id: _id.toString() })),
         );
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/channel-posts/index#handler", source: "api" });
         res.status(500).end();
     }
 }
