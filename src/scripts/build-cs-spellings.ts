@@ -277,7 +277,10 @@ const main = async () => {
     const menaionHoldout: Array<{ month: string; day: string }> = [];
     const menaionRoot = value("--menaion")
         ?? path.join(process.cwd(), "..", "typikon-rules", "raw", "menaion-cu");
-    if (fs.existsSync(menaionRoot)) {
+    // Опыт: каков был перевод ДО служебных книг. Переменная среды пропускает их
+    // при сборке, оставляя проверку на прежнем месте, — и разница видна числом.
+    const withoutService = process.env.NO_SERVICE_BOOKS === "1";
+    if (fs.existsSync(menaionRoot) && !withoutService) {
         for (const month of fs.readdirSync(menaionRoot).sort()) {
             const days = path.join(menaionRoot, month, "text");
             if (!fs.existsSync(days)) continue;
@@ -332,7 +335,7 @@ const main = async () => {
     const octoechosHoldout = new Map<string, string[]>();
     const octoechosRoot = value("--octoechos")
         ?? path.join(process.cwd(), "..", "typikon-rules", "raw", "octoechos-cu", "text");
-    if (fs.existsSync(octoechosRoot)) {
+    if (fs.existsSync(octoechosRoot) && !withoutService) {
         for (const file of fs.readdirSync(octoechosRoot).sort()) {
             if (!file.endsWith(".txt")) continue;
             const alias = file.replace(/\.txt$/, "");
@@ -810,11 +813,25 @@ const main = async () => {
             + " — здесь и надо будет искать описки набора, когда системное закроется");
     };
 
-    if (has("--check") && menaionHoldout.length) {
+    if (has("--check") && (menaionHoldout.length || withoutService)) {
         const civilRoot = path.join(path.dirname(menaionRoot), "menaion");
         const bodyOf = (file: string) =>
             fs.readFileSync(file, "utf8").split("-".repeat(40)).slice(1).join("-".repeat(40));
-        const pairs = menaionHoldout.flatMap(({ month, day }) => {
+        // Без служебных книг список отложенного пуст: собираем его заново, чтобы
+        // проверка шла по тем же дням и числа были сравнимы.
+        const held = menaionHoldout.length ? menaionHoldout : (() => {
+            const out: Array<{ month: string; day: string }> = [];
+            let seen = 0;
+            for (const month of fs.readdirSync(menaionRoot).sort()) {
+                const days = path.join(menaionRoot, month, "text");
+                if (!fs.existsSync(days)) continue;
+                for (const file of fs.readdirSync(days).sort()) {
+                    if (seen++ % 10 === 0) out.push({ month, day: file.replace(/\.txt$/, "") });
+                }
+            }
+            return out;
+        })();
+        const pairs = held.flatMap(({ month, day }) => {
             const csPath = path.join(menaionRoot, month, "text", `${day}.txt`);
             const civilPath = path.join(civilRoot, month, "text", `${day}.txt`);
             if (!fs.existsSync(csPath) || !fs.existsSync(civilPath)) return [];
