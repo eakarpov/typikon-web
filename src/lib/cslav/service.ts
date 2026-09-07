@@ -3,6 +3,7 @@ import { lookupSpellings } from "@/lib/cslav/store";
 import { lookupWords } from "@/lib/accents/store";
 import { byRule, sentenceCase } from "@/lib/cslav/core";
 import { DOMINANCE_FOR_ACCENTS, accentedByDictionary } from "@/lib/cslav/accents";
+import { OMEGA_TABLE } from "@/lib/cslav/omegaTable";
 
 // Шов между чистой разметкой и базой — единственное место, где они встречаются.
 // Тот же приём, что у разметки ударений: один заход в указатель на весь текст.
@@ -19,7 +20,9 @@ export const convertText = async (
     const asked = wordsToLookUp(text);
     const answers = asked.length ? await lookupSpellings(asked) : [];
     const byWord = new Map(asked.map((key, index) => [key, answers[index]]));
-    const result = convertWithAnswers(text, byWord, options);
+    // Таблица положения омеги приезжает сюда, а не в чистое ядро: она выведена
+    // скриптом из Минеи и потому данные, а не логика.
+    const result = convertWithAnswers(text, byWord, { omega: OMEGA_TABLE, ...options });
 
     if (options.accents === false) return result;
 

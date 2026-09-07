@@ -9,6 +9,8 @@ import {
     titloEra, titloSkeleton,
 } from "@/lib/cslav/titla";
 import { csNumeral } from "@/lib/csEncoding/numerals";
+import { convertWithAnswers, type CslAnswer } from "@/lib/cslav/convert";
+import { omegaKeys, type OmegaTable } from "@/lib/cslav/omega";
 
 // Указатель «гражданское написание → церковнославянское».
 //
@@ -304,6 +306,44 @@ const main = async () => {
         console.log(`Минея ЦС не найдена (${menaionRoot}) — четвёртый источник пропущен.`);
     }
 
+    // --- 3б. Положение омеги -------------------------------------------------
+    //
+    // Таблица «контекст → о или ѡ», выведенная из Минеи: две буквы слева от
+    // спорной гласной и хвост слова справа, плюс более общие ключи на случай,
+    // когда узкого в таблице нет. Берутся только решающие контексты — от десяти
+    // вхождений и девяноста пяти процентов перевеса; сомнительное молчит.
+    //
+    // Отложенные дни в таблицу не идут: иначе проверка мерила бы, как книга
+    // воспроизводит саму себя.
+    const omegaCounts = new Map<string, { o: number; w: number }>();
+    for (const place of index.values()) {
+        for (const [letters, seen] of place.m) {
+            for (let at = 0; at < letters.length; at++) {
+                if (letters[at] !== "о" && letters[at] !== "ѡ") continue;
+                for (const key of omegaKeys(letters, at)) {
+                    const found = omegaCounts.get(key) ?? { o: 0, w: 0 };
+                    if (letters[at] === "о") found.o += seen.n; else found.w += seen.n;
+                    omegaCounts.set(key, found);
+                }
+            }
+        }
+    }
+    // В таблицу идут ТОЛЬКО контексты с омегой. «О» — умолчание: где таблица
+    // молчит, буква остаётся как есть, и хранить эти контексты значило бы
+    // возить с собой полсловаря ради ответа, который и так известен. Файл от
+    // этого выходит вчетверо меньше, а ответы те же.
+    const OMEGA_MIN = 20;
+    const OMEGA_SHARE = 0.95;
+    const omegaTable: OmegaTable = {};
+    for (const [key, found] of omegaCounts) {
+        const total = found.o + found.w;
+        if (total < OMEGA_MIN || found.w <= found.o) continue;
+        if (found.w / total < OMEGA_SHARE) continue;
+        omegaTable[key] = "ѡ";
+    }
+    console.log(`положение омеги: ${Object.keys(omegaTable).length.toLocaleString("ru")} решающих контекстов`
+        + ` из ${omegaCounts.size.toLocaleString("ru")}`);
+
     // --- 4. Сокращения к полным словам ---------------------------------------
     //
     // Разбор отложен до конца всех трёх проходов нарочно: раскрытие костяка
@@ -558,6 +598,21 @@ const main = async () => {
         // видно сразу: «ѡ на месте о» — это правило, а не описка. Разбирать
         // надо блоками, от частого к редкому; описки останутся в хвосте, когда
         // системное будет закрыто.
+        // Разбор блока омеги: где именно она расходится — в окончании или в
+        // корне, и какое это окончание.
+        const omegaBlock = (got: string, want: string[]): string => {
+            const near = want.map((w) => ({ w, d: Math.abs(w.length - got.length) }))
+                .sort((a, b) => a.d - b.d)[0].w;
+            if (near.length !== got.length) return "иное";
+            const at: number[] = [];
+            for (let i = 0; i < near.length; i++) if (near[i] !== got[i]) at.push(i);
+            if (!at.length || at.some((i) => !"оѡѻ".includes(got[i]) || !"оѡѻ".includes(near[i]))) return "иное";
+            const last = at[at.length - 1];
+            const tailLen = near.length - last;
+            const where = tailLen <= 4 ? `окончание «${near.slice(last)}»` : "корень или приставка";
+            return `${got[last]}→${near[last]} · ${where}`;
+        };
+
         const classify = (got: string, want: string[]): string => {
             const near = want
                 .map((w) => ({ w, d: Math.abs(w.length - got.length) }))
@@ -595,28 +650,48 @@ const main = async () => {
                 (attested.get(key) ?? attested.set(key, new Set()).get(key)!).add(lettersOnly(spelling));
             }
 
-            for (const token of wordsOf(bodyOf(civilPath))) {
-                const civil = civilKey(token.replace(LEADING_MARK, "").toLowerCase());
+            // Текст прогоняется НАСТОЯЩИМ переводом, а не выборкой из указателя:
+            // грамматический слой видит предлоги и положение слова во фразе, и
+            // без него проверка засчитывала бы в ошибки то, что сервис решает
+            // верно, — падежные пары и звательный.
+            const civilBody = bodyOf(civilPath);
+            const byWord = new Map<string, CslAnswer>();
+            for (const token of wordsOf(civilBody)) {
+                const key = civilKey(token.replace(LEADING_MARK, "").toLowerCase());
+                if (!key || byWord.has(key)) continue;
+                const place = index.get(key);
+                if (!place) continue;
+                byWord.set(key, {
+                    word: key,
+                    known: Boolean(place.c.size || place.m.size || place.x.length || place.b.size),
+                    agree: null,
+                    corpus: ranked(place.c).map((v) => ({ w: v.spelling, n: v.n, d: v.d })),
+                    menaion: ranked(place.m).map((v) => ({ w: v.spelling, n: v.n, d: v.d })),
+                    lexicon: place.x,
+                    bible: [...place.b.entries()].sort((a, b) => b[1] - a[1]).map(([w, n]) => ({ w, n })),
+                    titlo: [],
+                });
+            }
+            const marked = convertWithAnswers(civilBody, byWord, { rule: true, accents: false, omega: omegaTable });
+
+            for (const piece of marked.tokens) {
+                if (piece.kind === "plain") continue;
+                const civil = civilKey(piece.original ?? piece.text);
                 if (!civil || /[^а-яё]/.test(civil)) continue;
                 const want = attested.get(civil);
                 if (!want) continue;   // в церковнославянском издании этого слова нет
                 comparable++;
 
-                const place = index.get(civil);
-                // Минея ведёт: замером по этой самой проверке она даёт 99,0%
-                // против 97,0% у собрания. Книги собрания аскетические, и на
-                // богослужебном тексте служебная книга — свидетель ближе.
-                const fromMenaion = place?.m.size ? ranked(place.m)[0] : null;
-                const best = place && place.c.size ? settled(place).best : null;
-                const got = (fromMenaion?.letters ?? best?.letters)
-                    ?? (place?.x.length ? lettersOnly(place.x[0].w) : null);
+                const got = piece.kind === "byRule" ? null
+                    : lettersOnly(csCanonical(piece.text.toLowerCase()));
                 if (got !== null) {
                     byDict++;
                     if (want.has(got)) { exact++; byDictExact++; }
                     else {
                         const line = `${civil}: мы «${got}», в книге «${[...want].join("», «")}»`;
                         wrong.set(line, (wrong.get(line) ?? 0) + 1);
-                        const block = classify(got, [...want]);
+                        const block = process.env.OMEGA === "1"
+                            ? omegaBlock(got, [...want]) : classify(got, [...want]);
                         const at = blocks.get(block) ?? { n: 0, examples: new Set<string>() };
                         at.n++;
                         if (at.examples.size < 3) at.examples.add(`${got} / ${[...want][0]}`);
@@ -624,7 +699,7 @@ const main = async () => {
                     }
                 } else {
                     byRuleN++;
-                    const ruled = lettersOnly(csCanonical(byRule(civil).form.toLowerCase()));
+                    const ruled = lettersOnly(csCanonical(piece.text.toLowerCase()));
                     if (want.has(ruled)) { exact++; byRuleExact++; }
                 }
             }
@@ -649,6 +724,27 @@ const main = async () => {
         const tail = [...blocks.values()].filter((b) => b.n <= 2).reduce((sum, b) => sum + b.n, 0);
         console.log(`   в хвосте (два случая и меньше на блок): ${tail.toLocaleString("ru")}`
             + " — здесь и надо будет искать описки набора, когда системное закроется");
+    }
+
+    // --- Таблица омеги файлом ------------------------------------------------
+    if (has("--omega")) {
+        const target = path.join(process.cwd(), "src", "lib", "cslav", "omegaTable.ts");
+        const rows = Object.entries(omegaTable).sort(([a], [b]) => a.localeCompare(b));
+        fs.writeFileSync(target, `import type { OmegaTable } from "@/lib/cslav/omega";
+
+// ВЫВЕДЕНО СКРИПТОМ, руками не правится: npm run cslav:build -- --omega.
+//
+// Положение омеги по Минее церковнославянским шрифтом: контекст спорной
+// гласной → что в нём стоит. Взяты только решающие контексты — от ${OMEGA_MIN}
+// вхождений и ${Math.round(OMEGA_SHARE * 100)}% перевеса. Устройство ключа и
+// порядок опроса описаны в @/lib/cslav/omega.
+//
+// Контекстов: ${rows.length.toLocaleString("ru")}.
+export const OMEGA_TABLE: OmegaTable = {
+${rows.map(([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join("\n")}
+};
+`, "utf8");
+        console.log(`\nтаблица омеги записана: ${target} (${rows.length.toLocaleString("ru")} контекстов)`);
     }
 
     // --- Запись --------------------------------------------------------------

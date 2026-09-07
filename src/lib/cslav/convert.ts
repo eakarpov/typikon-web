@@ -4,6 +4,7 @@ import {
 } from "@/lib/cslav/core";
 import { GOVERNMENT, narrowVariants } from "@/lib/cslav/grammar";
 import { contractByStem, TITLA_CONTRACTIONS } from "@/lib/cslav/titla";
+import { omegaAgreement, omegaAt, onlyOmegaApart, type OmegaTable } from "@/lib/cslav/omega";
 import { plural } from "@/utils/plural";
 
 // Разметка гражданского текста церковнославянскими написаниями.
@@ -103,6 +104,8 @@ export interface ConvertOptions {
     accents: boolean;
     /** Предлагать сокращение под титлом там, где оно засвидетельствовано. */
     titla: boolean;
+    /** Таблица положения омеги; без неё спор «о» против «ѡ» решается частотой. */
+    omega?: OmegaTable;
 }
 
 const DEFAULTS: ConvertOptions = { rule: true, accents: true, titla: false };
@@ -273,6 +276,50 @@ const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): 
  * когда у него их несколько, это разные падежи одного слова, и подтверждать
  * лидера чужим падежом значит решать за человека.
  */
+/**
+ * Спор «о» против «ѡ», решённый положением.
+ *
+ * Прикладывается ТОЛЬКО там, где написания разнятся одними этими буквами: если
+ * они разнятся ещё чем-то, положение омеги о них не судит. И только между
+ * равными по свидетельству: книга, где она говорит, остаётся выше правила.
+ *
+ * Возвращает переупорядоченный список, где впереди то написание, которое
+ * согласно с положением; null — правило молчит или спор не о том.
+ */
+const byOmega = (variants: CslVariant[], table?: OmegaTable): CslVariant[] | null => {
+    if (!table || variants.length < 2) return null;
+    const [first, second] = variants;
+    // КНИГА ВЫШЕ ПРАВИЛА. Первый прогон прикладывал положение омеги ко всякой
+    // паре и портил дело: 99,0% падало до 98,9%, а расхождений «о→ѡ»
+    // прибавлялось с 487 до 735 — правило переставляло засвидетельствованное.
+    // Поэтому оно вступает только там, где ведущее написание в книгах не
+    // встречено вовсе и выбирать иначе не из чего.
+    if (first.count > 0) return null;
+    if (!onlyOmegaApart(lettersOnly(first.spelling), lettersOnly(second.spelling))) return null;
+
+    const a = omegaAgreement(table, lettersOnly(first.spelling));
+    const b = omegaAgreement(table, lettersOnly(second.spelling));
+    if (a === null || b === null || a === b) return null;
+    return b > a ? [second, first, ...variants.slice(2)] : null;
+};
+
+/** Омега по положению — тому, что пришло правилом. */
+const withOmega = (form: string, table?: OmegaTable): { form: string; changed: boolean } => {
+    if (!table) return { form, changed: false };
+    const chars = [...form];
+    const plain = lettersOnly(form);
+    let changed = false;
+    // Знакоместа считаем по букве без ударения: таблица набрана по буквам.
+    let at = 0;
+    for (let i = 0; i < chars.length; i++) {
+        if (!/[\u0300-\u036f\u0483-\u0489]/.test(chars[i])) {
+            if (chars[i] === "о" && omegaAt(table, plain, at) === "ѡ") { chars[i] = "ѡ"; changed = true; }
+            at++;
+        }
+    }
+    return { form: chars.join(""), changed };
+};
+
 const settled = (answer: CslAnswer): boolean => {
     const dictForms = new Set(answer.lexicon.map((v) => lettersOnly(v.w)));
     const attested = attestedOf(answer);
@@ -411,6 +458,10 @@ export const convertWithAnswers = (
         }
 
         if (variants.length && settled(answer!)) {
+            // Положение омеги решает и там, где спор считался решённым, — но
+            // лишь когда решён он был словарём, а не книгой (см. byOmega).
+            const reordered = byOmega(variants, settings.omega);
+            if (reordered) variants.splice(0, variants.length, ...reordered);
             const best = variants[0];
             const rules: RuleName[] = withPsili(best.spelling).added ? ["звательце"] : [];
 
@@ -445,7 +496,8 @@ export const convertWithAnswers = (
             // Спор о написании — это спор о падеже: его задаёт предлог, а где
             // предлога нет — само его отсутствие (звательный против местного).
             const narrowed = narrowVariants(variants, governing);
-            const ordered = narrowed?.variants ?? variants;
+            const ordered = byOmega(narrowed?.variants ?? variants, settings.omega)
+                ?? narrowed?.variants ?? variants;
             if (narrowed?.decided) {
                 tokens.push({
                     text: ordered[0].applied,
@@ -476,11 +528,17 @@ export const convertWithAnswers = (
         // нём нечего менять. Иначе в готовом тексте остаётся гражданское
         // вкрапление, и списать его целиком нельзя.
         const ruled = byRule(word);
+
+        // ЗДЕСЬ ПОЛОЖЕНИЕ ОМЕГИ И РАБОТАЕТ. Там, где книги слово знают, они и
+        // отвечают; правилу же достаётся незнакомое, и без таблицы оно ставило
+        // бы одно «о» всюду. Замер на отложенных днях Минеи: таблица верна в
+        // 98,9% поставленных омег, мест угадано 92,2% против 83,1% у «всегда о».
+        const placed = withOmega(ruled.form, settings.omega);
         tokens.push({
-            text: sentenceCase(word, ruled.form, first),
+            text: sentenceCase(word, placed.form, first),
             kind: "byRule",
             source: "rule",
-            rules: ruled.applied,
+            rules: placed.changed ? [...ruled.applied, "омега"] : ruled.applied,
             original: word,
         });
         byRuleCount++;
