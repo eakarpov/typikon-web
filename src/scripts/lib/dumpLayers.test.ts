@@ -44,9 +44,37 @@ describe("разбор по правам", () => {
     });
 
     it("не даёт двум файлам занять одно имя", () => {
+        // Имя файла — это основа И формат: согласование нумераций лежит дважды,
+        // в JSON Lines и в CSV, и на диске это разные файлы. А вот два JSON Lines
+        // с одной основой затёрли бы друг друга молча.
         LAYERS.forEach((layer) => {
-            const files = layer.collections.map((c) => c.file);
+            const files = layer.collections.map((c) => `${c.file}.${c.format ?? "jsonl"}`);
             assert.equal(new Set(files).size, files.length, `${layer.id}: одинаковые имена файлов`);
+        });
+    });
+
+    it("повтор формата помечен и указывает на существующий файл", () => {
+        // Без пометки sameAs повтор лёг бы в счёт записей вторым разом, и слой
+        // вырос бы на 192 106 несуществующих записей.
+        LAYERS.forEach((layer) => {
+            const names = new Set(layer.collections.map((c) => `${c.file}.${c.format ?? "jsonl"}.gz`));
+            layer.collections.forEach((collection) => {
+                if (collection.format && collection.format !== "jsonl") {
+                    assert.ok(collection.sameAs, `${collection.file}: формат ${collection.format} без пометки sameAs`);
+                }
+                if (!collection.sameAs) return;
+                assert.ok(
+                    names.has(collection.sameAs),
+                    `${collection.file}: sameAs указывает на ${collection.sameAs}, которого в слое нет`,
+                );
+            });
+        });
+    });
+
+    it("у файла в формате csv перечислены колонки", () => {
+        LAYERS.flatMap((layer) => layer.collections).forEach((collection) => {
+            if (collection.format !== "csv") return;
+            assert.ok(collection.columns?.length, `${collection.file}: csv без колонок`);
         });
     });
 

@@ -5,6 +5,7 @@ import { plural } from "@/utils/plural";
 import {
     DUMP_URL,
     DumpLayerInfo,
+    dumpBase,
     formatBuiltAt,
     formatBytes,
     formatCount,
@@ -27,8 +28,11 @@ export const metadata: Metadata = {
         + "святые, храмы и согласование библейских нумераций. CC BY 4.0, с контрольными суммами.",
 };
 
-const Layer = ({ layer }: { layer: DumpLayerInfo }) => {
-    const records = layer.files.reduce((sum, file) => sum + file.records, 0);
+const Layer = ({ layer, base }: { layer: DumpLayerInfo; base: string }) => {
+    // Файл, повторяющий другой в ином формате (CSV рядом с JSON Lines), в счёт
+    // записей не идёт: иначе слой вырастал бы на несуществующие записи. В счёт
+    // размера идёт — место он занимает настоящее.
+    const records = layer.files.reduce((sum, file) => sum + (file.sameAs ? 0 : file.records), 0);
     const bytes = layer.files.reduce((sum, file) => sum + file.bytes, 0);
 
     return (
@@ -72,7 +76,7 @@ const Layer = ({ layer }: { layer: DumpLayerInfo }) => {
                             <tr key={file.path} className="border-b border-slate-100 align-top">
                                 <td className="pr-4 py-1">
                                     <a
-                                        href={`${DUMP_URL}/${file.path}`}
+                                        href={`${base}/${file.path}`}
                                         className="text-amber-800 underline underline-offset-4"
                                     >
                                         <code>{file.path}</code>
@@ -170,7 +174,7 @@ const DataPage = () => {
                         <p>
                             Собрана {formatBuiltAt(manifest.builtAt)}. Начните с{" "}
                             <a
-                                href={`${DUMP_URL}/manifest.json`}
+                                href={`${dumpBase(manifest)}/manifest.json`}
                                 className="text-amber-800 underline underline-offset-4"
                             >
                                 manifest.json
@@ -178,6 +182,39 @@ const DataPage = () => {
                             — там перечислены все файлы с числом записей, размерами и
                             контрольными суммами.
                         </p>
+                        {manifest.version && (
+                            // Ссылаться в работе надо на версию, а не на latest: у
+                            // версии содержимое не меняется, и контрольные суммы,
+                            // выписанные рядом, остаются верными.
+                            <p className="text-slate-700">
+                                Постоянный адрес этой версии —{" "}
+                                <a
+                                    href={`${DUMP_URL}/${manifest.version}/`}
+                                    className="text-amber-800 underline underline-offset-4"
+                                >
+                                    <code>/dump/{manifest.version}/</code>
+                                </a>
+                                ; прежние сборки остаются на месте. Последняя всегда лежит по{" "}
+                                <a
+                                    href={`${DUMP_URL}/latest/`}
+                                    className="text-amber-800 underline underline-offset-4"
+                                >
+                                    <code>/dump/latest/</code>
+                                </a>
+                                {" "}— он удобен для скрипта, но для ссылки в работе не годится.
+                            </p>
+                        )}
+                        {manifest.doi && (
+                            <p className="text-slate-700">
+                                DOI этой версии:{" "}
+                                <a
+                                    href={`https://doi.org/${manifest.doi}`}
+                                    className="text-amber-800 underline underline-offset-4"
+                                >
+                                    <code>{manifest.doi}</code>
+                                </a>
+                            </p>
+                        )}
                         <p className="border-l-2 border-slate-300 pl-3 text-slate-700">
                             {manifest.citation}
                         </p>
@@ -194,7 +231,7 @@ const DataPage = () => {
                             Рядом с файлами каждого слоя лежат его собственные LICENSE и README.
                         </p>
                         {manifest.layers.map((layer) => (
-                            <Layer key={layer.id} layer={layer} />
+                            <Layer key={layer.id} layer={layer} base={dumpBase(manifest)} />
                         ))}
                     </section>
 

@@ -12,6 +12,9 @@
 # Раздаёт файлы nginx, сайт их не проксирует. Что нужно на сервере один раз —
 # см. раздел «Выгрузка корпуса» в ROADMAP.md.
 #
+# Каждая сборка ложится в свой каталог по версии, latest указывает на последнюю:
+# у версии постоянный адрес, и прежние сборки остаются на месте.
+#
 # Порядок:
 #   npm run corpus:dump        # собрать (нужен доступ к базе)
 #   bash release-data.sh       # выложить
@@ -40,13 +43,16 @@ const m = JSON.parse(require('fs').readFileSync('$DUMP_LOCAL/manifest.json','utf
 const files = m.layers.flatMap(l => l.files);
 const records = files.reduce((s, f) => s + f.records, 0);
 const bytes = files.reduce((s, f) => s + f.bytes, 0);
-console.log('  собрана ' + m.builtAt + ': ' + files.length + ' файлов, ' +
+console.log('  версия ' + (m.version || m.builtAt) + ': ' + files.length + ' файлов, ' +
     records.toLocaleString('ru-RU') + ' записей, ' + (bytes / 1048576).toFixed(1) + ' МБ');
+if (!m.version) { console.error('  в манифесте нет version — пересобери выгрузку'); process.exit(1); }
 "
 
 rm -f data-dump.zip
 zip -rX data-dump.zip "$DUMP_LOCAL"
 sshpass -f <(printf '%s\n' $PASSWORD) scp data-dump.zip $USERNAME@$HOST:~/data-dump.zip
 
+# DUMP_REPLACE=1 разрешает заменить уже выложенную версию. По умолчанию сервер
+# такую выкладку отклоняет: выложенная версия неизменна.
 sshpass -f <(printf '%s\n' $PASSWORD) ssh $USERNAME@$HOST \
-    "DUMP_REMOTE='$DUMP_REMOTE' DUMP_LOCAL='$DUMP_LOCAL' bash -s" < data-remote.sh
+    "DUMP_REMOTE='$DUMP_REMOTE' DUMP_LOCAL='$DUMP_LOCAL' DUMP_REPLACE='${DUMP_REPLACE:-}' bash -s" < data-remote.sh

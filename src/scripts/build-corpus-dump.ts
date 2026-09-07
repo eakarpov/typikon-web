@@ -71,6 +71,8 @@ const OUT = outIndex >= 0 ? args[outIndex + 1] : "data-dump";
 
 interface FileReport {
     file: string;
+    /** Расширение вместе с форматом: jsonl.gz либо csv.gz. */
+    ext: string;
     title: string;
     records: number;
     bytes: number;
@@ -80,20 +82,40 @@ interface FileReport {
     /** Своя лицензия файла, если она не та, что у слоя. */
     license?: DumpLicense;
     attribution?: string;
+    /** Файл повторяет данные другого в ином формате — в счёт записей не идёт. */
+    sameAs?: string;
 }
 
 /**
  * Пишет поток документов в <file>.jsonl.gz и считает контрольную сумму по пути,
  * не собирая содержимое в память: одна только Библия — сто пятьдесят тысяч записей.
  */
+/**
+ * Значение в ячейке CSV по RFC 4180: кавычки удваиваются, а закавычивается всё,
+ * где есть запятая, кавычка или перевод строки. Пусто и null — пустая ячейка, а
+ * не слово «null»: таблицу открывают глазами, и «null» в ней читался бы текстом.
+ */
+const csvCell = (value: any): string => {
+    if (value === null || value === undefined) return "";
+    const text = String(value);
+    return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
 const writeCollection = async (
     dir: string,
     file: string,
     docs: AsyncIterable<any>,
-): Promise<{ records: number; bytes: number; sha256: string }> => {
-    const path = join(dir, `${file}.jsonl.gz`);
+    format: "jsonl" | "csv" = "jsonl",
+    columns?: string[],
+): Promise<{ records: number; bytes: number; sha256: string; ext: string }> => {
+    const ext = format === "csv" ? "csv.gz" : "jsonl.gz";
+    const path = join(dir, `${file}.${ext}`);
     let records = 0;
     let bytes = 0;
+
+    if (format === "csv" && !columns?.length) {
+        throw new Error(`у ${file} формат csv, но колонки не перечислены`);
+    }
 
     const hash = createHash("sha256");
     const gzip = createGzip({ level: 9 });
@@ -107,6 +129,15 @@ const writeCollection = async (
     });
 
     const lines = async function* () {
+        if (format === "csv") {
+            yield `${columns!.join(",")}\n`;
+            for await (const doc of docs) {
+                records += 1;
+                yield `${columns!.map((column) => csvCell(doc[column])).join(",")}\n`;
+            }
+            return;
+        }
+
         for await (const doc of docs) {
             records += 1;
             yield `${JSON.stringify(doc)}\n`;
@@ -115,12 +146,12 @@ const writeCollection = async (
 
     await pipeline(Readable.from(lines()), gzip, out);
 
-    return { records, bytes, sha256: hash.digest("hex") };
+    return { records, bytes, sha256: hash.digest("hex"), ext };
 };
 
 const layerReadme = (layer: DumpLayer, files: FileReport[]) => {
     const rows = files
-        .map((f) => `| \`${f.file}.jsonl.gz\` | ${f.title} | ${f.records.toLocaleString("ru-RU")} `
+        .map((f) => `| \`${f.file}.${f.ext}\` | ${f.title} | ${f.records.toLocaleString("ru-RU")} `
             + `| ${f.license ? `**${f.license.id}**` : layer.license.id} |`)
         .join("\n");
 
@@ -176,7 +207,11 @@ const layerReadme = (layer: DumpLayer, files: FileReport[]) => {
 const rootReadme = (layers: { layer: DumpLayer; files: FileReport[] }[], builtAt: string) => [
     "# Выгрузка корпуса «Уставные чтения»",
     "",
-    `Собрана ${builtAt}. Источник — https://www.typikon.su`,
+    `Версия ${builtAt}. Источник — https://www.typikon.su`,
+    "",
+    `Постоянный адрес этой версии: https://www.typikon.su/dump/${builtAt}/`,
+    "Последняя сборка всегда лежит по адресу https://www.typikon.su/dump/latest/ —",
+    "ссылаться в работе следует на версию, а не на latest.",
     "",
     "Слои лежат отдельно, потому что условия у них РАЗНЫЕ. Прежде чем брать —",
     "прочтите LICENSE и README в каталоге слоя; общей лицензии у выгрузки нет.",
@@ -206,6 +241,31 @@ const rootReadme = (layers: { layer: DumpLayer; files: FileReport[] }[], builtAt
     "",
     "В `manifest.json` — sha256 каждого файла. Выгрузка воспроизводима: две сборки на",
     "одной базе дают одинаковые суммы, поэтому обновление можно проверить сверкой.",
+    "",
+].join("\n");
+
+/**
+ * Цитата для скачавшего. Тот же CITATION.cff, что в репозитории, но с версией:
+ * ссылаться надо на версию, а не на корпус вообще, — состав его меняется.
+ */
+const citationCff = (version: string, doi: string | null) => [
+    "cff-version: 1.2.0",
+    'message: "Если корпус пригодился в работе, сошлитесь на него так."',
+    "type: dataset",
+    'title: "Корпус «Уставные чтения»"',
+    `version: "${version}"`,
+    `date-released: "${version}"`,
+    ...(doi ? [`doi: "${doi}"`] : []),
+    "authors:",
+    "  - family-names: Карпов",
+    "    given-names: Егор",
+    'url: "https://www.typikon.su"',
+    `repository-artifact: "https://www.typikon.su/dump/${version}/"`,
+    "license: CC-BY-4.0",
+    "",
+    "# Условия у слоёв РАЗНЫЕ: temples идёт под ODbL-1.0, греческий Ветхий Завет —",
+    "# под GPL-3.0, румынская синодальная 1914 — под CC BY-SA 4.0. Здесь названа",
+    "# лицензия основного слоя; полный разбор — в manifest.json и в LICENSE каждого слоя.",
     "",
 ].join("\n");
 
@@ -328,8 +388,37 @@ const run = async () => {
         }
     };
 
+    /**
+     * Соответствия наших святых чужим указателям: наш слуг -> идентификатор там.
+     *
+     * Сами перенесённые из dneslov поля из выгрузки сняты — они чужие. А вот
+     * ОТОЖДЕСТВЛЕНИЕ («эта наша запись и та их запись — об одном лице») сделано
+     * нами и лицензией корпуса покрывается: в LICENSE-CORPUS.md это названо
+     * прямо — «наша работа ровно в той части, которая сделана нами: сведение,
+     * отождествление, наши имена и связи». Отдаются только идентификаторы, без
+     * единого слова чужого содержания.
+     */
+    const saintExternalIds = async function* () {
+        const cursor = db.collection("saints")
+            .find({ externals: { $exists: true, $ne: [] } }, { projection: { slug: 1, externals: 1 } })
+            .sort({ _id: 1 });
+
+        for await (const saint of cursor) {
+            for (const external of saint.externals ?? []) {
+                if (!external?.source || !external?.id) continue;
+                yield prepare({
+                    slug: saint.slug,
+                    source: external.source,
+                    externalId: String(external.id),
+                    externalSlug: external.slug ?? null,
+                });
+            }
+        }
+    };
+
     const derived: Record<string, () => AsyncGenerator<any>> = {
         "bible-concordance": concordance,
+        "saint-external-ids": saintExternalIds,
         accents,
     };
 
@@ -346,15 +435,19 @@ const run = async () => {
                 throw new Error(`производная выгрузка ${collection.file} нечем собрать`);
             }
             const docs = collection.source ? fromMongo(collection) : build();
-            const result = await writeCollection(dir, collection.file, docs);
+            const result = await writeCollection(
+                dir, collection.file, docs, collection.format, collection.columns,
+            );
 
             files.push({
                 file: collection.file,
+                ext: result.ext,
                 title: collection.title,
                 records: result.records,
                 bytes: result.bytes,
                 sha256: result.sha256,
                 dropped: collection.drop,
+                sameAs: collection.sameAs,
                 note: collection.note,
                 license: collection.license,
                 attribution: collection.attribution,
@@ -409,10 +502,22 @@ const run = async () => {
     // одной базе перестали бы совпадать побайтово и сверять выгрузки было бы нечем.
     const builtAt = new Date().toISOString().slice(0, 10);
 
+    // Версия — это и есть постоянный адрес сборки. Прежде выгрузка лежала одна и
+    // перезаписывалась: сослаться на неё в работе было нельзя, потому что завтра по
+    // тому же адресу лежало бы другое. Теперь каждая сборка кладётся в свой каталог,
+    // а latest/ только указывает на последнюю.
+    const version = builtAt;
+
     const manifest = {
         name: "Выгрузка корпуса «Уставные чтения»",
         source: "https://www.typikon.su",
         builtAt,
+        version,
+        versionUrl: `https://www.typikon.su/dump/${version}/`,
+        // Проставляется, когда версия положена в архив с DOI (Zenodo). До того
+        // ссылаться можно на versionUrl — он тоже постоянный, но переживает
+        // переезд домена хуже, чем DOI.
+        doi: null as string | null,
         citation: CITATION,
         licenseUrl: "https://www.typikon.su/license",
         layers: built.map(({ layer, files }) => ({
@@ -422,7 +527,7 @@ const run = async () => {
             attribution: layer.attribution,
             rationale: layer.rationale,
             files: files.map((f) => ({
-                path: `${layer.id}/${f.file}.jsonl.gz`,
+                path: `${layer.id}/${f.file}.${f.ext}`,
                 title: f.title,
                 records: f.records,
                 bytes: f.bytes,
@@ -432,6 +537,7 @@ const run = async () => {
                 ...(f.license ? { license: f.license } : {}),
                 ...(f.attribution ? { attribution: f.attribution } : {}),
                 ...(f.dropped ? { droppedFields: f.dropped } : {}),
+                ...(f.sameAs ? { sameAs: f.sameAs } : {}),
                 ...(f.note ? { note: f.note } : {}),
             })),
             ...(layer.pointers ? { notShipped: layer.pointers } : {}),
@@ -441,8 +547,16 @@ const run = async () => {
 
     writeFileSync(join(OUT, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
     writeFileSync(join(OUT, "README.md"), rootReadme(built, builtAt));
+    // Цитата едет ВМЕСТЕ с данными: скачавший архив ссылается по тому, что у него
+    // на руках, а не по тому, что осталось на сайте. Версия здесь проставлена,
+    // в отличие от файла в репозитории, где её взять неоткуда.
+    writeFileSync(join(OUT, "CITATION.cff"), citationCff(version, manifest.doi));
 
-    const records = built.reduce((sum, b) => sum + b.files.reduce((s, f) => s + f.records, 0), 0);
+    // Повторы формата в счёт записей не идут: те же строки, другой файл.
+    const records = built.reduce(
+        (sum, b) => sum + b.files.reduce((s, f) => s + (f.sameAs ? 0 : f.records), 0),
+        0,
+    );
     const bytes = built.reduce((sum, b) => sum + b.files.reduce((s, f) => s + f.bytes, 0), 0);
     console.log(
         `\nГотово: ${records.toLocaleString("ru-RU")} записей, `

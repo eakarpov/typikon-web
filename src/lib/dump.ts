@@ -32,6 +32,8 @@ export interface DumpFile {
     license?: DumpLicense;
     attribution?: string;
     droppedFields?: Record<string, string>;
+    /** Файл повторяет данные другого в ином формате: в счёт записей не идёт. */
+    sameAs?: string;
     note?: string;
 }
 
@@ -56,6 +58,11 @@ export interface DumpManifest {
     name: string;
     source: string;
     builtAt: string;
+    /** Версия сборки, она же имя каталога; у выгрузок до 2026-09-07 её нет. */
+    version?: string;
+    versionUrl?: string;
+    /** Проставляется, когда версия положена в архив с DOI. */
+    doi?: string | null;
     citation: string;
     licenseUrl: string;
     layers: DumpLayerInfo[];
@@ -63,16 +70,33 @@ export interface DumpManifest {
 }
 
 /**
- * Манифест или null, если выгрузки на машине нет. Null — не ошибка: у страницы
- * есть что сказать и без чисел, а падать оттого, что дамп ещё не собран, ей незачем.
+ * Манифест последней сборки или null, если выгрузки на машине нет. Null — не ошибка:
+ * у страницы есть что сказать и без чисел, а падать оттого, что дамп ещё не собран,
+ * ей незачем.
+ *
+ * Сборки лежат каждая в своём каталоге по версии, `latest` указывает на последнюю.
+ * Плоская раскладка (манифест прямо в корне) читается тоже: так лежат выгрузки,
+ * собранные до 2026-09-07, и так же выглядит свежесобранная выгрузка на машине
+ * разработчика, где раскладку по версиям делает уже выкладка.
  */
 export const readManifest = (): DumpManifest | null => {
-    try {
-        return JSON.parse(readFileSync(join(DUMP_DIR, "manifest.json"), "utf8"));
-    } catch (e) {
-        return null;
+    for (const path of [join(DUMP_DIR, "latest", "manifest.json"), join(DUMP_DIR, "manifest.json")]) {
+        try {
+            return JSON.parse(readFileSync(path, "utf8"));
+        } catch (e) {
+            // Нет по этому адресу — пробуем следующий.
+        }
     }
+    return null;
 };
+
+/**
+ * Адрес каталога сборки. Ссылки на файлы ведут в КАТАЛОГ ВЕРСИИ, а не в latest:
+ * рядом с ними на странице стоят контрольные суммы именно этой сборки, и ссылка,
+ * по которой завтра лежит другое, делала бы суммы бессмысленными.
+ */
+export const dumpBase = (manifest: DumpManifest): string =>
+    manifest.version ? `${DUMP_URL}/${manifest.version}` : DUMP_URL;
 
 export const formatBytes = (bytes: number) => {
     if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`;
