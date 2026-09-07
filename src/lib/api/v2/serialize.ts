@@ -31,6 +31,9 @@ export const chantSummary = (hit: any) => ({
     // Фрагмент кусками: найденное отмечено флагом, а не разметкой внутри строки.
     snippet: (hit.snippet ?? []).map((part: any) => ({ text: part.text, hit: part.hit })),
     unit: hit.unit ?? null,
+    // На каком языке найденное. Без этого поля славянскую стихиру не отличить
+    // от румынской, а корпус четырёхъязычный.
+    language: hit.language ?? null,
     ode: hit.ode ?? null,
     marker: hit.marker ?? null,
     placement: hit.placement ?? null,
