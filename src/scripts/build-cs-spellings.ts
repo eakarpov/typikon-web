@@ -324,6 +324,12 @@ const main = async () => {
     // получен здесь: `npm run cslav:octoechos`. Парность с гражданским изданием
     // того же гласа — 94,8%.
     const octoechosShort: string[] = [];
+    // Отложенные гласы: у Октоиха роль дня играет глас — гражданское издание
+    // разбито по гласам, и сверять надо кусками той же величины. Откладываем
+    // два из восьми: книга вчетверо меньше Минеи, и десятой части не хватило бы
+    // на осмысленный счёт.
+    const OCTOECHOS_HELD = new Set(["4", "8"]);
+    const octoechosHoldout = new Map<string, string[]>();
     const octoechosRoot = value("--octoechos")
         ?? path.join(process.cwd(), "..", "typikon-rules", "raw", "octoechos-cu", "text");
     if (fs.existsSync(octoechosRoot)) {
@@ -332,6 +338,13 @@ const main = async () => {
             const alias = file.replace(/\.txt$/, "");
             const raw = fs.readFileSync(path.join(octoechosRoot, file), "utf8");
             const body = raw.split("-".repeat(40)).slice(1).join("-".repeat(40));
+            const tone = /глас-(\d)/.exec(file)?.[1] ?? "";
+            if (has("--check") && OCTOECHOS_HELD.has(tone)) {
+                const held = octoechosHoldout.get(tone) ?? [];
+                held.push(body);
+                octoechosHoldout.set(tone, held);
+                continue;
+            }
             stats.octoechosFiles++;
             for (const token of wordsOf(body)) {
                 const word = token.replace(LEADING_MARK, "");
@@ -642,8 +655,28 @@ const main = async () => {
     // если этот ключ в церковнославянском тексте того же дня есть, наше
     // написание сверяется со всеми, какими это слово там набрано. Порядок слов
     // в двух изданиях местами расходится, а состав службы — нет.
-    if (has("--check") && menaionHoldout.length) {
-        const civilRoot = path.join(path.dirname(menaionRoot), "menaion");
+    /**
+     * Обратная проверка на паре изданий одной книги.
+     *
+     * @param title   как назвать проверку в отчёте
+     * @param unit    как звать единицу отложенного: «дней», «гласов»
+     * @param pairs   отложенные куски: церковнославянский текст и гражданский
+     */
+    const reverseCheck = (
+        title: string,
+        unit: string,
+        pairs: Array<{ cs: string; civil: string }>,
+    ) => {
+        // ЕРОК СЧИТАЕТСЯ БУКВОЙ, а не надстрочным знаком. Общий lettersOnly
+        // снимает его наравне с ударением, и тогда «и҆з̾» книги сходится с
+        // «и҆зъ» указателя в одно «из» — расхождение исчезает из отчёта, хотя
+        // на бумаге буквы разные. В Октоихе на это приходился самый крупный
+        // блок, 270 случаев из 809, и без этой поправки он читался как «мы
+        // теряем конечный ер», чего на деле нет.
+        // U+033E (ерок) сидит внутри диапазона надстрочных, и вычесть его надо
+        // из диапазона поимённо, иначе он снимется вместе с ударением.
+        const compared = (word: string) => word.normalize("NFD")
+            .replace(/[\u0300-\u033d\u033f-\u036f\u0483-\u0489]/g, "").normalize("NFC");
         let comparable = 0, exact = 0, byDict = 0, byDictExact = 0, byRuleN = 0, byRuleExact = 0;
         const wrong = new Map<string, number>();
         const blocks = new Map<string, { n: number; examples: Set<string> }>();
@@ -689,28 +722,21 @@ const main = async () => {
             return `разная длина (${got.length}/${near.length})`;
         };
 
-        for (const { month, day } of menaionHoldout) {
-            const csPath = path.join(menaionRoot, month, "text", `${day}.txt`);
-            const civilPath = path.join(civilRoot, month, "text", `${day}.txt`);
-            if (!fs.existsSync(csPath) || !fs.existsSync(civilPath)) continue;
-            const bodyOf = (file: string) =>
-                fs.readFileSync(file, "utf8").split("-".repeat(40)).slice(1).join("-".repeat(40));
-
-            // Чем это слово набрано в церковнославянском издании этого дня.
+        for (const { cs, civil: civilBody } of pairs) {
+            // Чем это слово набрано в церковнославянском издании этой единицы.
             const attested = new Map<string, Set<string>>();
-            for (const token of wordsOf(bodyOf(csPath))) {
+            for (const token of wordsOf(cs)) {
                 const spelling = csCanonical(token.replace(LEADING_MARK, "").toLowerCase());
                 if (isShortened(spelling)) continue;
                 const key = civilKey(spelling);
                 if (!key || /[^а-яё]/.test(key)) continue;
-                (attested.get(key) ?? attested.set(key, new Set()).get(key)!).add(lettersOnly(spelling));
+                (attested.get(key) ?? attested.set(key, new Set()).get(key)!).add(compared(spelling));
             }
 
             // Текст прогоняется НАСТОЯЩИМ переводом, а не выборкой из указателя:
             // грамматический слой видит предлоги и положение слова во фразе, и
             // без него проверка засчитывала бы в ошибки то, что сервис решает
             // верно, — падежные пары и звательный.
-            const civilBody = bodyOf(civilPath);
             const byWord = new Map<string, CslAnswer>();
             for (const token of wordsOf(civilBody)) {
                 const key = civilKey(token.replace(LEADING_MARK, "").toLowerCase());
@@ -741,7 +767,7 @@ const main = async () => {
                 comparable++;
 
                 const got = piece.kind === "byRule" ? null
-                    : lettersOnly(csCanonical(piece.text.toLowerCase()));
+                    : compared(csCanonical(piece.text.toLowerCase()));
                 if (got !== null) {
                     byDict++;
                     if (want.has(got)) { exact++; byDictExact++; }
@@ -757,21 +783,21 @@ const main = async () => {
                     }
                 } else {
                     byRuleN++;
-                    const ruled = lettersOnly(csCanonical(piece.text.toLowerCase()));
+                    const ruled = compared(csCanonical(piece.text.toLowerCase()));
                     if (want.has(ruled)) { exact++; byRuleExact++; }
                 }
             }
         }
 
-        console.log("\n=== Обратная проверка: гражданская Минея против церковнославянской ===");
-        console.log(`отложено дней: ${menaionHoldout.length}, сверяемых слов: ${comparable.toLocaleString("ru")}`);
+        console.log(`\n=== Обратная проверка: ${title} ===`);
+        console.log(`отложено ${unit}: ${pairs.length}, сверяемых слов: ${comparable.toLocaleString("ru")}`);
         console.log(`по указателю: ${byDict.toLocaleString("ru")}, из них совпало`
             + ` ${byDictExact.toLocaleString("ru")} (${(byDictExact / Math.max(byDict, 1) * 100).toFixed(1)}%)`);
         console.log(`по правилу:   ${byRuleN.toLocaleString("ru")}, из них совпало`
             + ` ${byRuleExact.toLocaleString("ru")} (${(byRuleExact / Math.max(byRuleN, 1) * 100).toFixed(1)}%)`);
         console.log(`ВСЕГО СОВПАЛО: ${(exact / Math.max(comparable, 1) * 100).toFixed(1)}%`);
         console.log("Оценка честная: на входе гражданское издание, набранное отдельно,");
-        console.log("свёртки на входе нет, отложенные дни в указатель не попали.");
+        console.log("свёртки на входе нет, отложенное в указатель не попало.");
         const total = [...blocks.values()].reduce((sum, b) => sum + b.n, 0);
         console.log(`\nРасхождений ${total.toLocaleString("ru")}. Блоками, от частого к редкому:`);
         for (const [name, b] of [...blocks.entries()].sort((a, x) => x[1].n - a[1].n).slice(0, 20)) {
@@ -782,6 +808,38 @@ const main = async () => {
         const tail = [...blocks.values()].filter((b) => b.n <= 2).reduce((sum, b) => sum + b.n, 0);
         console.log(`   в хвосте (два случая и меньше на блок): ${tail.toLocaleString("ru")}`
             + " — здесь и надо будет искать описки набора, когда системное закроется");
+    };
+
+    if (has("--check") && menaionHoldout.length) {
+        const civilRoot = path.join(path.dirname(menaionRoot), "menaion");
+        const bodyOf = (file: string) =>
+            fs.readFileSync(file, "utf8").split("-".repeat(40)).slice(1).join("-".repeat(40));
+        const pairs = menaionHoldout.flatMap(({ month, day }) => {
+            const csPath = path.join(menaionRoot, month, "text", `${day}.txt`);
+            const civilPath = path.join(civilRoot, month, "text", `${day}.txt`);
+            if (!fs.existsSync(csPath) || !fs.existsSync(civilPath)) return [];
+            return [{ cs: bodyOf(csPath), civil: bodyOf(civilPath) }];
+        });
+        reverseCheck("гражданская Минея против церковнославянской", "дней", pairs);
+    }
+
+    // Вторая проверка, на другом материале. Минея и Октоих набирались порознь,
+    // и совпадение чисел на них — довод сильнее любого одного замера: если бы
+    // 99% держались лишь на минейной лексике, здесь бы это и вышло наружу.
+    if (has("--check") && octoechosHoldout.size) {
+        const civilRoot = path.join(path.dirname(path.dirname(octoechosRoot)), "octoechos", "text");
+        const pairs: Array<{ cs: string; civil: string }> = [];
+        for (const [tone, bodies] of octoechosHoldout) {
+            const civilFile = fs.existsSync(civilRoot)
+                ? fs.readdirSync(civilRoot).find((f) => f.includes(`глас-${tone}-`))
+                : undefined;
+            if (!civilFile) continue;
+            pairs.push({
+                cs: bodies.join("\n"),
+                civil: fs.readFileSync(path.join(civilRoot, civilFile), "utf8"),
+            });
+        }
+        if (pairs.length) reverseCheck("гражданский Октоих против церковнославянского", "гласов", pairs);
     }
 
     // --- Таблица положения файлом --------------------------------------------
