@@ -552,6 +552,31 @@ const main = async () => {
         const civilRoot = path.join(path.dirname(menaionRoot), "menaion");
         let comparable = 0, exact = 0, byDict = 0, byDictExact = 0, byRuleN = 0, byRuleExact = 0;
         const wrong = new Map<string, number>();
+        const blocks = new Map<string, { n: number; examples: Set<string> }>();
+
+        // Расхождение сводится к тому, какими буквами оно вызвано. Системное
+        // видно сразу: «ѡ на месте о» — это правило, а не описка. Разбирать
+        // надо блоками, от частого к редкому; описки останутся в хвосте, когда
+        // системное будет закрыто.
+        const classify = (got: string, want: string[]): string => {
+            const near = want
+                .map((w) => ({ w, d: Math.abs(w.length - got.length) }))
+                .sort((a, b) => a.d - b.d)[0].w;
+            if (near.length === got.length) {
+                const pairs: string[] = [];
+                for (let i = 0; i < near.length; i++) {
+                    if (near[i] !== got[i]) pairs.push(`${got[i]}→${near[i]}`);
+                }
+                if (!pairs.length) return "прочее";
+                return pairs.length === 1 ? pairs[0] : `несколько: ${pairs.join(" ")}`;
+            }
+            // Разная длина: чаще всего это конечный ер или ерок.
+            const longer = near.length > got.length ? near : got;
+            const shorter = near.length > got.length ? got : near;
+            const sign = near.length > got.length ? "+" : "−";
+            if (longer.startsWith(shorter)) return `${sign}«${longer.slice(shorter.length)}» в конце`;
+            return `разная длина (${got.length}/${near.length})`;
+        };
 
         for (const { month, day } of menaionHoldout) {
             const csPath = path.join(menaionRoot, month, "text", `${day}.txt`);
@@ -588,8 +613,15 @@ const main = async () => {
                 if (got !== null) {
                     byDict++;
                     if (want.has(got)) { exact++; byDictExact++; }
-                    else wrong.set(`${civil}: мы «${got}», в книге «${[...want].join("», «")}»`,
-                        (wrong.get(`${civil}: мы «${got}», в книге «${[...want].join("», «")}»`) ?? 0) + 1);
+                    else {
+                        const line = `${civil}: мы «${got}», в книге «${[...want].join("», «")}»`;
+                        wrong.set(line, (wrong.get(line) ?? 0) + 1);
+                        const block = classify(got, [...want]);
+                        const at = blocks.get(block) ?? { n: 0, examples: new Set<string>() };
+                        at.n++;
+                        if (at.examples.size < 3) at.examples.add(`${got} / ${[...want][0]}`);
+                        blocks.set(block, at);
+                    }
                 } else {
                     byRuleN++;
                     const ruled = lettersOnly(csCanonical(byRule(civil).form.toLowerCase()));
@@ -607,10 +639,16 @@ const main = async () => {
         console.log(`ВСЕГО СОВПАЛО: ${(exact / Math.max(comparable, 1) * 100).toFixed(1)}%`);
         console.log("Оценка честная: на входе гражданское издание, набранное отдельно,");
         console.log("свёртки на входе нет, отложенные дни в указатель не попали.");
-        console.log("\nЧаще всего расходимся (здесь же и опечатки набора):");
-        for (const [line, n] of [...wrong.entries()].sort((a, b) => b[1] - a[1]).slice(0, 25)) {
-            console.log(`   ×${String(n).padStart(4)}  ${line}`);
+        const total = [...blocks.values()].reduce((sum, b) => sum + b.n, 0);
+        console.log(`\nРасхождений ${total.toLocaleString("ru")}. Блоками, от частого к редкому:`);
+        for (const [name, b] of [...blocks.entries()].sort((a, x) => x[1].n - a[1].n).slice(0, 20)) {
+            const share = (b.n / total * 100).toFixed(1);
+            console.log(`   ×${String(b.n).padStart(5)}  ${share.padStart(5)}%  ${name.padEnd(22)}`
+                + `  ${[...b.examples].join(" · ")}`);
         }
+        const tail = [...blocks.values()].filter((b) => b.n <= 2).reduce((sum, b) => sum + b.n, 0);
+        console.log(`   в хвосте (два случая и меньше на блок): ${tail.toLocaleString("ru")}`
+            + " — здесь и надо будет искать описки набора, когда системное закроется");
     }
 
     // --- Запись --------------------------------------------------------------
