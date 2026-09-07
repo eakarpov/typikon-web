@@ -1,8 +1,9 @@
 import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
-import { readPage } from "@/lib/api/v2/params";
+import { readEnum, readPage } from "@/lib/api/v2/params";
 import { chantSummary } from "@/lib/api/v2/serialize";
 import { MIN_QUERY_LENGTH, searchChants } from "@/lib/chants";
+import { LANGUAGES } from "@/lib/incipits";
 import {reportError} from "@/lib/reportError";
 
 // Поиск по певческим текстам книг: Октоих, Минеи, Триоди, Ирмологий.
@@ -50,12 +51,16 @@ export async function GET(request: Request) {
             memoryId: url.searchParams.get("memory"),
             service: url.searchParams.get("service"),
             unit: url.searchParams.get("unit"),
+            // Корпус четырёхъязычный — 123 тыс. славянских строк, 53 тыс.
+            // румынских, 34 тыс. греческих, 24 тыс. английских, — и без этого
+            // отбора искать в нём славянское значило перебирать чужое.
+            language: readEnum(url, "language", LANGUAGES),
         }, limit, offset);
 
         // Корпус — отдельный файл, и на этом сервере его может не быть.
         // Говорим об этом прямо: пустая выдача читалась бы как «ничего не нашлось».
         if (!found) {
-            return fail("internal", "Корпус певческих текстов на этом сервере недоступен");
+            return fail("corpus_unavailable", "Корпус певческих текстов на этом сервере недоступен");
         }
 
         return respondCollection(found.items.map(chantSummary),

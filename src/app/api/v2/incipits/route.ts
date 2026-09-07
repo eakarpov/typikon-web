@@ -58,7 +58,7 @@ export async function GET(request: Request) {
         // Корпус — отдельный файл, и на этом сервере его может не быть.
         // Говорим прямо: пустая выдача читалась бы как «ничего не нашлось».
         if (!found) {
-            return fail("internal", "Корпус певческих текстов на этом сервере недоступен");
+            return fail("corpus_unavailable", "Корпус певческих текстов на этом сервере недоступен");
         }
 
         return respondCollection(found.items.map(incipitSummary),

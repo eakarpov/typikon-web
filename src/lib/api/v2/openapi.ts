@@ -1,8 +1,9 @@
-import { LICENSE_ID, LICENSE_URL } from "@/lib/api/v2/http";
+import { ERROR_CODES, LICENSE_ID, LICENSE_URL } from "@/lib/api/v2/http";
 import { DEFAULT_LIMIT, MAX_LIMIT } from "@/lib/api/v2/params";
 import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 import { SITE_HOST, SITE_URL } from "@/utils/site";
 import { BIBLE_SECTIONS } from "@/utils/bibleCanon";
+import { LANGUAGES } from "@/lib/incipits";
 
 // Машинное описание API. Держим его рядом с кодом, а не отдельным файлом в репозитории:
 // пределы постраничности и адрес лицензии берутся из тех же констант, что и в ручках,
@@ -225,12 +226,17 @@ export const openapi = () => ({
                     { name: "memory", in: "query", required: false, schema: { type: "string" }, description: "Память, которой поётся песнопение" },
                     { name: "service", in: "query", required: false, schema: { type: "string", enum: ["vespers", "matins", "liturgy", "hours", "compline", "midnight"] } },
                     { name: "unit", in: "query", required: false, schema: { type: "string" }, example: "stichera", description: "Род песнопения" },
+                    {
+                        name: "language", in: "query", required: false,
+                        schema: { type: "string", enum: [...LANGUAGES] },
+                        description: "Язык песнопения: cu_gr — церковнославянский, ro — румынский, grc — греческий",
+                    },
                     ...pageParams,
                 ],
                 responses: {
                     "200": ok("#/components/schemas/ChantList"),
                     "400": errorResponse("Запрос слишком короткий"),
-                    "500": errorResponse("Корпус песнопений на сервере недоступен"),
+                    "503": errorResponse("Корпус на этом сервере не выложен; code — corpus_unavailable"),
                 },
             },
         },
@@ -259,7 +265,7 @@ export const openapi = () => ({
                 responses: {
                     "200": ok("#/components/schemas/IncipitList"),
                     "400": errorResponse("Не указано начало песнопения или неизвестный язык"),
-                    "500": errorResponse("Корпус песнопений на сервере недоступен"),
+                    "503": errorResponse("Корпус на этом сервере не выложен; code — corpus_unavailable"),
                 },
             },
         },
@@ -472,7 +478,7 @@ export const openapi = () => ({
                     error: {
                         type: "object",
                         properties: {
-                            code: { type: "string", enum: ["not_found", "bad_request", "rate_limited", "internal"] },
+                            code: { type: "string", enum: [...ERROR_CODES] },
                             message: { type: "string" },
                         },
                     },
@@ -870,6 +876,7 @@ export const openapi = () => ({
                 properties: {
                     id: { type: "integer" },
                     snippet: { type: "array", items: { $ref: "#/components/schemas/SnippetPart" } },
+                    language: { type: ["string", "null"], description: "Язык песнопения: cu_gr, ro, grc, en" },
                     unit: { type: ["string", "null"], description: "Род: stichera, sedalen, troparion, irmos…" },
                     ode: { type: ["integer", "null"], description: "Песнь канона, если это канон" },
                     marker: { type: ["string", "null"], description: "Жанр напечатанного: богородичен, троичен, мученичен…" },
