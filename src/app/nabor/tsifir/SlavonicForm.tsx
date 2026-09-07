@@ -1,7 +1,7 @@
 'use client';
 import { useState } from "react";
 import type { ConvertResult, CslToken, CslVariant } from "@/lib/cslav/convert";
-import { CASE_LABELS } from "@/lib/cslav/labels";
+import { CASE_LABELS, SPEECH_LABEL } from "@/lib/cslav/labels";
 import { plural } from "@/utils/plural";
 
 // Гражданка в церковнославянское написание.
@@ -40,7 +40,11 @@ const Variant = ({ variant }: { variant: CslVariant }) => (
     <>
         <span className="font-sans-serif">{variant.applied}</span>
         <span className="text-slate-500">
-            {variant.properties ? ` — ${CASE_LABELS(variant.properties)}` : ""}
+            {/* У наречия помет формы нет вовсе: подписываем частью речи, иначе
+                спор «вѣ́рнѡ» против «вѣ́рно» остаётся без объяснения. */}
+            {variant.properties
+                ? ` — ${CASE_LABELS(variant.properties)}`
+                : (SPEECH_LABEL(variant.speech) ? ` — ${SPEECH_LABEL(variant.speech)}` : "")}
             {variant.count > 0
                 ? `, ${variant.count} ${plural(variant.count, "раз", "раза", "раз")}`
                     + (variant.texts
@@ -141,6 +145,17 @@ const Word = ({ token, chosen, onChoose }: {
         const cs = token.why !== "киноварь";
         return (
             <span className={cs ? "font-sans-serif text-slate-500" : "text-slate-500"} title={token.why}>
+                {token.text}
+            </span>
+        );
+    }
+    // Словарное написание с оговоркой: выбор между наречием и кратким
+    // прилагательным сделан частотой, и читатель должен видеть второе чтение.
+    if (token.why) {
+        return (
+            <span className="font-sans-serif underline decoration-dotted underline-offset-4
+                             decoration-slate-300"
+                  title={token.why}>
                 {token.text}
             </span>
         );

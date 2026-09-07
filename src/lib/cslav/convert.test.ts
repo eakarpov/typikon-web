@@ -206,3 +206,31 @@ test("неизвестное слово доводится правилом, д�
     assert.equal(got.untouched, 0);
     assert.deepEqual(got.tokens[0].rules, []);
 });
+
+test("наречие и краткое прилагательное разводятся частью речи", () => {
+    // «вѣ́рнѡ» наречие, «вѣ́рно» краткое прилагательное среднего рода. В
+    // гражданке это омонимы, и различает их только часть речи.
+    const map = answers(["верно", answer("верно", {
+        menaion: [{ w: "вѣ́рнѡ", n: 120, d: 40 }],
+        lexicon: [
+            { w: "вѣ́рнѡ", l: "вѣ́рнѡ", p: "", s: "ADV" },
+            { w: "вѣ́рно", l: "вѣ́рный", p: "brev,sg,n,nom/acc", s: "A" },
+        ],
+    })]);
+    const got = convertWithAnswers("верно", map);
+    assert.equal(toPlainText(got.tokens), "вѣ́рнѡ");
+    // Выбор сделан частотой, и об этом сказано прямо: второе чтение названо.
+    assert.match(got.tokens[0].why!, /наречие пишется омегой/);
+    assert.match(got.tokens[0].why!, /другое чтение — «вѣ́рно»/);
+});
+
+test("без свидетельства спор о части речи остаётся спором", () => {
+    const got = convertWithAnswers("непорочне", answers(["непорочне", answer("непорочне", {
+        lexicon: [
+            { w: "непоро́чнѣ", l: "непоро́чнѣ", p: "", s: "ADV" },
+            { w: "непоро́чне", l: "непоро́чный", p: "brev,sg,m,voc", s: "A" },
+        ],
+    })]));
+    assert.equal(got.ambiguous, 1);
+    assert.match(got.tokens[0].why!, /омонимы/);
+});

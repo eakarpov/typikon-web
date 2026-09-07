@@ -34,7 +34,11 @@ const DICT_DB = "typikon-csl";
 const SPELLINGS = "spellings";
 
 interface CorpusVariant { w: string; n: number; d: number }
-interface DictVariant { w: string; l: string; p: string }
+// s — часть речи ЛЕКСЕМЫ (ADV, A, S, V), а не помета формы. Она нужна там, где
+// написание различает не падеж, а часть речи: наречие на -о пишется омегой
+// («вѣ́рнѡ»), краткое прилагательное — обычным о («вѣ́рно»). У формы наречия
+// помет нет вовсе, и без этого поля спор выходил безымянным.
+interface DictVariant { w: string; l: string; p: string; s?: string }
 interface BibleVariant { w: string; n: number }
 
 // Написание — это БУКВЫ, а не буквы с ударением. Ударения у нас решает свой
@@ -196,6 +200,7 @@ const main = async () => {
                 w: spelling,
                 l: String(lexeme.name ?? ""),
                 p: String(form.properties ?? ""),
+                ...(lexeme.properties ? { s: String(lexeme.properties) } : {}),
             };
             // В словаре у одной лексемы формы нередко лежат дважды: с ударением
             // и без («госпо́ди» и «господи»). Безударный дубль читателю

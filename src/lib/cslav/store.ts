@@ -20,7 +20,7 @@ interface SpellingDocument {
     c?: Array<{ w: string; n: number; d: number }>;
     /** Минея церковнославянским шрифтом: чужая оцифровка, отдельно от собрания. */
     m?: Array<{ w: string; n: number; d: number }>;
-    x?: Array<{ w: string; l: string; p: string }>;
+    x?: Array<{ w: string; l: string; p: string; s?: string }>;
     b?: Array<{ w: string; n: number }>;
     /** Сокращения; o: 1 — дониконовское, синодальному набору не годится. */
     t?: Array<{ w: string; n: number; o?: 1 }>;

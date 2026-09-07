@@ -35,6 +35,8 @@ export interface CslVariant {
     properties?: string;
     /** Лексема словаря, от которой форма. */
     lemma?: string;
+    /** Часть речи лексемы: наречие пишется омегой, краткое прилагательное — о. */
+    speech?: string;
 }
 
 export type CslTokenKind =
@@ -88,7 +90,7 @@ export interface CslAnswer {
     corpus: Array<{ w: string; n: number; d: number }>;
     /** Минея церковнославянским шрифтом — главное свидетельство служебной титлы. */
     menaion: Array<{ w: string; n: number; d: number }>;
-    lexicon: Array<{ w: string; l: string; p: string }>;
+    lexicon: Array<{ w: string; l: string; p: string; s?: string }>;
     bible: Array<{ w: string; n: number }>;
     /** Сокращения под титлом; o: 1 — дониконовское. */
     titlo: Array<{ w: string; n: number; o?: 1 }>;
@@ -228,6 +230,7 @@ const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): 
             if (v.p) seen.add(v.p);
             twin.properties = [...seen].join(" · ") || undefined;
             twin.lemma ??= v.l || undefined;
+            twin.speech ??= v.s || undefined;
             continue;
         }
         const { form } = withPsili(v.w);
@@ -240,6 +243,7 @@ const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): 
             source: "lexicon",
             properties: v.p || undefined,
             lemma: v.l || undefined,
+            speech: v.s || undefined,
         });
     }
 
@@ -283,6 +287,32 @@ const settled = (answer: CslAnswer): boolean => {
         return dictForms.size <= 1 || dictForms.has(lettersOnly(attested[0].w));
     }
     return dictForms.size === 1 || (dictForms.size === 0 && answer.bible.length === 1);
+};
+
+/**
+ * Спор о части речи, а не о падеже.
+ *
+ * Наречие на -о пишется омегой, краткое прилагательное среднего рода — обычным
+ * о: «вѣ́рнѡ» против «вѣ́рно», «свѣ́тлѡ» против «свѣ́тло». В гражданке это
+ * омонимы, и различает их только часть речи, которую из одного слова не узнать.
+ * Решать за читателя тут нечем — но назвать спор по имени обязательно.
+ */
+const speechDispute = (variants: CslVariant[], chosen?: CslVariant): string | undefined => {
+    const adverb = variants.find((v) => v.speech?.startsWith("ADV"));
+    const other = variants.find((v) => v.speech && !v.speech.startsWith("ADV"));
+    if (!adverb || !other) return undefined;
+
+    const rule = "наречие пишется омегой и ятем («вѣ́рнѡ», «непоро́чнѣ»),"
+        + " краткое прилагательное — обычными о и е («вѣ́рно», «непоро́чне»);"
+        + " в гражданском написании это омонимы";
+    if (!chosen) return rule;
+
+    // Выбор сделан частотой, а не разбором: сказать об этом надо прямо, иначе
+    // читатель примет частоту за грамматику. Таких ключей в указателе 648.
+    const isAdverb = chosen.speech?.startsWith("ADV");
+    const rival = isAdverb ? other : adverb;
+    return `${rule}. Взято ${isAdverb ? "наречие" : "краткое прилагательное"}`
+        + ` по частоте; другое чтение — «${rival.spelling}»`;
 };
 
 /** Разметка текста по готовым ответам указателя. */
@@ -406,6 +436,7 @@ export const convertWithAnswers = (
                 kind: "byDictionary",
                 source: best.source,
                 rules: rules.length ? rules : undefined,
+                why: speechDispute(variants, best),
             });
             byDictionary++;
             continue;
@@ -429,7 +460,7 @@ export const convertWithAnswers = (
                     text: ordered[0].applied,
                     kind: "ambiguous",
                     variants: ordered,
-                    why: narrowed?.why,
+                    why: narrowed?.why ?? speechDispute(ordered),
                 });
                 ambiguous++;
             }
