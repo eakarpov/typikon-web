@@ -1,6 +1,7 @@
 import { buildCalendar, knownTimezone, type CalendarEvent } from "@/lib/ical";
 import { parishView } from "@/lib/parish/schedule";
 import { isoDate } from "@/lib/ordo";
+import { ICS_UID_DOMAIN, SITE_HOST, SITE_URL } from "@/utils/site";
 
 // ПОДПИСНОЙ КАЛЕНДАРЬ ПРИХОДА. Прихожанин подписывается телефоном один раз, и
 // расписание приезжает в тот календарь, которым он уже пользуется, — без
@@ -20,7 +21,7 @@ import { isoDate } from "@/lib/ordo";
 
 export const revalidate = 3600;
 
-const BASE_URL = "https://www.typikon.su";
+const BASE_URL = `${SITE_URL}`;
 const DAYS_BACK = 7;
 const DAYS_AHEAD = 90;
 const DEFAULT_MINUTES = 90;
@@ -78,7 +79,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
                     // Уид держится за собрание, а не за его место в дне: правка
                     // часа должна ПОДВИНУТЬ событие у подписчика, а не завести
                     // рядом второе
-                    uid: `${g.key}@${slug}.typikon.su`,
+                    uid: `${g.key}@${slug}.${ICS_UID_DOMAIN}`,
                     start: stamp(g.civil, g.time),
                     end: plusMinutes(g.civil, g.time, g.duration ?? DEFAULT_MINUTES),
                     tzid,
@@ -107,7 +108,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
 
     const body = buildCalendar({
         name: `Богослужения: ${first.title}`,
-        description: `Расписание богослужений. ${first.title} — typikon.su`,
+        description: `Расписание богослужений. ${first.title} — ${SITE_HOST}`,
         events,
         stamp: new Date(),
         ttlHours: 6,

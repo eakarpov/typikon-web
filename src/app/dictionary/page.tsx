@@ -4,6 +4,7 @@ import Content from "@/app/dictionary/Content";
 import SearchForm from "@/app/dictionary/SearchForm";
 import { searchData } from "@/app/dictionary/api";
 import { myFont } from "@/utils/font";
+import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Словарь церковнославянского языка — Уставные чтения",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Словарь церковнославянского языка",
         description: "Склонение и спряжение церковнославянского слова — парадигма целиком.",
-        url: "//www.typikon.su/dictionary/",
+        url: `${SITE_URL}/dictionary/`,
     },
 };
 

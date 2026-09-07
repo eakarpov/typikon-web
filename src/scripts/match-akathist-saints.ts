@@ -37,8 +37,9 @@ import { Agent, fetch as undiciFetch } from "undici";
 import Database from "better-sqlite3";
 import clientPromise from "@/lib/mongodb";
 import { normalizeChurchSlavonic } from "@/utils/churchSlavonic";
+import { SITE_HOST } from "@/utils/site";
 
-const UA = "typikon.su akathist-saint matcher";
+const UA = `${SITE_HOST} akathist-saint matcher`;
 const DELAY_MS = 700;
 const RETRIES = 4;
 // Тот же приём, что в src/scripts/lib/dneslov.ts: сертификат у dneslov не

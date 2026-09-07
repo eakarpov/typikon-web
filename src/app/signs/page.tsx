@@ -3,6 +3,7 @@ import {myFont} from "@/utils/font";
 import {Suspense} from "react";
 import Content from "@/app/signs/Content";
 import {getItems} from "@/app/signs/api";
+import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Памяти по знаку Типикона",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Памяти по знаку Типикона",
         description: "Список памятей по знаку Типикона.",
-        url: "//www.typikon.su/signs/",
+        url: `${SITE_URL}/signs/`,
         type: "website",
     },
 };

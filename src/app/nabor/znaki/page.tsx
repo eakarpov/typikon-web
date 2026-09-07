@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { myFont, csFontVariables } from "@/utils/font";
+import { SITE_URL } from "@/utils/site";
 
 const Inspector = dynamic(() => import("@/app/nabor/znaki/Inspector"), { ssr: false });
 
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Разбор строки по знакам",
         description: "Титла, покрытия, выносные и то, что стоит не на своём месте.",
-        url: "//www.typikon.su/nabor/znaki/",
+        url: `${SITE_URL}/nabor/znaki/`,
     },
 };
 

@@ -3,6 +3,7 @@ import {myFont} from "@/utils/font";
 import {Suspense} from "react";
 import Content from "@/app/rest-readings/Content";
 import {getItems} from "@/app/rest-readings/api";
+import { SITE_URL } from "@/utils/site";
 
 // Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
 export const revalidate = 3600;
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Чтения на год",
         description: "Уставные чтения вне триодных периодов Постной и Цветной Триодей.",
-        url: "//www.typikon.su/rest-readings/",
+        url: `${SITE_URL}/rest-readings/`,
         type: "website",
     },
 };

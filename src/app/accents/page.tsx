@@ -7,6 +7,7 @@ import { summarize } from "@/lib/accents/store";
 import { cached, CacheTag } from "@/lib/cache";
 import MarkForm from "@/app/accents/MarkForm";
 import WordLookup from "@/app/accents/WordLookup";
+import { SITE_URL } from "@/utils/site";
 
 // Словарь ударений лицом к человеку. До сих пор он был доступен только через
 // /api/v2/accents, то есть программистам.
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Ударения",
         description: "Расстановка ударений в церковнославянском тексте по словарю собрания.",
-        url: "//www.typikon.su/accents/",
+        url: `${SITE_URL}/accents/`,
     },
 };
 

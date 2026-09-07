@@ -6,6 +6,7 @@ import { myFont } from "@/utils/font";
 import { getSaintRows, SAINTS_PER_PAGE } from "@/app/saints/api";
 import { saintMatches, searchTerms } from "@/lib/saintSearch";
 import { plural } from "@/utils/plural";
+import { SITE_URL } from "@/utils/site";
 
 // Указатель святых. До сих пор страницы /saints/[id] существовали, но попасть на них
 // можно было только из текста — списка не было нигде, и в карту сайта они не попадали.
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Святые в собрании",
         description: "Указатель святых, чьи памяти и упоминания встречаются в уставных чтениях собрания.",
-        url: "//www.typikon.su/saints/",
+        url: `${SITE_URL}/saints/`,
     },
 };
 

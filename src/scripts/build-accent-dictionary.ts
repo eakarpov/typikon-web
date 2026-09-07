@@ -47,6 +47,7 @@ import {
     OXIA,
     VARIA,
 } from "@/lib/accents/core";
+import { SITE_HOST } from "@/utils/site";
 
 const outArg = process.argv.indexOf("--out");
 const OUT = outArg > 0 ? process.argv[outArg + 1] : "script-data/accents.json";
@@ -90,7 +91,7 @@ async function main() {
 
     const payload = {
         meta: {
-            about: "Словарь ударений церковнославянского корпуса typikon.su. "
+            about: `Словарь ударений церковнославянского корпуса ${SITE_HOST}. `
                 + "Ключ — слово без надстрочной разметки; значение — варианты ударения "
                 + "[номер ударной гласной, знак, частота, написание].",
             corpus: {

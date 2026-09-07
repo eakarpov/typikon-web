@@ -5,6 +5,7 @@ import { concordanceFor, parseRef } from "@/lib/bible/concordance";
 import { publicEditions } from "@/lib/bible/query";
 import { bibleEdition } from "@/lib/api/v2/serialize";
 import { reportError } from "@/lib/reportError";
+import { SITE_URL } from "@/utils/site";
 
 // Согласование библейских нумераций: где один и тот же стих стоит в каждом издании.
 //
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
                     + "издании, а разорванный надвое стих даёт два места в одном издании.",
                 bulk: {
                     what: "Вся таблица — 192 106 строк — отдаётся файлом, по одной строке на стих.",
-                    where: "https://www.typikon.su/data",
+                    where: `${SITE_URL}/data`,
                 },
                 editions: editions.map(bibleEdition),
             }, { maxAge: 3600 });

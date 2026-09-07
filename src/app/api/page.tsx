@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { myFont } from "@/utils/font";
+import { SITE_HOST, SITE_URL } from "@/utils/site";
 
 // Человеческая документация к публичному API. Машинное описание — /api/v2/openapi.json,
 // оно собирается из тех же констант, что и сами ручки.
@@ -38,7 +39,7 @@ const ApiDocs = () => (
                 ключа; для настоящей работы ключ заводится за минуту в профиле.
             </p>
             <p>
-                Базовый адрес — <code>https://www.typikon.su/api/v2</code>. Машинное описание:{" "}
+                Базовый адрес — <code>{SITE_URL}/api/v2</code>. Машинное описание:{" "}
                 <a href="/api/v2/openapi.json" className="text-amber-800 underline underline-offset-4">
                     openapi.json
                 </a>
@@ -65,7 +66,7 @@ const ApiDocs = () => (
                 : берите свободно, в том числе для коммерческих целей, указывая источник.
             </p>
             <p className="border-l-2 border-slate-300 pl-3 text-slate-700">
-                Корпус «Уставные чтения» (typikon.su), CC BY 4.0
+                Корпус «Уставные чтения» ({SITE_HOST}), CC BY 4.0
             </p>
             <p>
                 Оригиналы памятников — в общественном достоянии. Сканы, русские переводы и
@@ -122,7 +123,7 @@ const ApiDocs = () => (
                 перестаёт работать.
             </p>
             <Example>{`curl -H "Authorization: Bearer tk_…" \\
-  "https://www.typikon.su/api/v2/search?q=пасха"`}</Example>
+  "${SITE_URL}/api/v2/search?q=пасха"`}</Example>
             <p>
                 В каждом ответе видно, сколько осталось: <code>X-RateLimit-Remaining</code> и{" "}
                 <code>X-Quota-Remaining</code>. Суточный счётчик обнуляется в полночь UTC
@@ -145,7 +146,7 @@ const ApiDocs = () => (
                 День по постоянному адресу — <code>pascha</code>, <code>march-30</code>,{" "}
                 <code>post-1-sb</code>, — без пересчёта подвижного круга.
             </Endpoint>
-            <Example>{`curl https://www.typikon.su/api/v2/calendar/2026-04-12
+            <Example>{`curl ${SITE_URL}/api/v2/calendar/2026-04-12
 
 {
   "date": "2026-04-12",
@@ -179,7 +180,7 @@ const ApiDocs = () => (
                 набирать не нужно: «стражи» находит «стра́жи», «иоанна» — «і҆ѡа́нна».
                 Фрагмент возвращается в исходном написании.
             </Endpoint>
-            <Example>{`curl "https://www.typikon.su/api/v2/texts?readiness=ready&limit=2"
+            <Example>{`curl "${SITE_URL}/api/v2/texts?readiness=ready&limit=2"
 
 {
   "items": [ { "id": "...", "alias": "prolog-08-11-eupl", "name": "..." } ],
@@ -222,7 +223,7 @@ const ApiDocs = () => (
                 связан с другими языками лишь на девять процентов.
             </p>
             <Example>{`curl -H "Authorization: Bearer КЛЮЧ" \\
-  "https://www.typikon.su/api/v2/incipits?q=воду+прошед&sort=uses&limit=1"
+  "${SITE_URL}/api/v2/incipits?q=воду+прошед&sort=uses&limit=1"
 
 {
   "items": [ {

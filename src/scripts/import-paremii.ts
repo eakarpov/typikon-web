@@ -14,9 +14,10 @@ import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { findBookByCode } from "@/utils/texts";
+import { SITE_HOST, SITE_URL_NAKED } from "@/utils/site";
 
 const URL = "https://azbyka.ru/paremijnik";
-const USER_AGENT = "Mozilla/5.0 (compatible; typikon.su-importer/1.0; +https://typikon.su)";
+const USER_AGENT = `Mozilla/5.0 (compatible; ${SITE_HOST}-importer/1.0; +${SITE_URL_NAKED})`;
 
 // azbyka.ru использует западную нумерацию для двух последних книг Царств
 // (3-я Царств = "1King", 4-я Царств = "2King"), не совпадающую с bookMap.

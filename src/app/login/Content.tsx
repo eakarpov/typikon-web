@@ -7,6 +7,7 @@ import {useRouter} from "next/navigation";
 import {AuthSlice} from "@/lib/store/auth";
 import Script from "next/script";
 import {reportClientError} from "@/lib/reportClientError";
+import { VK_REDIRECT_URL } from "@/utils/site";
 
 const Login = ({
     vkApp,
@@ -31,7 +32,7 @@ const Login = ({
         if (!hasVkAuth) return;
         VKID.Config.init({
             app: vkApp,
-            redirectUrl: 'https://typikon.su/login',
+            redirectUrl: VK_REDIRECT_URL,
             responseMode: VKID.ConfigResponseMode.Callback,
             codeVerifier,
             source: VKID.ConfigSource.LOWCODE,

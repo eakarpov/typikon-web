@@ -6,6 +6,7 @@ import { myFont } from "@/utils/font";
 import { claimOf, commemoratorOf } from "@/lib/pomyannik/commemorators";
 import { countUnread } from "@/lib/pomyannik/zapiski";
 import Priem from "@/app/pomyannik/priem/Priem";
+import { SITE_HOST_FULL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Приём записок — Помянник",
@@ -33,7 +34,7 @@ const PriemPage = async () => {
 
     // Адрес берётся из запроса, а не из настроек: на своей машине ссылка должна
     // вести на свою машину, иначе проверить её нельзя.
-    const host = (await headers()).get("host") ?? "www.typikon.su";
+    const host = (await headers()).get("host") ?? SITE_HOST_FULL;
     const origin = host.startsWith("localhost") ? `http://${host}` : `https://${host}`;
 
     return (

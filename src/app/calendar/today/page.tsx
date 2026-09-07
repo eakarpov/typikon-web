@@ -7,6 +7,7 @@ import {getTodayDate, getZeroedNumber} from "@/utils/dates";
 import {Metadata} from "next";
 import {cookies} from "next/headers";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
+import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Чтения на сегодняшний календарный день",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Чтения на сегодняшний календарный день',
         description: 'Уставные чтения на сегодняшний календарный день.',
-        url: "//www.typikon.su/calendar/today"
+        url: `${SITE_URL}/calendar/today`
     },
 }
 

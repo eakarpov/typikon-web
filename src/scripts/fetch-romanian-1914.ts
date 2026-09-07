@@ -27,6 +27,7 @@ import "@/scripts/lib/env";
 import fs from "fs";
 import path from "path";
 import { BIBLE_CANON } from "@/utils/bibleCanon";
+import { SITE_HOST } from "@/utils/site";
 
 const outArg = process.argv.indexOf("--out");
 const OUT = outArg > 0 ? process.argv[outArg + 1] : "romanian/ro-1914.json";
@@ -158,7 +159,7 @@ const plain = (raw: string) => raw
 const fetchPage = async (page: string): Promise<string> => {
     const url = `${BASE}/${encodeURIComponent(page.replace(/ /g, "_"))}?action=raw`;
     const response = await fetch(url, {
-        headers: { "User-Agent": "typikon.su corpus import (contact: typikon.su/contact)" },
+        headers: { "User-Agent": `${SITE_HOST} corpus import (contact: ${SITE_HOST}/contact)` },
     });
     if (!response.ok) throw new Error(`${page}: ${response.status}`);
     return response.text();

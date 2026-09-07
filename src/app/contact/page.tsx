@@ -1,6 +1,7 @@
 import Content from "@/app/contact/Content";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
+import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Обратная связь",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Обратная связь',
         description: 'Уставные чтения, обратная связь с пользователями.',
-        url: "//www.typikon.su/contact/"
+        url: `${SITE_URL}/contact/`
     },
 }
 

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildCalendar } from "@/lib/ical";
+import { ICS_UID_DOMAIN } from "@/utils/site";
 
 const STAMP = new Date("2026-08-24T10:00:00Z");
 
@@ -9,7 +10,7 @@ const build = (summary: string, description?: string) =>
         name: "Уставные чтения",
         description: "Чтения дня",
         stamp: STAMP,
-        events: [{ uid: "20260824@typikon.su", date: "20260824", summary, description }],
+        events: [{ uid: `20260824@${ICS_UID_DOMAIN}`, date: "20260824", summary, description }],
     });
 
 const lines = (ics: string) => ics.split("\r\n").filter(Boolean);

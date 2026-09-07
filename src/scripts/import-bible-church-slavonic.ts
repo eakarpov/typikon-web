@@ -12,9 +12,10 @@ import "@/scripts/lib/env";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { TextKind } from "@/utils/texts";
+import { SITE_HOST, SITE_URL_NAKED } from "@/utils/site";
 
 const SOURCE_BASE = "https://bible.by/elzs";
-const USER_AGENT = "Mozilla/5.0 (compatible; typikon.su-importer/1.0; +https://typikon.su)";
+const USER_AGENT = `Mozilla/5.0 (compatible; ${SITE_HOST}-importer/1.0; +${SITE_URL_NAKED})`;
 const REQUEST_DELAY_MS = 350;
 
 // Каноничный порядок книг Елизаветинской Библии (славянская традиция: соборные

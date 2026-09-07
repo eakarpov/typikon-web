@@ -5,6 +5,7 @@ import {
     checkDomain, claimOf, claimsByStatus, createCommemorator,
     decideClaim, markLetterSent, markReplied,
 } from "@/lib/pomyannik/commemorators";
+import { SITE_HOST, SITE_URL } from "@/utils/site";
 
 // РАЗБОР ЗАЯВОК НА ПРИЁМ ЗАПИСОК.
 //
@@ -17,7 +18,7 @@ import {
 // когда заявок станет больше десятка в неделю; до тех пор это работа на пустом
 // месте.
 
-const BASE_URL = "https://www.typikon.su";
+const BASE_URL = `${SITE_URL}`;
 
 export async function GET() {
     const { userId, caps } = await viewer();
@@ -49,9 +50,9 @@ export async function POST(request: NextRequest) {
     if (!claim) return NextResponse.json({ error: "заявки нет" }, { status: 404 });
 
     if (action === "letter") {
-        const mailed = await sendMail(claim.email, "Приём записок на typikon.su",
+        const mailed = await sendMail(claim.email, `Приём записок на ${SITE_HOST}`,
             `Здравствуйте.\n\n`
-            + `На typikon.su подана заявка на приём поминальных записок от имени:\n`
+            + `На ${SITE_HOST} подана заявка на приём поминальных записок от имени:\n`
             + `${claim.title}\n\n`
             + `Указана страница епархии: ${claim.dioceseUrl}\n\n`
             + `Если заявку подавали вы — ОТВЕТЬТЕ на это письмо, оставив в тексте\n`
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
         const person = await createCommemorator(claim, userId);
         await decideClaim(target, "approved", userId, note);
         await sendMail(claim.email, "Приём записок открыт",
-            `Заявка принята: вы можете принимать поминальные записки на typikon.su.\n\n`
+            `Заявка принята: вы можете принимать поминальные записки на ${SITE_HOST}.\n\n`
             + `${note ? note + "\n\n" : ""}`
             + `Ссылка-приглашение для прихожан — её можно раздать или повесить\n`
             + `на стенде:\n${BASE_URL}/pomyannik/podat/${person.inviteCode}\n\n`

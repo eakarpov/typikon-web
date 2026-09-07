@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { myFont, csFontVariables } from "@/utils/font";
 import Form from "@/app/razbor/Form";
+import { SITE_URL } from "@/utils/site";
 
 // Разбор набранного текста — для того, кто набирает, а не для того, кто читает.
 //
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Разбор набранного текста",
         description: "Что это за строки, где они в собрании и что с ними не так.",
-        url: "//www.typikon.su/razbor/",
+        url: `${SITE_URL}/razbor/`,
     },
 };
 

@@ -8,6 +8,7 @@ import { myFont } from "@/utils/font";
 import { dneslovIdsOf, getSaintByAddress, type Saint } from "@/lib/saints";
 import { memoriesOfSaint } from "@/lib/memories";
 import { dedicationsOfSaint } from "@/lib/temples";
+import { SITE_URL } from "@/utils/site";
 
 // Адрес страницы святого — наш слуг (`saints.slug`). Номер памяти святцев
 // (/saints/3030) остаётся рабочим навсегда и уводит постоянным редиректом: такие
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const address = params.id;
     const saint = await getSaintByAddress(address);
     const name = heading(saint, address);
-    const url = `//www.typikon.su/saints/${saint?.slug || address}`;
+    const url = `${SITE_URL}/saints/${saint?.slug || address}`;
 
     return {
         title: `Страница святого - ${name}`,

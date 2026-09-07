@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { myFont, csFontVariables } from "@/utils/font";
+import { SITE_URL } from "@/utils/site";
 
 // Перекодировка старого набора в юникод.
 //
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Перекодировка HIP, UCS и транслитерации в юникод",
         description: "Старый церковнославянский набор — в юникод, прямо в браузере.",
-        url: "//www.typikon.su/nabor/ucs/",
+        url: `${SITE_URL}/nabor/ucs/`,
     },
 };
 

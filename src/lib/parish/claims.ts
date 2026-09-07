@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { parishDb } from "./db";
 import type { Temple } from "@/lib/temples";
+import { SITE_HOST, SITE_URL } from "@/utils/site";
 
 // ЗАЯВКА НА ВЕДЕНИЕ РАСПИСАНИЯ.
 //
@@ -157,7 +158,7 @@ export const checkSite = async (
     // русская подпись, и падали ВСЕ три попытки разом — а наружу это
     // выглядело как «знака на сайте нет». Молчаливый сбой и отрицательный
     // ответ здесь неразличимы, и потому ниже причина запоминается.
-    const headers = { "User-Agent": "typikon.su/1.0 (+https://www.typikon.su)" };
+    const headers = { "User-Agent": `${SITE_HOST}/1.0 (+${SITE_URL})` };
     let lastError: string | null = null;
 
     for (const url of tokenPaths(site)) {

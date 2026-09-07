@@ -7,6 +7,7 @@ import { SIGN_LABELS } from "@/utils/chantLabels";
 import {
     addressOf, CYCLE_LABELS, getLinkedSaint, getMemory, METHOD_LABELS, type Memory,
 } from "@/lib/memories";
+import { SITE_URL } from "@/utils/site";
 
 // Карточка ПАМЯТИ — службы, назначенной книгой на своё место. Не карточка
 // святого: святой при памяти бывает, а бывает и нет, и /saints остаётся своим
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
         title,
         description: `Служба в книге: ${addressOf(memory)}. Знак службы и его источники.`,
-        openGraph: { type: "website", title, url: `//www.typikon.su/memories/${memory.memoryId}` },
+        openGraph: { type: "website", title, url: `${SITE_URL}/memories/${memory.memoryId}` },
     };
 }
 

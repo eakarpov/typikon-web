@@ -5,6 +5,7 @@ import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 import { cached, CacheTag } from "@/lib/cache";
 import { ACCENTS_COLLECTION, ACCENTS_DB } from "@/lib/accents/store";
 import {reportError} from "@/lib/reportError";
+import { SITE_HOST, SITE_URL } from "@/utils/site";
 
 // Описание сервиса: с чего начинает знакомство любой клиент. Здесь же — условия
 // использования, чтобы их нельзя было не заметить.
@@ -42,11 +43,11 @@ export async function GET(request: Request) {
             description:
                 "Церковнославянские уставные чтения по Типикону: тексты, привязка к дням года, зачала.",
             version: "2",
-            website: "https://www.typikon.su",
+            website: `${SITE_URL}`,
             license: {
                 corpus: "CC-BY-4.0",
-                url: "https://www.typikon.su/license",
-                attribution: "Корпус «Уставные чтения» (typikon.su), CC BY 4.0",
+                url: `${SITE_URL}/license`,
+                attribution: `Корпус «Уставные чтения» (${SITE_HOST}), CC BY 4.0`,
                 note: "Оригиналы памятников — общественное достояние. Сканы, переводы и данные dneslov.org принадлежат их владельцам.",
             },
             counts: await counts(),
@@ -68,15 +69,15 @@ export async function GET(request: Request) {
                 pericopes: "/api/v2/pericopes",
                 signs: "/api/v2/signs",
                 news: "/api/v2/news",
-                documentation: "https://www.typikon.su/api",
+                documentation: `${SITE_URL}/api`,
             },
             // Первое, что хочет знать клиент после «что тут есть» — «сколько мне можно».
             access: {
                 anonymous: `${ANONYMOUS_ALLOWANCE.limit} запросов в час с адреса, без поиска`,
                 withKey: `${TIERS.free.limit} запросов в минуту и ${TIERS.free.perDay} в сутки, все разделы`,
                 header: "Authorization: Bearer {ключ}",
-                obtain: "https://www.typikon.su/profile",
-                documentation: "https://www.typikon.su/api",
+                obtain: `${SITE_URL}/profile`,
+                documentation: `${SITE_URL}/api`,
             },
             stability:
                 "В версии 2 поля только добавляются. Несовместимые изменения выйдут отдельной версией.",

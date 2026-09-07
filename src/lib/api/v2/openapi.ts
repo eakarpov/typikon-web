@@ -1,6 +1,7 @@
 import { LICENSE_ID, LICENSE_URL } from "@/lib/api/v2/http";
 import { DEFAULT_LIMIT, MAX_LIMIT } from "@/lib/api/v2/params";
 import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
+import { SITE_HOST, SITE_URL } from "@/utils/site";
 
 // Машинное описание API. Держим его рядом с кодом, а не отдельным файлом в репозитории:
 // пределы постраничности и адрес лицензии берутся из тех же констант, что и в ручках,
@@ -49,7 +50,7 @@ export const openapi = () => ({
             "Церковнославянские уставные чтения по Типикону: тексты, книги, привязка к дням " +
             "церковного года, зачала и знаки месяцеслова.\n\n" +
             "Нужен корпус целиком — не выбирайте его отсюда по записи: он выложен одним "
-            + "набором файлов, https://www.typikon.su/data (JSON Lines, контрольные суммы, "
+            + `набором файлов, ${SITE_URL}/data (JSON Lines, контрольные суммы, `
             + "лицензия на каждый слой).\n\n"
             + "Корпус доступен по лицензии CC BY 4.0 — пользуйтесь свободно, указывая источник. " +
             "Оригиналы памятников находятся в общественном достоянии. Сканы, переводы и данные " +
@@ -57,12 +58,12 @@ export const openapi = () => ({
             `Доступ отмерен. Без ключа — ${ANONYMOUS_ALLOWANCE.limit} запросов в час с адреса и без ` +
             "поиска: этого хватает попробовать. С ключом — " +
             `${TIERS.free.limit} запросов в минуту и ${TIERS.free.perDay} в сутки, включая поиск. ` +
-            "Ключ заводится в профиле на typikon.su и передаётся заголовком Authorization: Bearer. " +
+            `Ключ заводится в профиле на ${SITE_HOST} и передаётся заголовком Authorization: Bearer. ` +
             "Остаток виден в заголовках X-RateLimit-Remaining и X-Quota-Remaining.",
         license: { name: LICENSE_ID, url: LICENSE_URL },
-        contact: { url: "https://www.typikon.su/contact" },
+        contact: { url: `${SITE_URL}/contact` },
     },
-    servers: [{ url: "https://www.typikon.su", description: "Основной сервер" }],
+    servers: [{ url: `${SITE_URL}`, description: "Основной сервер" }],
     // Ключ не обязателен: без него ручки тоже отвечают, только скупее и без поиска.
     // Поэтому security на уровне документа, а не в каждой операции.
     security: [{ apiKey: [] }, {}],
@@ -245,7 +246,7 @@ export const openapi = () => ({
                     "что ключ сводит «й» к «и»: «Радуйся» ищется и находится как " +
                     "«радуися».\n\n" +
                     "Указатель целиком эта ручка не отдаёт — для этого есть выгрузка " +
-                    "корпуса на https://www.typikon.su/data.",
+                    `корпуса на ${SITE_URL}/data.`,
                 parameters: [
                     { name: "q", in: "query", required: true, schema: { type: "string" }, example: "воду прошед", description: "Начало песнопения" },
                     { name: "language", in: "query", required: false, schema: { type: "string", enum: ["cu_gr", "ro", "grc", "en", "et", "ar"] }, description: "Язык текста. Зачины разных языков не пересекаются: между языками инципит не отождествляет ничего" },
@@ -380,7 +381,7 @@ export const openapi = () => ({
                     "Это соответствие МЕСТА, а не текста: пары может не оказаться вовсе, а " +
                     "разорванный надвое стих даёт в издании два места.\n\n" +
                     "Без ref — описание ручки и список изданий. Всю таблицу (192 106 строк) " +
-                    "берите файлом из выгрузки: https://www.typikon.su/data",
+                    `берите файлом из выгрузки: ${SITE_URL}/data`,
                 parameters: [
                     {
                         name: "ref", in: "query", required: false,
@@ -446,7 +447,7 @@ export const openapi = () => ({
                 type: "http",
                 scheme: "bearer",
                 description:
-                    "Ключ доступа, выпускается в профиле на typikon.su. Даёт больший лимит и " +
+                    `Ключ доступа, выпускается в профиле на ${SITE_HOST}. Даёт больший лимит и ` +
                     "открывает поиск. Запасной вид — заголовок X-Api-Key с тем же значением.",
             },
         },

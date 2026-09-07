@@ -5,6 +5,7 @@ import {permanentRedirect} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
+import { SITE_URL } from "@/utils/site";
 
 // Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
 export const revalidate = 3600;
@@ -38,7 +39,7 @@ export async function generateMetadata(
         openGraph: {
             title: item.name,
             type: "website",
-            url: `//www.typikon.su/library/${id}`,
+            url: `${SITE_URL}/library/${id}`,
             description: item.description ||
                 `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`
         },

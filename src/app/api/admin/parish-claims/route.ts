@@ -6,6 +6,7 @@ import { addAdmin } from "@/lib/parish/access";
 import { getTemple } from "@/lib/temples";
 import { viewer } from "@/lib/rights-server";
 import { sendMail } from "@/lib/mail";
+import { SITE_URL } from "@/utils/site";
 
 // Решение модератора по заявке. Отдельно от приходских ручек: там право
 // приходское и именное, здесь — сайта, и просит оно `parish.claims`.
@@ -47,7 +48,7 @@ const notify = async (
 
     const temple = await getTemple(templeSlug);
     const name = temple?.name ?? templeSlug;
-    const link = `https://www.typikon.su/parish/${templeSlug}`;
+    const link = `${SITE_URL}/parish/${templeSlug}`;
 
     return approve
         ? sendMail(email, `Расписание: ${name}`,

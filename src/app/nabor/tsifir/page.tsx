@@ -5,6 +5,7 @@ import { myFont, csFontVariables } from "@/utils/font";
 import NumeralForm from "@/app/nabor/tsifir/NumeralForm";
 import CivilForm from "@/app/nabor/tsifir/CivilForm";
 import SlavonicForm from "@/app/nabor/tsifir/SlavonicForm";
+import { SITE_URL } from "@/utils/site";
 
 // Два преобразования на одной странице, и это не экономия места.
 //
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Написание в обе стороны и цифирь",
         description: "Гражданка в церковнославянское написание и обратно; буквенное число.",
-        url: "//www.typikon.su/nabor/tsifir/",
+        url: `${SITE_URL}/nabor/tsifir/`,
     },
 };
 

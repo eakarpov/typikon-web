@@ -8,8 +8,9 @@
 // счёт — общее.
 import { Agent, fetch as undiciFetch } from "undici";
 import { normalizeChurchSlavonic } from "@/utils/churchSlavonic";
+import { SITE_HOST } from "@/utils/site";
 
-const UA = "typikon.su saint matcher";
+const UA = `${SITE_HOST} saint matcher`;
 export const DELAY_MS = 700;
 const RETRIES = 4;
 // СТРАНИЦЫ БЕРЁМ ДО КОНЦА, а не три. Выдача у dneslov идёт по 25, и трёх

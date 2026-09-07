@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { myFont, csFontVariables } from "@/utils/font";
+import { SITE_URL } from "@/utils/site";
 
 const FontReader = dynamic(() => import("@/app/nabor/font/FontReader"), { ssr: false });
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Разбор шрифтового файла",
         description: "Покрытие, привязка надстрочных и частная область — прямо из файла шрифта.",
-        url: "//www.typikon.su/nabor/font/",
+        url: `${SITE_URL}/nabor/font/`,
     },
 };
 

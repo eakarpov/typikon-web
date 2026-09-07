@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { myFont, csFontVariables } from "@/utils/font";
+import { SITE_URL } from "@/utils/site";
 
 const FontCheck = dynamic(() => import("@/app/nabor/shrift/FontCheck"), { ssr: false });
 
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Проверка церковнославянского шрифта",
         description: "Какие знаки отображает шрифт вашей системы, а какие подменяет заполнителем.",
-        url: "//www.typikon.su/nabor/shrift/",
+        url: `${SITE_URL}/nabor/shrift/`,
     },
 };
 

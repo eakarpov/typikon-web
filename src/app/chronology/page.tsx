@@ -9,6 +9,7 @@ import Result from "@/app/chronology/Result";
 import Calendars, { YearNumbers } from "@/app/chronology/Calendars";
 import DateForm, { INPUT_CALENDARS, InputCalendar } from "@/app/chronology/DateForm";
 import Tabs, { Tab } from "@/app/chronology/Tabs";
+import { SITE_URL } from "@/utils/site";
 
 // Хронологический решатель: числа года в обе стороны и датировка записи
 // перебором. Пособие не для читателя, а для того, кто держит в руках источник
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
         description:
             "Перевод дат от Сотворения мира и разбор летописных датировок на внутреннюю "
             + "непротиворечивость.",
-        url: "//www.typikon.su/chronology/",
+        url: `${SITE_URL}/chronology/`,
     },
 };
 

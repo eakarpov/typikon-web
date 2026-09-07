@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { myFont } from "@/utils/font";
+import { SITE_HOST } from "@/utils/site";
 
 // Условия использования корпуса. Дублирует LICENSE-CORPUS.md из репозитория:
 // в репозитории — для тех, кто берёт данные, здесь — для тех, кто пришёл на сайт.
@@ -57,7 +58,7 @@ const License = () => (
             </p>
             <p>Как ссылаться:</p>
             <p className="border-l-2 border-slate-300 pl-3 text-slate-700">
-                Корпус «Уставные чтения» (typikon.su), CC BY 4.0
+                Корпус «Уставные чтения» ({SITE_HOST}), CC BY 4.0
             </p>
             <p>
                 Если вы изменили материал — отметьте это, чтобы изменения не приписывались
@@ -101,7 +102,7 @@ const License = () => (
             </p>
             <p className="border-l-2 border-slate-300 pl-3 text-slate-700">
                 © участники OpenStreetMap (ODbL); данные Wikidata (CC0); разметка престолов —
-                проект «Уставные чтения» (typikon.su)
+                проект «Уставные чтения» ({SITE_HOST})
             </p>
         </section>
 

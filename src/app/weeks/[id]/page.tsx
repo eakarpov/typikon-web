@@ -5,6 +5,7 @@ import {myFont} from "@/utils/font";
 import {Metadata} from "next";
 import {cookies} from "next/headers";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
+import { SITE_URL } from "@/utils/site";
 
 type Props = {
     params: { id: string }
@@ -25,7 +26,7 @@ export async function generateMetadata(
         description: `Уставные чтения на день: ${item?.name}`,
         openGraph: {
             type: "website",
-            url: `//www.typikon.su/penticostarion/${id}`,
+            url: `${SITE_URL}/penticostarion/${id}`,
             title: item?.name,
             description: `Уставные чтения на день: ${item?.name}`,
         },

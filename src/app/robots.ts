@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/utils/site";
 
 // Правила обхода. Лежат в коде рядом с картой сайта (sitemap.ts), а не статикой в
 // public/, по той же причине: адреса разделов меняются, и правило, которое живёт
@@ -11,7 +12,7 @@ import { MetadataRoute } from "next";
 // а вторая половина (счётчики и отказы тем, кто просьбу не читает) живёт в
 // rateLimit.ts и в настройках nginx.
 
-const BASE_URL = "https://www.typikon.su";
+const BASE_URL = `${SITE_URL}`;
 
 /** Личное и служебное: индексировать нечего, а отвечает всё это из базы. */
 const PRIVATE = [

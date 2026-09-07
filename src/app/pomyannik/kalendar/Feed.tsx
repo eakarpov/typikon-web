@@ -1,5 +1,6 @@
 'use client';
 import React from "react";
+import { SITE_URL } from "@/utils/site";
 
 // ПОДПИСКА НА ЛИЧНУЮ ЛЕНТУ.
 //
@@ -22,7 +23,7 @@ const Feed = ({ initial }: { initial: FeedState | null }) => {
     const [copied, setCopied] = React.useState(false);
 
     const url = feed
-        ? `${typeof window === "undefined" ? "https://www.typikon.su" : window.location.origin}`
+        ? `${typeof window === "undefined" ? `${SITE_URL}` : window.location.origin}`
           + `/pomyannik/feed/${feed.token}/pomyannik.ics`
         : "";
 

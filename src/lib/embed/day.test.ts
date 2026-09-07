@@ -10,6 +10,7 @@ import {
     type EmbedDay,
     type EmbedReading,
 } from "./day";
+import { SITE_URL } from "@/utils/site";
 
 const options = (over: Partial<ReturnType<typeof readOptions>> = {}) => ({
     ...readOptions(new URLSearchParams(), "2026-03-04"),
@@ -44,7 +45,7 @@ describe("экранирование", () => {
                 slot: `<b>слот</b>`,
                 cites: [{ cite: `<i>цитата</i>`, alias: `"><script>`, bible: true }],
             }],
-        }), options(), "https://www.typikon.su");
+        }), options(), `${SITE_URL}`);
 
         assert.ok(!html.includes("<script>alert(1)"));
         assert.ok(!html.includes("<img src=x"));
@@ -131,13 +132,13 @@ describe("отбор чтений", () => {
 
 describe("рамка без данных", () => {
     it("говорит, что случилось, вместо пустоты", () => {
-        const html = renderEmbed(null, options(), "https://www.typikon.su");
+        const html = renderEmbed(null, options(), `${SITE_URL}`);
         assert.ok(html.includes("недоступны"));
         // Ссылка на сайт остаётся: по ней и приходят разбираться.
         assert.ok(html.includes("/calculator/2026-03-04"));
     });
 
     it("всегда несёт подпись со ссылкой на источник", () => {
-        assert.ok(renderEmbed(day(), options(), "https://www.typikon.su").includes("Уставные чтения"));
+        assert.ok(renderEmbed(day(), options(), `${SITE_URL}`).includes("Уставные чтения"));
     });
 });

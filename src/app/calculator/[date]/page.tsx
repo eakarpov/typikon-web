@@ -8,6 +8,7 @@ import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLangua
 import {notFound} from "next/navigation";
 import MyTempleToday from "@/app/components/MyTempleToday";
 import TrapezaToday from "@/app/components/TrapezaToday";
+import { SITE_URL } from "@/utils/site";
 
 type Props = {
     params: { date: string };
@@ -25,7 +26,7 @@ export async function generateMetadata(
         description: `Полные уставные чтения (Триодь и календарь) на ${date}.`,
         openGraph: {
             type: "website",
-            url: `//www.typikon.su/calculator/${date}`,
+            url: `${SITE_URL}/calculator/${date}`,
             title: `Уставные чтения на день: ${date}`,
             description: `Полные уставные чтения (Триодь и календарь) на ${date}.`,
         },

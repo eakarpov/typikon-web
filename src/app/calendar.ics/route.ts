@@ -4,6 +4,7 @@ import { buildCalendar, CalendarEvent } from "@/lib/ical";
 import { TextType, valueTitle } from "@/utils/texts";
 import { DEFAULT_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
 import {reportError} from "@/lib/reportError";
+import { ICS_UID_DOMAIN, SITE_HOST, SITE_URL } from "@/utils/site";
 
 // Подписной календарь: чтения и памяти дня приезжают в тот календарь, которым человек
 // уже пользуется, без захода на сайт и без приложения.
@@ -18,7 +19,7 @@ import {reportError} from "@/lib/reportError";
 // готовый ответ и обновляет его в фоне.
 export const revalidate = 86400;
 
-const BASE_URL = "https://www.typikon.su";
+const BASE_URL = `${SITE_URL}`;
 const DAYS_BACK = 7;
 const DAYS_AHEAD = 90;
 
@@ -81,7 +82,7 @@ const buildEvent = (date: Date, result: any): CalendarEvent | null => {
         // Домен в uid остаётся голым, хотя адреса выше переехали на www: uid — это
         // не адрес, а опознавательный знак события. Сменить его значит для каждого
         // подписчика превратить правку дня в новое событие рядом со старым.
-        uid: `${toIcsDate(date)}@typikon.su`,
+        uid: `${toIcsDate(date)}@${ICS_UID_DOMAIN}`,
         date: toIcsDate(date),
         summary,
         description,
@@ -120,7 +121,7 @@ export async function GET() {
 
     const body = buildCalendar({
         name: "Уставные чтения",
-        description: "Чтения и памяти дня по Типикону — typikon.su",
+        description: `Чтения и памяти дня по Типикону — ${SITE_HOST}`,
         events,
         stamp: new Date(),
     });

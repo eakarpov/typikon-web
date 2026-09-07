@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { memo } from "react";
 import Link from "next/link";
 import { myFont, csFontVariables } from "@/utils/font";
+import { SITE_URL } from "@/utils/site";
 
 // Указатель раздела: инструменты для того, кто НАБИРАЕТ церковнославянский, а не
 // читает его.
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Церковнославянский набор",
         description: "Старые кодировки в юникод, разбор знаков, цифирь.",
-        url: "//www.typikon.su/nabor/",
+        url: `${SITE_URL}/nabor/`,
     },
 };
 

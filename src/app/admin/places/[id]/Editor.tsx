@@ -9,6 +9,7 @@ import {
     TextReadiness
 } from "@/utils/texts";
 import {useCallback, useEffect, useState} from "react";
+import { SITE_URL } from "@/utils/site";
 
 const AdminEditor = ({ value }: any) => {
     const [footnotes, setFootnotes] = useState(
@@ -25,7 +26,7 @@ const AdminEditor = ({ value }: any) => {
     const [saved, setIsSaved] = useState(false);
 
     const onBufferClick = useCallback(() => {
-        navigator.clipboard.writeText(`https://www.typikon.su/reading/${alias}`);
+        navigator.clipboard.writeText(`${SITE_URL}/reading/${alias}`);
     }, [alias]);
 
     const onSubmit = () => {

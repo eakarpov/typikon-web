@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { ObjectId } from "mongodb";
+import { SITE_URL, SITE_URL_NAKED } from "@/utils/site";
 
 // Правила доступа к публичному API: кто спрашивает и что ему за это полагается.
 //
@@ -150,7 +151,7 @@ export const tokenState = (token: Pick<ApiToken, "revokedAt" | "expiresAt">, now
     return "ok";
 };
 
-const DEFAULT_SITE_ORIGINS = ["https://typikon.su", "https://www.typikon.su"];
+const DEFAULT_SITE_ORIGINS = [SITE_URL_NAKED, SITE_URL];
 
 export const siteOrigins = (): string[] => {
     const configured = process.env.SITE_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean);

@@ -6,13 +6,14 @@ import {BIBLE_CANON} from "@/utils/bibleCanon";
 import {REFERENCE_VERSIFICATION} from "@/utils/bibleVersification";
 import { podobnyIndex } from "@/lib/podobny/store";
 import {reportError} from "@/lib/reportError";
+import { SITE_URL } from "@/utils/site";
 
 // Карта сайта строится из базы, а не лежит статикой в public/: раньше файл
 // генерировался внешним сервисом и с 2024 года не обновлялся, поэтому новые
 // чтения в индекс не попадали. Пересобирается раз в сутки.
 export const revalidate = 86400;
 
-const BASE_URL = "https://www.typikon.su";
+const BASE_URL = `${SITE_URL}`;
 
 // Тексты в статусах "в наличии"/"пока отсутствует" — это заготовки без содержимого,
 // в индексе им делать нечего.

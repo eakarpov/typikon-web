@@ -7,13 +7,14 @@
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { findBookByCode, findBookSlugByAbbreviation } from "@/utils/texts";
+import { SITE_HOST, SITE_URL_NAKED } from "@/utils/site";
 
 const SOURCES: Array<{ source: "gospel" | "apostle"; url: string }> = [
     { source: "gospel", url: "https://azbyka.ru/shemy/spisok-vseh-bogosluzhebnyh-zachal-evangelija.shtml" },
     { source: "apostle", url: "https://azbyka.ru/shemy/spisok-vseh-bogosluzhebnyh-zachal-apostola.shtml" },
 ];
 
-const USER_AGENT = "Mozilla/5.0 (compatible; typikon.su-importer/1.0; +https://typikon.su)";
+const USER_AGENT = `Mozilla/5.0 (compatible; ${SITE_HOST}-importer/1.0; +${SITE_URL_NAKED})`;
 
 interface IRange { chapterFrom: number; verseFrom: number; chapterTo: number; verseTo: number; }
 

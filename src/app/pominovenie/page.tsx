@@ -3,6 +3,7 @@ import Link from "next/link";
 import { myFont } from "@/utils/font";
 import { publicCommemorators } from "@/lib/pomyannik/commemorators";
 import { NOTE_KIND_BY_KEY } from "@/lib/pomyannik/types";
+import { SITE_URL } from "@/utils/site";
 
 // КТО ПРИНИМАЕТ ЗАПИСКИ ОТ ВСЕХ.
 //
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Кому подать записку",
         description: "Священники, принимающие поминальные записки. Оплат на сайте нет.",
-        url: "//www.typikon.su/pominovenie/",
+        url: `${SITE_URL}/pominovenie/`,
     },
 };
 

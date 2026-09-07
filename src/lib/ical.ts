@@ -1,6 +1,7 @@
 // Сборка iCalendar (RFC 5545). Отдельно от данных, чтобы формат можно было проверять
 // сам по себе: тут только экранирование, сворачивание строк и склейка.
 import { knownZone, vtimezoneLines } from "@/lib/timezones";
+import { ICS_UID_DOMAIN } from "@/utils/site";
 
 interface CalendarEventBase {
     uid: string;
@@ -100,7 +101,7 @@ export const buildCalendar = ({
     const lines: string[] = [
         ...line("BEGIN", "VCALENDAR"),
         ...line("VERSION", "2.0"),
-        ...line("PRODID", "-//typikon.su//Уставные чтения//RU"),
+        ...line("PRODID", `-//${ICS_UID_DOMAIN}//Уставные чтения//RU`),
         ...line("CALSCALE", "GREGORIAN"),
         ...line("METHOD", "PUBLISH"),
         ...line("X-WR-CALNAME", escapeText(name)),

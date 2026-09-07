@@ -1,6 +1,7 @@
 import { feedByToken, listPersons } from "@/lib/pomyannik/service";
 import { shift, todayIso, upcoming, type UpcomingEvent } from "@/lib/pomyannik/reckoning";
 import { buildCalendar, type CalendarEvent } from "@/lib/ical";
+import { ICS_UID_DOMAIN, SITE_HOST, SITE_URL } from "@/utils/site";
 
 // ЛИЧНАЯ ЛЕНТА ПОМЯННИКА.
 //
@@ -24,7 +25,7 @@ export const dynamic = "force-dynamic";
 
 const DAYS_BACK = 7;
 const DAYS_AHEAD = 372;
-const BASE_URL = "https://www.typikon.su";
+const BASE_URL = `${SITE_URL}`;
 
 /** Обезличенный заголовок: что за день, но не по ком. */
 const anonymous = (event: UpcomingEvent): string => {
@@ -65,7 +66,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ token: string }> 
     const calendar: CalendarEvent[] = events.map(event => ({
         // Опознавательный знак события, а не адрес: сменится он — и у
         // подписчика прошлогодние именины останутся рядом с новыми.
-        uid: `${event.personId ?? "obshchee"}-${event.kind}-${event.date}@typikon.su`,
+        uid: `${event.personId ?? "obshchee"}-${event.kind}-${event.date}@${ICS_UID_DOMAIN}`,
         date: event.date.replace(/-/g, ""),
         summary: feed.withNames ? event.title : anonymous(event),
         description: describe(event, feed.withNames),
@@ -74,7 +75,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ token: string }> 
 
     const body = buildCalendar({
         name: "Помянник",
-        description: "Именины, годовщины и поминальные дни — typikon.su",
+        description: `Именины, годовщины и поминальные дни — ${SITE_HOST}`,
         events: calendar,
         stamp: new Date(),
         ttlHours: 12,

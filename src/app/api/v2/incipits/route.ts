@@ -4,6 +4,7 @@ import { readEnum, readPage } from "@/lib/api/v2/params";
 import { incipitSummary } from "@/lib/api/v2/serialize";
 import { LANGUAGES, listIncipits, normalizeIncipitQuery } from "@/lib/incipits";
 import {reportError} from "@/lib/reportError";
+import { SITE_URL } from "@/utils/site";
 
 // Указатель зачинов: песнопения книг по первым словам.
 //
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
         return fail(
             "bad_request",
             "Укажите начало песнопения в q. Указатель целиком отдаётся выгрузкой " +
-            "корпуса (https://www.typikon.su/data), а не этой ручкой: перебор всех " +
+            `корпуса (${SITE_URL}/data), а не этой ручкой: перебор всех ` +
             "182 650 зачинов на каждый запрос стоил бы секунду.",
         );
     }

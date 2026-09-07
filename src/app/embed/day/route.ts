@@ -5,6 +5,7 @@ import { MONTH_OF } from "@/utils/chantLabels";
 import { formatDateISO } from "@/utils/dates";
 import { readOptions, renderEmbed, type EmbedDay, type EmbedReading } from "@/lib/embed/day";
 import {reportError} from "@/lib/reportError";
+import { SITE_URL } from "@/utils/site";
 
 // Виджет чтений для чужого сайта: `<iframe src="…/embed/day">`.
 //
@@ -17,7 +18,7 @@ import {reportError} from "@/lib/reportError";
 
 export const revalidate = 600;
 
-const BASE = "https://www.typikon.su";
+const BASE = `${SITE_URL}`;
 
 const dateLabel = (iso: string): string => {
     const [y, m, d] = iso.split("-").map(Number);

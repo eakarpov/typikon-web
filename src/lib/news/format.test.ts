@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { escapeXml, hasUnread, rssXml, slugify, uniqueAlias } from "@/lib/news/format";
+import { SITE_URL_NAKED } from "@/utils/site";
 
 // Новости — единственное место, где сайт говорит с читателем от себя. Ошибка здесь
 // не роняет страницу, а тихо портит: битый адрес, вечно горящая точка «новое»,
@@ -52,17 +53,17 @@ test("фид собирается с обязательными полями и 
         title: "Добавили Минею & Пролог",
         summary: "Коротко о том, что изменилось",
         publishedAt: "2026-08-25T10:00:00.000Z",
-    }], "https://typikon.su");
+    }], SITE_URL_NAKED);
 
     assert.ok(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>'));
-    assert.ok(xml.includes("<link>https://typikon.su/news/obnovlenie</link>"));
+    assert.ok(xml.includes(`<link>${SITE_URL_NAKED}/news/obnovlenie</link>`));
     assert.ok(xml.includes("<pubDate>Tue, 25 Aug 2026 10:00:00 GMT</pubDate>"));
     assert.ok(xml.includes("Добавили Минею &amp; Пролог"));
     assert.ok(!xml.includes("Минею & Пролог"), "сырой амперсанд ломает читалки");
 });
 
 test("пустая лента остаётся годным фидом", () => {
-    const xml = rssXml([], "https://typikon.su");
+    const xml = rssXml([], SITE_URL_NAKED);
 
     assert.ok(xml.includes("<channel>"));
     assert.ok(xml.includes("</rss>"));

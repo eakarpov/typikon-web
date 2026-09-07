@@ -16,6 +16,7 @@ import Markdown from "react-markdown";
 import Modal from "react-modal";
 import "./highlight.css";
 import {revalidateTexts} from "@/lib/admin/revalidate";
+import { SITE_URL } from "@/utils/site";
 
 
 interface IQuote {
@@ -218,7 +219,7 @@ const AdminEditor = ({ value }: any) => {
     }, [setNotes]);
 
     const onBufferClick = useCallback(() => {
-        navigator.clipboard.writeText(`https://www.typikon.su/reading/${alias}`);
+        navigator.clipboard.writeText(`${SITE_URL}/reading/${alias}`);
     }, [alias]);
 
     const onSubmit = () => {

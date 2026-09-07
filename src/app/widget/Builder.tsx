@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SITE_URL } from "@/utils/site";
 
 // Сборщик виджета: выбрал вид — увидел его же и получил готовый код.
 //
@@ -7,7 +8,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 // похожая на неё: иначе всякое расхождение между показанным и вставленным
 // обнаруживалось бы уже у прихода.
 
-const SITE = "https://www.typikon.su";
 
 const CLASS = "border rounded px-1 py-0.5 text-sm font-serif bg-white";
 
@@ -34,10 +34,10 @@ const query = (o: Options): string => {
 };
 
 const snippetOf = (o: Options): string =>
-    `<iframe src="${SITE}/embed/day${query(o)}"\n`
+    `<iframe src="${SITE_URL}/embed/day${query(o)}"\n`
     + `        title="Чтения дня" loading="lazy"\n`
     + `        style="width:100%;height:${o.height}px;border:1px solid #e2e8f0;border-radius:6px"></iframe>\n`
-    + `<script src="${SITE}/embed.js" async></script>`;
+    + `<script src="${SITE_URL}/embed.js" async></script>`;
 
 const Builder = () => {
     const [o, setO] = useState<Options>({

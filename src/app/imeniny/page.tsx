@@ -3,6 +3,7 @@ import Link from "next/link";
 import { myFont } from "@/utils/font";
 import { allNames, keyOf, nameEntry } from "@/lib/imeniny/store";
 import Result from "@/app/imeniny/Result";
+import { SITE_URL } from "@/utils/site";
 
 // Именины: когда праздновать день своего святого.
 //
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Именины: когда день вашего святого",
         description: "Ближайшая память святого с вашим именем — по святцам и церковному календарю.",
-        url: "//www.typikon.su/imeniny/",
+        url: `${SITE_URL}/imeniny/`,
     },
 };
 

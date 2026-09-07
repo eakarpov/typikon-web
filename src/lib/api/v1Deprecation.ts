@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/utils/site";
 // Учёт клиентов первой версии API и разметка её как устаревшей.
 //
 // План перевода такой: v2 объявлена публичной, сайт на неё уже переведён, дальше
@@ -82,5 +83,5 @@ export const countV1Request = (headers: Headers): string | null => {
 export const deprecationHeaders = (): Record<string, string> => ({
     "Deprecation": "true",
     "Sunset": SUNSET,
-    "Link": '</api/v2>; rel="successor-version", <https://www.typikon.su/api>; rel="help"',
+    "Link": `</api/v2>; rel="successor-version", <${SITE_URL}/api>; rel="help"`,
 });

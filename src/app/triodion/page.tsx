@@ -3,6 +3,7 @@ import {myFont} from "@/utils/font";
 import {Suspense} from "react";
 import Content from "@/app/triodion/Content";
 import {Metadata} from "next";
+import { SITE_URL } from "@/utils/site";
 
 // Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
 export const revalidate = 3600;
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Уставные чтения Постной Триоди",
         description: "Уставные чтения с недели о мытаре и фарисее до пасхальной заутрени.",
-        url: "//www.typikon.su/triodion/",
+        url: `${SITE_URL}/triodion/`,
         type: "website",
     },
 }

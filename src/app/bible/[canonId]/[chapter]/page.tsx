@@ -8,6 +8,7 @@ import { referenceChapterCount } from "@/utils/bibleVersification";
 import { getBibleIndex, getChapter, neighbourBooks, resolveEditionCodes } from "@/app/bible/api";
 import Chapter from "@/app/bible/[canonId]/[chapter]/Chapter";
 import { echoCountsForChapter } from "@/lib/citations";
+import { SITE_URL } from "@/utils/site";
 
 // Страница зависит и от адреса (?v=...), и от cookie языка, поэтому остаётся
 // динамической; в базу за ней при этом не ходим — выборки кэшируются в api.ts.
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: `${canon.name}, глава ${chapter}: церковнославянский и румынский тексты рядом.`,
         openGraph: {
             type: "website",
-            url: `//www.typikon.su/bible/${canon.id}/${chapter}`,
+            url: `${SITE_URL}/bible/${canon.id}/${chapter}`,
             title,
         },
     };

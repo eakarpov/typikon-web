@@ -43,6 +43,7 @@ import {
     prepare,
     unclassified,
 } from "@/scripts/lib/dumpLayers";
+import { SITE_URL } from "@/utils/site";
 
 /** Полные тексты чужих лицензий — их GPL требует передавать вместе с работой. */
 const LICENSE_SOURCE = "licenses";
@@ -207,10 +208,10 @@ const layerReadme = (layer: DumpLayer, files: FileReport[]) => {
 const rootReadme = (layers: { layer: DumpLayer; files: FileReport[] }[], builtAt: string) => [
     "# Выгрузка корпуса «Уставные чтения»",
     "",
-    `Версия ${builtAt}. Источник — https://www.typikon.su`,
+    `Версия ${builtAt}. Источник — ${SITE_URL}`,
     "",
-    `Постоянный адрес этой версии: https://www.typikon.su/dump/${builtAt}/`,
-    "Последняя сборка всегда лежит по адресу https://www.typikon.su/dump/latest/ —",
+    `Постоянный адрес этой версии: ${SITE_URL}/dump/${builtAt}/`,
+    `Последняя сборка всегда лежит по адресу ${SITE_URL}/dump/latest/ —`,
     "ссылаться в работе следует на версию, а не на latest.",
     "",
     "Слои лежат отдельно, потому что условия у них РАЗНЫЕ. Прежде чем брать —",
@@ -228,7 +229,7 @@ const rootReadme = (layers: { layer: DumpLayer; files: FileReport[] }[], builtAt
     "",
     ...Object.entries(EXCLUDED).map(([name, why]) => `- \`${name}\` — ${why}`),
     "",
-    "Полные условия: https://www.typikon.su/license",
+    `Полные условия: ${SITE_URL}/license`,
     "",
     "## Полнота",
     "",
@@ -263,8 +264,8 @@ const citationCff = (version: string, doi: string | null) => [
     // транслитерации однофамильцы сливаются, а идентификатор — нет. Он же
     // связывает набор данных с профилем автора в архиве и в DataCite.
     '    orcid: "https://orcid.org/0000-0002-2394-3373"',
-    'url: "https://www.typikon.su"',
-    `repository-artifact: "https://www.typikon.su/dump/${version}/"`,
+    `url: "${SITE_URL}"`,
+    `repository-artifact: "${SITE_URL}/dump/${version}/"`,
     "license: CC-BY-4.0",
     "",
     "# Условия у слоёв РАЗНЫЕ: temples идёт под ODbL-1.0, греческий Ветхий Завет —",
@@ -514,16 +515,16 @@ const run = async () => {
 
     const manifest = {
         name: "Выгрузка корпуса «Уставные чтения»",
-        source: "https://www.typikon.su",
+        source: `${SITE_URL}`,
         builtAt,
         version,
-        versionUrl: `https://www.typikon.su/dump/${version}/`,
+        versionUrl: `${SITE_URL}/dump/${version}/`,
         // Проставляется, когда версия положена в архив с DOI (Zenodo). До того
         // ссылаться можно на versionUrl — он тоже постоянный, но переживает
         // переезд домена хуже, чем DOI.
         doi: null as string | null,
         citation: CITATION,
-        licenseUrl: "https://www.typikon.su/license",
+        licenseUrl: `${SITE_URL}/license`,
         layers: built.map(({ layer, files }) => ({
             id: layer.id,
             title: layer.title,

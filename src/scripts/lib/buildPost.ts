@@ -3,6 +3,7 @@ import { extractHeroFromHeuristic, HeroName } from "@/scripts/lib/heroName";
 import { expandOrderAbbreviation } from "@/scripts/lib/orderAbbreviations";
 import { ChannelPostNameSource } from "@/types/dto/channelPost";
 import { saintImages, saintSlugs } from "@/lib/saints";
+import { SITE_URL } from "@/utils/site";
 
 interface DaySongText {
     _id: string;
@@ -35,7 +36,7 @@ export interface BuiltChannelPost {
     dneslovSlug: string | null;
 }
 
-const SITE = "https://www.typikon.su";
+const SITE = `${SITE_URL}`;
 const HELP_LINK = "https://messenger.online.sberbank.ru/sl/8xVnkqtrmfkJzj8yO";
 const TELEGRAM_LIMIT = 4096;
 const BODY_LIMIT = 3200; // запас под заголовок/стихи/ссылки/хэштеги в лимите Telegram

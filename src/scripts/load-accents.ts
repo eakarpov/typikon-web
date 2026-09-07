@@ -62,6 +62,7 @@ import {
     type CorpusVariant,
     type LexiconVariant,
 } from "@/lib/accents/store";
+import { SITE_HOST } from "@/utils/site";
 
 const APPLY = process.argv.includes("--apply");
 const dumpArg = process.argv.indexOf("--dump");
@@ -286,7 +287,7 @@ async function main() {
         // и чужие программы, экономить на именах там незачем.
         const payload = {
             meta: {
-                about: "Словарь ударений церковнославянского языка (typikon.su). Ключ — слово "
+                about: `Словарь ударений церковнославянского языка (${SITE_HOST}). Ключ — слово `
                     + "без надстрочной разметки; corpus — употребление в книжных чтениях с "
                     + "частотами, chants — в гимнографии (Октоих, Минеи, Триоди, Часослов), "
                     + "lexicon — порождённые парадигмы словаря с грамматикой. Частоты у книг и "

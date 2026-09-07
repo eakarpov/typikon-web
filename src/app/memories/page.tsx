@@ -4,6 +4,7 @@ import { setMeta } from "@/lib/meta";
 import { myFont } from "@/utils/font";
 import { SIGN_LABELS } from "@/utils/chantLabels";
 import { addressOf, BOOK_LABELS, getMemoryRows } from "@/lib/memories";
+import { SITE_URL } from "@/utils/site";
 
 // Указатель памятей. Раздел отдельный от /saints нарочно: там ЛИЦА, здесь
 // СЛУЖБЫ. Под иконой, Господним праздником или собором лица нет вовсе или их
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Реестр памятей",
         description: "Службы богослужебных книг: где стоит каждая, какой у неё знак и на чём этот знак основан.",
-        url: "//www.typikon.su/memories/",
+        url: `${SITE_URL}/memories/`,
     },
 };
 

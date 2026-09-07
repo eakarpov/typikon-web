@@ -1,3 +1,4 @@
+import { SITE_HOST } from "@/utils/site";
 // Что проект отдаёт наружу выгрузкой и на каких условиях.
 //
 // Корпус под CC BY 4.0, но взять его целиком до сих пор было неоткуда: постранично
@@ -117,7 +118,7 @@ const ODBL = {
     url: "https://opendatacommons.org/licenses/odbl/1-0/",
 };
 
-export const CITATION = "Корпус «Уставные чтения» (typikon.su), CC BY 4.0";
+export const CITATION = `Корпус «Уставные чтения» (${SITE_HOST}), CC BY 4.0`;
 
 export const LAYERS: DumpLayer[] = [
     {
@@ -298,7 +299,7 @@ export const LAYERS: DumpLayer[] = [
                 attribution:
                     "Текст: Biblia 1914, ro.wikisource.org/wiki/Biblia_1914 — CC BY-SA 4.0. "
                     + "Разбор на книги и согласование нумераций — проект «Уставные чтения» "
-                    + "(typikon.su), CC BY 4.0",
+                    + `(${SITE_HOST}), CC BY 4.0`,
                 note:
                     "Вычитанный людьми текст Викитеки, а не OCR. Share-alike у него свой, "
                     + "поэтому файл идёт не под лицензией слоя. Стоит подложкой к "
@@ -315,7 +316,7 @@ export const LAYERS: DumpLayer[] = [
                     "Текст: Η Καινή Διαθήκη, 1904 Patriarchal Greek New Testament, "
                     + "ebible.org/find/details.php?id=grcbyz — общественное достояние. "
                     + "Разбор на книги и согласование нумераций — проект «Уставные чтения» "
-                    + "(typikon.su), CC BY 4.0",
+                    + `(${SITE_HOST}), CC BY 4.0`,
                 note:
                     "Общественное достояние, а не лицензия слоя: требовать указания "
                     + "источника на текст, который свободен от притязаний, мы не вправе. "
@@ -331,7 +332,7 @@ export const LAYERS: DumpLayer[] = [
                 attribution:
                     "Оцифровка: LXX-Swete-1930 (github.com/eliranwong/LXX-Swete-1930), GPL-3.0. "
                     + "Разбор на книги и согласование нумераций — проект «Уставные чтения» "
-                    + "(typikon.su), CC BY 4.0",
+                    + `(${SITE_HOST}), CC BY 4.0`,
                 note:
                     "ТОЛЬКО этот файл идёт под GPL-3.0, а не весь слой: сам текст — чужая "
                     + "оцифровка, полный текст лицензии лежит рядом в GPL-3.0.txt. Издание "
@@ -358,7 +359,7 @@ export const LAYERS: DumpLayer[] = [
         license: ODBL,
         attribution:
             "© участники OpenStreetMap (ODbL); данные Wikidata (CC0); "
-            + "разметка престолов — проект «Уставные чтения» (typikon.su)",
+            + `разметка престолов — проект «Уставные чтения» (${SITE_HOST})`,
         rationale:
             "Каталог выведен из OpenStreetMap (53 091 запись) и Wikidata (11 763). OSM "
             + "распространяется под ODbL: она требует указания источника и держит производные "

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChannelPostDTO } from "@/types/dto/channelPost";
+import { SITE_URL } from "@/utils/site";
 
 const STATUS_LABEL: Record<string, string> = {
     draft: "Черновик",
@@ -130,7 +131,7 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
                     ) : item.dneslovId ? (
                         <a
                             className="text-blue-700 underline"
-                            href={`https://www.typikon.su/saints/${item.dneslovId}`}
+                            href={`${SITE_URL}/saints/${item.dneslovId}`}
                             target="_blank"
                             rel="noreferrer"
                         >

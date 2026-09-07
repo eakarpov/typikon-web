@@ -5,6 +5,7 @@ import {permanentRedirect} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
+import { SITE_URL } from "@/utils/site";
 
 type Props = {
     params: { id: string }
@@ -25,7 +26,7 @@ export async function generateMetadata(
         description: item?.description?.replaceAll('́', '') || `Уставные чтения на день: ${item?.name?.replaceAll('́', '')}`,
         openGraph: {
             type: "website",
-            url: `//www.typikon.su/reading/${id}`,
+            url: `${SITE_URL}/reading/${id}`,
             title: item?.name?.replaceAll('́', ''),
             description: item?.description?.replaceAll('́', '') || `Уставные чтения на день: ${item?.name?.replaceAll('́', '')}`,
         },

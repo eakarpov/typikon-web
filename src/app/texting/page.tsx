@@ -4,6 +4,7 @@ import {getItems} from "@/app/texting/api";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
+import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Отекстовка",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Отекстовка",
         description: "Помогите отекстовать документы, которым это нужнее всего.",
-        url: "//www.typikon.su/texting/"
+        url: `${SITE_URL}/texting/`
     },
 }
 

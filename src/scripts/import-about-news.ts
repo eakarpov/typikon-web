@@ -26,6 +26,7 @@ import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { NEWS_COLLECTION, NEWS_DB } from "@/lib/news/posts";
 import { revalidateNews } from "@/scripts/lib/revalidate";
+import { SITE_URL } from "@/utils/site";
 
 const APPLY = process.argv.includes("--apply");
 
@@ -83,7 +84,7 @@ const RELEASES: Release[] = [
             "Корпус под лицензией CC BY 4.0: берите свободно, в том числе для своих приложений и " +
             "приходских сайтов, указывая источник.\n\n" +
             "**Попробовать можно без ключа** — 60 запросов в час с адреса, кроме поиска:\n\n" +
-            "    curl https://www.typikon.su/api/v2/calendar/today\n\n" +
+            `    curl ${SITE_URL}/api/v2/calendar/today\n\n` +
             "**Для работы нужен ключ** — 30 запросов в минуту и 10 000 в сутки, включая поиск. " +
             "Он заводится за минуту в [профиле](/profile#tokens) после входа на сайт, передаётся " +
             "заголовком `Authorization: Bearer …` и в любой момент отзывается там же.\n\n" +

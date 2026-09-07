@@ -13,13 +13,14 @@ import {
     tokenState,
     type ApiToken,
 } from "@/lib/api/v2/tokens";
+import { SITE_URL, SITE_URL_NAKED } from "@/utils/site";
 
 // Правила доступа решают, кого пускать к публичному API и сколько ему позволено.
 // Ошибка здесь либо закрывает API тем, кто вправе им пользоваться, либо раздаёт
 // больше, чем задумано, — и то и другое видно не сразу, поэтому проверяем правила
 // отдельно от запросов.
 
-const ORIGINS = ["https://typikon.su", "https://www.typikon.su"];
+const ORIGINS = [SITE_URL_NAKED, SITE_URL];
 
 const headers = (values: Record<string, string>) => new Headers(values);
 
@@ -138,9 +139,12 @@ test("клиент без заголовков браузера своим не 
 });
 
 test("при отсутствии Sec-Fetch-Site разбираемся по источнику", () => {
-    assert.equal(isSiteRequest(headers({ origin: "https://typikon.su" }), ORIGINS), true);
-    assert.equal(isSiteRequest(headers({ "sec-fetch-site": "same-site", origin: "https://www.typikon.su" }), ORIGINS), true);
-    assert.equal(isSiteRequest(headers({ referer: "https://typikon.su/search?q=%D0%BF%D0%B0%D1%81%D1%85%D0%B0" }), ORIGINS), true);
+    assert.equal(isSiteRequest(headers({ origin: SITE_URL_NAKED }), ORIGINS), true);
+    assert.equal(isSiteRequest(headers({ "sec-fetch-site": "same-site", origin: `${SITE_URL}` }), ORIGINS), true);
+    assert.equal(isSiteRequest(headers({ referer: `${SITE_URL_NAKED}/search?q=%D0%BF%D0%B0%D1%81%D1%85%D0%B0` }), ORIGINS), true);
+    // Два адреса ниже НАРОЧНО записаны литералом, а не константой: это чужие
+    // адреса, похожие на наш, и подставить сюда SITE_URL значило бы проверять,
+    // что свой адрес равен себе.
     assert.equal(isSiteRequest(headers({ origin: "https://typikon.su.example.com" }), ORIGINS), false);
     assert.equal(isSiteRequest(headers({ origin: "http://typikon.su" }), ORIGINS), false, "http вместо https — не наш адрес");
     assert.equal(isSiteRequest(headers({ origin: "null" }), ORIGINS), false, "песочница iframe шлёт origin: null");

@@ -5,6 +5,7 @@ import { setMeta } from "@/lib/meta";
 import { myFont } from "@/utils/font";
 import { getDedicationCounts, getTemples, TEMPLES_PER_PAGE } from "@/lib/temples";
 import { temples as templesCount } from "@/utils/plural";
+import { SITE_URL } from "@/utils/site";
 
 // Указатель храмов. Нужен не сам по себе: престол — параметр службы, и пока
 // читателю негде назвать свой храм, «свята́го, его́же есть храм» остаётся
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Храмы и престолы",
         description: "Указатель храмов с престолами и престольными праздниками.",
-        url: "//www.typikon.su/temples/",
+        url: `${SITE_URL}/temples/`,
     },
 };
 

@@ -5,6 +5,7 @@ import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
 import Link from "next/link";
+import { SITE_URL } from "@/utils/site";
 
 // Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
 export const revalidate = 3600;
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Библиотека текстов',
         description: 'Уставные чтения, объединенные в книги для полного прочтения.',
-        url: "//www.typikon.su/library/"
+        url: `${SITE_URL}/library/`
     },
 }
 

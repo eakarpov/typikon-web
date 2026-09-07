@@ -30,9 +30,10 @@
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { SIGN } from "@/types/dto/days";
+import { SITE_HOST, SITE_URL_NAKED } from "@/utils/site";
 
 const SOURCE_URL = "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/48_1";
-const USER_AGENT = "Mozilla/5.0 (compatible; typikon.su-importer/1.0; +https://typikon.su)";
+const USER_AGENT = `Mozilla/5.0 (compatible; ${SITE_HOST}-importer/1.0; +${SITE_URL_NAKED})`;
 const DRY_RUN = process.env.DRY_RUN === "1";
 
 // Индекс страницы (1..12) -> номер месяца, январь = 1 (сентябрь = 9).

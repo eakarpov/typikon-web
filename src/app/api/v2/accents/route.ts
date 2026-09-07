@@ -3,6 +3,7 @@ import { authorize } from "@/lib/api/v2/access";
 import { lookupWords, summarize } from "@/lib/accents/store";
 import { cached, CacheTag } from "@/lib/cache";
 import {reportError} from "@/lib/reportError";
+import { SITE_URL } from "@/utils/site";
 
 // Словарь ударений. Без параметров — что это такое и как им пользоваться;
 // с ?words= — поиск пачкой.
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
                 // обещать в API адрес, которого нет, хуже, чем промолчать.
                 // Ставится в ACCENTS_DUMP_URL после настройки раздачи на сервере.
                 ...(process.env.ACCENTS_DUMP_URL ? { download: process.env.ACCENTS_DUMP_URL } : {}),
-                documentation: "https://www.typikon.su/api",
+                documentation: `${SITE_URL}/api`,
             }, { maxAge: 86400, access });
         }
 

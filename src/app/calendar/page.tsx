@@ -5,6 +5,7 @@ import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
 import DateCalendar from "./DateCalendar";
+import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Чтения на календарный день",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Чтения на календарный день',
         description: 'Уставные чтения на выбранный календарный день.',
-        url: "//www.typikon.su/calendar/"
+        url: `${SITE_URL}/calendar/`
     },
 }
 

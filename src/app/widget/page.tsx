@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { myFont } from "@/utils/font";
 import Builder from "@/app/widget/Builder";
+import { SITE_URL } from "@/utils/site";
 
 // Виджет чтений для приходского сайта.
 //
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Виджет чтений для сайта прихода",
         description: "Чтения дня рамкой на вашем сайте: одна строка кода, без ключей.",
-        url: "//www.typikon.su/widget/",
+        url: `${SITE_URL}/widget/`,
     },
 };
 

@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/v2/tokens";
 import { findToken, touchToken } from "@/lib/api/v2/tokenStore";
 import { spendDaily } from "@/lib/api/v2/usage";
+import { SITE_HOST } from "@/utils/site";
 
 // Кто и на каких правах спрашивает публичный API.
 //
@@ -44,7 +45,7 @@ const granted = (kind: CallerKind, headers: Record<string, string>, token: ApiTo
 const refused = (denied: Response): Access => ({ denied, headers: {}, kind: "anonymous", token: null });
 
 /** Подсказка, куда идти за ключом. Одинаковая во всех отказах — их пишут в лог и читают глазами. */
-const KEY_HINT = "Ключ заводится в профиле на typikon.su/profile, документация — typikon.su/api.";
+const KEY_HINT = `Ключ заводится в профиле на ${SITE_HOST}/profile, документация — ${SITE_HOST}/api.`;
 
 const AUTHENTICATE = { "WWW-Authenticate": 'Bearer realm="typikon", charset="UTF-8"' };
 

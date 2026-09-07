@@ -7,6 +7,7 @@ import {Metadata} from "next";
 import {getMonth, getMonthLabel} from "@/lib/common/date";
 import {cookies} from "next/headers";
 import {BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
+import { SITE_URL } from "@/utils/site";
 
 type Props = {
     params: { id: string }
@@ -27,7 +28,7 @@ export async function generateMetadata(
         description: `Список текстов с уставными чтениями на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
         openGraph: {
             type: "website",
-            url: `//www.typikon.su/calendar/${id}`,
+            url: `${SITE_URL}/calendar/${id}`,
             title: `Уставные чтения на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
             description: `Список текстов с уставными чтениями на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
         },

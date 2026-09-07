@@ -4,6 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { myFont, csFontVariables } from "@/utils/font";
 import { PUA_TABLE } from "@/lib/csEncoding/pua";
+import { SITE_URL } from "@/utils/site";
 
 const Folder = dynamic(() => import("@/app/nabor/pua/Folder"), { ssr: false });
 
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Частные коды в юникод",
         description: "Сведение шрифтовых кодов Ponomar к общепринятой юникодной записи.",
-        url: "//www.typikon.su/nabor/pua/",
+        url: `${SITE_URL}/nabor/pua/`,
     },
 };
 

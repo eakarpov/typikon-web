@@ -1,6 +1,7 @@
 import Editor from "@/app/calculator/Editor";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
+import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Чтения на день",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Чтения на день',
         description: 'Уставные чтения на выбранный день годового и триодного круга.',
-        url: "//www.typikon.su/calculator/"
+        url: `${SITE_URL}/calculator/`
     },
 }
 

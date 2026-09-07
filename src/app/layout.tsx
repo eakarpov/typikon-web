@@ -12,6 +12,7 @@ import Script from "next/script";
 import TelegramLoginRemover from "@/app/TelegramLoginRemover";
 import SessionLoader from "@/app/SessionLoader";
 import ServiceWorkerRegistrar from "@/app/ServiceWorkerRegistrar";
+import { SITE_URL } from "@/utils/site";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     // получает свой canonical, а не общий на весь сайт. Страницы, задающие свою
     // metadata, это наследуют: поля метаданных сливаются, и alternates ни одна из
     // них не переопределяет.
-    metadataBase: new URL("https://www.typikon.su"),
+    metadataBase: new URL(`${SITE_URL}`),
     alternates: { canonical: "./" },
     title: "Уставные чтения",
     description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',

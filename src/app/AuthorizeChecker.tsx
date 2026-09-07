@@ -3,6 +3,7 @@ import {memo, useCallback, useEffect} from "react";
 import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import * as VKID from "@vkid/sdk";
 import {AuthSlice} from "@/lib/store/auth";
+import { VK_REDIRECT_URL } from "@/utils/site";
 
 let timeout: NodeJS.Timeout|null = null;
 
@@ -49,7 +50,7 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
     useEffect(() => {
         VKID.Config.init({
             app: vkApp,
-            redirectUrl: 'https://typikon.su/login',
+            redirectUrl: VK_REDIRECT_URL,
             responseMode: VKID.ConfigResponseMode.Callback,
             codeVerifier,
             source: VKID.ConfigSource.LOWCODE,

@@ -5,6 +5,7 @@ import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
 import {getMonthLabel} from "@/lib/common/date";
+import { SITE_URL } from "@/utils/site";
 
 // Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
 export const revalidate = 3600;
@@ -32,7 +33,7 @@ export async function generateMetadata(
         description: `Список дней с уставными чтениями на месяц: ${getMonthLabel(item?.value - 1)}`,
         openGraph: {
             type: "website",
-            url: `//www.typikon.su/months/${id}`,
+            url: `${SITE_URL}/months/${id}`,
             title: `Уставные чтения на месяц: ${getMonthLabel(item?.value - 1)}`,
             description: `Список дней с уставными чтениями на месяц: ${getMonthLabel(item?.value - 1)}`,
         },
