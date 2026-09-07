@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { normalizeQuery, snippetFor } from "@/lib/search";
+import {reportError} from "@/lib/reportError";
 
 // Поиск идёт по нормализованным полям searchName/searchContent (см. @/lib/search):
 // по самому content искать нельзя — ударения стоят внутри слов. Поля заполняются
@@ -48,7 +49,7 @@ export const searchData = async (query: string) => {
 
         return [texts, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/search/api#searchData" });
         return [null, e];
     }
 };

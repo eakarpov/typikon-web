@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {reportError} from "@/lib/reportError";
 
 const getItem = async (id: string): Promise<[any, any]> => {
     try {
@@ -21,7 +22,7 @@ const getItem = async (id: string): Promise<[any, any]> => {
             .toArray();
         return [texts[0], null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/texts/service#getItem", source: "api" });
         return [null, e];
     }
 };
@@ -50,7 +51,7 @@ export const getBatchItems = async (ids: string[]) => {
             .toArray();
         return [texts, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/texts/service#getBatchItems", source: "api" });
         return [null, e];
     }
 };

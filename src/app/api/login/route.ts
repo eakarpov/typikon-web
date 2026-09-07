@@ -14,8 +14,8 @@ function toHex(buffer: Uint8Array): string {
 }
 
 export async function POST(request: NextRequest) {
+    // Тело не логируется: в нём приходит id_token Google и данные учётной записи.
     const body = await request.json();
-    console.log(body);
     // const body = req;
     // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 

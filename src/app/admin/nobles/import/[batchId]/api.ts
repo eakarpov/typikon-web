@@ -1,4 +1,5 @@
 import {init} from "@/lib/sqlite";
+import {reportError} from "@/lib/reportError";
 
 export const getBatchDetail = async (batchId: string) => {
     try {
@@ -57,7 +58,7 @@ export const getBatchDetail = async (batchId: string) => {
 
         return [{ batch, nobles, families, couplesCount: couplesCount.c, rules, duplicates, dneslovLinks }, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/nobles/import/[batchId]/api#getBatchDetail" });
         return [null, {error: e}];
     }
 };

@@ -2,7 +2,7 @@ import Link from "next/link";
 import {useMemo} from "react";
 
 const NobleCard = ({ value, family }: { value: any; family: any}) => {
-    const links = useMemo(() => {
+    const links = useMemo<string[]>(() => {
         return value.links ? JSON.parse(value.links) : [];
     }, [value]);
 

@@ -18,6 +18,7 @@ import Style from 'ol/style/Style.js';
 import Text from 'ol/style/Text.js';
 import "ol/ol.css";
 import {Coordinate} from "ol/coordinate";
+import {reportClientError} from "@/lib/reportClientError";
 
 const data = [
     {
@@ -249,7 +250,7 @@ const customSourceLines = new VectorSource({
             })
             .catch(error => {
                 failure!();
-                console.error('Failed to load JSON:', error);
+                reportClientError(error, "places/common: не загрузились точки карты");
             });
     }
 });
@@ -286,7 +287,7 @@ const customSource = new VectorSource({
             })
             .catch(error => {
                 failure!();
-                console.error('Failed to load JSON:', error);
+                reportClientError(error, "places/common: не загрузились точки карты");
             });
     }
 });
@@ -324,17 +325,6 @@ const PlacesPage = () => {
                 center: fromLonLat([longitude, latitude]),
                 zoom: 4,
             }),
-        });
-
-        map.on('click', (e) => {
-            const feature = map.forEachFeatureAtPixel(e.pixel, function (feature) {
-                return feature;
-            });
-
-            if (feature) {
-                const name = feature.get('name');
-                console.log(feature, name);
-            }
         });
     };
 

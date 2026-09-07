@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 const loadBooks = async (): Promise<[any, any]> => {
     try {
@@ -33,7 +34,7 @@ const loadBooks = async (): Promise<[any, any]> => {
             .toArray();
         return [books, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/library/api#loadBooks" });
         return [null, e];
     }
 };

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { clientIpFromHeaders, consume } from "@/lib/rateLimit";
 import { razbor } from "@/lib/razbor/lookup";
+import {reportError} from "@/lib/reportError";
 
 // Разбор набранного текста для страницы /razbor.
 //
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     try {
         return NextResponse.json(razbor(text));
     } catch (e) {
-        console.error("razbor: не удалось разобрать текст", e);
+        reportError(e, { where: "api/razbor: не удалось разобрать текст", source: "api" });
         return NextResponse.json({ error: "Не удалось разобрать текст" }, { status: 500 });
     }
 }

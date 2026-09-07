@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 // Ревью связей со святыми — и акафистов, и памятей книг. Две коллекции, одна
 // страница: работа глазами одна и та же (подтвердить или поправить), и
@@ -107,7 +108,7 @@ export const getLinks = async (status: string, target: LinkTarget): Promise<Link
             error: null,
         };
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/akathists/api#getLinks" });
         return { items: [], counts: {}, target, error: String(e) };
     }
 };

@@ -142,7 +142,6 @@ export default function Home() {
                           className="border-t border-slate-300 pt-4"
                       >
                           <Suspense fallback={<div>Loading...</div>}>
-                              {/* @ts-expect-error Async Server Component */}
                               <ContentMoreThan itemsPromise={textCount} />
                           </Suspense>
                       </li>
@@ -199,7 +198,6 @@ export default function Home() {
                   </div>
                   <div className={myFont.variable}>
                       <Suspense fallback={<div>Loading...</div>}>
-                          {/* @ts-expect-error Async Server Component */}
                           <Content itemsPromise={itemsData} />
                       </Suspense>
                   </div>

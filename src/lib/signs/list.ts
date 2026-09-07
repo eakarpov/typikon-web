@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export interface SignsListParams {
     page?: number;
@@ -50,7 +51,7 @@ export const getSignsList = async (params: SignsListParams): Promise<SignsListRe
 
         return { items, total, page, pageSize, error: null };
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/signs/list#getSignsList" });
         return { items: [], total: 0, page, pageSize, error: "Ошибка при загрузке данных" };
     }
 };

@@ -4,6 +4,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
 import { book, textSummary } from "@/lib/api/v2/serialize";
+import {reportError} from "@/lib/reportError";
 
 // Книга со списком своих текстов. Тексты постранично: в «Толковом апостоле» их 363,
 // и отдавать их все одним ответом незачем.
@@ -46,7 +47,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             texts: { items: texts.map(textSummary), total, limit, offset },
         }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/books/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить книгу");
     }
 }

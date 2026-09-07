@@ -90,20 +90,16 @@ const Nobles = ({ value }: {value: any}) => {
             return;
         }
 
-        console.log(spouseFilter, value.children, value.spouses, value.children
-            .filter(c => spouseFilter ? value.data.gender
-                ? spouseFilter === c.motherId
-                : spouseFilter === c.fatherId : true));
         const d = [
             {
                 id: value.data.id.toString(),
                 data: value.data,
                 rels: {
-                    parents: [value.data.fatherId?.toString(), value.data.motherId?.toString()].filter(el => !!el),
-                    spouses: value.spouses.filter(el => spouseFilter ? el.data.id === spouseFilter : true)
+                    parents: [value.data.fatherId?.toString(), value.data.motherId?.toString()].filter((el: any) => !!el),
+                    spouses: value.spouses.filter((el: any) => spouseFilter ? el.data.id === spouseFilter : true)
                         .map((item: any) => item.data?.id.toString()),
                     children: value.children
-                        .filter(c => spouseFilter ? value.data.gender
+                        .filter((c: any) => spouseFilter ? value.data.gender
                             ? spouseFilter === c.motherId
                             : spouseFilter === c.fatherId : true)
                         .map((item: any) => item.id.toString()),
@@ -123,8 +119,8 @@ const Nobles = ({ value }: {value: any}) => {
                         children: [value.data.id.toString()],
                     }
                 }
-            ].filter(el => !!el),
-            ...value.spouses.filter(el => spouseFilter ? el.data.id === spouseFilter : true).map((c: any) => {
+            ].filter((el: any) => !!el),
+            ...value.spouses.filter((el: any) => spouseFilter ? el.data.id === spouseFilter : true).map((c: any) => {
                 return {
                   id: c.data?.id.toString(),
                   data: c.data,
@@ -139,7 +135,7 @@ const Nobles = ({ value }: {value: any}) => {
                 };
             }),
             ...value.children
-                .filter(c => spouseFilter ? value.data.gender
+                .filter((c: any) => spouseFilter ? value.data.gender
                     ? spouseFilter === c.motherId
                     : spouseFilter === c.fatherId : true)
                 .map((c: any) => {
@@ -156,8 +152,6 @@ const Nobles = ({ value }: {value: any}) => {
                 }
             }),
         ]
-        console.log(d);
-
         create(d, value.data.id.toString());
     }, [value, spouseFilter]);
 
@@ -272,8 +266,8 @@ const Nobles = ({ value }: {value: any}) => {
                         <div id="rules">
                             <b>Правления</b>
                             {value.rules.map((r: any, i: number) => (
-                                // eslint-disable-next-line react/jsx-key
                                 <div
+                                    key={r.id ?? i}
                                     className="tree-root tree-root-2 f3"
                                     id={`tree-rules-${i}`}
                                 />

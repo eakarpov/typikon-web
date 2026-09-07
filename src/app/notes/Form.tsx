@@ -5,9 +5,9 @@ import React, {useCallback, useState} from "react";
 const Form = () => {
     const [value, setValue] = useState("");
 
-    const onChange = useCallback((e) => setValue(e.target.value), []);
+    const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value), []);
 
-    const onKeyDown = useCallback((e) => {
+    const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.keyCode === 13) {
             //
         }

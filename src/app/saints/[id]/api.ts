@@ -3,6 +3,7 @@ import { init } from "@/lib/sqlite";
 import { cachedTuple, cached, CacheTag } from "@/lib/cache";
 import { snapshotOfMemory } from "@/lib/saints";
 import { saintMemory } from "@/lib/dneslov";
+import {reportError} from "@/lib/reportError";
 
 // Номеров святцев у записи каталога может быть несколько — две их памяти, сведённые
 // нами в одно лицо (см. @/lib/saintSources о том, почему такое бывает и почему
@@ -29,7 +30,7 @@ export const getItems = cachedTuple(async (ids: string[]): Promise<[any, any]> =
             .toArray();
         return [texts, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/saints/[id]/api#getItems" });
         return [null, e];
     }
 }, ["saint-texts"], [CacheTag.TEXTS]);
@@ -66,7 +67,7 @@ export const getMentions = cachedTuple(async (ids: string[]): Promise<[any, any]
             .toArray();
         return [texts, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/saints/[id]/api#getMentions" });
         return [null, e];
     }
 }, ["saint-mentions"], [CacheTag.TEXTS]);
@@ -82,7 +83,7 @@ export const getLinkedNoble = async (ids: string[]): Promise<[any, any]> => {
             .get(...ids);
         return [noble ?? null, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/saints/[id]/api#getLinkedNoble" });
         return [null, e];
     }
 };

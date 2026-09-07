@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from "react";
+import type {PickerProps} from "@/app/admin/nobles/[id]/types";
 
 const NobleItem = ({
                        value,
                        setValue,
                        placeholder,
-                   }) => {
+                   }: PickerProps) => {
 
     const [father, setFather] = useState<any|null>(null);
 
@@ -20,6 +21,10 @@ const NobleItem = ({
                     setFatherData([]);
                     setFatherSearch(data.data.name);
                 });
+        } else {
+            setFatherData([]);
+            setFatherSearch("");
+            setFather(null);
         }
     }, [value]);
 
@@ -42,7 +47,7 @@ const NobleItem = ({
             </label>
             {father ? (
                 <div>
-                    {father.name} <span onClick={() => setFather(null)}>X</span>
+                    {father.name} <span onClick={() => setValue(null)}>X</span>
                 </div>
             ) : (
                 <>

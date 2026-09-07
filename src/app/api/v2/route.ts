@@ -4,6 +4,7 @@ import { authorize } from "@/lib/api/v2/access";
 import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 import { cached, CacheTag } from "@/lib/cache";
 import { ACCENTS_COLLECTION, ACCENTS_DB } from "@/lib/accents/store";
+import {reportError} from "@/lib/reportError";
 
 // Описание сервиса: с чего начинает знакомство любой клиент. Здесь же — условия
 // использования, чтобы их нельзя было не заметить.
@@ -81,7 +82,7 @@ export async function GET(request: Request) {
                 "В версии 2 поля только добавляются. Несовместимые изменения выйдут отдельной версией.",
         }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/route#GET", source: "api" });
         return fail("internal", "Не удалось собрать описание сервиса");
     }
 }

@@ -1,6 +1,7 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { calcDayCached, calendarResponse, readLang } from "@/lib/api/v2/calendar";
+import {reportError} from "@/lib/reportError";
 
 // Что читается в конкретный день. Дата — гражданская (YYYY-MM-DD), всё остальное
 // считается: подвижный круг с отступкой и преступкой, неподвижный календарь,
@@ -30,7 +31,7 @@ export async function GET(request: Request, { params }: { params: { date: string
 
         return respond(calendarResponse(params.date, result), { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/calendar/[date]/route#GET", source: "api" });
         return fail("internal", "Не удалось рассчитать день");
     }
 }

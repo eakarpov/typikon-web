@@ -1,4 +1,5 @@
 import {unstable_cache} from "next/cache";
+import {reportError} from "@/lib/reportError";
 
 // Контент сайта меняется редко (правка текста в админке — событие раз в дни),
 // а страницы при этом рендерятся динамически из-за cookie языка Библии и
@@ -80,7 +81,7 @@ export const cachedTuple = <Args extends any[]>(
         try {
             return [await inner(...args), null];
         } catch (e) {
-            console.error(e);
+            reportError(e, { where: "lib/cache#cachedTuple" });
             return [null, e];
         }
     };

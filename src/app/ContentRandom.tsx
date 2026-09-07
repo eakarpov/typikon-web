@@ -72,11 +72,11 @@ const ContentRandom = () => {
                                 reactStringReplace(
                                     paragraph,
                                     /\{(\d+)}/g,
-                                    (footnote) => <FootnoteLinkNew footnotes={item.footnotes} value={footnote} />,
+                                    (footnote, i, offset) => <FootnoteLinkNew key={`footnote-${i}-${offset}`} footnotes={item.footnotes} value={footnote} />,
                                 ),
                                 /\{k\|(.+)}/,
-                                (red) => (
-                                    <span key={red} className="text-red-600">
+                                (red, i, offset) => (
+                                    <span key={`red-${i}-${offset}`} className="text-red-600">
                                         {red}
                                     </span>
                                 )

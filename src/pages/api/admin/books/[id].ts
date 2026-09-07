@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 import {DEFAULT_BOOK_LANGUAGE} from "@/utils/bookLanguages";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -39,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 );
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error");
+            reportError(e, { where: "pages/api/admin/books/[id]#handler", source: "api" });
         }
     } else {
         res.status(404).end();

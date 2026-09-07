@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "@/lib/mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 import { BIBLE_EDITIONS } from "@/lib/bible/schema";
+import {reportError} from "@/lib/reportError";
 
 // Правка описания издания. Состав книг и стихи здесь не трогаются: их правят
 // отдельно, и смешивать «переименовать издание» с «переписать книгу» опасно.
@@ -68,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ ok: true });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/bible/editions/[code]#handler", source: "api" });
         res.status(400).end();
     }
 }

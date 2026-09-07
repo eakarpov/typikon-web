@@ -5,6 +5,7 @@ import {aggregationDayWithMonth, aggregationTextWithBook, getAggregationAddField
 import {resolveDayPericopes} from "@/lib/pericopes";
 import {DEFAULT_BIBLE_LANGUAGE} from "@/utils/bibleLanguage";
 import {cached, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 // Агрегация дня — самая тяжёлая выборка на сайте: десятки $lookup по текстам,
 // книгам и месяцам плюс резолюция зачал. Кэшируется по паре (день, язык Библии),
@@ -94,7 +95,7 @@ export const getItem = async (id: string, lang: string = DEFAULT_BIBLE_LANGUAGE)
     try {
         return [await loadDay(id, lang), null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/calendar/[id]/api#getItem" });
         return [null, { error: "Ошибка"}];
     }
 };

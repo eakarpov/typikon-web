@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const getItem = async (id: string): Promise<[any, any]> => {
     try {
@@ -21,7 +22,7 @@ export const getItem = async (id: string): Promise<[any, any]> => {
         const res = texts[0];
         return [res, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/profile/api#getItem" });
         return [null, e];
     }
 };
@@ -37,7 +38,7 @@ export const getAcceptedTextingCount = async (id: string): Promise<[number, any]
 
         return [count, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/profile/api#getAcceptedTextingCount" });
         return [0, e];
     }
 };
@@ -60,7 +61,7 @@ export const setItem = async (id: string, data: any): Promise<[any, any]> => {
 
         return [true, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/profile/api#setItem" });
         return [null, e];
     }
 };

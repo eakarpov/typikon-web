@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { LOGS, VISITORS, VISITS_DB } from "@/lib/meta/visits";
+import {reportError} from "@/lib/reportError";
 
 // Считается в базе, а не в приложении. Раньше сюда загружались ВСЕ документы журнала
 // и складывались в JS — на 95 тысячах записей это дорогая операция на каждый показ
@@ -30,7 +31,7 @@ export const getMeta = async (): Promise<[any, any]> => {
 
         return [{ totalCount, totalUsers }, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/meta/api#getMeta" });
         return [null, e];
     }
 };

@@ -1,40 +1,49 @@
 import {init} from "@/lib/sqlite";
+import type {CoupleRow, FamilyRow, NobleRow, RuleRow, StateRow} from "@/lib/nobles/types";
+import {reportError} from "@/lib/reportError";
 
 export const getItem = async (id: string) => {
     try {
         const db = await init();
 
-        const data = await db.prepare(`select * from nobles where id=?`).get(id);
+        const data = await db.prepare(`select * from nobles where id=?`).get(id) as NobleRow | undefined;
 
-        const family = await db.prepare(`select * from families where id=?`).get(data.familyId);
+        // Прежде отсутствие персоны выходило наружу исключением при обращении к
+        // полю несуществующей строки; страница показывала ту же ошибку, но по
+        // пути через catch. Проверка называет случай прямо.
+        if (!data) {
+            return [null, `Персона ${id} не найдена.`];
+        }
+
+        const family = await db.prepare(`select * from families where id=?`).get(data.familyId) as FamilyRow | undefined;
 
         const isMale = !!data.gender;
 
         const resultTemp = await db.prepare(`select * from couples where husbandId = ? or wifeId = ?`).all(
             id,
             id
-        );
+        ) as CoupleRow[];
 
         const spousesTemp = resultTemp
-            .filter((item: any) => isMale ? item.husbandId === parseInt(id) : item.wifeId === parseInt(id) );
+            .filter((item) => isMale ? item.husbandId === parseInt(id) : item.wifeId === parseInt(id) );
 
         const selectRequest = await db.prepare(`select * from nobles where id= ?`);
 
-        const spousesData: any[] = [];
+        const spousesData: NobleRow[] = [];
         for (const item of spousesTemp) {
             spousesData.push(...selectRequest.all(
                 isMale ? item.wifeId : item.husbandId
-            ));
+            ) as NobleRow[]);
         }
 
-        const spouses = spousesTemp.map((item: any) => ({
+        const spouses = spousesTemp.map((item) => ({
             ...item,
             data: spousesData.find((el) => isMale ? el.id === item.wifeId : el.id === item.husbandId),
         }));
 
-        const children = await db.prepare(`select * from nobles where fatherId=? or motherId=?`).all(id, id);
+        const children = await db.prepare(`select * from nobles where fatherId=? or motherId=?`).all(id, id) as NobleRow[];
 
-        const rulesTemp = await db.prepare(`select * from rules where personId=?`).all(id);
+        const rulesTemp = await db.prepare(`select * from rules where personId=?`).all(id) as RuleRow[];
 
         // const suzerainDataRequest = await db.prepare(`select * from states where id=?`);
         //
@@ -47,64 +56,74 @@ export const getItem = async (id: string) => {
 
         const predessorDataRequest = await db.prepare(`select * from rules where id= ?`);
 
-        const predessorData: any[] = [];
+        const predessorData: RuleRow[] = [];
         for (const item of rulesTemp) {
             predessorData.push(...predessorDataRequest.all(
                 item.predessorId,
-            ));
+            ) as RuleRow[]);
         }
 
         const successorDataRequest = await db.prepare(`select * from rules where predessorId= ?`);
 
-        const successorData: any[] = [];
+        const successorData: RuleRow[] = [];
         for (const item of rulesTemp) {
             successorData.push(...successorDataRequest.all(
                 item.id,
-            ));
+            ) as RuleRow[]);
         }
 
         const selectStateDataRequest = await db.prepare(`select * from states where id= ?`);
 
-        const statesData: any[] = [];
+        // Государства и персоны ниже собираются одиночными get(): ссылка может
+        // никуда не вести (правление на несуществующее государство), и тогда
+        // строки просто нет. Прежде в массив попадал undefined, и следующий же
+        // find() по нему падал — теперь ненайденное не кладётся вовсе.
+        const statesData: StateRow[] = [];
+        const pushState = (value: unknown) => {
+            if (value) statesData.push(value as StateRow);
+        };
         for (const item of rulesTemp) {
-            statesData.push(selectStateDataRequest.get(
+            pushState(selectStateDataRequest.get(
                 item.stateId,
             ));
             statesData.push(...selectStateDataRequest.all(
                 item.suzerainId,
-            ));
+            ) as StateRow[]);
         }
         for (const item of predessorData) {
-            statesData.push(selectStateDataRequest.get(
+            pushState(selectStateDataRequest.get(
                 item.stateId,
             ));
         }
         for (const item of successorData) {
-            statesData.push(selectStateDataRequest.get(
+            pushState(selectStateDataRequest.get(
                 item.stateId,
             ));
         }
 
         const selectRuleDataRequest = await db.prepare(`select * from nobles where id= ?`);
 
-        const rulesData: any[] = [];
+        const rulesData: NobleRow[] = [];
+        const pushNoble = (value: unknown) => {
+            if (value) rulesData.push(value as NobleRow);
+        };
         for (const item of rulesTemp) {
             rulesData.push(...selectRuleDataRequest.all(
                 item.personId,
-            ));
+            ) as NobleRow[]);
         }
         for (const item of predessorData) {
-            rulesData.push(selectRuleDataRequest.get(
+            pushNoble(selectRuleDataRequest.get(
                 item.personId,
             ));
         }
         for (const item of successorData) {
-            rulesData.push(selectRuleDataRequest.get(
+            pushNoble(selectRuleDataRequest.get(
                 item.personId,
             ));
         }
 
-        const rules = rulesTemp.map((item: any) => {
+        const rules = rulesTemp.map((item) => {
             const suzerainRule = statesData.find((el) => el.id === item.suzerainId);
             const successorRule = successorData.find((el) => el.predessorId === item.id);
             const predessorRule = predessorData.find((el) => el.id === item.predessorId);
@@ -126,9 +145,9 @@ export const getItem = async (id: string) => {
             })
         });
 
-        const father = await db.prepare(`select * from nobles where id= ?`).get(data.fatherId);
+        const father = await db.prepare(`select * from nobles where id= ?`).get(data.fatherId) as NobleRow | undefined;
 
-        const mother = await db.prepare(`select * from nobles where id= ?`).get(data.motherId);
+        const mother = await db.prepare(`select * from nobles where id= ?`).get(data.motherId) as NobleRow | undefined;
 
         // geshwester
 
@@ -142,7 +161,7 @@ export const getItem = async (id: string) => {
             family,
         }, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/nobles/[id]/api#getItem" });
         return [null, e];
     }
 };

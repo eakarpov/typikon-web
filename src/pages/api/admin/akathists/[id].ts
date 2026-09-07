@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 // Решение по одной связи со святым — акафиста или памяти книги.
 //
@@ -43,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!result.matchedCount) { res.status(404).json({ error: "not found" }); return; }
         res.status(200).end();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/akathists/[id]#handler", source: "api" });
         res.status(400).json({ error: String(e) });
     }
 }

@@ -1,6 +1,7 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import {checkRightsBack} from "@/lib/admin/back";
 import {init} from "@/lib/sqlite";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -35,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).end();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/nobles/import/[batchId]/rules/[id]#handler", source: "api" });
         res.status(400).json({error: String(e)});
     }
 }

@@ -5,6 +5,7 @@ import { readPage } from "@/lib/api/v2/params";
 import { textSummary } from "@/lib/api/v2/serialize";
 import { MIN_QUERY_LENGTH } from "@/app/search/api";
 import { normalizeQuery, snippetFor } from "@/lib/search";
+import {reportError} from "@/lib/reportError";
 
 // Поиск по названию и содержимому. Ударения и церковнославянское написание набирать
 // не нужно: и запрос, и тексты сравниваются в нормализованном виде (см. @/lib/search).
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
 
         return respondCollection(items, { total, limit, offset }, { maxAge: 300, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/search/route#GET", source: "api" });
         return fail("internal", "Поиск не удался");
     }
 }

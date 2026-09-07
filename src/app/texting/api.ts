@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {TextReadiness} from "@/utils/texts";
+import {reportError} from "@/lib/reportError";
 
 export const getItems = async (): Promise<[any, any]> => {
     try {
@@ -47,7 +48,7 @@ export const getItems = async (): Promise<[any, any]> => {
 
         return [texts, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/texting/api#getItems" });
         return [null, e];
     }
 };

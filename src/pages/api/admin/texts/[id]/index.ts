@@ -4,6 +4,7 @@ import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 import {buildSearchFields} from "@/lib/search";
 import {normalizeParagraphs} from "@/utils/texts";
+import {reportError} from "@/lib/reportError";
 
 // Один alias — один документ: адрес /texts/{alias} разрешается в один документ, и если
 // alias занят, второй становится недостижим. В базе такие пары уже есть (следствие
@@ -80,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error");
+            reportError(e, { where: "pages/api/admin/texts/[id]/index#handler", source: "api" });
         }
     } else {
         res.status(404).end();

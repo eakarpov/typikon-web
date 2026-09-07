@@ -3,6 +3,7 @@ import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { readEnum } from "@/lib/api/v2/params";
 import { week } from "@/lib/api/v2/serialize";
+import {reportError} from "@/lib/reportError";
 
 // Седмицы подвижного круга: Постная и Цветная Триодь.
 export const revalidate = 3600;
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
 
         return respondCollection(serialized, { total: serialized.length, limit: serialized.length, offset: 0 }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/weeks/route#GET", source: "api" });
         return fail("internal", "Не удалось получить седмицы");
     }
 }

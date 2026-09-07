@@ -3,6 +3,7 @@ import { cached, CacheTag } from "@/lib/cache";
 import { buildCalendar, CalendarEvent } from "@/lib/ical";
 import { TextType, valueTitle } from "@/utils/texts";
 import { DEFAULT_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
+import {reportError} from "@/lib/reportError";
 
 // Подписной календарь: чтения и памяти дня приезжают в тот календарь, которым человек
 // уже пользуется, без захода на сайт и без приложения.
@@ -108,7 +109,7 @@ export async function GET() {
                 return buildEvent(date, result);
             } catch (e) {
                 // Один сбойный день не должен обрушить всю ленту.
-                console.error(`calendar.ics: не удалось посчитать ${toIsoDate(date)}`, e);
+                reportError(e, { where: "calendar.ics: не удалось посчитать день", extra: { date: toIsoDate(date) } });
                 return null;
             }
         }));

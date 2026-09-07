@@ -6,6 +6,7 @@ import { pericope, verse } from "@/lib/api/v2/serialize";
 import { resolvePericopeVersesWithFallback } from "@/lib/pericopes";
 import { readLang } from "@/lib/api/v2/calendar";
 import { cached, CacheTag } from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 // Зачало с разрешёнными стихами: диапазоны превращаются в сам текст.
 export const revalidate = 3600;
@@ -53,7 +54,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             verses: (resolved?.verses ?? []).map(verse),
         }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/pericopes/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить зачало");
     }
 }

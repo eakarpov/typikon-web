@@ -10,7 +10,7 @@ const TextPart = ({ value, footnotes }: ITextPart) => {
     return reactStringReplace(
         value,
         /(\S\d+)/g,
-        (footnote) => <FootnoteLink footnotes={footnotes} value={footnote} />,
+        (footnote, i, offset) => <FootnoteLink key={`footnote-${i}-${offset}`} footnotes={footnotes} value={footnote} />,
     );
 };
 

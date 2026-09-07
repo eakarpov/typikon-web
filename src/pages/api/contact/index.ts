@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import * as nodemailer from "nodemailer";
 import {store} from "@/lib/captcha";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
@@ -46,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         transporter.sendMail(mailOption, (err, data) => {
             if (err) {
                 res.status(500).end();
-                console.log(err, process.env.EMAIL, process.env.EMAIL_PASSWORD);
+                reportError(err, { where: "pages/api/contact: письмо не ушло", source: "api" });
             } else {
                 res.status(200).end();
             }

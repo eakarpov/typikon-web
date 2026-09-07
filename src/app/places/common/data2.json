@@ -866,7 +866,7 @@
   {
     "name": "Ново Место",
     "lat": 47.8089,
-    "code": 16.2325,
+    "lon": 16.2325,
     "createdAt": "12 век",
     "destroyedAt": null,
     "color": "green"

@@ -1,3 +1,5 @@
+import type { NewsPostDTO } from "@/types/dto/news";
+
 // Новости: всё, что можно посчитать без базы.
 //
 // Вынесено отдельно от выборок ради тестов: адрес записи, отметка «новое» и сборка
@@ -108,3 +110,17 @@ ${entries}
 </rss>
 `;
 };
+
+/** Вид записи по-русски: в ленте и на самой записи подпись одна и та же. */
+export const typeLabel: Record<NewsPostDTO["type"], string> = {
+    update: "Обновление",
+    announcement: "Объявление",
+};
+
+/**
+ * Дата публикации читателю. Лежит здесь, а не в самой странице ленты: страница
+ * app-роутера может вывозить наружу только то, что Next у неё спрашивает, и
+ * всякий сторонний export ломает проверку типов сборки.
+ */
+export const dateLabel = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "";

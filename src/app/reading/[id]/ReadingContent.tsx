@@ -460,7 +460,6 @@ const ReadingContent = ({ item }: { item: any }) => {
         }
         // @ts-ignore
         if (!CSS.highlights) {
-            console.log("CSS highlight is not supported");
             return;
         }
         // @ts-ignore

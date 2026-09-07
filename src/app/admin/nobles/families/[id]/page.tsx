@@ -14,7 +14,6 @@ const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
                 Это страница элемента
             </p>
             <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
                 <AdminEditorManager itemPromise={itemPromise} />
             </Suspense>
         </div>

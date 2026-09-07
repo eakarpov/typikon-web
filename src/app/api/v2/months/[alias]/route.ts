@@ -2,6 +2,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { getItem } from "@/app/months/[id]/api";
 import { month } from "@/lib/api/v2/serialize";
+import {reportError} from "@/lib/reportError";
 
 // Месяц со списком своих дней — по одной строке на день, без чтений.
 export const revalidate = 3600;
@@ -30,7 +31,7 @@ export async function GET(request: Request, { params }: { params: { alias: strin
             })),
         }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/months/[alias]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить месяц");
     }
 }

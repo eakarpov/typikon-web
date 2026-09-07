@@ -1,6 +1,7 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import {checkRightsBack} from "@/lib/admin/back";
 import {init} from "@/lib/sqlite";
+import {reportError} from "@/lib/reportError";
 
 // Мердж партии staging_* в живые nobles/families/couples. Идемпотентен: опирается на
 // nobles.wikidataId/families.wikidataId (UNIQUE) — повторный запуск на той же партии не плодит дублей,
@@ -284,7 +285,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const result = run();
         res.status(200).json(result);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/nobles/import/[batchId]/merge#handler", source: "api" });
         res.status(400).json({error: String(e)});
     }
 }

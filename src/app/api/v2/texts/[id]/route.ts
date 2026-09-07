@@ -4,6 +4,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { textDetail } from "@/lib/api/v2/serialize";
 import { cached, CacheTag } from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 // Текст целиком. Принимает и alias, и идентификатор: alias — устойчивый адрес,
 // но у части текстов его нет.
@@ -61,7 +62,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
         return respond(textDetail(doc), { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/texts/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить текст");
     }
 }

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect } from "react";
+import {reportClientError} from "@/lib/reportClientError";
 
 // Регистрируем service worker только в проде: в dev он кэширует ответы Next и мешает
 // горячей перезагрузке. Проверять офлайн-режим надо на сборке (npm run build && npm start).
@@ -11,7 +12,7 @@ const ServiceWorkerRegistrar = () => {
         // Регистрация после load, чтобы не соперничать за сеть с первой отрисовкой.
         const register = () => {
             navigator.serviceWorker.register("/sw.js").catch((e) => {
-                console.error("Не удалось зарегистрировать service worker", e);
+                reportClientError(e, "ServiceWorkerRegistrar");
             });
         };
 

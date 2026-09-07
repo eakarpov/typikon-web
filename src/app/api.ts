@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {hashIp, normalizeUrl, LOGS, VISITORS, VISITS_DB, VISIT_TIMESTAMPS_KEPT} from "@/lib/meta/visits";
 import {cachedTuple, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 export const getRandomProlog = async () => {
     try {
@@ -21,7 +22,7 @@ export const getRandomProlog = async () => {
             .toArray();
         return [texts[0], null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api#getRandomProlog" });
         return [null, e];
     }
 }
@@ -47,7 +48,7 @@ const loadLastItems = async (): Promise<[any, any]> => {
             .toArray();
         return [texts, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api#loadLastItems" });
         return [null, e];
     }
 };
@@ -64,7 +65,7 @@ const loadCount = async (): Promise<[any, any]> => {
             ]).toArray();
         return [texts[0]?.Total, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api#loadCount" });
         return [null, e];
     }
 };
@@ -105,7 +106,7 @@ export const writeMetaData = async (obj: any): Promise<any> => {
             ),
         ]);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api#writeMetaData" });
         return e;
     }
 };

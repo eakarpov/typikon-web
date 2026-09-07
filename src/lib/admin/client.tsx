@@ -9,9 +9,11 @@ export const WithRights = ({
     session,
 }: {
     Component: FunctionComponent;
-    showButton: boolean;
+    // Необязательные: не переданное значит то же, что false, — и проверки ниже
+    // читают их именно так. Вызывающие места держат оба признака необязательными.
+    showButton?: boolean;
     session: any|null
-    isDevelopment: boolean;
+    isDevelopment?: boolean;
     user?: any;
 }) => {
         if (isDevelopment) {

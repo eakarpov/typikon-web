@@ -5,6 +5,7 @@ import {TextReadiness} from "@/utils/texts";
 import {BIBLE_CANON} from "@/utils/bibleCanon";
 import {REFERENCE_VERSIFICATION} from "@/utils/bibleVersification";
 import { podobnyIndex } from "@/lib/podobny/store";
+import {reportError} from "@/lib/reportError";
 
 // Карта сайта строится из базы, а не лежит статикой в public/: раньше файл
 // генерировался внешним сервисом и с 2024 года не обновлялся, поэтому новые
@@ -248,7 +249,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 entry(`/podobny/${unit.slug}`, new Date(), 0.5, "monthly")),
         ]);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/sitemap#sitemap" });
         // Пустая карта хуже устаревшей, но лучше пятисотки на /sitemap.xml.
         return STATIC_ROUTES.map(({ path, priority }) =>
             entry(path, new Date(), priority, "daily"));

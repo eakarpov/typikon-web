@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 import { BIBLE_VERSES } from "@/lib/bible/schema";
+import {reportError} from "@/lib/reportError";
 
 // Правка одного стиха — только содержимое.
 //
@@ -46,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ ok: true });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/bible/verses/[id]#handler", source: "api" });
         res.status(400).end();
     }
 }

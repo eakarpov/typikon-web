@@ -3,6 +3,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { textSummary } from "@/lib/api/v2/serialize";
 import { cached, CacheTag } from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 // Тексты, связанные со святым. Идентификатор — номер памяти в святцах dneslov.org.
 //
@@ -59,7 +60,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             mentions: mentions.map(textSummary),
         }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/saints/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить тексты святого");
     }
 }

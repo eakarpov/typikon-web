@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { BIBLE_BOOKS, BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
 import { canonBookName } from "@/utils/bibleCanon";
+import {reportError} from "@/lib/reportError";
 
 // Админский список изданий с их книгами. Без кэша: редактор должен видеть то, что
 // в базе прямо сейчас, а не то, что успело осесть в кэше выборок.
@@ -91,7 +92,7 @@ export const getEditions = async (): Promise<AdminEdition[]> => {
                 }),
         }));
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/bible/api#getEditions" });
         return [];
     }
 };

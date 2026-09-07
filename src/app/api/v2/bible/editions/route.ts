@@ -3,6 +3,7 @@ import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { bibleEdition } from "@/lib/api/v2/serialize";
 import { publicEditions } from "@/lib/bible/query";
+import {reportError} from "@/lib/reportError";
 
 // Издания Библии: что вообще можно запросить у /api/v2/bible/{книга}/{глава}.
 //
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
             { access },
         );
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/bible/editions/route#GET", source: "api" });
         return fail("internal", "Не удалось получить издания Библии");
     }
 }

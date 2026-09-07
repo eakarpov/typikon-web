@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { myFont } from "@/utils/font";
 import { getPublished } from "@/lib/news/posts";
 import { CONTENT_REVALIDATE } from "@/lib/cache";
-import { dateLabel, typeLabel } from "@/app/news/page";
+import { dateLabel, typeLabel } from "@/lib/news/format";
 
 // Отдельный адрес у каждой новости: на неё ссылаются из писем и каналов, и ссылка
 // должна вести на саму запись, а не на ленту, где её ещё надо найти.

@@ -6,6 +6,7 @@ import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {useRouter} from "next/navigation";
 import {AuthSlice} from "@/lib/store/auth";
 import Script from "next/script";
+import {reportClientError} from "@/lib/reportClientError";
 
 const Login = ({
     vkApp,
@@ -80,7 +81,7 @@ const Login = ({
     }
 
     const vkidOnError = (error: any) => {
-        console.log(error);
+        reportClientError(error, "login: вход через VK ID");
     };
 
     const decodeJWT = (token: string) => {

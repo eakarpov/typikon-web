@@ -7,6 +7,7 @@ import { TextingProposalStatus } from "@/utils/texting";
 import { TextReadiness } from "@/utils/texts";
 import { buildSearchFields } from "@/lib/search";
 import { normalizeParagraphs } from "@/utils/texts";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -109,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).end();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/texting/[id]/approve#handler", source: "api" });
         res.status(500).end();
     }
 }

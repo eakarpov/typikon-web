@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const getUserInfo = async (id: string) => {
     try {
@@ -14,7 +15,7 @@ export const getUserInfo = async (id: string) => {
             .toArray();
         return users[0];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/users#getUserInfo" });
     }
 };
 
@@ -39,7 +40,7 @@ export const registerNewUserWithVK = async (id: string) => {
             });
         return users.insertedId.toString();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/users#registerNewUserWithVK" });
     }
 };
 
@@ -64,7 +65,7 @@ export const registerNewUserWithGoogle = async (id: string) => {
             });
         return users.insertedId.toString();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/users#registerNewUserWithGoogle" });
     }
 };
 
@@ -89,7 +90,7 @@ export const registerNewUserWithTelegram = async (id: string) => {
             });
         return users.insertedId.toString();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/users#registerNewUserWithTelegram" });
     }
 };
 
@@ -105,7 +106,7 @@ export const getUserByVKId = async (id: string) => {
             });
         return user;
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/users#getUserByVKId" });
     }
 }
 
@@ -121,7 +122,7 @@ export const getUserByGoogleId = async (id: string) => {
             });
         return user;
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/users#getUserByGoogleId" });
     }
 }
 
@@ -137,6 +138,6 @@ export const getUserByTelegramId = async (id: string) => {
             });
         return user;
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "lib/authorize/users#getUserByTelegramId" });
     }
 }

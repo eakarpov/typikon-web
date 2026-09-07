@@ -8,12 +8,11 @@ import {revalidateDays} from "@/lib/admin/revalidate";
 
 interface IAdminEditor {
     value: any;
-    id: string;
 }
 
 interface IDayPartItem { textId?: string; pericopeId?: string; cite?: string; description?: string; paschal: boolean; statia?: number; }
 
-const AdminEditor = ({ value, id }: IAdminEditor) => {
+const AdminEditor = ({ value }: IAdminEditor) => {
     const [subnames, setSubnames] = useState<string[]>(value.subnames || []);
     const [name, setName] = useState(value.name || "");
 

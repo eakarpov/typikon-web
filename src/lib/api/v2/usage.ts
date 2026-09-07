@@ -2,6 +2,7 @@ import { ObjectId, type Collection } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { TOKENS_DB } from "@/lib/api/v2/tokens";
 import { dayKey, decide, type QuotaVerdict } from "@/lib/api/v2/quota";
+import {reportError} from "@/lib/reportError";
 
 // Суточный расход ключей.
 //
@@ -70,7 +71,7 @@ const persist = async (tokenId: string, counter: Counter) => {
         );
     } catch (e) {
         // Расход в памяти при этом остаётся верным — потеряется только запись.
-        console.error("api-token usage flush", e);
+        reportError(e, { where: "lib/api/v2/usage: не удалось записать учёт", source: "api" });
     }
 };
 
@@ -87,7 +88,7 @@ const load = async (tokenId: string, day: string): Promise<Counter> => {
             count = doc?.count ?? 0;
         } catch (e) {
             // База недоступна — считаем с нуля, но доступ из-за этого не закрываем.
-            console.error("api-token usage load", e);
+            reportError(e, { where: "lib/api/v2/usage: не удалось прочитать учёт", source: "api" });
         }
 
         const counter: Counter = { day, count, saved: count };

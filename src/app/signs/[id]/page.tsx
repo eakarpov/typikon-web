@@ -9,7 +9,6 @@ const PlaceItem = ({ params: { id }}: { params: { id: string }}) => {
 
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            {/* @ts-expect-error Async Server Component */}
             <Content itemPromise={itemPromise} />
         </Suspense>
     )

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import {reportError} from "@/lib/reportError";
 
 // ПИСЬМО ЧЕЛОВЕКУ, а не отчёт себе. Прежде почтой пользовалась одна форма
 // обратной связи, и слала она всегда НАМ; теперь надо писать и наружу — тому,
@@ -31,7 +32,7 @@ export const sendMail = async (
         await t.sendMail({ from: process.env.EMAIL, to, subject, text });
         return true;
     } catch (e) {
-        console.error(`письмо «${subject}» для ${to} не ушло:`, e);
+        reportError(e, { where: "lib/mail: письмо не ушло", extra: { subject, to } });
         return false;
     }
 };

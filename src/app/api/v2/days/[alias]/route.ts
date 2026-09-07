@@ -4,6 +4,7 @@ import { getItem } from "@/app/calendar/[id]/api";
 import { dayDetail } from "@/lib/api/v2/serialize";
 import { DAY_SLOT_ORDER, TextType, valueTitle } from "@/utils/texts";
 import { readLang } from "@/lib/api/v2/calendar";
+import {reportError} from "@/lib/reportError";
 
 // День церковного года по его постоянному адресу (march-30, post-1-sb, pascha).
 // В отличие от /calendar/{дата} здесь не считается подвижный круг — берётся
@@ -26,7 +27,7 @@ export async function GET(request: Request, { params }: { params: { alias: strin
 
         return respond(dayDetail(day, DAY_SLOT_ORDER as readonly string[], (slot) => valueTitle(slot as TextType)), { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/days/[alias]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить день");
     }
 }

@@ -30,7 +30,6 @@ const Penticostarion = async () => {
             </div>
             <div className={myFont.variable}>
                 <Suspense fallback={<div>Loading...</div>}>
-                    {/* @ts-expect-error Async Server Component */}
                     <Content itemsPromise={itemsData} />
                 </Suspense>
             </div>

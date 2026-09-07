@@ -1,25 +1,13 @@
 'use client';
 import { useEffect } from "react";
 import Link from "next/link";
+import { reportClientError } from "@/lib/reportClientError";
 
 // Граница ошибок для страниц. Без неё пользователь видел стандартную страницу Next,
 // а сама ошибка не доезжала до сервера — узнать о ней было неоткуда.
 const ErrorBoundary = ({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) => {
     useEffect(() => {
-        fetch("/api/client-errors", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
-                digest: error.digest,
-                where: typeof window !== "undefined" ? window.location.pathname : "",
-            }),
-            keepalive: true,
-        }).catch(() => {
-            // Если не доехало — не мешаем пользователю ещё одной ошибкой.
-        });
+        reportClientError(error, window.location.pathname, { digest: error.digest });
     }, [error]);
 
     return (

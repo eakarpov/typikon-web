@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {TextingProposalStatus} from "@/utils/texting";
+import {reportError} from "@/lib/reportError";
 
 export const createProposal = async (
     {userId, textId, content, comment}: {userId: string, textId: string, content: string, comment?: string}
@@ -23,7 +24,7 @@ export const createProposal = async (
 
         return [res.insertedId, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/texting/service#createProposal", source: "api" });
         return [null, e];
     }
 };

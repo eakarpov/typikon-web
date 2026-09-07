@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const saveReport = async (item: any) => {
     try {
@@ -16,6 +17,6 @@ export const saveReport = async (item: any) => {
             );
         return;
     } catch (e) {
-        console.log("mongodb error");
+        reportError(e, { where: "app/api/report/service#saveReport", source: "api" });
     }
 }

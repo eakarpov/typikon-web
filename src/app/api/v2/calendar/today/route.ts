@@ -2,6 +2,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { calcDayCached, calendarResponse, readLang } from "@/lib/api/v2/calendar";
 import { formatDateISO } from "@/utils/dates";
+import {reportError} from "@/lib/reportError";
 
 // Сегодняшний день. «Сегодня» здесь гражданское: церковная дата и переход после
 // вечерни считаются внутри и отдаются отдельным полем.
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
 
         return respond(calendarResponse(today, result), { maxAge: 300, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/calendar/today/route#GET", source: "api" });
         return fail("internal", "Не удалось рассчитать день");
     }
 }

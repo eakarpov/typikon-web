@@ -3,6 +3,7 @@ import { authorize } from "@/lib/api/v2/access";
 import { readEnum, readPage } from "@/lib/api/v2/params";
 import { incipitSummary } from "@/lib/api/v2/serialize";
 import { LANGUAGES, listIncipits, normalizeIncipitQuery } from "@/lib/incipits";
+import {reportError} from "@/lib/reportError";
 
 // Указатель зачинов: песнопения книг по первым словам.
 //
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
         return respondCollection(found.items.map(incipitSummary),
             { total: found.total, limit, offset }, { maxAge: 300, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/incipits/route#GET", source: "api" });
         return fail("internal", "Поиск по указателю не удался");
     }
 }

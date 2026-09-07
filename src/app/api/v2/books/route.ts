@@ -3,6 +3,7 @@ import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
 import { book } from "@/lib/api/v2/serialize";
+import {reportError} from "@/lib/reportError";
 
 export const revalidate = 3600;
 
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
 
         return respondCollection(items.map(book), { total, limit, offset }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/books/route#GET", source: "api" });
         return fail("internal", "Не удалось получить список книг");
     }
 }

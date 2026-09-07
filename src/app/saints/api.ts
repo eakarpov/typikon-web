@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 import { saintCards } from "@/lib/saints";
+import {reportError} from "@/lib/reportError";
 
 // Указатель святых. Строится из наших данных — texts.dneslovId и texts.mentionIds
 // дают, кто в корпусе представлен, а имя и адрес берутся из каталога `saints`.
@@ -87,7 +88,7 @@ export const getSaintIds = async (): Promise<string[]> => {
     try {
         return (await getSaintRows()).map((item) => item.slug ?? item.dneslovId);
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/saints/api#getSaintIds" });
         return [];
     }
 };

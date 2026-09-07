@@ -204,10 +204,10 @@ const DayPartReading = ({
         reactStringReplace(
             text,
             /\{st\|(.+)}/g,
-            (results) => <Link href={`/saints/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
+            (results, i, offset) => <Link key={`saint-${i}-${offset}`} href={`/saints/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
         ),
         /\{pl\|(.+)}/g,
-        (results) => <Link href={`/places/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
+        (results, i, offset) => <Link key={`place-${i}-${offset}`} href={`/places/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
     );
 
     const renderPericopeItem = (item: any, index: number) => {
@@ -357,7 +357,8 @@ const DayPartReading = ({
                                                 reactStringReplace(
                                                     paragraph,
                                                     /\{st\|(.+)}/g,
-                                                    (results) => <Link
+                                                    (results, i, offset) => <Link
+                                                        key={`saint-${i}-${offset}`}
                                                         href={`/saints/${results.split('|')[0]}`}
                                                         className="text-blue-800"
                                                     >
@@ -365,7 +366,8 @@ const DayPartReading = ({
                                                     </Link>,
                                                 ),
                                                 /\{pl\|(.+)}/g,
-                                                (results) => <Link
+                                                (results, i, offset) => <Link
+                                                    key={`place-${i}-${offset}`}
                                                     href={`/places/${results.split('|')[0]}`}
                                                     className="text-blue-800"
                                                 >
@@ -373,11 +375,11 @@ const DayPartReading = ({
                                                 </Link>,
                                             ),
                                             /\{(\d+)}/g,
-                                            (footnote) => <FootnoteLinkNew footnotes={item.text.footnotes} value={footnote} />,
+                                            (footnote, i, offset) => <FootnoteLinkNew key={`footnote-${i}-${offset}`} footnotes={item.text.footnotes} value={footnote} />,
                                         ),
                                         /\{k\|(.+)}/,
-                                        (red) => (
-                                            <span className="text-red-600">
+                                        (red, i, offset) => (
+                                            <span key={`red-${i}-${offset}`} className="text-red-600">
                                                 {red}
                                             </span>
                                         )

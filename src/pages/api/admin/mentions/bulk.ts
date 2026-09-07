@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 const ALLOWED = ["pending", "approved", "rejected"];
 
@@ -45,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ updated: result.modifiedCount });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/mentions/bulk#handler", source: "api" });
         res.status(500).end();
     }
 }

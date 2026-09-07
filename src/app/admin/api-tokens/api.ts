@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { allowanceFor, tokenState, type ApiToken, type Scope, type Tier } from "@/lib/api/v2/tokens";
 import { dayKey } from "@/lib/api/v2/quota";
 import { TOKENS_DB } from "@/lib/api/v2/tokens";
+import {reportError} from "@/lib/reportError";
 
 export interface AdminTokenView {
     id: string;
@@ -75,7 +76,7 @@ export const getItems = async (): Promise<[AdminTokenView[] | null, any]> => {
             };
         }), null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/api-tokens/api#getItems" });
         return [null, { error: e }];
     }
 };

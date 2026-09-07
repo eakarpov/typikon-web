@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const getNotes = async (id: string) => {
     try {
@@ -12,6 +13,6 @@ export const getNotes = async (id: string) => {
             }).toArray();
         return res;
     } catch (e) {
-        console.log("mongodb error");
+        reportError(e, { where: "app/api/notes/services#getNotes", source: "api" });
     }
 }

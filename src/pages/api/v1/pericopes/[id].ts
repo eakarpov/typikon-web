@@ -2,6 +2,7 @@ import {NextApiRequest, NextApiResponse} from "next";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {resolvePericopeVerses} from "@/lib/pericopes";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'GET') {
@@ -47,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).json({ ...base, lang, ...resolved });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/pericopes/[id]#handler", source: "api" });
         res.status(400).end();
     }
 }

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 // Один alias — один документ: адреса /calendar/{alias}, /triodion/{alias} и
 // /penticostarion/{alias} разрешаются в один документ, и если
@@ -77,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 );
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error", e);
+            reportError(e, { where: "pages/api/admin/days/[id]#handler", source: "api" });
             res.status(500).end();
         }
     } else {

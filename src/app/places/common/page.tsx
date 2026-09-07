@@ -6,7 +6,6 @@ const PlacesPage = () => {
     setMeta();
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            {/* @ts-expect-error Async Server Component */}
             <Content />
         </Suspense>
     )

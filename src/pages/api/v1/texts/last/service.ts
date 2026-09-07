@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const getLastItems = async (): Promise<[any, any]> => {
     try {
@@ -21,7 +22,7 @@ export const getLastItems = async (): Promise<[any, any]> => {
             .toArray();
         return [texts, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/texts/last/service#getLastItems", source: "api" });
         return [null, e];
     }
 };

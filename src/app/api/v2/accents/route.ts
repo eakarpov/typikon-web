@@ -2,6 +2,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { lookupWords, summarize } from "@/lib/accents/store";
 import { cached, CacheTag } from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 // Словарь ударений. Без параметров — что это такое и как им пользоваться;
 // с ?words= — поиск пачкой.
@@ -88,7 +89,7 @@ export async function GET(request: Request) {
             known: items.filter((item) => item.known).length,
         }, { maxAge: 86400, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/accents/route#GET", source: "api" });
         return fail("internal", "Словарь ударений недоступен");
     }
 }

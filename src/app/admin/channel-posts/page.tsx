@@ -8,7 +8,6 @@ const AdminChannelPosts = () => {
     return (
         <div className="flex flex-col">
             <Suspense fallback={<div>Loading...</div>}>
-                {/* @ts-expect-error Async Server Component */}
                 <Content itemsPromise={itemsData} />
             </Suspense>
         </div>

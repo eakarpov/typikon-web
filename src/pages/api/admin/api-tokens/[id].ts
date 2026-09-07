@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 import { SCOPES, TIERS, type ApiToken, type Scope, type Tier } from "@/lib/api/v2/tokens";
 import { forgetCachedTokens, tokensCollection } from "@/lib/api/v2/tokenStore";
+import {reportError} from "@/lib/reportError";
 
 // Правка живого ключа: лимиты, разделы, тариф, отзыв и возврат.
 //
@@ -89,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         forgetCachedTokens();
         res.status(200).json({ ok: true });
     } catch (e) {
-        console.error("admin api-tokens patch", e);
+        reportError(e, { where: "pages/api/admin/api-tokens/[id]", source: "api" });
         res.status(400).json({ error: e instanceof Error ? e.message : "Не удалось изменить ключ" });
     }
 }

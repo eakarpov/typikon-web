@@ -4,6 +4,7 @@ import {ObjectId} from "mongodb";
 import {verifySession, verifySessionBack} from "@/lib/authorize/authorization";
 import * as process from "node:process";
 import {checkRightsBack} from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -37,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error");
+            reportError(e, { where: "pages/api/admin/places/[id]#handler", source: "api" });
         }
     } else {
         res.status(404).end();

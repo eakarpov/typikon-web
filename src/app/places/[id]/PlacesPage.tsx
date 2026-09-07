@@ -12,17 +12,16 @@ import {Heatmap} from "ol/layer";
 
 const PlacesPage = ({ item }: {item: any}) => {
 
-    console.log(item);
-
     useEffect(() => {
         const source = new OSM();
         const layer = new TileLayer({
             source: source,
         });
-        document.getElementById("map").innerHTML = "";
+        const container = document.getElementById("map");
+        if (!container) return;
+        container.innerHTML = "";
         const latitude = parseFloat(item.latitude);
         const longitude = parseFloat(item.longitude);
-        console.log(longitude, latitude);
         const map = new Map({
             layers: [layer],
             target: "map",
@@ -62,7 +61,7 @@ const PlacesPage = ({ item }: {item: any}) => {
                 )}
                 {item.links && (
                     <span>
-                        Ссылки: {item.links.map(link => (
+                        Ссылки: {item.links.map((link: any) => (
                             <span key={link.url}>
                                 <a href={link.url} target="_blank" rel="noreferrer">{link.text}</a>
                             </span>

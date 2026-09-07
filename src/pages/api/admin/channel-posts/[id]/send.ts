@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 import { sendChannelPostToTelegram } from "@/lib/channelPosts/telegram";
+import {reportError} from "@/lib/reportError";
 
 // Отправка поста немедленно, минуя scheduledAt и статус ready — для теста отправки в Telegram
 // и на случай, если по какой-то причине пропустили окно крона (например пост на 18:00 не ушёл,
@@ -46,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).end();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/channel-posts/[id]/send#handler", source: "api" });
         await (await clientPromise).db("typikon").collection("channelPosts").updateOne(
             { _id: new ObjectId(id) },
             { $set: { status: "failed", publishError: String((e as Error)?.message || e) } },

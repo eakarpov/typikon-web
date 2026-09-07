@@ -2,6 +2,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { incipitDetail } from "@/lib/api/v2/serialize";
 import { LANGUAGES, getIncipit } from "@/lib/incipits";
+import {reportError} from "@/lib/reportError";
 
 // Зачин по постоянному адресу: все его вхождения и все соответствия.
 //
@@ -49,7 +50,7 @@ export async function GET(
 
         return respond(incipitDetail(found), { maxAge: 3600, access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/incipits/[lang]/[key]/route#GET", source: "api" });
         return fail("internal", "Не удалось собрать зачин");
     }
 }

@@ -1,13 +1,15 @@
 import fontkit from "@pdf-lib/fontkit";
 import {layoutMultilineText, PDFDocument, rgb} from "pdf-lib";
+import type {MultilineTextLayout, PDFFont, PDFPage} from "pdf-lib";
 import fs from "fs";
+import {reportError} from "@/lib/reportError";
 
 const renderPart = (
-    multiText,
-    page,
-    pdfDoc,
-    startingPositon,
-    font,
+    multiText: MultilineTextLayout,
+    page: PDFPage,
+    pdfDoc: PDFDocument,
+    startingPositon: number,
+    font: PDFFont,
     fontSize = 20,
     color = rgb(0,0,0),
     lineHeight = 25,
@@ -34,12 +36,17 @@ const renderPart = (
     return { position: startingPositon, newPage: page };
 }
 
-const getFont = async (path: string, pdfDoc) => {
+const getFont = async (path: string, pdfDoc: PDFDocument) => {
     let file;
     try {
         file = fs.readFileSync(process.cwd() + path);
     } catch (e) {
-        console.log(e);
+        reportError(e, { where: "lib/pdf/service: шрифт не прочитан", extra: { path: process.cwd() + path } });
+    }
+    // Прежде непрочитанный файл уходил в embedFont как undefined и вываливался
+    // там невнятной ошибкой разбора; причина называется на месте.
+    if (!file) {
+        throw new Error(`Шрифт не прочитан: ${path}`);
     }
     pdfDoc.registerFontkit(fontkit);
     const font = await pdfDoc.embedFont(file);

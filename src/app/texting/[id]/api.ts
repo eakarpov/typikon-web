@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextingProposalStatus} from "@/utils/texting";
+import {reportError} from "@/lib/reportError";
 
 export const getItem = async (id: string): Promise<[any, any]> => {
     try {
@@ -41,7 +42,7 @@ export const getItem = async (id: string): Promise<[any, any]> => {
         const res = texts[0];
         return [res, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/texting/[id]/api#getItem" });
         return [null, e];
     }
 };
@@ -61,7 +62,7 @@ export const getOwnPendingProposal = async (userId: string, textId: string): Pro
 
         return [res, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/texting/[id]/api#getOwnPendingProposal" });
         return [null, e];
     }
 };

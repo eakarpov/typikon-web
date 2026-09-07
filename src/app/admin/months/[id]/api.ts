@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const getItem = async (id: string) => {
     try {
@@ -53,6 +54,6 @@ export const getItem = async (id: string) => {
             .toArray();
         return months[0];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/months/[id]/api#getItem" });
     }
 };

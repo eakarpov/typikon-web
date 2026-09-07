@@ -21,6 +21,7 @@ import {
     verbSlot,
     type PartOfSpeech,
 } from "@/lib/morphology/tags";
+import {reportError} from "@/lib/reportError";
 
 // Страница словаря собирает парадигму на сервере: и порождение по таблицам, и
 // наложение выписанных в словаре форм. Клиенту уходит готовая сетка — списки строк
@@ -248,7 +249,7 @@ export const getItem = async (id: string): Promise<[LexemeView | null, unknown]>
 
         return [view, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/dictionary/[id]/api#getItem" });
         return [null, e];
     }
 };

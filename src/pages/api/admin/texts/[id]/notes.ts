@@ -2,6 +2,7 @@ import {NextApiRequest, NextApiResponse} from "next";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -31,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 .insertMany(dataWithIds);
             res.status(200).end();
         } catch (e) {
-            console.log("mongodb error");
+            reportError(e, { where: "pages/api/admin/texts/[id]/notes#handler", source: "api" });
             res.status(400).end();
         }
     } else {

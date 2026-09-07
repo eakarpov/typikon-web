@@ -4,7 +4,7 @@ import { ICorrection } from "@/types/dto/corrections";
 
 const DeleteItem = ({ item }: { item: ICorrection }) => {
     const onDelete = () => {
-        console.log(item);
+        // Ручки удаления правок нет: кнопка заведена наперёд и пока ничего не делает.
     };
 
     return (

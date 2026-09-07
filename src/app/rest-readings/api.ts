@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
+import {reportError} from "@/lib/reportError";
 
 const loadRestWeeks = async (): Promise<[any, any]> => {
     try {
@@ -60,7 +61,7 @@ const loadRestWeeks = async (): Promise<[any, any]> => {
             .toArray();
         return [weeks, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/rest-readings/api#loadRestWeeks" });
         return [null, {error: "Ошибка при загрузке данных"}];
     }
 };

@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 const getItems = async () => {
     try {
@@ -13,7 +14,7 @@ const getItems = async () => {
             .toArray();
         return [books, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/v1/library/service#getItems", source: "api" });
         return [null, e];
     }
 };

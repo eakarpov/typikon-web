@@ -5,6 +5,7 @@ import { readDate, readEnum, readPage } from "@/lib/api/v2/params";
 import { textSummary } from "@/lib/api/v2/serialize";
 import { TextReadiness } from "@/utils/texts";
 import { ObjectId } from "mongodb";
+import {reportError} from "@/lib/reportError";
 
 // Список текстов. Тело текста здесь не отдаётся — за ним в карточку: именно оно
 // раздувало ответы v1 до сотни килобайт на три записи.
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
 
         return respondCollection(items.map(textSummary), { total, limit, offset }, { access });
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/api/v2/texts/route#GET", source: "api" });
         return fail("internal", "Не удалось получить список текстов");
     }
 }

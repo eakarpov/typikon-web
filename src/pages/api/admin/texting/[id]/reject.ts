@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 import { decrypt } from "@/lib/authorize/sessions";
 import { TextingProposalStatus } from "@/utils/texting";
+import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -53,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         res.status(200).end();
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "pages/api/admin/texting/[id]/reject#handler", source: "api" });
         res.status(500).end();
     }
 }

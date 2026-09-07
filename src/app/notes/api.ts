@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import {reportError} from "@/lib/reportError";
 
 export const searchData = async (query?: string) => {
     try {
@@ -31,7 +32,7 @@ export const searchData = async (query?: string) => {
             .toArray();
         return [notes, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/notes/api#searchData" });
         return [null, e];
     }
 };

@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {TextingProposalStatus} from "@/utils/texting";
+import {reportError} from "@/lib/reportError";
 
 export const getItems = async (): Promise<[any, any]> => {
     try {
@@ -55,7 +56,7 @@ export const getItems = async (): Promise<[any, any]> => {
 
         return [items, null];
     } catch (e) {
-        console.error(e);
+        reportError(e, { where: "app/admin/texting/api#getItems" });
         return [null, e];
     }
 };
