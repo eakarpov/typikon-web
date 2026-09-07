@@ -159,11 +159,24 @@ describe("ближайшее", () => {
         assert.equal(events[0]?.date, "2027-01-07");
     });
 
-    it("добавляет общие поминальные дни без привязки к лицу", () => {
-        const events = upcoming([], "2026-04-15", 10);
+    it("добавляет общие поминальные дни, когда в помяннике есть усопшие", () => {
+        const events = upcoming([person({ died: "2019-03-12" })], "2026-04-15", 10);
         const radonitsa = events.find(e => e.kind === "memorial-day");
         assert.equal(radonitsa?.date, "2026-04-21");
         assert.equal(radonitsa?.personId, undefined);
+    });
+
+    // Заупокойные субботы в карточке живого человека читались как поминовение
+    // ЕГО — а он жив.
+    it("живому заупокойных суббот не показывает", () => {
+        const events = upcoming(
+            [person({ kind: "living", born: "1978-06-14", died: null })],
+            "2026-04-15", 30);
+        assert.deepEqual(events.filter(e => e.kind === "memorial-day"), []);
+    });
+
+    it("пустому помяннику — тоже", () => {
+        assert.deepEqual(upcoming([], "2026-04-15", 10), []);
     });
 
     it("за окно не выходит", () => {

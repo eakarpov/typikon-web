@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
 
     const claim = await saveClaim({
         userId: session.id, title, dioceseUrl, email,
-        phone: String(body?.phone ?? "").trim().slice(0, 60) || null,
         evidence: String(body?.evidence ?? "").trim().slice(0, 1000) || null,
     });
 

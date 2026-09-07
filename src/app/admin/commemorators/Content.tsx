@@ -5,7 +5,7 @@ import type { ClaimRow } from "./api";
 // РАЗБОР ЗАЯВОК НА ПРИЁМ ЗАПИСОК.
 //
 // Порядок действий здесь не случаен и стоит на виду: отправить письмо → дождаться
-// ответа со знаком → принять. Разбирающий может и перескочить (кнопки не заперты
+// ответа с кодом → принять. Разбирающий может и перескочить (кнопки не заперты
 // друг за другом), но видит, чего не сделал: заявка, принятая без ответного
 // письма, — это заявка, принятая на честное слово, и знать об этом он должен.
 
@@ -14,7 +14,7 @@ const BUTTON = "border rounded px-3 py-1 bg-slate-50 hover:bg-slate-100 font-ser
 const STATUS: Record<string, string> = {
     "pending": "подана, письмо не отправлено",
     "letter-sent": "письмо отправлено, ждём ответа",
-    "verified": "ответ получен, знак сошёлся",
+    "verified": "ответ получен, код сошёлся",
 };
 
 const MATCH_COLOR: Record<string, string> = {
@@ -97,11 +97,10 @@ const Content = ({ claims }: { claims: ClaimRow[] }) => {
                         <dd className="break-all">{claim.email}</dd>
                         <dt className="text-slate-500">домены</dt>
                         <dd className={MATCH_COLOR[claim.domainMatch] ?? ""}>{claim.domainNote}</dd>
-                        <dt className="text-slate-500">знак в письме</dt>
+                        <dt className="text-slate-500">код в письме</dt>
                         <dd><code className="text-xs">{claim.token}</code></dd>
-                        {claim.phone && (<><dt className="text-slate-500">телефон</dt><dd>{claim.phone}</dd></>)}
                         {claim.evidence && (
-                            <><dt className="text-slate-500">чем подтвердит</dt>
+                            <><dt className="text-slate-500">от заявителя</dt>
                               <dd className="whitespace-pre-wrap">{claim.evidence}</dd></>)}
                         {claim.letterSentAt && (
                             <><dt className="text-slate-500">письмо ушло</dt>
@@ -123,11 +122,11 @@ const Content = ({ claims }: { claims: ClaimRow[] }) => {
                     <div className="flex flex-wrap gap-2 items-center">
                         <button className={BUTTON} disabled={busy === claim.userId}
                                 onClick={() => act(claim.userId, "letter")}>
-                            {claim.letterSentAt ? "отправить письмо снова" : "отправить письмо со знаком"}
+                            {claim.letterSentAt ? "отправить письмо снова" : "отправить письмо с кодом"}
                         </button>
                         <button className={BUTTON} disabled={busy === claim.userId}
                                 onClick={() => act(claim.userId, "replied")}>
-                            ответ получен, знак сошёлся
+                            ответ получен, код сошёлся
                         </button>
                         <button className={BUTTON} disabled={busy === claim.userId}
                                 onClick={() => act(claim.userId, "approve")}>

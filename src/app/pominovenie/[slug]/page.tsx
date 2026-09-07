@@ -61,7 +61,7 @@ const CommemoratorPage = async (props: { params: Promise<{ slug: string }> }) =>
                     </p>
                 )}
                 <p className="font-serif text-slate-600 text-sm mt-2">
-                    <strong>Оплаты здесь нет</strong>, и сана мы не удостоверяем: за него
+                    Оплаты здесь нет, и сана мы не удостоверяем: за него
                     отвечает епархия. Мы сверили страницу выше и ответ на письмо, посланное на
                     адрес в её домене.
                 </p>

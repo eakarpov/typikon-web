@@ -320,12 +320,22 @@ export const upcoming = (
         }
     }
 
-    const years = new Set([at(from)!.getFullYear(), at(until)!.getFullYear()]);
-    for (const year of years) {
-        for (const day of memorialSaturdays(year)) {
-            if (!within(day.date)) continue;
-            out.push({ date: day.date, kind: "memorial-day", title: day.name,
-                       custom: day.custom, note: day.note });
+    // ОБЩИЕ ПОМИНАЛЬНЫЕ ДНИ — ТОЛЬКО ТАМ, ГДЕ ЕСТЬ КОГО ПОМИНАТЬ.
+    //
+    // Дни эти не зависят от имён, и оттого их легко подмешать ко всякому
+    // перечню. Но в карточке живого человека «Суббота мясопустная» и
+    // «Радоница» читаются как заупокойное поминовение ЕГО — а он жив. То же и
+    // в помяннике, где одни имена о здравии: заупокойные субботы там не при
+    // чём, и стоят они на своей странице (/pomyannik/kalendar).
+    const departed = persons.some(p => p.kind === "departed" || p.died);
+    if (departed) {
+        const years = new Set([at(from)!.getFullYear(), at(until)!.getFullYear()]);
+        for (const year of years) {
+            for (const day of memorialSaturdays(year)) {
+                if (!within(day.date)) continue;
+                out.push({ date: day.date, kind: "memorial-day", title: day.name,
+                           custom: day.custom, note: day.note });
+            }
         }
     }
 

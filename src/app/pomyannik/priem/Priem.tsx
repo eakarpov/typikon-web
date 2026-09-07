@@ -18,11 +18,13 @@ interface ClaimView {
 }
 
 const STATUS_WORDS: Record<string, string> = {
-    "pending": "Заявка подана. Мы пришлём письмо со знаком на указанный адрес — ответьте на него, "
-        + "оставив знак в тексте.",
-    "letter-sent": "Письмо со знаком отправлено на указанный адрес. Ответьте на него, оставив знак "
-        + "в тексте, — этим и подтверждается, что заявку подали вы.",
-    "verified": "Ответ получен, знак сошёлся. Осталось решение — оно за человеком, не за машиной.",
+    "pending": "Заявка подана. На указанный адрес придёт письмо с просьбой её подтвердить — "
+        + "ответьте на него, не удаляя код подтверждения из текста.",
+    "letter-sent": "Письмо с просьбой подтвердить заявку отправлено на указанный адрес. Ответьте "
+        + "на него, не удаляя код подтверждения из текста, — этим и подтверждается, что заявку "
+        + "подали вы.",
+    "verified": "Ответ получен, код подтверждения сошёлся. Осталось решение — оно за человеком, "
+        + "не за машиной.",
     "rejected": "Заявку мы не приняли.",
 };
 
@@ -30,7 +32,7 @@ const Claim = ({ initial }: { initial: ClaimView | null }) => {
     const [claim, setClaim] = React.useState(initial);
     const [form, setForm] = React.useState({
         title: initial?.title ?? "", dioceseUrl: initial?.dioceseUrl ?? "",
-        email: initial?.email ?? "", phone: "", evidence: "",
+        email: initial?.email ?? "", evidence: "",
     });
     const [busy, setBusy] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -98,19 +100,17 @@ const Claim = ({ initial }: { initial: ClaimView | null }) => {
                     <label className="flex flex-col gap-1 font-serif text-sm">
                         <span className="text-slate-600">
                             почта в домене этой епархии
-                            <span className="text-slate-400 text-xs"> · туда уйдёт письмо со знаком</span>
+                            <span className="text-slate-400 text-xs"> · туда уйдёт письмо с просьбой подтвердить заявку</span>
                         </span>
                         <input className={FIELD} required type="email"
                                value={form.email}
                                onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
                     </label>
                     <label className="flex flex-col gap-1 font-serif text-sm">
-                        <span className="text-slate-600">телефон<span className="text-slate-400 text-xs"> · если удобнее разговором</span></span>
-                        <input className={FIELD} value={form.phone}
-                               onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-                    </label>
-                    <label className="flex flex-col gap-1 font-serif text-sm">
-                        <span className="text-slate-600">чем ещё подтвердите</span>
+                        <span className="text-slate-600">
+                            дополнительные сведения для администратора
+                            <span className="text-slate-400 text-xs"> · не обязательно</span>
+                        </span>
                         <textarea rows={3} className={FIELD} value={form.evidence}
                                   onChange={e => setForm(f => ({ ...f, evidence: e.target.value }))} />
                     </label>
@@ -157,7 +157,7 @@ const Settings = ({ initial, origin }: { initial: Commemorator; origin: string }
             <div className="flex flex-col gap-1">
                 <span className="font-serif text-sm text-slate-600">
                     ссылка-приглашение <span className="text-slate-400 text-xs">
-                        · её раздают прихожанам или вешают знаком на стенде
+                        · её раздают прихожанам или вешают на стенде
                     </span>
                 </span>
                 <div className="flex flex-wrap gap-2 items-center">
