@@ -43,7 +43,7 @@ export async function GET(request: Request) {
             description:
                 "Церковнославянские уставные чтения по Типикону: тексты, привязка к дням года, зачала.",
             version: "2",
-            website: `${SITE_URL}`,
+            website: SITE_URL,
             license: {
                 corpus: "CC-BY-4.0",
                 url: `${SITE_URL}/license`,

@@ -21,7 +21,7 @@ import { ICS_UID_DOMAIN, SITE_HOST, SITE_URL } from "@/utils/site";
 
 export const revalidate = 3600;
 
-const BASE_URL = `${SITE_URL}`;
+const BASE_URL = SITE_URL;
 const DAYS_BACK = 7;
 const DAYS_AHEAD = 90;
 const DEFAULT_MINUTES = 90;

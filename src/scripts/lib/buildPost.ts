@@ -36,7 +36,7 @@ export interface BuiltChannelPost {
     dneslovSlug: string | null;
 }
 
-const SITE = `${SITE_URL}`;
+const SITE = SITE_URL;
 const HELP_LINK = "https://messenger.online.sberbank.ru/sl/8xVnkqtrmfkJzj8yO";
 const TELEGRAM_LIMIT = 4096;
 const BODY_LIMIT = 3200; // запас под заголовок/стихи/ссылки/хэштеги в лимите Telegram

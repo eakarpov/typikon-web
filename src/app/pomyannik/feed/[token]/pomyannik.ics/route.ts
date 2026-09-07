@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 
 const DAYS_BACK = 7;
 const DAYS_AHEAD = 372;
-const BASE_URL = `${SITE_URL}`;
+const BASE_URL = SITE_URL;
 
 /** Обезличенный заголовок: что за день, но не по ком. */
 const anonymous = (event: UpcomingEvent): string => {

@@ -515,7 +515,7 @@ const run = async () => {
 
     const manifest = {
         name: "Выгрузка корпуса «Уставные чтения»",
-        source: `${SITE_URL}`,
+        source: SITE_URL,
         builtAt,
         version,
         versionUrl: `${SITE_URL}/dump/${version}/`,

@@ -23,7 +23,7 @@ const Feed = ({ initial }: { initial: FeedState | null }) => {
     const [copied, setCopied] = React.useState(false);
 
     const url = feed
-        ? `${typeof window === "undefined" ? `${SITE_URL}` : window.location.origin}`
+        ? `${typeof window === "undefined" ? SITE_URL : window.location.origin}`
           + `/pomyannik/feed/${feed.token}/pomyannik.ics`
         : "";
 

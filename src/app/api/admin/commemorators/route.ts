@@ -18,7 +18,7 @@ import { SITE_HOST, SITE_URL } from "@/utils/site";
 // когда заявок станет больше десятка в неделю; до тех пор это работа на пустом
 // месте.
 
-const BASE_URL = `${SITE_URL}`;
+const BASE_URL = SITE_URL;
 
 export async function GET() {
     const { userId, caps } = await viewer();

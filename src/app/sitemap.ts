@@ -13,7 +13,7 @@ import { SITE_URL } from "@/utils/site";
 // чтения в индекс не попадали. Пересобирается раз в сутки.
 export const revalidate = 86400;
 
-const BASE_URL = `${SITE_URL}`;
+const BASE_URL = SITE_URL;
 
 // Тексты в статусах "в наличии"/"пока отсутствует" — это заготовки без содержимого,
 // в индексе им делать нечего.

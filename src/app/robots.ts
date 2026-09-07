@@ -12,7 +12,7 @@ import { SITE_URL } from "@/utils/site";
 // а вторая половина (счётчики и отказы тем, кто просьбу не читает) живёт в
 // rateLimit.ts и в настройках nginx.
 
-const BASE_URL = `${SITE_URL}`;
+const BASE_URL = SITE_URL;
 
 /** Личное и служебное: индексировать нечего, а отвечает всё это из базы. */
 const PRIVATE = [

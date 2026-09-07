@@ -140,7 +140,7 @@ test("клиент без заголовков браузера своим не 
 
 test("при отсутствии Sec-Fetch-Site разбираемся по источнику", () => {
     assert.equal(isSiteRequest(headers({ origin: SITE_URL_NAKED }), ORIGINS), true);
-    assert.equal(isSiteRequest(headers({ "sec-fetch-site": "same-site", origin: `${SITE_URL}` }), ORIGINS), true);
+    assert.equal(isSiteRequest(headers({ "sec-fetch-site": "same-site", origin: SITE_URL }), ORIGINS), true);
     assert.equal(isSiteRequest(headers({ referer: `${SITE_URL_NAKED}/search?q=%D0%BF%D0%B0%D1%81%D1%85%D0%B0` }), ORIGINS), true);
     // Два адреса ниже НАРОЧНО записаны литералом, а не константой: это чужие
     // адреса, похожие на наш, и подставить сюда SITE_URL значило бы проверять,

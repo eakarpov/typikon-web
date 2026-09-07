@@ -18,7 +18,7 @@ import { SITE_URL } from "@/utils/site";
 
 export const revalidate = 600;
 
-const BASE = `${SITE_URL}`;
+const BASE = SITE_URL;
 
 const dateLabel = (iso: string): string => {
     const [y, m, d] = iso.split("-").map(Number);

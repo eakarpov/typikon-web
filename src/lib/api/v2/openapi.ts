@@ -63,7 +63,7 @@ export const openapi = () => ({
         license: { name: LICENSE_ID, url: LICENSE_URL },
         contact: { url: `${SITE_URL}/contact` },
     },
-    servers: [{ url: `${SITE_URL}`, description: "Основной сервер" }],
+    servers: [{ url: SITE_URL, description: "Основной сервер" }],
     // Ключ не обязателен: без него ручки тоже отвечают, только скупее и без поиска.
     // Поэтому security на уровне документа, а не в каждой операции.
     security: [{ apiKey: [] }, {}],

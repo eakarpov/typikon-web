@@ -16,7 +16,7 @@ import { SITE_URL } from "@/utils/site";
 // продолжал отдавать старый фид, когда новость уже вышла.
 export const dynamic = "force-dynamic";
 
-const SITE = `${SITE_URL}`;
+const SITE = SITE_URL;
 
 // Двадцати записей хватает любой читалке: они показывают последнее, а не архив.
 const FEED_SIZE = 20;
