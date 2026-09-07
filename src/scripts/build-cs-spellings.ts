@@ -10,7 +10,7 @@ import {
 } from "@/lib/cslav/titla";
 import { csNumeral } from "@/lib/csEncoding/numerals";
 import { convertWithAnswers, type CslAnswer } from "@/lib/cslav/convert";
-import { omegaKeys, type OmegaTable } from "@/lib/cslav/omega";
+import { contextKeys, defaultOf, GROUPS, type LetterTable } from "@/lib/cslav/positional";
 
 // Указатель «гражданское написание → церковнославянское».
 //
@@ -306,43 +306,43 @@ const main = async () => {
         console.log(`Минея ЦС не найдена (${menaionRoot}) — четвёртый источник пропущен.`);
     }
 
-    // --- 3б. Положение омеги -------------------------------------------------
+    // --- 3б. Положение букв --------------------------------------------------
     //
-    // Таблица «контекст → о или ѡ», выведенная из Минеи: две буквы слева от
-    // спорной гласной и хвост слова справа, плюс более общие ключи на случай,
-    // когда узкого в таблице нет. Берутся только решающие контексты — от десяти
-    // вхождений и девяноста пяти процентов перевеса; сомнительное молчит.
+    // Таблица «контекст → буква», выведенная из Минеи для двух спорных рядов:
+    // о/ѡ/ѻ и е/є. Устройство ключа описано в @/lib/cslav/positional. Берутся
+    // только решающие контексты — от двадцати вхождений и девяноста пяти
+    // процентов перевеса — и только те, где стоит НЕ умолчание ряда: «о» и «е»
+    // подразумеваются, и хранить их значило бы возить полсловаря ради
+    // известного ответа.
     //
     // Отложенные дни в таблицу не идут: иначе проверка мерила бы, как книга
     // воспроизводит саму себя.
-    const omegaCounts = new Map<string, { o: number; w: number }>();
+    const letterCounts = new Map<string, Map<string, number>>();
     for (const place of index.values()) {
         for (const [letters, seen] of place.m) {
             for (let at = 0; at < letters.length; at++) {
-                if (letters[at] !== "о" && letters[at] !== "ѡ") continue;
-                for (const key of omegaKeys(letters, at)) {
-                    const found = omegaCounts.get(key) ?? { o: 0, w: 0 };
-                    if (letters[at] === "о") found.o += seen.n; else found.w += seen.n;
-                    omegaCounts.set(key, found);
+                if (!GROUPS.some((g) => g.includes(letters[at]))) continue;
+                for (const key of contextKeys(letters, at)) {
+                    const found = letterCounts.get(key) ?? new Map<string, number>();
+                    found.set(letters[at], (found.get(letters[at]) ?? 0) + seen.n);
+                    letterCounts.set(key, found);
                 }
             }
         }
     }
-    // В таблицу идут ТОЛЬКО контексты с омегой. «О» — умолчание: где таблица
-    // молчит, буква остаётся как есть, и хранить эти контексты значило бы
-    // возить с собой полсловаря ради ответа, который и так известен. Файл от
-    // этого выходит вчетверо меньше, а ответы те же.
-    const OMEGA_MIN = 20;
-    const OMEGA_SHARE = 0.95;
-    const omegaTable: OmegaTable = {};
-    for (const [key, found] of omegaCounts) {
-        const total = found.o + found.w;
-        if (total < OMEGA_MIN || found.w <= found.o) continue;
-        if (found.w / total < OMEGA_SHARE) continue;
-        omegaTable[key] = "ѡ";
+    const LETTERS_MIN = 20;
+    const LETTERS_SHARE = 0.95;
+    const letterTable: LetterTable = {};
+    for (const [key, found] of letterCounts) {
+        const total = [...found.values()].reduce((sum, n) => sum + n, 0);
+        if (total < LETTERS_MIN) continue;
+        const [letter, n] = [...found.entries()].sort((a, b) => b[1] - a[1])[0];
+        if (n / total < LETTERS_SHARE) continue;
+        if (letter === defaultOf(letter)) continue;
+        letterTable[key] = letter;
     }
-    console.log(`положение омеги: ${Object.keys(omegaTable).length.toLocaleString("ru")} решающих контекстов`
-        + ` из ${omegaCounts.size.toLocaleString("ru")}`);
+    console.log(`положение букв: ${Object.keys(letterTable).length.toLocaleString("ru")} решающих контекстов`
+        + ` из ${letterCounts.size.toLocaleString("ru")}`);
 
     // --- 4. Сокращения к полным словам ---------------------------------------
     //
@@ -598,15 +598,17 @@ const main = async () => {
         // видно сразу: «ѡ на месте о» — это правило, а не описка. Разбирать
         // надо блоками, от частого к редкому; описки останутся в хвосте, когда
         // системное будет закрыто.
-        // Разбор блока омеги: где именно она расходится — в окончании или в
-        // корне, и какое это окончание.
+        // Разбор одного блока по местам: где буквы расходятся — в окончании или
+        // в корне, и какое это окончание. Пара задаётся переменной среды
+        // SPLIT, например SPLIT=е,є.
+        const pair = (process.env.SPLIT ?? "о,ѡ,ѻ").split(",");
         const omegaBlock = (got: string, want: string[]): string => {
             const near = want.map((w) => ({ w, d: Math.abs(w.length - got.length) }))
                 .sort((a, b) => a.d - b.d)[0].w;
             if (near.length !== got.length) return "иное";
             const at: number[] = [];
             for (let i = 0; i < near.length; i++) if (near[i] !== got[i]) at.push(i);
-            if (!at.length || at.some((i) => !"оѡѻ".includes(got[i]) || !"оѡѻ".includes(near[i]))) return "иное";
+            if (!at.length || at.some((i) => !pair.includes(got[i]) || !pair.includes(near[i]))) return "иное";
             const last = at[at.length - 1];
             const tailLen = near.length - last;
             const where = tailLen <= 4 ? `окончание «${near.slice(last)}»` : "корень или приставка";
@@ -672,7 +674,7 @@ const main = async () => {
                     titlo: [],
                 });
             }
-            const marked = convertWithAnswers(civilBody, byWord, { rule: true, accents: false, omega: omegaTable });
+            const marked = convertWithAnswers(civilBody, byWord, { rule: true, accents: false, letters: letterTable });
 
             for (const piece of marked.tokens) {
                 if (piece.kind === "plain") continue;
@@ -690,7 +692,7 @@ const main = async () => {
                     else {
                         const line = `${civil}: мы «${got}», в книге «${[...want].join("», «")}»`;
                         wrong.set(line, (wrong.get(line) ?? 0) + 1);
-                        const block = process.env.OMEGA === "1"
+                        const block = process.env.SPLIT
                             ? omegaBlock(got, [...want]) : classify(got, [...want]);
                         const at = blocks.get(block) ?? { n: 0, examples: new Set<string>() };
                         at.n++;
@@ -726,25 +728,26 @@ const main = async () => {
             + " — здесь и надо будет искать описки набора, когда системное закроется");
     }
 
-    // --- Таблица омеги файлом ------------------------------------------------
-    if (has("--omega")) {
-        const target = path.join(process.cwd(), "src", "lib", "cslav", "omegaTable.ts");
-        const rows = Object.entries(omegaTable).sort(([a], [b]) => a.localeCompare(b));
-        fs.writeFileSync(target, `import type { OmegaTable } from "@/lib/cslav/omega";
+    // --- Таблица положения файлом --------------------------------------------
+    if (has("--letters")) {
+        const target = path.join(process.cwd(), "src", "lib", "cslav", "positionalTable.ts");
+        const rows = Object.entries(letterTable).sort(([a], [b]) => a.localeCompare(b));
+        fs.writeFileSync(target, `import type { LetterTable } from "@/lib/cslav/positional";
 
-// ВЫВЕДЕНО СКРИПТОМ, руками не правится: npm run cslav:build -- --omega.
+// ВЫВЕДЕНО СКРИПТОМ, руками не правится: npm run cslav:build -- --letters.
 //
-// Положение омеги по Минее церковнославянским шрифтом: контекст спорной
-// гласной → что в нём стоит. Взяты только решающие контексты — от ${OMEGA_MIN}
-// вхождений и ${Math.round(OMEGA_SHARE * 100)}% перевеса. Устройство ключа и
-// порядок опроса описаны в @/lib/cslav/omega.
+// Положение букв по Минее церковнославянским шрифтом: контекст спорной гласной
+// → что в нём стоит. Ряды о/ѡ/ѻ и е/є; умолчания ряда («о», «е») в таблицу не
+// входят. Взяты решающие контексты — от ${LETTERS_MIN} вхождений и
+// ${Math.round(LETTERS_SHARE * 100)}% перевеса. Устройство ключа и порядок
+// опроса описаны в @/lib/cslav/positional.
 //
 // Контекстов: ${rows.length.toLocaleString("ru")}.
-export const OMEGA_TABLE: OmegaTable = {
+export const LETTER_TABLE: LetterTable = {
 ${rows.map(([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join("\n")}
 };
 `, "utf8");
-        console.log(`\nтаблица омеги записана: ${target} (${rows.length.toLocaleString("ru")} контекстов)`);
+        console.log(`\nтаблица положения записана: ${target} (${rows.length.toLocaleString("ru")} контекстов)`);
     }
 
     // --- Запись --------------------------------------------------------------

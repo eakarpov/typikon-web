@@ -26,6 +26,7 @@ const RULE_LABELS: Record<string, string> = {
     "от": "приставка ѿ",
     "ударение": "ударение по словарю",
     "титло": "сокращение под титлом",
+    "положение": "омега и широкое є по положению",
 };
 
 const SOURCE_LABELS: Record<string, string> = {
