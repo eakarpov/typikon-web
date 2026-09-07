@@ -259,6 +259,10 @@ const citationCff = (version: string, doi: string | null) => [
     "authors:",
     "  - family-names: Карпов",
     "    given-names: Егор",
+    // ORCID опознаёт человека там, где имя не опознаёт: в латинской
+    // транслитерации однофамильцы сливаются, а идентификатор — нет. Он же
+    // связывает набор данных с профилем автора в архиве и в DataCite.
+    '    orcid: "https://orcid.org/0000-0002-2394-3373"',
     'url: "https://www.typikon.su"',
     `repository-artifact: "https://www.typikon.su/dump/${version}/"`,
     "license: CC-BY-4.0",

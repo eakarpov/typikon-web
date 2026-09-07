@@ -19,7 +19,7 @@ abstract: >-
 authors:
   - family-names: Карпов
     given-names: Егор
-    # orcid: "https://orcid.org/0000-0000-0000-0000"
+    orcid: "https://orcid.org/0000-0002-2394-3373"
 url: "https://www.typikon.su"
 repository-code: "https://github.com/eakarpov/typikon-web"
 repository-artifact: "https://www.typikon.su/dump/latest/"
