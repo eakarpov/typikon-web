@@ -8,6 +8,9 @@ import SidePanel from "@/app/profile/SidePanel";
 import {listTokens} from "@/app/api/api-tokens/service";
 import { capsOf, roleLabels } from "@/lib/rights";
 import MyTemples from "@/app/profile/MyTemples";
+import { countPersons } from "@/lib/pomyannik/service";
+import { commemoratorOf } from "@/lib/pomyannik/commemorators";
+import { countUnread } from "@/lib/pomyannik/zapiski";
 
 const ProfilePage = async () => {
     const cookie = (await cookies()).get('session')?.value;
@@ -32,6 +35,9 @@ const ProfilePage = async () => {
     }
 
     const [acceptedTextingCount] = await getAcceptedTextingCount(session!.userId as string);
+    const pomyannikCount = await countPersons(session!.userId as string);
+    const commemorator = await commemoratorOf(session!.userId as string);
+    const unreadNotes = commemorator ? await countUnread(session!.userId as string) : 0;
     const userNotes = await getAllUserNotes(session!.userId as string);
     const apiTokens = await listTokens(session!.userId as string);
 
@@ -51,6 +57,24 @@ const ProfilePage = async () => {
                         Помочь с отекстовкой
                     </Link>
                 </p>
+                {/* ПОМЯННИК ССЫЛКОЙ ИЗ ПРОФИЛЯ, а не вкладкой в нём: в профиль
+                    заходят раз в год за своими данными, а в помянник — между
+                    службами, и жить он должен своей страницей. Отсюда о нём
+                    узнают те, кто ещё не знает */}
+                <p>
+                    <Link href="/pomyannik">
+                        Помянник{pomyannikCount > 0 ? ` (${pomyannikCount})` : ""}
+                    </Link>
+                </p>
+                {/* Приём записок виден только тому, кому он открыт: заявку
+                    подают со страницы приёма, а не отсюда */}
+                {commemorator && (
+                    <p>
+                        <Link href="/pomyannik/prinyatye">
+                            Поданные записки{unreadNotes > 0 ? ` (${unreadNotes})` : ""}
+                        </Link>
+                    </p>
+                )}
                 <Content item={item} />
                 {/* СВОИ ХРАМЫ. Ответственный входил на сайт и не видел, чем
                     ведает: до собственного расписания добирался через

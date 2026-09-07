@@ -7,6 +7,7 @@ import {
     MagnifyingGlassIcon,
     PencilSquareIcon,
     ArrowLeftOnRectangleIcon,
+    BookOpenIcon,
     ArrowRightOnRectangleIcon,
     UserCircleIcon,
     LanguageIcon,
@@ -250,6 +251,18 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 >
                     <Cog6ToothIcon className="w-4 h-4" />
                 </Link>
+                {/* Помянник — единственное, за чем вошедший приходит РЕГУЛЯРНО:
+                    именины и сороковины ждать не умеют. Оттого он в строке, а
+                    не внутри профиля */}
+                {isAuth && (
+                    <Link
+                        title="Помянник"
+                        href="/pomyannik"
+                        className={`cursor-pointer min-w-fit flex items-center ${pathname?.startsWith(`/pomyannik`) && `text-red-600`}`}
+                    >
+                        <BookOpenIcon className="w-4 h-4" />
+                    </Link>
+                )}
                 {isAuth && (
                     <Link
                         title="Профиль"

@@ -69,6 +69,7 @@
     "memories:import": "tsx src/scripts/import-memories.ts",
     "memories:review-prep": "tsx src/scripts/prepare-memory-review.ts",
     "parish:admin": "tsx src/scripts/parish-admin.ts",
+    "pomyannik:sweep": "tsx src/scripts/sweep-zapiski.ts",
     "roles": "tsx src/scripts/roles.ts",
     "bible:greek-nt": "tsx src/scripts/import-greek-nt.ts",
     "bible:fix-swete": "tsx src/scripts/fix-swete-typos.ts",

@@ -138,6 +138,52 @@ const SPECS: Spec[] = [
     { db: "typikon-users", collection: "favourites", key: { userId: 1, createdAt: -1 },
       why: "выдача избранного списком, новые сверху" },
 
+    // --- typikon-users: помянник
+    //
+    // Помянник спрашивают целиком и всегда одним разворотом: сперва о здравии,
+    // потом о упокоении, внутри — своим порядком. Это первый ключ, и он же
+    // обслуживает сортировку. Второй нужен массовому вводу: тот на каждое имя
+    // спрашивает «такое уже есть?», и без ключа тридцать имён давали бы тридцать
+    // полных переборов.
+    //
+    // Лента подписки ищется ПО АДРЕСУ на каждое обращение календаря — а клиенты
+    // ходят за нею несколько раз в сутки и без спроса; уникальность здесь ещё и
+    // страховка от того, чтобы один адрес открыл два помянника.
+    { db: "typikon-users", collection: "pomyannikPersons", key: { userId: 1, kind: 1, order: 1 },
+      why: "помянник разворотом: о здравии и о упокоении, каждый своим порядком" },
+    { db: "typikon-users", collection: "pomyannikPersons", key: { userId: 1, nameKey: 1 },
+      why: "массовый ввод: «это имя в помяннике уже есть»" },
+    { db: "typikon-users", collection: "pomyannikFeeds", key: { token: 1 }, options: { unique: true },
+      why: "подписной календарь ищется по адресу на каждое обращение; уникальность не даёт "
+         + "одному адресу открыть два помянника" },
+    { db: "typikon-users", collection: "pomyannikFeeds", key: { userId: 1 }, options: { unique: true },
+      why: "лента у человека одна: её показывают в помяннике и меняют ей адрес" },
+
+    // --- typikon-users: приём записок
+    //
+    // Принимающего ищут тремя способами, и все три на горячем пути: по коду из
+    // ссылки-приглашения (её открывают с телефона у стенда), по адресу открытой
+    // страницы и по себе самому. Уникальность кода и адреса обязательна: два
+    // приёма под одной ссылкой — это записка, ушедшая не тому.
+    //
+    // Записки спрашивают дважды: священник — свои поданные, подавший — свои
+    // отправленные. Чистка ходит по третьему ключу и берёт только те, у кого
+    // имена ещё не стёрты.
+    { db: "typikon-users", collection: "commemorators", key: { userId: 1 }, options: { unique: true },
+      why: "право принимать записки именное и одно на человека" },
+    { db: "typikon-users", collection: "commemorators", key: { inviteCode: 1 }, options: { unique: true },
+      why: "подача по ссылке-приглашению; уникальность не даёт двум приёмам сойтись на одной ссылке" },
+    { db: "typikon-users", collection: "commemorators", key: { slug: 1 }, options: { unique: true },
+      why: "открытая страница /pominovenie/{slug}" },
+    { db: "typikon-users", collection: "commemorators", key: { public: 1, title: 1 },
+      why: "открытый список тех, кто принимает от всех" },
+    { db: "typikon-users", collection: "zapiski", key: { toUserId: 1, readAt: 1, createdAt: -1 },
+      why: "поданные священнику: неразобранные сверху" },
+    { db: "typikon-users", collection: "zapiski", key: { fromUserId: 1, createdAt: -1 },
+      why: "что подавал этот человек" },
+    { db: "typikon-users", collection: "zapiski", key: { sweptAt: 1 },
+      why: "чистка берёт те записки, с которых имена ещё не сняты" },
+
     // --- typikon: святцы
     //
     // Снимок чужих святцев и наш каталог поверх него (sync-dneslov.ts, build-saints.ts).
