@@ -95,6 +95,9 @@ export default function RootLayout({
                       vkApp={parseInt(process.env.VK_APP!)}
                       codeVerifier={process.env.CODE_VERIFIER!}
                   />
+                  {/* На печать шапка не идёт: правило в globals.css снимает
+                      её со всякого листа — на бумаге нужна записка, а не
+                      строка разделов сайта */}
                   <nav className="border-b-2 w-full overflow-scroll">
                       <div className={myFont.variable}>
                           <NavMenu

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { PomyannikPerson, NoteKind } from "@/lib/pomyannik/types";
 import { MAX_NAMES_IN_NOTE, NOTE_KINDS, NOTE_KIND_BY_KEY } from "@/lib/pomyannik/types";
 import { displayName, rankChurchGenitive, rankGenitive } from "@/app/pomyannik/labels";
+import NoteSheet, { type SheetName } from "@/app/pomyannik/NoteSheet";
 import type { SlavonicName } from "@/lib/pomyannik/slavonic";
 
 // СБОРКА ЗАПИСКИ.
@@ -54,6 +55,7 @@ const Zapiska = ({ persons, slavonic, to }: {
     const [kind, setKind] = React.useState<NoteKind>(offered[0]?.key ?? "proskomidia");
     const [picked, setPicked] = React.useState<Set<string>>(new Set());
     const [sending, setSending] = React.useState(false);
+    const [cross, setCross] = React.useState(true);
     const [sent, setSent] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
@@ -91,7 +93,14 @@ const Zapiska = ({ persons, slavonic, to }: {
     const formOf = (p: PomyannikPerson) => slavonic[nameOf(p)];
 
     const groups = (["living", "departed"] as const)
-        .map(section => ({ section, list: chosen.filter(p => p.kind === section) }))
+        .map(section => ({
+            section,
+            list: chosen.filter(p => p.kind === section).map((p): SheetName => ({
+                rank: p.rank, sex: p.sex,
+                text: formOf(p)?.genitive ?? nameOf(p),
+                declined: formOf(p)?.source === "lexicon",
+            })),
+        }))
         .filter(g => g.list.length);
 
     const doubtful = chosen.filter(p => formOf(p)?.source !== "lexicon");
@@ -176,36 +185,7 @@ const Zapiska = ({ persons, slavonic, to }: {
 
             {chosen.length > 0 && (
                 <>
-                    {/* Сама записка: на печати остаётся только она */}
-                    <div className="border rounded p-5 bg-white max-w-sm">
-                        <p className="font-serif text-center text-sm text-slate-600 mb-3">
-                            {info.label}
-                        </p>
-                        {groups.map(({ section, list }) => (
-                            <div key={section} className="mb-4">
-                                <p className="font-sans-serif text-center text-lg mb-1">
-                                    {section === "living" ? "ѡ здра́вїи" : "ѡ ᲂу҆поко́енїи"}
-                                </p>
-                                <ul className="font-sans-serif text-lg text-center leading-relaxed">
-                                    {list.map(person => (
-                                        <li key={person.id}>
-                                            {/* Помета славянским письмом, если оно
-                                                засвидетельствовано книгой; иначе
-                                                гражданкой — и об этом сказано ниже */}
-                                            {rankChurchGenitive(person.rank, person.sex)
-                                                ?? (rankGenitive(person.rank, person.sex)
-                                                    ? <span className="font-serif text-base">
-                                                          {rankGenitive(person.rank, person.sex)}
-                                                      </span>
-                                                    : null)}
-                                            {person.rank ? " " : ""}
-                                            {formOf(person)?.genitive ?? nameOf(person)}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
+                    <NoteSheet title={info.label} cross={cross} groups={groups} />
 
                     {civilRanks.length > 0 && (
                         <p className="font-serif text-sm text-slate-600 max-w-2xl print:hidden">
@@ -233,6 +213,18 @@ const Zapiska = ({ persons, slavonic, to }: {
                         ставим — оно требует дательного падежа («подать иерею
                         Николаю»), а склонять сан с именем мы не умеем и врать
                         согласованием не станем: кому подаём, сказано выше */}
+                    <label className="flex gap-2 items-start font-serif text-sm print:hidden">
+                        <input type="checkbox" className="mt-1" checked={!cross}
+                               onChange={e => setCross(!e.target.checked)} />
+                        <span>
+                            печатать без креста
+                            <span className="block text-slate-500 text-xs">
+                                лист с крестом не выбрасывают, его сжигают; если эта забота
+                                вам не ко времени — крест можно не ставить
+                            </span>
+                        </span>
+                    </label>
+
                     <div className="flex flex-wrap gap-3 items-center print:hidden">
                         {to && (sent ? (
                             <span className="font-serif text-sm text-slate-700">

@@ -2,7 +2,8 @@
 import React from "react";
 import type { Zapiska } from "@/lib/pomyannik/zapiski";
 import { NOTE_KIND_BY_KEY } from "@/lib/pomyannik/types";
-import { humanDate, rankChurchGenitive, rankGenitive } from "@/app/pomyannik/labels";
+import { humanDate } from "@/app/pomyannik/labels";
+import NoteSheet, { type SheetName } from "@/app/pomyannik/NoteSheet";
 
 // ПОДАННЫЕ ЗАПИСКИ.
 //
@@ -14,8 +15,6 @@ import { humanDate, rankChurchGenitive, rankGenitive } from "@/app/pomyannik/lab
 // родительный значило бы подсунуть читающему ошибку, которой он не делал.
 
 const BUTTON = "border rounded px-3 py-1 bg-slate-50 hover:bg-slate-100 font-serif text-sm";
-
-const TITLE = { living: "ѡ здра́вїи", departed: "ѡ ᲂу҆поко́енїи" } as const;
 
 const Inbox = ({ initial }: { initial: Zapiska[] }) => {
     const [notes, setNotes] = React.useState(initial);
@@ -47,7 +46,14 @@ const Inbox = ({ initial }: { initial: Zapiska[] }) => {
             {notes.map(note => {
                 const info = NOTE_KIND_BY_KEY[note.kind];
                 const groups = (["living", "departed"] as const)
-                    .map(section => ({ section, list: note.names.filter(n => n.kind === section) }))
+                    .map(section => ({
+                        section,
+                        list: note.names.filter(n => n.kind === section).map((n): SheetName => ({
+                            rank: n.rank, sex: n.sex,
+                            text: n.slavonic || n.churchName || n.name,
+                            declined: n.slavonicSource === "lexicon",
+                        })),
+                    }))
                     .filter(g => g.list.length);
                 const doubtful = note.names.filter(n => n.slavonicSource !== "lexicon");
 
@@ -76,24 +82,12 @@ const Inbox = ({ initial }: { initial: Zapiska[] }) => {
                             <p className="font-serif text-sm text-slate-500">
                                 Имена стёрты по сроку хранения: было {note.namesCount}.
                             </p>
-                        ) : groups.map(({ section, list }) => (
-                            <div key={section}>
-                                <p className="font-sans-serif text-center text-base">{TITLE[section]}</p>
-                                <ul className="font-sans-serif text-lg text-center leading-relaxed">
-                                    {list.map((name, i) => (
-                                        <li key={`${name.name}-${i}`}>
-                                            {rankChurchGenitive(name.rank, name.sex)
-                                                ?? (rankGenitive(name.rank, name.sex)
-                                                    ? <span className="font-serif text-base">
-                                                          {rankGenitive(name.rank, name.sex)}
-                                                      </span> : null)}
-                                            {name.rank ? " " : ""}
-                                            {name.slavonic || name.churchName || name.name}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+                        ) : (
+                            /* Записка показывается тем же видом, каким её
+                               собирал подавший: священник читает то же самое, а
+                               не наш пересказ */
+                            <NoteSheet groups={groups} />
+                        )}
 
                         {!note.sweptAt && doubtful.length > 0 && (
                             <p className="font-serif text-xs text-amber-700">

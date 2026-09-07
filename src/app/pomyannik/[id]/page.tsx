@@ -7,6 +7,7 @@ import { myFont, csFont } from "@/utils/font";
 import { getPerson } from "@/lib/pomyannik/service";
 import { memorialDays, sorokoustSpan, upcoming } from "@/lib/pomyannik/reckoning";
 import { slavonicName } from "@/lib/pomyannik/slavonic";
+import { nameDayOptions } from "@/lib/pomyannik/nameday";
 import { displayName, humanDate, rankGenitive, weekdayOf, YEARS } from "@/app/pomyannik/labels";
 import Card from "@/app/pomyannik/[id]/Card";
 import Upcoming from "@/app/pomyannik/Upcoming";
@@ -42,7 +43,10 @@ const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
     const person = await getPerson(session.userId as string, id);
     if (!person) notFound();
 
-    const slavonic = await slavonicName(person.churchName || person.name);
+    const [slavonic, nameDays] = await Promise.all([
+        slavonicName(person.churchName || person.name),
+        nameDayOptions(person.churchName || person.name),
+    ]);
     const memorial = person.died ? memorialDays(person.died) : null;
     const sorokoust = person.sorokoust ? sorokoustSpan(person.sorokoust.from) : null;
     const ahead = upcoming([person], undefined, 400);
@@ -114,7 +118,7 @@ const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
 
             <section className="flex flex-col gap-3">
                 <h2 className="font-bold font-serif text-sm border-t pt-3">Запись</h2>
-                <Card person={person} />
+                <Card person={person} nameDays={nameDays} />
             </section>
 
             <p className="font-serif text-sm">

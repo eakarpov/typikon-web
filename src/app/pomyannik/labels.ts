@@ -85,3 +85,24 @@ export const rankChurchGenitive = (rank: Rank | null | undefined, sex: Sex): str
     if (!info) return null;
     return sex === "f" && info.feminine ? info.feminine.cs : info.cs;
 };
+
+/**
+ * Имя с прописной буквы — церковнославянское в том числе.
+ *
+ * Словарь лексем хранит леммы строчными («нікола́й», «і҆ѡа́ннъ»), и склонение
+ * выдаёт их такими же. В записке же имя пишут с прописной: это имя человека, а
+ * не слово из словаря.
+ *
+ * Ведущие надстрочные знаки пропускаем: слово может начинаться со звательца или
+ * придыхания, и поднимать в верхний регистр надо БУКВУ, а не знак над нею.
+ */
+export const capitalize = (raw: string): string => {
+    const text = String(raw ?? "");
+    if (!text) return text;
+    // U+0300–U+036F и U+0483–U+0489 — надстрочные; буква стоит после них.
+    const at = [...text].findIndex(c => !/[\u0300-\u036f\u0483-\u0489]/.test(c));
+    if (at < 0) return text;
+    const chars = [...text];
+    chars[at] = chars[at].toLocaleUpperCase("ru");
+    return chars.join("");
+};

@@ -71,15 +71,29 @@ const Column = ({
                         {person.relation && (
                             <span className="text-slate-400 text-xs">{person.relation}</span>
                         )}
-                        <button
-                            type="button"
-                            onClick={() => onRemove(person.id!)}
-                            title="Убрать из помянника"
-                            className="ml-auto text-slate-300 hover:text-red-900 opacity-0
-                                       group-hover:opacity-100 focus:opacity-100 px-1"
-                        >
-                            ×
-                        </button>
+                        {/* ПРАВКА НАЗЫВАЕТСЯ СЛОВОМ. Прежде имя было ссылкой на
+                            карточку, и только: щёлкать по имени, чтобы поправить
+                            дату, никто не догадывался — выходило, что имя можно
+                            лишь завести да убрать */}
+                        {/* НА УЗКОМ ЭКРАНЕ ВИДНО ВСЕГДА. Наведения на телефоне
+                            нет, и спрятанное «по наведению» там не появляется
+                            никогда — а помянник открывают как раз с телефона. */}
+                        <span className="ml-auto flex gap-2 shrink-0 opacity-60
+                                         sm:opacity-0 sm:group-hover:opacity-100
+                                         sm:focus-within:opacity-100">
+                            <Link href={`/pomyannik/${person.id}`}
+                                  className="text-slate-400 hover:text-red-900 text-xs">
+                                править
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => onRemove(person.id!)}
+                                title="Убрать из помянника"
+                                className="text-slate-300 hover:text-red-900 px-1"
+                            >
+                                ×
+                            </button>
+                        </span>
                     </li>
                 ))}
             </ul>
@@ -148,6 +162,18 @@ const Book = ({ initial, names }: { initial: PomyannikPerson[]; names: string[] 
                 <Column kind="living" persons={of("living")} onAdd={add} onRemove={remove} busy={busy} />
                 <Column kind="departed" persons={of("departed")} onAdd={add} onRemove={remove} busy={busy} />
             </div>
+            {/* Падеж объясняем ЗДЕСЬ, где имена и стоят: в помяннике они в
+                именительном, а склоняются только в записке, и человек, не
+                увидевший записки, решит, что мы просто не умеем */}
+            {persons.length > 0 && (
+                <p className="font-serif text-xs text-slate-500 border-t pt-2">
+                    Имена стоят так, как вы их вписали. Церковнославянскими и в родительном
+                    падеже они станут <strong>в записке</strong>: «Николай» читается
+                    «Нїкола́а». Щёлкните имя — в карточке даты рождения и преставления, чин,
+                    именины и заказанный сорокоуст.
+                </p>
+            )}
+
             <datalist id="pomyannik-names">
                 {names.map(name => <option key={name} value={name} />)}
             </datalist>

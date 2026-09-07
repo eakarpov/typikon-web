@@ -3,7 +3,8 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import type { PomyannikPerson, PersonKind, Rank, Sex } from "@/lib/pomyannik/types";
 import { RANKS } from "@/lib/pomyannik/types";
-import { rankLabel } from "@/app/pomyannik/labels";
+import type { NameDayOption } from "@/lib/pomyannik/nameday";
+import { humanDate, rankLabel } from "@/app/pomyannik/labels";
 
 // КАРТОЧКА ЛИЦА: одна форма, одна кнопка.
 //
@@ -26,7 +27,9 @@ const Row = ({ label, hint, children }: {
     </label>
 );
 
-const Card = ({ person }: { person: PomyannikPerson }) => {
+const Card = ({ person, nameDays }: {
+    person: PomyannikPerson; nameDays: NameDayOption[];
+}) => {
     const router = useRouter();
     const [draft, setDraft] = React.useState(person);
     const [busy, setBusy] = React.useState(false);
@@ -36,6 +39,24 @@ const Card = ({ person }: { person: PomyannikPerson }) => {
     const set = <K extends keyof PomyannikPerson>(key: K, value: PomyannikPerson[K]) => {
         setDraft(current => ({ ...current, [key]: value }));
         setSaved(false);
+    };
+
+    // Какая память сейчас выбрана. Ищем совпадение с записью лица, а не
+    // держим отдельное состояние: правка приходит целым лицом, и второй счёт
+    // того же самого рано или поздно разошёлся бы с первым.
+    const current = draft.nameDay;
+    const chosen = current?.source === "manual"
+        ? nameDays.find(o =>
+            o.nameDay.offset === current.offset
+            && o.nameDay.month === current.month
+            && o.nameDay.day === current.day
+            && o.saint === current.saint)
+        : undefined;
+    const chosenDay = chosen ? `${chosen.value}:${chosen.saint}` : "";
+
+    const pickDay = (id: string) => {
+        const option = nameDays.find(o => `${o.value}:${o.saint}` === id);
+        set("nameDay", option ? option.nameDay : null);
     };
 
     const save = async () => {
@@ -113,6 +134,10 @@ const Card = ({ person }: { person: PomyannikPerson }) => {
                            onChange={e => set("relation", e.target.value || null)} />
                 </Row>
 
+            </div>
+
+            <h3 className="font-bold font-serif text-sm border-t pt-3">Даты</h3>
+            <div className="grid sm:grid-cols-2 gap-3">
                 <Row label="день рождения">
                     <input className={FIELD} type="date" value={draft.born ?? ""}
                            onChange={e => set("born", e.target.value || null)} />
@@ -144,16 +169,49 @@ const Card = ({ person }: { person: PomyannikPerson }) => {
                 )}
             </div>
 
-            {/* ИМЕНИНЫ ПОСЧИТАНЫ, НО НЕ НАВЯЗАНЫ: обычай народный, и названные
-                человеком именины расчёт не перебивает */}
-            <div className="font-serif text-sm text-slate-600 border-t pt-3">
-                {draft.nameDay?.source === "manual"
-                    ? "Именины назначены вами — расчёт по дню рождения их не тронет."
-                    : draft.nameDay
-                        ? <>Именины посчитаны по дню рождения{draft.nameDay.saint
-                            ? <> — память {draft.nameDay.saint}</> : null}. Это{" "}
-                            <strong>обычай, а не устав</strong>: назначить их иначе вы вправе.</>
-                        : "Именины посчитаются, как только будет известен день рождения."}
+            {/* ИМЕНИНЫ ВЫБИРАЮТСЯ, А НЕ ТОЛЬКО СЧИТАЮТСЯ.
+                Расчёт по дню рождения — самый ходовой обычай, но у имени памятей
+                бывает десяток, и какая из них своя, знает человек, а не мы:
+                кого-то крестили в честь другого святого, кому-то именины
+                назначили по дню крещения. Прежде здесь стояла одна строка о том,
+                что мы посчитали, — и выбрать было нечего. */}
+            <h3 className="font-bold font-serif text-sm border-t pt-3">Именины</h3>
+            <div className="flex flex-col gap-2">
+                <select className={FIELD} value={chosenDay}
+                        onChange={e => pickDay(e.target.value)}>
+                    <option value="">
+                        {draft.born
+                            ? "считать по дню рождения — ближайшая память после него"
+                            : "считать по дню рождения (день рождения пока не назван)"}
+                    </option>
+                    {nameDays.map(option => (
+                        <option key={`${option.value}:${option.saint}`}
+                                value={`${option.value}:${option.saint}`}>
+                            {humanDate(option.date, false)}
+                            {option.movable ? " (память подвижная)" : ""} — {option.saint}
+                            {option.guess ? " · имя вынуто из соборной памяти" : ""}
+                        </option>
+                    ))}
+                </select>
+
+                <p className="font-serif text-xs text-slate-500">
+                    {draft.nameDay?.source === "manual"
+                        ? "Именины назначены вами — расчёт по дню рождения их больше не тронет."
+                        : draft.nameDay
+                            ? <>Посчитано по дню рождения{draft.nameDay.saint
+                                ? <> — память {draft.nameDay.saint}</> : null}.</>
+                            : "Пока не посчитано: нужен день рождения либо выбор памяти."}
+                    {" "}<strong>Правило это обычай, а не устав</strong>: Церковь единого
+                    порядка не устанавливает, и назначить именины иначе вы вправе.
+                </p>
+
+                {nameDays.length === 0 && (
+                    <p className="font-serif text-xs text-amber-700">
+                        Имени «{draft.churchName || draft.name}» в нашем указателе святцев нет,
+                        и памятей для выбора мы показать не можем. Указатель выведен нами
+                        разбором заголовков и неполон — это не значит, что имени нет в святцах.
+                    </p>
+                )}
             </div>
 
             {error && <p className="font-serif text-sm text-amber-700">{error}</p>}
