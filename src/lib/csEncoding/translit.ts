@@ -59,7 +59,7 @@ export const TRANSLIT: Record<string, string> = {
     "z": "ѧ",
     "w": "ѡ",
     "t": "ѿ",
-    "m": "ѵ",
+    "m": "ѷ",
     "k": "ꙗ" + PSILI,
     "n": "ѻ" + PSILI,
 
@@ -77,6 +77,31 @@ export const TRANSLIT: Record<string, string> = {
     "L": "лⷣ",
     "R": "рⷭ" + POKRYTIE,
     "r": "рⷭ" + POKRYTIE,
+    "C": "ⷭ" + POKRYTIE,          // прописной вариант «c»
+    "¦": "х" + TITLO,
+    "®": "рⷣ",
+    "T": "Ѿ",
+    "N": "Ѻ" + PSILI,
+    "K": "Ꙗ" + PSILI,
+    "Q": "Ѽ",
+    "F": "Ѳ",
+
+    // Буквы, которых нет в кириллической части раскладки.
+    "o": "ѻ",
+    "q": "ѽ",
+    "u": "ᲂу",
+    "v": "ѵ",
+    "x": "ѯ",
+    "p": "ѱ",
+    "f": "ѳ",
+    "i": "і",
+
+    // Каморы и прочее над буквой.
+    "{": "ꙋ" + KAMORA,
+    "‡": "і" + KAMORA,
+    "±": "ꙗ" + PSILI + VARIA,
+    "%": PSILI + VARIA,           // прописной вариант «5»
+    "№": "а" + TITLO,             // единица цифирью
 };
 
 /**
@@ -94,6 +119,13 @@ export const TRANSLIT_LETTERS: Record<string, string> = {
     "ћ": "ꙗ" + PSILI + OXIA,      // ћ
     "џ": "ѻ" + PSILI + OXIA,      // џ
     "і": "і",                     // і остаётся собой
+    "њ": "ѡ" + PSILI,             // њ
+    "Њ": "Ѡ" + PSILI,             // Њ
+    "Џ": "Ѻ" + PSILI + OXIA,      // Џ
+    "Ў": "Оу" + PSILI,            // Ў
+    "ќ": "ᲂу" + PSILI + OXIA,     // ќ
+    "Ќ": "Оу" + PSILI + OXIA,     // Ќ
+    "Ћ": "Ꙗ" + PSILI + OXIA,      // Ћ
 };
 
 const KEYS = new RegExp(

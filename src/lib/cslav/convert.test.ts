@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { convertWithAnswers, toPlainText, wordsToLookUp, type CslAnswer } from "@/lib/cslav/convert";
 
 const answer = (word: string, parts: Partial<CslAnswer> = {}): CslAnswer => ({
-    word, known: true, agree: null, corpus: [], menaion: [], lexicon: [], bible: [], titlo: [], ...parts,
+    word, known: true, agree: null, corpus: [], menaion: [], octoechos: [], lexicon: [], bible: [], titlo: [], ...parts,
 });
 
 const answers = (...list: Array<[string, CslAnswer]>) => new Map(list);

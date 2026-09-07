@@ -26,6 +26,7 @@
     "db:anonymize-logs": "tsx src/scripts/anonymize-meta-logs.ts",
     "db:book-languages": "tsx src/scripts/set-book-languages.ts",
     "cslav:build": "tsx src/scripts/build-cs-spellings.ts",
+    "cslav:octoechos": "tsx src/scripts/convert-octoechos-cu.ts",
     "fonts:woff2": "tsx src/scripts/fonts-to-woff2.ts",
     "db:import-vmch": "NODE_ENV=development tsx src/scripts/import-vmch.ts",
     "db:lib-fond": "tsx src/scripts/fetch-lib-fond.ts",

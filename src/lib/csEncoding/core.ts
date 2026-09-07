@@ -43,7 +43,7 @@ export const SOURCE_LABELS: Record<Source, string> = {
  * («Background», «Georgia», «Arial») переложились бы наравне с текстом. Замер по
  * Октоиху: без этого «a» насчитывалось 30 466 раз вместо тысяч.
  */
-const stripMarkup = (raw: string): { text: string; tags: number } => {
+export const stripMarkup = (raw: string): { text: string; tags: number } => {
     if (!/<[a-z!/][^>]*>/i.test(raw)) return { text: raw, tags: 0 };
     let tags = 0;
     // Строчная разметка снимается БЕЗ пробела, блочная — с переводом строки.

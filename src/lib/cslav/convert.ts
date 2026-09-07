@@ -20,7 +20,7 @@ import { plural } from "@/utils/plural";
 // ничего не выбрано.
 
 /** Откуда взято написание. */
-export type CslSource = "corpus" | "menaion" | "lexicon" | "bible" | "rule";
+export type CslSource = "corpus" | "menaion" | "octoechos" | "lexicon" | "bible" | "rule";
 
 export interface CslVariant {
     /** Написание как оно есть в источнике. */
@@ -93,6 +93,8 @@ export interface CslAnswer {
     corpus: Array<{ w: string; n: number; d: number }>;
     /** Минея церковнославянским шрифтом — главное свидетельство служебной титлы. */
     menaion: Array<{ w: string; n: number; d: number }>;
+    /** Октоих церковнославянским шрифтом — вторая служебная книга. */
+    octoechos: Array<{ w: string; n: number; d: number }>;
     lexicon: Array<{ w: string; l: string; p: string; s?: string }>;
     bible: Array<{ w: string; n: number }>;
     /** Сокращения под титлом; o: 1 — дониконовское. */
@@ -197,10 +199,15 @@ const NOISE = 3;
 // книги собрания аскетические, и на богослужебном тексте служебная книга —
 // свидетель ближе. Собрание давало «вѣрно», «достоино», «ѡбразъ» там, где в
 // службе стоят «вѣрнѡ», «достоинѡ», «ѻбразъ».
-const attestedOf = (answer: CslAnswer) =>
-    (answer.menaion.length
-        ? answer.menaion.map((v) => ({ ...v, source: "menaion" as const }))
-        : answer.corpus.map((v) => ({ ...v, source: "corpus" as const })));
+const attestedOf = (answer: CslAnswer) => {
+    if (answer.menaion.length) return answer.menaion.map((v) => ({ ...v, source: "menaion" as const }));
+    // Октоих сразу за Минеей: книга того же извода и назначения. Замерить его
+    // отдельно нечем — обратная проверка идёт по Минее, — но ставить служебную
+    // книгу ниже аскетического собрания было бы против того самого замера,
+    // который Минею наверх и поднял.
+    if (answer.octoechos.length) return answer.octoechos.map((v) => ({ ...v, source: "octoechos" as const }));
+    return answer.corpus.map((v) => ({ ...v, source: "corpus" as const }));
+};
 
 const variantsOf = (answer: CslAnswer, word: string, atSentenceStart: boolean): CslVariant[] => {
     const out: CslVariant[] = [];

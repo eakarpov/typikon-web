@@ -20,6 +20,8 @@ interface SpellingDocument {
     c?: Array<{ w: string; n: number; d: number }>;
     /** Минея церковнославянским шрифтом: чужая оцифровка, отдельно от собрания. */
     m?: Array<{ w: string; n: number; d: number }>;
+    /** Октоих церковнославянским шрифтом: юникодный вид — наша работа. */
+    o?: Array<{ w: string; n: number; d: number }>;
     x?: Array<{ w: string; l: string; p: string; s?: string }>;
     b?: Array<{ w: string; n: number }>;
     /** Сокращения; o: 1 — дониконовское, синодальному набору не годится. */
@@ -28,7 +30,7 @@ interface SpellingDocument {
 }
 
 const empty = (word: string): CslAnswer => ({
-    word, known: false, agree: null, corpus: [], menaion: [], lexicon: [], bible: [], titlo: [],
+    word, known: false, agree: null, corpus: [], menaion: [], octoechos: [], lexicon: [], bible: [], titlo: [],
 });
 
 /**
@@ -51,10 +53,11 @@ export const lookupSpellings = async (keys: string[]): Promise<CslAnswer[]> => {
         if (!doc) return empty(key);
         return {
             word: key,
-            known: Boolean(doc.c?.length || doc.m?.length || doc.x?.length || doc.b?.length),
+            known: Boolean(doc.c?.length || doc.m?.length || doc.o?.length || doc.x?.length || doc.b?.length),
             agree: doc.a ?? null,
             corpus: doc.c ?? [],
             menaion: doc.m ?? [],
+            octoechos: doc.o ?? [],
             lexicon: doc.x ?? [],
             bible: doc.b ?? [],
             titlo: doc.t ?? [],

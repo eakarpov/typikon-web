@@ -67,13 +67,23 @@ interface Entry {
      * только здесь.
      */
     m: Attested;
+    /**
+     * Октоих церковнославянским шрифтом — пятый источник, рядом с Минеей.
+     *
+     * Книга того же извода и того же назначения, но своя: держать её отдельно
+     * нужно потому, что юникодный вид её — НАША работа. В сети чистого
+     * юникодного Октоиха нет; исходник набран транслитерацией, и перекладка
+     * сделана здесь (npm run cslav:octoechos, @/lib/csEncoding/translit).
+     */
+    o: Attested;
     x: DictVariant[];
     b: Map<string, number>;
     /** Сокращения: написание → сколько раз и какого извода. */
     t: Map<string, { n: number; old: boolean }>;
 }
 
-const entry = (): Entry => ({ c: new Map(), m: new Map(), x: [], b: new Map(), t: new Map() });
+const entry = (): Entry =>
+    ({ c: new Map(), m: new Map(), o: new Map(), x: [], b: new Map(), t: new Map() });
 
 const argv = process.argv.slice(2);
 const has = (flag: string) => argv.includes(flag);
@@ -130,6 +140,7 @@ const main = async () => {
         titloByStem: 0, titloByTable: 0, titloByWord: 0, titloByOrder: 0,
         titloByContraction: 0, titloRejected: 0, titloOld: 0, titloSynodal: 0,
         menaionDays: 0, menaionTokens: 0, menaionShortened: 0, titloByPrefix: 0,
+        octoechosFiles: 0, octoechosTokens: 0, octoechosShortened: 0,
     };
 
     // Отложенная десятая часть: без неё проверка мерит, как собрание
@@ -306,6 +317,47 @@ const main = async () => {
         console.log(`Минея ЦС не найдена (${menaionRoot}) — четвёртый источник пропущен.`);
     }
 
+    // --- 3в. Октоих церковнославянским шрифтом -------------------------------
+    //
+    // Пара к гражданскому Октоиху (raw/octoechos), 56 файлов — восемь гласов на
+    // семь дней седмицы. Исходник набран транслитерацией, и юникодный вид его
+    // получен здесь: `npm run cslav:octoechos`. Парность с гражданским изданием
+    // того же гласа — 94,8%.
+    const octoechosShort: string[] = [];
+    const octoechosRoot = value("--octoechos")
+        ?? path.join(process.cwd(), "..", "typikon-rules", "raw", "octoechos-cu", "text");
+    if (fs.existsSync(octoechosRoot)) {
+        for (const file of fs.readdirSync(octoechosRoot).sort()) {
+            if (!file.endsWith(".txt")) continue;
+            const alias = file.replace(/\.txt$/, "");
+            const raw = fs.readFileSync(path.join(octoechosRoot, file), "utf8");
+            const body = raw.split("-".repeat(40)).slice(1).join("-".repeat(40));
+            stats.octoechosFiles++;
+            for (const token of wordsOf(body)) {
+                const word = token.replace(LEADING_MARK, "");
+                const spelling = csCanonical(word.toLowerCase());
+                const key = civilKey(spelling);
+                if (!key || /[^а-яё]/.test(key)) continue;
+                if (isShortened(spelling)) { stats.octoechosShortened++; octoechosShort.push(spelling); continue; }
+                if (findAccentIssues(spelling).length) continue;
+                stats.octoechosTokens++;
+                const place = take(key);
+                const letters = lettersOnly(spelling);
+                const seen = place.o.get(letters)
+                    ?? { n: 0, texts: new Set<string>(), forms: new Map<string, number>() };
+                seen.n += 1;
+                seen.texts.add(alias);
+                seen.forms.set(spelling, (seen.forms.get(spelling) ?? 0) + 1);
+                place.o.set(letters, seen);
+            }
+        }
+        console.log(`Октоих ЦС: ${stats.octoechosFiles} файлов,`
+            + ` ${stats.octoechosTokens.toLocaleString("ru")} словоупотреблений,`
+            + ` сокращений ${stats.octoechosShortened.toLocaleString("ru")}`);
+    } else {
+        console.log(`Октоих ЦС не найден (${octoechosRoot}) — пятый источник пропущен.`);
+    }
+
     // --- 3б. Положение букв --------------------------------------------------
     //
     // Таблица «контекст → буква», выведенная из Минеи для двух спорных рядов:
@@ -319,7 +371,7 @@ const main = async () => {
     // воспроизводит саму себя.
     const letterCounts = new Map<string, Map<string, number>>();
     for (const place of index.values()) {
-        for (const [letters, seen] of place.m) {
+        for (const [letters, seen] of [...place.m, ...place.o]) {
             for (let at = 0; at < letters.length; at++) {
                 if (!GROUPS.some((g) => g.includes(letters[at]))) continue;
                 for (const key of contextKeys(letters, at)) {
@@ -437,6 +489,7 @@ const main = async () => {
     linkAll(pending, false);
     linkAll(bibleShort, true);
     linkAll(menaionShort, true);
+    linkAll(octoechosShort, true);
     for (const place of index.values()) {
         for (const seen of place.t.values()) {
             if (seen.old) stats.titloOld += seen.n; else stats.titloSynodal += seen.n;
@@ -500,11 +553,12 @@ const main = async () => {
         + ` (безударных дублей свёрнуто: ${stats.dictDuplicates.toLocaleString("ru")})`);
     console.log(`Библия: ${stats.bibleTokens.toLocaleString("ru")} словоупотреблений`);
     console.log(`ключей в указателе: ${index.size.toLocaleString("ru")} (из собрания ${corpusKeys.toLocaleString("ru")})`);
-    const shortened = stats.shortened + bibleShort.length + menaionShort.length;
+    const shortened = stats.shortened + bibleShort.length + menaionShort.length + octoechosShort.length;
     console.log(`сокращений под титлом и с выносными: ${shortened.toLocaleString("ru")}`
         + ` (собрание ${stats.shortened.toLocaleString("ru")},`
         + ` Библия ${bibleShort.length.toLocaleString("ru")},`
-        + ` Минея ${menaionShort.length.toLocaleString("ru")})`);
+        + ` Минея ${menaionShort.length.toLocaleString("ru")},`
+        + ` Октоих ${octoechosShort.length.toLocaleString("ru")})`);
     console.log(`   связано с полным словом ${stats.titloLinked.toLocaleString("ru")},`
         + ` цифирь ${stats.numerals.toLocaleString("ru")},`
         + ` костяк не раскрылся у ${stats.titloUnknown.toLocaleString("ru")}`);
@@ -665,10 +719,12 @@ const main = async () => {
                 if (!place) continue;
                 byWord.set(key, {
                     word: key,
-                    known: Boolean(place.c.size || place.m.size || place.x.length || place.b.size),
+                    known: Boolean(place.c.size || place.m.size || place.o.size
+                        || place.x.length || place.b.size),
                     agree: null,
                     corpus: ranked(place.c).map((v) => ({ w: v.spelling, n: v.n, d: v.d })),
                     menaion: ranked(place.m).map((v) => ({ w: v.spelling, n: v.n, d: v.d })),
+                    octoechos: ranked(place.o).map((v) => ({ w: v.spelling, n: v.n, d: v.d })),
                     lexicon: place.x,
                     bible: [...place.b.entries()].sort((a, b) => b[1] - a[1]).map(([w, n]) => ({ w, n })),
                     titlo: [],
@@ -760,6 +816,9 @@ ${rows.map(([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join("
             } : {}),
             ...(place.m.size ? {
                 m: ranked(place.m).map((v): CorpusVariant => ({ w: v.spelling, n: v.n, d: v.d })),
+            } : {}),
+            ...(place.o.size ? {
+                o: ranked(place.o).map((v): CorpusVariant => ({ w: v.spelling, n: v.n, d: v.d })),
             } : {}),
             ...(place.x.length ? { x: place.x } : {}),
             ...(place.b.size ? {
