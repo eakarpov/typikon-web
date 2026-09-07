@@ -67,6 +67,13 @@ export async function GET(request: Request) {
                 incipits: "/api/v2/incipits?q=",
                 incipit: "/api/v2/incipits/{язык}/{зачин}",
                 pericopes: "/api/v2/pericopes",
+                // Библии в перечне не значилось вовсе — тот же недосмотр, что был
+                // с песнопениями: три ручки работают с самого переезда Библии на
+                // свою модель, а знакомящийся с API клиент о них не узнавал.
+                bibleBooks: "/api/v2/bible/books",
+                bibleEditions: "/api/v2/bible/editions",
+                bibleChapter: "/api/v2/bible/{книга}/{глава}",
+                concordance: "/api/v2/concordance?ref=",
                 signs: "/api/v2/signs",
                 news: "/api/v2/news",
                 documentation: `${SITE_URL}/api`,

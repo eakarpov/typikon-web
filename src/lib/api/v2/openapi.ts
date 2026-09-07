@@ -2,6 +2,7 @@ import { LICENSE_ID, LICENSE_URL } from "@/lib/api/v2/http";
 import { DEFAULT_LIMIT, MAX_LIMIT } from "@/lib/api/v2/params";
 import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 import { SITE_HOST, SITE_URL } from "@/utils/site";
+import { BIBLE_SECTIONS } from "@/utils/bibleCanon";
 
 // Машинное описание API. Держим его рядом с кодом, а не отдельным файлом в репозитории:
 // пределы постраничности и адрес лицензии берутся из тех же констант, что и в ручках,
@@ -336,6 +337,19 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/PericopeList") },
             },
         },
+        "/api/v2/bible/books": {
+            get: {
+                tags: ["Библия"],
+                summary: "Оглавление Библии",
+                description:
+                    "Книги канона и, признаком inCanon: false, книги приложения — те, что " +
+                    "издания печатают, а славянский канон не держит. Отдаётся целиком, без " +
+                    "постраничности: список закрыт.\n\nПорядок значим и является частью " +
+                    "ответа — канон идёт в порядке Елизаветинской Библии, а не по алфавиту; " +
+                    "пересортировав, восстановить его будет неоткуда.",
+                responses: { "200": ok("#/components/schemas/BibleBookList") },
+            },
+        },
         "/api/v2/bible/editions": {
             get: {
                 tags: ["Библия"],
@@ -567,6 +581,31 @@ export const openapi = () => ({
                     content: { type: "string" },
                 },
             },
+            BibleBook: {
+                type: "object",
+                properties: {
+                    id: { type: "string", example: "matfeya", description: "Он же — слаг книги в зачалах" },
+                    name: { type: "string", example: "От Матфея" },
+                    abbr: { type: "string", example: "Мф" },
+                    section: {
+                        type: "string",
+                        enum: [...BIBLE_SECTIONS.map((section) => section.id), "appendix"],
+                        description: "Раздел канона; appendix — книга вне славянского канона",
+                    },
+                    inCanon: { type: "boolean" },
+                    chapters: {
+                        type: ["integer", "null"],
+                        description:
+                            "Сколько в книге канонических глав. null у приложения: эталон снят " +
+                            "с церковнославянского издания, а этих книг в нём нет вовсе",
+                    },
+                    note: {
+                        type: "string",
+                        description: "Откуда книга взялась и почему стоит вне канона; только у приложения",
+                    },
+                },
+            },
+            BibleBookList: collection("#/components/schemas/BibleBook"),
             BibleEdition: {
                 type: "object",
                 properties: {
