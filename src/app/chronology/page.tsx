@@ -3,7 +3,8 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { myFont } from "@/utils/font";
 import { setMeta } from "@/lib/meta";
 import * as ch from "@/utils/chronology";
-import { diagnose, Field, FIELDS, Record_, solve } from "@/lib/dating";
+import { diagnose, solve } from "@/lib/dating";
+import { asked, numeric, readRecord } from "@/lib/datingRecord";
 import Form from "@/app/chronology/Form";
 import Result from "@/app/chronology/Result";
 import Calendars, { YearNumbers } from "@/app/chronology/Calendars";
@@ -36,45 +37,6 @@ export const metadata: Metadata = {
 
 const DEFAULT_FROM = 988;
 const DEFAULT_TO = 1700;
-
-const numeric = (value: string | undefined, min: number, max: number) => {
-    if (!value) return undefined;
-    const n = Number(value.replace(/[^\d]/g, ""));
-    return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
-};
-
-/** Что из адреса удалось прочесть как условие записи. */
-const readRecord = (params: Record<string, string | undefined>) => {
-    const record: Record_ = {};
-    const ranges: Partial<Record<Field, [number, number]>> = {
-        indikt: [1, 15], krugSolntsu: [1, 28], krugLune: [1, 19],
-        vrutseleto: [1, 7], osnovanie: [1, 30], epakta: [0, 30],
-    };
-    for (const field of FIELDS) {
-        const bounds = ranges[field];
-        if (bounds) {
-            const value = numeric(params[field], bounds[0], bounds[1]);
-            if (value !== undefined) (record as any)[field] = value;
-        }
-    }
-    const letter = (params.klyuchGranits || "").trim();
-    if (letter && ch.KLYUCH_LETTERS.includes(letter as any)) record.klyuchGranits = letter;
-
-    const weekday = (params.weekday || "").trim();
-    if (ch.WEEKDAYS.includes(weekday as ch.Weekday)) record.weekday = weekday as ch.Weekday;
-
-    record.leto = numeric(params.leto, 1, 9999);
-    const month = numeric(params.month, 1, 12);
-    const day = numeric(params.day, 1, 31);
-    // Месяц без числа день не задаёт, а число без месяца тем более: они идут
-    // только парой, иначе перебору нечего прикладывать ко дню недели.
-    if (month && day) { record.month = month; record.day = day; }
-
-    return record;
-};
-
-const asked = (record: Record_) =>
-    Object.values(record).some(v => v !== undefined);
 
 /** День, набранный в форме перевода, — или null, если набрано не всё. */
 const readDay = (params: Record<string, string | undefined>): number | null => {
