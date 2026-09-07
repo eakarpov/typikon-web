@@ -252,6 +252,11 @@ const main = async () => {
     // изданиями; и сокращения, которых у нас нечем раскрыть. Последние и есть
     // то, ради чего книга берётся.
     const menaionShort: string[] = [];
+    // Отложенные дни Минеи: на них идёт обратная проверка — гражданское
+    // издание прогоняется переводчиком и сверяется с церковнославянским. Если
+    // день оставить в указателе, проверка померит, как он воспроизводит сам
+    // себя. Берём каждый десятый по порядку, чтобы состав не плавал.
+    const menaionHoldout: Array<{ month: string; day: string }> = [];
     const menaionRoot = value("--menaion")
         ?? path.join(process.cwd(), "..", "typikon-rules", "raw", "menaion-cu");
     if (fs.existsSync(menaionRoot)) {
@@ -260,6 +265,11 @@ const main = async () => {
             if (!fs.existsSync(days)) continue;
             for (const file of fs.readdirSync(days).sort()) {
                 const alias = `${month}/${file.replace(/\.txt$/, "")}`;
+                if (has("--check") && stats.menaionDays % 10 === 0) {
+                    menaionHoldout.push({ month, day: file.replace(/\.txt$/, "") });
+                    stats.menaionDays++;
+                    continue;
+                }
                 const raw = fs.readFileSync(path.join(days, file), "utf8");
                 // Заголовок обхода (URL, TITLE) отрезается: это не книга.
                 const body = raw.split("-".repeat(40)).slice(1).join("-".repeat(40));
@@ -518,6 +528,84 @@ const main = async () => {
         console.log(`всего точно воспроизведено: ${((dictExact + ruleExact) / total * 100).toFixed(1)}%`);
         console.log("Оценка верхняя: свёрнутый церковнославянский текст ложится на указатель лучше,");
         console.log("чем текст, набранный человеком с нуля.");
+    }
+
+    // --- Обратная проверка по Минее ------------------------------------------
+    //
+    // ЧЕМ ОНА ЛУЧШЕ ПРЕДЫДУЩЕЙ. Та берёт церковнославянское слово, сворачивает
+    // его в гражданку и смотрит, восстановится ли обратно, — и оценка выходит
+    // верхняя: свёрнутое ложится на указатель лучше, чем набранное человеком.
+    // Здесь на входе НАСТОЯЩЕЕ гражданское издание Минеи, набранное отдельно от
+    // церковнославянского, и сверяется оно с настоящим церковнославянским
+    // изданием того же дня. Свёртки на входе нет вовсе.
+    //
+    // Сверка идёт не по местам, а по дню: у гражданского слова берётся ключ, и
+    // если этот ключ в церковнославянском тексте того же дня есть, наше
+    // написание сверяется со всеми, какими это слово там набрано. Порядок слов
+    // в двух изданиях местами расходится, а состав службы — нет.
+    if (has("--check") && menaionHoldout.length) {
+        const civilRoot = path.join(path.dirname(menaionRoot), "menaion");
+        let comparable = 0, exact = 0, byDict = 0, byDictExact = 0, byRuleN = 0, byRuleExact = 0;
+        const wrong = new Map<string, number>();
+
+        for (const { month, day } of menaionHoldout) {
+            const csPath = path.join(menaionRoot, month, "text", `${day}.txt`);
+            const civilPath = path.join(civilRoot, month, "text", `${day}.txt`);
+            if (!fs.existsSync(csPath) || !fs.existsSync(civilPath)) continue;
+            const bodyOf = (file: string) =>
+                fs.readFileSync(file, "utf8").split("-".repeat(40)).slice(1).join("-".repeat(40));
+
+            // Чем это слово набрано в церковнославянском издании этого дня.
+            const attested = new Map<string, Set<string>>();
+            for (const token of wordsOf(bodyOf(csPath))) {
+                const spelling = csCanonical(token.replace(LEADING_MARK, "").toLowerCase());
+                if (isShortened(spelling)) continue;
+                const key = civilKey(spelling);
+                if (!key || /[^а-яё]/.test(key)) continue;
+                (attested.get(key) ?? attested.set(key, new Set()).get(key)!).add(lettersOnly(spelling));
+            }
+
+            for (const token of wordsOf(bodyOf(civilPath))) {
+                const civil = civilKey(token.replace(LEADING_MARK, "").toLowerCase());
+                if (!civil || /[^а-яё]/.test(civil)) continue;
+                const want = attested.get(civil);
+                if (!want) continue;   // в церковнославянском издании этого слова нет
+                comparable++;
+
+                const place = index.get(civil);
+                // Минея ведёт: замером по этой самой проверке она даёт 99,0%
+                // против 97,0% у собрания. Книги собрания аскетические, и на
+                // богослужебном тексте служебная книга — свидетель ближе.
+                const fromMenaion = place?.m.size ? ranked(place.m)[0] : null;
+                const best = place && place.c.size ? settled(place).best : null;
+                const got = (fromMenaion?.letters ?? best?.letters)
+                    ?? (place?.x.length ? lettersOnly(place.x[0].w) : null);
+                if (got !== null) {
+                    byDict++;
+                    if (want.has(got)) { exact++; byDictExact++; }
+                    else wrong.set(`${civil}: мы «${got}», в книге «${[...want].join("», «")}»`,
+                        (wrong.get(`${civil}: мы «${got}», в книге «${[...want].join("», «")}»`) ?? 0) + 1);
+                } else {
+                    byRuleN++;
+                    const ruled = lettersOnly(csCanonical(byRule(civil).form.toLowerCase()));
+                    if (want.has(ruled)) { exact++; byRuleExact++; }
+                }
+            }
+        }
+
+        console.log("\n=== Обратная проверка: гражданская Минея против церковнославянской ===");
+        console.log(`отложено дней: ${menaionHoldout.length}, сверяемых слов: ${comparable.toLocaleString("ru")}`);
+        console.log(`по указателю: ${byDict.toLocaleString("ru")}, из них совпало`
+            + ` ${byDictExact.toLocaleString("ru")} (${(byDictExact / Math.max(byDict, 1) * 100).toFixed(1)}%)`);
+        console.log(`по правилу:   ${byRuleN.toLocaleString("ru")}, из них совпало`
+            + ` ${byRuleExact.toLocaleString("ru")} (${(byRuleExact / Math.max(byRuleN, 1) * 100).toFixed(1)}%)`);
+        console.log(`ВСЕГО СОВПАЛО: ${(exact / Math.max(comparable, 1) * 100).toFixed(1)}%`);
+        console.log("Оценка честная: на входе гражданское издание, набранное отдельно,");
+        console.log("свёртки на входе нет, отложенные дни в указатель не попали.");
+        console.log("\nЧаще всего расходимся (здесь же и опечатки набора):");
+        for (const [line, n] of [...wrong.entries()].sort((a, b) => b[1] - a[1]).slice(0, 25)) {
+            console.log(`   ×${String(n).padStart(4)}  ${line}`);
+        }
     }
 
     // --- Запись --------------------------------------------------------------
