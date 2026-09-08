@@ -548,6 +548,31 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/saints/dossier/{address}": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Досье святого",
+                description:
+                    "Запись каталога и всё, что к ней привязано: дни памяти в гражданских "
+                    + "датах, памяти месяцеслова со знаком службы, тексты и упоминания, "
+                    + "акафисты, посвящения храмов, связь с родословной.\n\nАдрес — наш слуг "
+                    + "либо, для старых ссылок, номер памяти в святцах: номерами святые "
+                    + "подписаны в разметке самих текстов корпуса.\n\nТексты собираются по "
+                    + "всем номерам записи: одно лицо календарь держит порознь двумя "
+                    + "памятями.\n\nПустой раздел чаще значит «связь не проставлена», чем "
+                    + "«нет» — об этом говорит поле caveat. akathists: null означает, что "
+                    + "корпус на сервере не выложен и акафисты не смотрели вовсе; [] — "
+                    + "смотрели и не нашли.",
+                parameters: [
+                    { name: "address", in: "path", required: true, schema: { type: "string" }, example: "zahariya-i-elisaveta" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/SaintDossier"),
+                    "400": errorResponse("Адрес не указан или закодирован неверно"),
+                    "404": errorResponse("Такого святого в каталоге нет"),
+                },
+            },
+        },
         "/api/v2/saints/{id}": {
             get: {
                 tags: ["Справочники"],
@@ -682,6 +707,33 @@ export const openapi = () => ({
                     chapter: { type: "integer" },
                     verse: { type: "integer" },
                     content: { type: "string" },
+                },
+            },
+            SaintDossier: {
+                type: "object",
+                properties: {
+                    slug: { type: ["string", "null"] },
+                    name: { type: ["string", "null"] },
+                    altNames: { type: "array", items: { type: "string" } },
+                    kind: { type: ["string", "null"] },
+                    kindLabel: { type: ["string", "null"] },
+                    orders: { type: "array", items: { type: "object" } },
+                    baseYear: { type: ["integer", "null"] },
+                    baseYearLabel: { type: ["string", "null"] },
+                    memoryDates: {
+                        type: "array", items: { type: "object" },
+                        description: "Дни памяти, разложенные в гражданский календарь; переходящие у святцев записаны смещением",
+                    },
+                    roundelUrl: { type: ["string", "null"] },
+                    images: { type: "array", items: { type: "object" } },
+                    externals: { type: "array", items: { type: "object" }, description: "Номеров святцев у записи бывает несколько" },
+                    memories: { type: "array", items: { type: "object" }, description: "Памяти месяцеслова со знаком службы" },
+                    texts: { type: "array", items: { $ref: "#/components/schemas/Text" } },
+                    mentions: { type: "array", items: { $ref: "#/components/schemas/Text" } },
+                    akathists: { description: "null — корпус не выложен; [] — не нашли" },
+                    dedications: { type: "array", items: { type: "object" } },
+                    noble: { description: "Ссылка на родословную; правления не отдаются" },
+                    caveat: { type: "string" },
                 },
             },
             Name: {

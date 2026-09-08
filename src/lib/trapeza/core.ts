@@ -201,7 +201,15 @@ export const variantDisagreement = (day: OrdoDay | null): OrdoVariant[] => {
         && (v.fastingLabel ?? "") !== (chosen.fastingLabel ?? ""));
 };
 
-export type ShortKind = "verdict" | "disputed" | "silent";
+/**
+ * `unavailable` — не ответила служба устава, а не промолчала книга.
+ *
+ * Разница не тонкая: молчание книги значит «поста нет либо про него сказать
+ * нечего», молчание службы — «мы не знаем». Склеенные в одно, они дают клиенту
+ * ответ, по которому он не отличит исправную тишину от поломки, и приложение,
+ * показавшее «поста нет» на упавшем движке, соврало бы читателю о посте.
+ */
+export type ShortKind = "verdict" | "disputed" | "silent" | "unavailable";
 
 export interface ShortAnswer {
     kind: ShortKind;
@@ -217,7 +225,12 @@ export interface ShortAnswer {
  * в год в месте, где оговорке нет места, значило бы говорить его чаще всего,
  * что книга действительно сказала.
  */
-export const shortAnswer = (rules: OrdoFastingRule[]): ShortAnswer => {
+export const shortAnswer = (
+    rules: OrdoFastingRule[],
+    /** Ответил ли движок устава вообще. Не ответил — это не молчание книги. */
+    answered: boolean = true,
+): ShortAnswer => {
+    if (!answered) return { kind: "unavailable", line: null };
     if (!rules.length) return { kind: "silent", line: null };
     if (rules.some(r => r.disputed)) {
         return { kind: "disputed", line: "главы Типикона на этот день расходятся" };
