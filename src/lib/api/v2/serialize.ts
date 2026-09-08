@@ -53,6 +53,58 @@ export const chantSummary = (hit: any) => ({
     akathist: hit.akathist ?? null,
     stanza: hit.stanza ?? null,
     stanzaKind: hit.stanzaKind ?? null,
+    // Издание, откуда строка. Одно место службы печатают несколько изданий, и
+    // без этого поля две строки одного места неразличимы снаружи. Просили ещё
+    // при выносе поиска наружу — отдаём теперь.
+    sourceBook: hit.sourceBook ?? null,
+});
+
+/**
+ * Песнопение целиком — то, что обещал `sampleId` указателя зачинов.
+ *
+ * Обещание стояло в описании: «чтобы за ним можно было сходить в
+ * /api/v2/chants». Сходить было некуда — та ручка принимает запрос, а не
+ * идентификатор, и всякое вхождение зачина оставалось без текста.
+ *
+ * `borrowed` и `textItemId` отдаются вместе: книга печатает ирмос зачином, а
+ * полный текст лежит в Ирмологии, и подставленный текст надо назвать
+ * подставленным. `textItemId` при этом говорит, ЧЬЯ это строка, — по ней
+ * посчитаны смещения цитат, и приложенные к чужой строке они уехали бы молча.
+ */
+export const chantDetail = (row: any) => ({
+    id: row.id,
+    text: row.text ?? "",
+    borrowed: row.borrowed === true,
+    textItemId: row.textItemId ?? null,
+    language: row.language ?? null,
+    unit: row.unit ?? null,
+    marker: row.marker ?? null,
+    markerAlt: row.markerAlt ?? null,
+    placement: row.placement ?? null,
+    /** Сколько раз строка поётся: указание книги, а не украшение. */
+    repeat: row.repeat ?? 1,
+    ode: row.ode ?? null,
+    stanza: row.stanza ?? null,
+    stanzaKind: row.stanzaKind ?? null,
+    tone: row.tone ?? null,
+    /** Подобен, как его напечатала книга: по нему напев выбирается прежде гласа. */
+    podoben: row.podoben ?? null,
+    service: row.service ?? null,
+    position: row.position ?? null,
+    groupLabel: row.groupLabel ?? null,
+    memoryId: row.memoryId ?? null,
+    memory: row.memory ?? null,
+    book: row.book ?? null,
+    month: row.month ?? null,
+    day: row.day ?? null,
+    paschaOffset: row.paschaOffset ?? null,
+    weekday: row.weekday ?? null,
+    memoryTone: row.memoryTone ?? null,
+    sign: row.sign ?? null,
+    akathist: row.akathist ?? null,
+    canonId: row.canonId ?? null,
+    /** Издание, откуда строка, — то же, что у находки поиска. */
+    sourceBook: row.sourceBook ?? null,
 });
 
 /** Зачин в указателе: ключ, число вхождений и представительное из них. */
@@ -740,4 +792,167 @@ export const zapiska = (note: any) => ({
     readAt: iso(note.readAt),
     finishedAt: iso(note.finishedAt),
     sweptAt: iso(note.sweptAt),
+});
+
+// --- Каноны, акафисты, молитвы ------------------------------------------------
+//
+// Три раздела певческого корпуса, до сих пор жившие только страницами сайта.
+// Белый список здесь тот же, что и везде, и нужен он не меньше: строки корпуса
+// несут служебные поля разбора (`parsing_confidence`, `slot_key`), которым
+// наружу незачем.
+
+/** Канон в перечне. */
+export const canonSummary = (row: any) => ({
+    id: row.id,
+    /** Кому канон: метка памяти, под которой он напечатан. */
+    memory: row.memory ?? null,
+    memoryId: row.memoryId ?? null,
+    book: row.book ?? null,
+    month: row.month ?? null,
+    day: row.day ?? null,
+    paschaOffset: row.paschaOffset ?? null,
+    weekday: row.weekday ?? null,
+    /** Глас памяти (у Октоиха) — не то же, что глас самого канона. */
+    memoryTone: row.memoryTone ?? null,
+    tone: row.tone ?? null,
+    /**
+     * Надписание, КАК НАПЕЧАТАНО книгой, и лицо, с которым оно отождествлено, —
+     * порознь. Напечатанное есть свидетельство, отождествление — вывод из него,
+     * и вывод бывает неверен. Где отождествления нет, остаётся надписание:
+     * гадать за книгу мы не станем.
+     */
+    creator: row.creator ?? null,
+    author: row.author ?? null,
+    authorCentury: row.authorCentury ?? null,
+    /** Каким свидетелем отождествлено: надписание, греческий подлинник, документ. */
+    authorMethod: row.authorMethod ?? null,
+    acrostic: row.acrostic ?? null,
+    service: row.service ?? null,
+    role: row.role ?? null,
+    /** Сколько песней и сколько строк — чтобы перечень был осязаем без открытия. */
+    odes: row.odes ?? 0,
+    items: row.items ?? 0,
+});
+
+const canonLine = (line: any) => ({
+    unit: line.unit ?? null,
+    text: line.text ?? "",
+    /**
+     * Текста своего нет — он взят по ссылке. Книги печатают ирмос зачином
+     * («Ирмо́с: Христо́с ражда́ется:»), а полный текст лежит в Ирмологии или в
+     * соседнем каноне; неподписанный, он выдавался бы за напечатанный здесь.
+     */
+    borrowed: line.borrowed === true,
+    marker: line.marker ?? null,
+    /** Сколько раз поётся: «Ирмо́с по два́жды» — указание книги, а не украшение. */
+    repeat: line.repeat ?? 1,
+});
+
+/**
+ * Канон целиком.
+ *
+ * **Номер песни — тот, что стоит в книге, а не порядковый.** Второй песни нет
+ * ни у кого, кроме Великого канона, а трипеснцы Триоди несут три и меньше:
+ * «Песнь 3» после «Песни 1» — это как напечатано, а не пропуск разбора.
+ * Перенумеровав их подряд, клиент «починит» пропуск, которого нет.
+ */
+export const canonDetail = (row: any) => ({
+    ...canonSummary(row),
+    odesList: (row.odesList ?? []).map((ode: any) => ({
+        ode: ode.ode,
+        irmos: (ode.irmos ?? []).map(canonLine),
+        troparia: (ode.troparia ?? []).map(canonLine),
+    })),
+});
+
+/** Акафист в перечне. */
+export const akathistSummary = (row: any) => ({
+    id: row.id,
+    title: row.title ?? "",
+    /**
+     * Кому акафист. Не памяти и не святому одно вместо другого: акафист
+     * Богородице пред иконой обращён к иконе, а не к лицу святцев. `inoe` —
+     * не отговорка, а то, что стоит в источнике: Кресту, Ангелам, ко
+     * Причащению, о упокоении и покаянный.
+     */
+    subjectKind: row.subjectKind ?? null,
+    /**
+     * `ustavny` — положен уставом; таких один. Прочие собраны ради корпуса и в
+     * сборку служб не идут, и раздел, умолчавший об этом, читался бы как устав.
+     */
+    status: row.status ?? null,
+    dneslovId: row.dneslovId ?? null,
+    memoryId: row.memoryId ?? null,
+    memory: row.memory ?? null,
+    stanzas: row.stanzas ?? 0,
+    /** Проимиев бывает несколько, и счёт у них свой, сквозной по ним. */
+    prooimia: row.prooimia ?? 0,
+});
+
+const akathistStanza = (line: any) => ({
+    /** Порядок чтения; он же порядок показа. */
+    index: line.index,
+    /**
+     * Проимий или строфа акростиха. Различает именно это поле, а не номер:
+     * акростишный «кондак 2» и второй проимий — разные строки с одним числом.
+     */
+    kind: line.kind ?? null,
+    unit: line.unit ?? null,
+    stanza: line.stanza ?? null,
+    /**
+     * Буква краегранесия. У Великого акафиста двадцать четыре строфы идут по
+     * греческому алфавиту, и это не украшение: недостающая буква значит
+     * потерянную строфу.
+     */
+    letter: line.letter ?? null,
+    text: line.text ?? "",
+});
+
+/** Акафист целиком, вместе с молитвами, что печатаются при нём. */
+export const akathistDetail = (row: any, prayers: any[] = []) => ({
+    ...akathistSummary(row),
+    /** Рефрен: им кончается каждая строфа своего рода, по нему акафист и опознают. */
+    refrainIkos: row.refrainIkos ?? null,
+    refrainKontakion: row.refrainKontakion ?? null,
+    sourceBook: row.sourceBook ?? null,
+    sourceUrl: row.sourceUrl ?? null,
+    stanzasList: (row.lines ?? []).map(akathistStanza),
+    /**
+     * Молитва при акафисте — не строфа: у неё нет ни номера, ни места в
+     * акростихе, и живёт она своей сущностью. Но печатается здесь же, и
+     * читателю нужна здесь же.
+     */
+    prayers: prayers.map(prayerSummary),
+});
+
+/** Молитва в перечне. */
+export const prayerSummary = (row: any) => ({
+    id: row.id,
+    /** Двести тридцать пять из тысячи подписаны просто «Моли́тва». */
+    title: row.title ?? null,
+    /** При ком она: при памяти, при акафисте, при каноне. */
+    kind: row.kind ?? null,
+    owner: row.owner ?? null,
+    ownerId: row.ownerId ?? null,
+    seq: row.seq ?? 1,
+    incipit: row.incipit ?? null,
+});
+
+/** Молитва целиком. */
+export const prayerDetail = (row: any, siblings: any[] = []) => ({
+    ...prayerSummary(row),
+    text: row.text ?? "",
+    language: row.language ?? null,
+    sourceBook: row.sourceBook ?? null,
+    sourceUrl: row.sourceUrl ?? null,
+    /**
+     * Что напечатано здесь же — при том же акафисте или той же памяти. Только
+     * подпись и порядок: род и владелец у них те же, что у этой, и повторять их
+     * по разу на соседа незачем.
+     */
+    siblings: siblings.map((row: any) => ({
+        id: row.id,
+        title: row.title ?? null,
+        seq: row.seq ?? 1,
+    })),
 });

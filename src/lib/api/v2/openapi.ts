@@ -21,6 +21,25 @@ const collection = (itemsRef: string) => ({
     },
 });
 
+/**
+ * Конверт с отборами: то же, что `collection`, плюс чем можно сузить.
+ *
+ * Отборы едут с выдачей, а не отдельной ручкой: значения берутся из самого
+ * корпуса, и приехавшие с ответом разойтись с ним не могут, а зашитые у клиента
+ * — разошлись бы молча, как только в корпусе заведут новую роль или книгу.
+ */
+const collectionWithFacets = (itemsRef: string, facetsRef: string) => ({
+    type: "object",
+    required: ["items", "total", "limit", "offset", "facets"],
+    properties: {
+        items: { type: "array", items: { $ref: itemsRef } },
+        total: { type: "integer" },
+        limit: { type: "integer" },
+        offset: { type: "integer" },
+        facets: { $ref: facetsRef },
+    },
+});
+
 const pageParams = [
     {
         name: "limit", in: "query", required: false,
@@ -257,6 +276,145 @@ export const openapi = () => ({
                     "200": ok("#/components/schemas/ChantList"),
                     "400": errorResponse("Запрос слишком короткий"),
                     "503": errorResponse("Корпус на этом сервере не выложен; code — corpus_unavailable"),
+                },
+            },
+        },
+        "/api/v2/chants/{id}": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Песнопение целиком",
+                description:
+                    "То, что обещало поле sampleId указателя зачинов. Идентификатор — номер "
+                    + "строки корпуса; берётся из sampleId или из witnesses[].id.\n\n"
+                    + "Текст бывает взят по ссылке: книги печатают ирмос зачином, а полный текст "
+                    + "лежит в Ирмологии. Такой ответ помечен borrowed, и помету надо донести до "
+                    + "читателя — иначе подставленный текст выдаётся за напечатанный здесь.",
+                parameters: [{
+                    name: "id", in: "path", required: true,
+                    schema: { type: "integer" }, example: 40005,
+                }],
+                responses: {
+                    "200": ok("#/components/schemas/ChantDetail"),
+                    "400": errorResponse("Идентификатор строки — целое число"),
+                    "404": errorResponse("Такого песнопения в корпусе нет"),
+                },
+            },
+        },
+        "/api/v2/canons": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Каноны книг",
+                description:
+                    "Каноны Октоиха, Миней, Триодей и Минеи общей. Пустой запрос — не ошибка, а "
+                    + "начало просмотра: перечень канонов сам по себе и есть содержимое раздела, "
+                    + "а поиск его сужает.\n\nИщется по тому, кому канон и чьё он творение. "
+                    + "Имена — как их пишет книга, в родительном падеже: «Никола́я», а не "
+                    + "«Николаю»; ударения набирать не нужно, и части слова довольно.",
+                parameters: [
+                    { name: "q", in: "query", required: false, schema: { type: "string" }, example: "Николая Дамаскина" },
+                    { name: "book", in: "query", required: false, schema: { type: "string" } },
+                    { name: "tone", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 8 } },
+                    { name: "service", in: "query", required: false, schema: { type: "string" } },
+                    { name: "role", in: "query", required: false, schema: { type: "string" }, description: "Роль канона: воскресный, крестовоскресный, богородичен" },
+                    ...pageParams,
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/CanonList"),
+                    "503": errorResponse("Корпус певческих текстов на этом сервере не выложен"),
+                },
+            },
+        },
+        "/api/v2/canons/{id}": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Канон целиком",
+                description:
+                    "Песни подряд, как в книге: ирмос, затем тропари.\n\n**Нумерация песней не "
+                    + "сплошная, и это не изъян разбора.** Второй песни нет ни у кого, кроме "
+                    + "Великого канона, а трипеснцы Триоди несут три и меньше. Номер отдаётся "
+                    + "тот, что стоит у песни в книге: перенумеровав их подряд, вы «почините» "
+                    + "пропуск, которого нет.\n\nУ строки бывает `borrowed`: книга печатает "
+                    + "ирмос зачином, а полный текст лежит в Ирмологии. Помету надо донести до "
+                    + "читателя — иначе подставленный текст выдаётся за напечатанный здесь.",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" }, example: "mineya-06-15-6-svc2-canon2" }],
+                responses: {
+                    "200": ok("#/components/schemas/CanonDetail"),
+                    "404": errorResponse("Такого канона в корпусе нет"),
+                    "503": errorResponse("Корпус недоступен"),
+                },
+            },
+        },
+        "/api/v2/akathists": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Акафисты корпуса",
+                description:
+                    "**Уставом положен один акафист — Великий.** Остальные собраны ради корпуса и "
+                    + "поиска и в сборку служб не идут; это говорит поле `status`, и донести его "
+                    + "обязан всякий, кто показывает перечень: раздел похож на устав и им не "
+                    + "является.",
+                parameters: [
+                    { name: "q", in: "query", required: false, schema: { type: "string" }, example: "Николаю" },
+                    { name: "subject", in: "query", required: false, schema: { type: "string" }, description: "Кому: gospod, bogorodica, ikona, prazdnik, svyatoy, inoe" },
+                    { name: "status", in: "query", required: false, schema: { type: "string", enum: ["ustavny", "odobrenny", "chastny"] } },
+                    ...pageParams,
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/AkathistList"),
+                    "503": errorResponse("Корпус певческих текстов на этом сервере не выложен"),
+                },
+            },
+        },
+        "/api/v2/akathists/{id}": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Акафист целиком",
+                description:
+                    "Строфы в порядке `index` — это порядок чтения. Сортировать их по паре «род и "
+                    + "номер» неверно: проимий и первый икос акростиха разойдутся по разным "
+                    + "концам.\n\nПодписывает строфу пара «род + номер» — «икос 6», «кондак 12»: "
+                    + "именно парой акафист и цитируют. У проимиев счёт свой, и различает их "
+                    + "`kind`, а не номер.\n\nМолитвы при акафисте едут тем же ответом: молитва "
+                    + "не строфа, но печатается здесь же.",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" }, example: "narod-a-adrian-poshehonsky" }],
+                responses: {
+                    "200": ok("#/components/schemas/AkathistDetail"),
+                    "404": errorResponse("Такого акафиста в корпусе нет"),
+                    "503": errorResponse("Корпус недоступен"),
+                },
+            },
+        },
+        "/api/v2/prayers": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Молитвы книг и молитвы при акафистах",
+                description:
+                    "Молитву называет не подпись, а тот, при ком она стоит: подписаны почти все "
+                    + "просто «Моли́тва». Оттого искать можно и по имени владельца, и по зачину — "
+                    + "зачин и есть то единственное, чем две молитвы одного акафиста различаются.",
+                parameters: [
+                    { name: "q", in: "query", required: false, schema: { type: "string" }, example: "о всепетая" },
+                    { name: "kind", in: "query", required: false, schema: { type: "string", enum: ["memory", "akathist", "canon"] }, description: "При ком напечатана" },
+                    ...pageParams,
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/PrayerList"),
+                    "503": errorResponse("Корпус певческих текстов на этом сервере не выложен"),
+                },
+            },
+        },
+        "/api/v2/prayers/{id}": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Молитва целиком",
+                description:
+                    "Вместе с соседями — тем, что напечатано здесь же: книга печатает молитвы "
+                    + "вереницей, и читающий вторую обыкновенно хочет и первую.",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                responses: {
+                    "200": ok("#/components/schemas/PrayerDetail"),
+                    "404": errorResponse("Такой молитвы в корпусе нет"),
+                    "503": errorResponse("Корпус недоступен"),
                 },
             },
         },
@@ -1794,7 +1952,11 @@ export const openapi = () => ({
                 properties: {
                     id: { type: "integer" },
                     snippet: { type: "array", items: { $ref: "#/components/schemas/SnippetPart" } },
-                    language: { type: ["string", "null"], description: "Язык песнопения: cu_gr, ro, grc, en" },
+                    language: {
+                        type: ["string", "null"],
+                        enum: [...LANGUAGES, null],
+                        description: "Язык самой строки; корпус шестиязычен",
+                    },
                     unit: { type: ["string", "null"], description: "Род: stichera, sedalen, troparion, irmos…" },
                     ode: { type: ["integer", "null"], description: "Песнь канона, если это канон" },
                     marker: { type: ["string", "null"], description: "Жанр напечатанного: богородичен, троичен, мученичен…" },
@@ -1808,9 +1970,285 @@ export const openapi = () => ({
                     position: { type: ["string", "null"], description: "Место службы: «Стихиры на Господи воззвах» и т.п." },
                     tone: { type: ["integer", "null"] },
                     sign: { type: ["string", "null"] },
+                    akathist: {
+                        type: ["string", "null"],
+                        description:
+                            "У строфы акафиста нет ни книги, ни дня: её адрес — имя произведения "
+                            + "и номер строфы",
+                    },
+                    stanza: { type: ["integer", "null"], description: "Номер строфы акафиста" },
+                    stanzaKind: {
+                        type: ["string", "null"], enum: ["prooimion", "stanza", null],
+                        description:
+                            "Проимий или строфа акростиха: у проимиев счёт свой, и номер их не "
+                            + "различает",
+                    },
+                    sourceBook: {
+                        type: ["string", "null"],
+                        description: "Издание, откуда строка: одно место службы печатают несколько",
+                    },
                 },
             },
             ChantList: collection("#/components/schemas/Chant"),
+            CanonFacets: {
+                type: "object",
+                description: "Чем можно сузить перечень. Значения — из самого корпуса, не списком в коде",
+                properties: {
+                    books: { type: "array", items: { type: "string" } },
+                    tones: { type: "array", items: { type: "integer" } },
+                    services: { type: "array", items: { type: "string" } },
+                    roles: { type: "array", items: { type: "string" } },
+                },
+            },
+            Canon: {
+                type: "object",
+                description: "Канон в перечне",
+                properties: {
+                    id: { type: "string" },
+                    memory: { type: ["string", "null"], description: "Кому канон: метка памяти, под которой напечатан" },
+                    memoryId: { type: ["string", "null"] },
+                    book: { type: ["string", "null"] },
+                    month: { type: ["integer", "null"] },
+                    day: { type: ["integer", "null"] },
+                    paschaOffset: { type: ["integer", "null"] },
+                    weekday: { type: ["string", "null"] },
+                    memoryTone: { type: ["integer", "null"], description: "Глас памяти у Октоиха — не то же, что глас канона" },
+                    tone: { type: ["integer", "null"] },
+                    creator: {
+                        type: ["string", "null"],
+                        description:
+                            "Надписание, КАК НАПЕЧАТАНО книгой: «Творе́ние Ио́сифово. Гла́с 2.» "
+                            + "Напечатанное есть свидетельство",
+                    },
+                    author: {
+                        type: ["string", "null"],
+                        description:
+                            "Лицо, с которым надписание отождествлено, — если отождествлено. Это "
+                            + "вывод из свидетельства, и он может быть неверен; где отождествления "
+                            + "нет, остаётся одно надписание",
+                    },
+                    authorCentury: { type: ["string", "null"] },
+                    authorMethod: { type: ["string", "null"], description: "Каким свидетелем: надписание, греческий подлинник, документ" },
+                    acrostic: { type: ["string", "null"], description: "Краегранесие" },
+                    service: { type: ["string", "null"] },
+                    role: { type: ["string", "null"] },
+                    odes: { type: "integer", description: "Сколько песней" },
+                    items: { type: "integer", description: "Сколько строк" },
+                },
+            },
+            CanonList: collectionWithFacets("#/components/schemas/Canon", "#/components/schemas/CanonFacets"),
+            CanonLine: {
+                type: "object",
+                properties: {
+                    unit: { type: ["string", "null"], description: "irmos или troparion" },
+                    text: { type: "string" },
+                    borrowed: {
+                        type: "boolean",
+                        description:
+                            "Текст взят по ссылке: книга печатает ирмос зачином, а полный лежит в "
+                            + "Ирмологии. Показать его неподписанным — выдать отсылку за песнопение",
+                    },
+                    marker: { type: ["string", "null"], description: "Богородичен, троичен, мученичен…" },
+                    repeat: { type: "integer", description: "«Ирмо́с по два́жды» — указание книги" },
+                },
+            },
+            CanonOde: {
+                type: "object",
+                properties: {
+                    ode: {
+                        type: "integer",
+                        description:
+                            "Номер песни, КАК В КНИГЕ. Нумерация не сплошная: второй песни нет ни "
+                            + "у кого, кроме Великого канона",
+                    },
+                    irmos: { type: "array", items: { $ref: "#/components/schemas/CanonLine" } },
+                    troparia: { type: "array", items: { $ref: "#/components/schemas/CanonLine" } },
+                },
+            },
+            CanonDetail: {
+                allOf: [
+                    { $ref: "#/components/schemas/Canon" },
+                    {
+                        type: "object",
+                        properties: {
+                            odesList: { type: "array", items: { $ref: "#/components/schemas/CanonOde" } },
+                        },
+                    },
+                ],
+            },
+            AkathistFacets: {
+                type: "object",
+                properties: {
+                    subjectKinds: { type: "array", items: { type: "string" } },
+                    statuses: { type: "array", items: { type: "string" } },
+                },
+            },
+            Akathist: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    title: { type: "string" },
+                    subjectKind: {
+                        type: ["string", "null"],
+                        description:
+                            "Кому: gospod, bogorodica, ikona, prazdnik, svyatoy, inoe. Не памяти и "
+                            + "не святому одно вместо другого: акафист Богородице пред иконой "
+                            + "обращён к иконе. `inoe` — то, что стоит в источнике: Кресту, "
+                            + "Ангелам, ко Причащению, о упокоении, покаянный",
+                    },
+                    status: {
+                        type: ["string", "null"], enum: ["ustavny", "odobrenny", "chastny", null],
+                        description:
+                            "`ustavny` — положен уставом; таких один. Прочие собраны ради корпуса и "
+                            + "в сборку служб не идут",
+                    },
+                    dneslovId: { type: ["string", "null"] },
+                    memoryId: { type: ["string", "null"] },
+                    memory: { type: ["string", "null"], description: "Служба, в которой напечатан. Есть только у Великого" },
+                    stanzas: { type: "integer" },
+                    prooimia: { type: "integer", description: "Проимиев бывает несколько, и счёт у них свой" },
+                },
+            },
+            AkathistList: collectionWithFacets("#/components/schemas/Akathist", "#/components/schemas/AkathistFacets"),
+            AkathistStanza: {
+                type: "object",
+                properties: {
+                    index: { type: "integer", description: "Порядок чтения; он же порядок показа" },
+                    kind: {
+                        type: ["string", "null"], enum: ["prooimion", "stanza", null],
+                        description:
+                            "Различает проимий и строфу акростиха. Именно это поле, а не номер: "
+                            + "акростишный «кондак 2» и второй проимий несут одно число",
+                    },
+                    unit: { type: ["string", "null"], description: "kontakion или ikos" },
+                    stanza: { type: ["integer", "null"] },
+                    letter: {
+                        type: ["string", "null"],
+                        description:
+                            "Буква краегранесия. У Великого акафиста двадцать четыре строфы идут по "
+                            + "греческому алфавиту, и недостающая буква значит потерянную строфу",
+                    },
+                    text: { type: "string" },
+                },
+            },
+            AkathistDetail: {
+                allOf: [
+                    { $ref: "#/components/schemas/Akathist" },
+                    {
+                        type: "object",
+                        properties: {
+                            refrainIkos: {
+                                type: ["string", "null"],
+                                description: "Им кончается каждый икос; по рефрену акафист и опознают",
+                            },
+                            refrainKontakion: { type: ["string", "null"] },
+                            sourceBook: { type: ["string", "null"] },
+                            sourceUrl: { type: ["string", "null"] },
+                            stanzasList: { type: "array", items: { $ref: "#/components/schemas/AkathistStanza" } },
+                            prayers: {
+                                type: "array",
+                                items: { $ref: "#/components/schemas/Prayer" },
+                                description: "Молитвы, что печатаются при этом акафисте",
+                            },
+                        },
+                    },
+                ],
+            },
+            PrayerFacets: {
+                type: "object",
+                properties: { kinds: { type: "array", items: { type: "string" } } },
+            },
+            Prayer: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    title: { type: ["string", "null"], description: "Подписаны почти все просто «Моли́тва»" },
+                    kind: { type: ["string", "null"], enum: ["memory", "akathist", "canon", null] },
+                    owner: { type: ["string", "null"], description: "При ком напечатана" },
+                    ownerId: { type: ["string", "null"] },
+                    seq: { type: "integer" },
+                    incipit: { type: ["string", "null"], description: "Начало текста: тем и различаются две молитвы одного акафиста" },
+                },
+            },
+            PrayerList: collectionWithFacets("#/components/schemas/Prayer", "#/components/schemas/PrayerFacets"),
+            PrayerDetail: {
+                allOf: [
+                    { $ref: "#/components/schemas/Prayer" },
+                    {
+                        type: "object",
+                        properties: {
+                            text: { type: "string" },
+                            language: { type: ["string", "null"] },
+                            sourceBook: { type: ["string", "null"] },
+                            sourceUrl: { type: ["string", "null"] },
+                            siblings: {
+                                type: "array",
+                                description: "Что напечатано здесь же — при том же акафисте или той же памяти",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        id: { type: "string" },
+                                        title: { type: ["string", "null"] },
+                                        seq: { type: "integer" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ],
+            },
+            ChantDetail: {
+                type: "object",
+                description: "Песнопение целиком",
+                properties: {
+                    id: { type: "integer" },
+                    text: { type: "string", description: "Текст, как напечатан: с ударениями и разметкой строк" },
+                    borrowed: {
+                        type: "boolean",
+                        description:
+                            "Своего текста у строки нет — он взят по ссылке. Книги печатают ирмос "
+                            + "зачином («Ирмо́с: Христо́с ражда́ется:»), а полный текст лежит в "
+                            + "Ирмологии или в соседнем каноне. Показать подставленный текст "
+                            + "неподписанным значило бы выдать его за напечатанный здесь.",
+                    },
+                    textItemId: {
+                        type: ["integer", "null"],
+                        description:
+                            "Чья это строка: своя или та, откуда текст взят. Нужно всему, что "
+                            + "считается по смещениям в тексте — они посчитаны по строке со своим "
+                            + "текстом. `null` — текст пришёл из словаря формул.",
+                    },
+                    language: { type: ["string", "null"], enum: [...LANGUAGES, null] },
+                    unit: { type: ["string", "null"] },
+                    marker: { type: ["string", "null"] },
+                    markerAlt: { type: ["string", "null"] },
+                    placement: { type: ["string", "null"] },
+                    repeat: { type: "integer", description: "Сколько раз поётся: указание книги" },
+                    ode: { type: ["integer", "null"] },
+                    stanza: { type: ["integer", "null"] },
+                    stanzaKind: { type: ["string", "null"], enum: ["prooimion", "stanza", null] },
+                    tone: { type: ["integer", "null"] },
+                    podoben: {
+                        type: ["string", "null"],
+                        description: "Подобен, как напечатала книга: по нему напев выбирается прежде гласа",
+                    },
+                    service: { type: ["string", "null"] },
+                    position: { type: ["string", "null"] },
+                    groupLabel: { type: ["string", "null"] },
+                    memoryId: { type: ["string", "null"] },
+                    memory: { type: ["string", "null"] },
+                    book: { type: ["string", "null"] },
+                    month: { type: ["integer", "null"] },
+                    day: { type: ["integer", "null"] },
+                    paschaOffset: { type: ["integer", "null"] },
+                    weekday: { type: ["string", "null"] },
+                    memoryTone: { type: ["integer", "null"] },
+                    sign: { type: ["string", "null"] },
+                    akathist: { type: ["string", "null"] },
+                    canonId: { type: ["string", "null"] },
+                    sourceBook: { type: ["string", "null"], description: "Издание, откуда строка" },
+                },
+            },
             Incipit: {
                 type: "object",
                 description: "Зачин в указателе",

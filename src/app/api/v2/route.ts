@@ -64,6 +64,13 @@ export async function GET(request: Request) {
                 // Песнопения тут не было с самого начала — недосмотр: ручка есть
                 // и работает, а в перечне её не значилось.
                 chants: "/api/v2/chants?q=",
+                chant: "/api/v2/chants/{id}",
+                canons: "/api/v2/canons?q=",
+                canon: "/api/v2/canons/{id}",
+                akathists: "/api/v2/akathists?q=",
+                akathist: "/api/v2/akathists/{id}",
+                prayers: "/api/v2/prayers?q=",
+                prayer: "/api/v2/prayers/{id}",
                 incipits: "/api/v2/incipits?q=",
                 incipit: "/api/v2/incipits/{язык}/{зачин}",
                 pericopes: "/api/v2/pericopes",
