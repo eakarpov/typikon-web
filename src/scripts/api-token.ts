@@ -12,6 +12,9 @@
 //   npx tsx src/scripts/api-token.ts issue --name "Приход" --tier partner --per-day 50000 --days 365 --apply
 //   npx tsx src/scripts/api-token.ts set --id <id> --per-day 50000 --apply
 //   npx tsx src/scripts/api-token.ts revoke --id <id> --apply
+//
+// Вернуть пропавший ключ (не выпустить новый — вернуть тот же самый):
+//   npx tsx src/scripts/api-token.ts issue --name "app" --tier app --secret tk_… --apply
 import "@/scripts/lib/env";
 import { ObjectId } from "mongodb";
 import {
@@ -21,6 +24,7 @@ import {
     allowanceFor,
     generateToken,
     hashToken,
+    looksLikeToken,
     tokenPrefix,
     tokenState,
     type ApiToken,
@@ -123,9 +127,34 @@ const issue = async () => {
         return;
     }
 
-    const plain = generateToken();
+    // `--secret` — не выпуск нового, а ВОЗВРАЩЕНИЕ пропавшего. Ключ приложения
+    // зашит в сборку и живёт у всех, кто её поставил; если он пропал на сервере
+    // (восстановили базу из старого снимка, стёрли не тот), новый выпуск делу не
+    // поможет — установленные копии о нём не узнают. Поможет только вернуть тот
+    // же самый.
+    const given = option("secret");
+    if (given && !looksLikeToken(given)) {
+        throw new Error("--secret не похож на ключ: ожидается tk_ и не меньше сорока знаков");
+    }
+
+    const plain = given ?? generateToken();
     const tokens = await tokensCollection();
+
+    // Дважды один ключ не заводим: два документа с одной свёрткой дали бы
+    // молчаливую двойственность — какой из них считает квоту, зависело бы от
+    // порядка в выдаче.
+    const already = await tokens.findOne({ hash: hashToken(plain) });
+    if (already) {
+        throw new Error(`Такой ключ уже заведён: «${(already as any).name}». ` +
+            "Чтобы поправить его права, возьмите `set --id`.");
+    }
+
     await tokens.insertOne({ ...doc, hash: hashToken(plain), prefix: tokenPrefix(plain) } as ApiToken);
+
+    if (given) {
+        console.log(`\nКлюч ${tokenPrefix(plain)} возвращён на сервер.`);
+        return;
+    }
 
     console.log("\nКлюч (показывается один раз):");
     console.log(plain);

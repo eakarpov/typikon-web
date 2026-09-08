@@ -113,6 +113,22 @@ export const generateToken = (): string => `${TOKEN_PREFIX}${randomBytes(SECRET_
 
 export const hashToken = (token: string): string => createHash("sha256").update(token).digest("hex");
 
+/**
+ * Годится ли строка в ключ.
+ *
+ * Нужно ровно для одного: заново зарегистрировать УЖЕ ВЫПУЩЕННЫЙ ключ, когда он
+ * пропал на сервере — восстановили базу из старого снимка, стёрли не тот. Сам
+ * ключ в базе не лежит (там только его свёртка), и восстановить его оттуда
+ * нельзя; зато он есть в сборке приложения и у каждого, кто её поставил.
+ *
+ * Проверяем длину, а не только приставку: короткий ключ подбирается, и
+ * зарегистрировать «tk_1» значило бы раздать доступ всякому, кто попробует.
+ */
+export const looksLikeToken = (value: string): boolean =>
+    value.startsWith(TOKEN_PREFIX) &&
+    value.length >= TOKEN_PREFIX.length + 40 &&
+    /^[A-Za-z0-9_-]+$/.test(value.slice(TOKEN_PREFIX.length));
+
 /** Показываемая часть ключа: приставка и первые символы секрета. */
 export const tokenPrefix = (token: string): string => `${token.slice(0, TOKEN_PREFIX.length + 6)}…`;
 

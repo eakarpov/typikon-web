@@ -8,6 +8,7 @@ import {
     generateToken,
     hashToken,
     isSiteRequest,
+    looksLikeToken,
     readBearer,
     tokenPrefix,
     tokenState,
@@ -148,4 +149,18 @@ test("при отсутствии Sec-Fetch-Site разбираемся по и�
     assert.equal(isSiteRequest(headers({ origin: "https://typikon.su.example.com" }), ORIGINS), false);
     assert.equal(isSiteRequest(headers({ origin: "http://typikon.su" }), ORIGINS), false, "http вместо https — не наш адрес");
     assert.equal(isSiteRequest(headers({ origin: "null" }), ORIGINS), false, "песочница iframe шлёт origin: null");
+});
+
+// Возвращение пропавшего ключа. Проверка нужна не форме ради формы: `--secret`
+// заводит ключ по данной строке, и слабая строка раздала бы доступ всякому, кто
+// её подберёт.
+test("в ключ годится только то, что похоже на выпущенный ключ", () => {
+    assert.equal(looksLikeToken(generateToken()), true);
+
+    assert.equal(looksLikeToken("tk_1"), false, "короткий подбирается");
+    assert.equal(looksLikeToken("Ctn3kcW3wFox48OrAgZKGgKljSfelQxUb9r4t1RSpnw"), false,
+        "без приставки — не наш");
+    assert.equal(looksLikeToken("tk_" + "a".repeat(40) + "="), false,
+        "лишние знаки: настоящий ключ в base64url, а там нет ни '=', ни '+'");
+    assert.equal(looksLikeToken(""), false);
 });
