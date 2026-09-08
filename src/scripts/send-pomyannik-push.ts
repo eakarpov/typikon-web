@@ -25,9 +25,20 @@ import { upcoming } from "@/lib/pomyannik/reckoning";
 const HOUR = Number(process.env.POMYANNIK_PUSH_HOUR ?? 8);
 
 const main = async () => {
-    const creds = credentials();
+    let creds;
+    try {
+        creds = credentials();
+    } catch (e) {
+        // Путь к ключу задан, а прочитать его не вышло: настройка сделана
+        // наполовину, и это надо сказать словами, а не «послано 0».
+        console.error(String(e));
+        process.exit(1);
+    }
     if (!creds) {
-        console.error("Отправка не настроена: нет FCM_PROJECT_ID / FCM_CLIENT_EMAIL / FCM_PRIVATE_KEY");
+        console.error(
+            "Отправка не настроена. Положите ключ служебной записи файлом и укажите путь:\n" +
+            "  GOOGLE_APPLICATION_CREDENTIALS=/etc/typikon/fcm-service-account.json",
+        );
         process.exit(1);
     }
 

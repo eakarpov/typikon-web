@@ -1,4 +1,5 @@
 import { createSign } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 // ОТПРАВКА ТОЛЧКА — без библиотеки.
 //
@@ -20,12 +21,57 @@ export interface FcmCredentials {
 }
 
 /**
- * Учётные данные из окружения; `null` — не настроено.
+ * Учётные данные; `null` — не настроено.
+ *
+ * **Ключ лежит файлом вне дерева проекта, а в переменной — только путь.** Тот
+ * же обычай, что в smart-garden, и по тем же причинам: `git pull` файл не
+ * тронет, `git clean` не снесёт, закоммитить его нельзя, и в `.env.production`,
+ * который ездит по ssh при каждой выкладке, он не попадает. Имя переменной
+ * стандартное — его ждут и чужие руководства, и `firebase-admin`, если он
+ * когда-нибудь понадобится.
+ *
+ * | | путь к ключу |
+ * |---|---|
+ * | дев | `~/.config/typikon/fcm-service-account.json` |
+ * | прод | `/etc/typikon/fcm-service-account.json` |
+ *
+ * Тройка переменных остаётся вторым способом — для окружений, где своего файла
+ * не заведёшь (контейнер, чужой хостинг). Файл идёт первым: он и надёжнее, и
+ * привычнее.
  *
  * `null`, а не бросок: рассылка должна уметь сказать «не настроено» словами и
  * закончиться, а не упасть в крон стеком вызовов.
  */
-export const credentials = (env: NodeJS.ProcessEnv = process.env): FcmCredentials | null => {
+export const credentials = (env: NodeJS.ProcessEnv = process.env): FcmCredentials | null =>
+    fromFile(env.GOOGLE_APPLICATION_CREDENTIALS) ?? fromEnv(env);
+
+/** Ключ из файла служебной записи — как его скачивают из консоли, без правок. */
+export const fromFile = (path: string | undefined): FcmCredentials | null => {
+    if (!path) return null;
+
+    let raw: string;
+    try {
+        raw = readFileSync(path, "utf8");
+    } catch (e) {
+        // Путь задан, а файла нет — это настройка, сделанная наполовину, и
+        // молчать о ней нельзя: рассылка иначе просто ничего не пошлёт.
+        throw new Error(`ключ служебной записи не прочитался (${path}): ${e}`);
+    }
+
+    const json = JSON.parse(raw);
+    if (!json.project_id || !json.client_email || !json.private_key) {
+        throw new Error(`это не ключ служебной записи: ${path}`);
+    }
+
+    return {
+        projectId: json.project_id,
+        clientEmail: json.client_email,
+        privateKey: json.private_key,
+    };
+};
+
+/** Ключ тремя переменными — для окружений, где файла не завести. */
+const fromEnv = (env: NodeJS.ProcessEnv): FcmCredentials | null => {
     const projectId = env.FCM_PROJECT_ID;
     const clientEmail = env.FCM_CLIENT_EMAIL;
     // В .env перевод строки не живёт: закрытый ключ кладут с «\n» и разворачивают
