@@ -503,7 +503,17 @@ export const openapi = () => ({
             get: {
                 tags: ["Календарь"],
                 summary: "День по постоянному адресу",
-                parameters: [{ name: "alias", in: "path", required: true, schema: { type: "string" }, example: "pascha" }],
+                parameters: [
+                    { name: "alias", in: "path", required: true, schema: { type: "string" }, example: "pascha" },
+                    {
+                        name: "expand", in: "query", schema: { type: "string", enum: ["content"] },
+                        description:
+                            "`content` — вложить тела текстов прямо в чтения. По умолчанию их "
+                            + "нет, и странице дня они не нужны: она ведёт в текст ссылкой. Но "
+                            + "клиенту, который день читает, без них достаётся запрос на "
+                            + "каждый текст, а их в ином дне полсотни",
+                    },
+                ],
                 responses: { "200": ok("#/components/schemas/Day"), "404": errorResponse("День не найден") },
             },
         },
@@ -702,9 +712,17 @@ export const openapi = () => ({
                     + "`404` — у текста нет дня, и это обычное дело: не всё, что лежит в "
                     + "корпусе, положено на число. Пустым днём это не подменяется — пустой "
                     + "читался бы как «в этот день ничего не читается».",
-                parameters: [{
-                    name: "id", in: "path", required: true, schema: { type: "string" },
-                }],
+                parameters: [
+                    { name: "id", in: "path", required: true, schema: { type: "string" } },
+                    {
+                        name: "expand", in: "query", schema: { type: "string", enum: ["content"] },
+                        description:
+                            "`content` — вложить тела текстов прямо в чтения. По умолчанию их "
+                            + "нет, и странице дня они не нужны: она ведёт в текст ссылкой. Но "
+                            + "клиенту, который день читает, без них достаётся запрос на "
+                            + "каждый текст, а их в ином дне полсотни",
+                    },
+                ],
                 responses: {
                     "200": ok("#/components/schemas/Day"),
                     "404": errorResponse("У этого текста нет дня"),

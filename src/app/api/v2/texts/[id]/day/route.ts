@@ -29,6 +29,7 @@ export async function GET(
     if (access.denied) return access.denied;
 
     const { id } = await params;
+    const withContent = new URL(request.url).searchParams.get("expand") === "content";
 
     try {
         const [day, error] = await getDayByText(id);
@@ -39,7 +40,8 @@ export async function GET(
         if (!day) return fail("not_found", "У этого текста нет дня");
 
         return respond(
-            dayDetail(day, DAY_SLOT_ORDER as readonly string[], (slot) => valueTitle(slot as TextType)),
+            dayDetail(day, DAY_SLOT_ORDER as readonly string[],
+                (slot) => valueTitle(slot as TextType), withContent),
             { access },
         );
     } catch (e) {

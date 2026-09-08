@@ -19,13 +19,23 @@ export async function GET(request: Request, { params }: { params: { alias: strin
     const access = await authorize(request, "calendar");
     if (access.denied) return access.denied;
 
+    const url = new URL(request.url);
+    // Тела текстов по просьбе. По умолчанию их нет — странице дня они не нужны,
+    // она ведёт в текст ссылкой. Но клиенту, который день ЧИТАЕТ, без них
+    // достаётся запрос на каждый текст, а их в ином дне полсотни.
+    const withContent = url.searchParams.get("expand") === "content";
+
     try {
-        const [day, error] = await getItem(params.alias, readLang(new URL(request.url)));
+        const [day, error] = await getItem(params.alias, readLang(url));
 
         if (error) return fail("internal", "Не удалось получить день");
         if (!day) return fail("not_found", `День «${params.alias}» не найден`);
 
-        return respond(dayDetail(day, DAY_SLOT_ORDER as readonly string[], (slot) => valueTitle(slot as TextType)), { access });
+        return respond(
+            dayDetail(day, DAY_SLOT_ORDER as readonly string[],
+                (slot) => valueTitle(slot as TextType), withContent),
+            { access },
+        );
     } catch (e) {
         reportError(e, { where: "app/api/v2/days/[alias]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить день");

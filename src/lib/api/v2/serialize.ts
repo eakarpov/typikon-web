@@ -286,13 +286,33 @@ export const pericope = (doc: any) => ({
 
 // --- День со слотами службы
 
-/** Один пункт слота: либо текст, либо зачало, иногда и то и другое. */
-const slotItem = (item: any) => ({
+/**
+ * Один пункт слота: либо текст, либо зачало, иногда и то и другое.
+ *
+ * `withContent` добавляет тело текста. По умолчанию его нет, и это верно для
+ * сайта: страница дня ведёт в текст ссылкой, а полсотни тел в ответе ей ни к
+ * чему. Но клиент, который день ЧИТАЕТ, а не листает, иначе получает N+1
+ * запросов на мобильной сети — ровно то, от чего первая версия API избавляла,
+ * вкладывая тела внутрь.
+ */
+const slotItem = (item: any, withContent = false) => ({
     cite: item.cite || null,
     description: item.description || null,
     statia: item.statia ?? null,
     paschal: Boolean(item.paschal),
-    text: item.text?._id || item.text?.id ? textSummary(item.text) : null,
+    text: item.text?._id || item.text?.id
+        ? {
+            ...textSummary(item.text),
+            ...(withContent
+                ? {
+                    content: item.text.content ?? "",
+                    // Набран ли текст церковнославянской графикой: от этого
+                    // зависит шрифт, и без пометы клиент выбирал бы его гаданием.
+                    csSource: Boolean(item.text.csSource),
+                }
+                : {}),
+        }
+        : null,
     pericope: item.pericope
         ? {
             ...pericope(item.pericope),
@@ -311,16 +331,26 @@ const slotItem = (item: any) => ({
  * Наружу отдаём списком: клиенту не нужно знать имена полей заранее, а порядок
  * следования службы сохраняется.
  */
-export const daySlots = (day: any, order: readonly string[], title: (slot: string) => string) =>
+export const daySlots = (
+    day: any,
+    order: readonly string[],
+    title: (slot: string) => string,
+    withContent = false,
+) =>
     order
         .filter((slot) => day?.[slot]?.items?.length)
         .map((slot) => ({
             slot,
             title: title(slot),
-            items: day[slot].items.map(slotItem),
+            items: day[slot].items.map((item: any) => slotItem(item, withContent)),
         }));
 
-export const dayDetail = (day: any, order: readonly string[], title: (slot: string) => string) => ({
+export const dayDetail = (
+    day: any,
+    order: readonly string[],
+    title: (slot: string) => string,
+    withContent = false,
+) => ({
     id: id(day._id ?? day.id),
     alias: day.alias || null,
     name: day.name ?? "",
@@ -329,7 +359,7 @@ export const dayDetail = (day: any, order: readonly string[], title: (slot: stri
     weekIndex: day.weekIndex ?? null,
     week: day.week ? week(day.week) : null,
     month: day.month ? month(day.month) : null,
-    readings: daySlots(day, order, title),
+    readings: daySlots(day, order, title, withContent),
     updatedAt: iso(day.updatedAt),
 });
 
