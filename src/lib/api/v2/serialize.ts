@@ -610,3 +610,134 @@ export const saintDossier = (saint: any, parts: any) => ({
     caveat: "Пустой раздел чаще значит, что связь ещё не проставлена, чем что её нет: "
         + "памяти, посвящения и акафисты сверяются вручную, и выверена пока меньшая часть.",
 });
+
+// --- Помянник ----------------------------------------------------------------
+//
+// Здесь белый список нужнее, чем где-либо ещё в этом файле: наружу идут не тексты
+// корпуса, а имена родни и даты смерти. `userId` и `fromUserId` не выходят
+// никогда — ни в лице, ни в записке.
+
+/**
+ * Лицо помянника.
+ *
+ * `relation` («мама», «крёстный») ВЫХОДИТ, хотя в записку не идёт: он для того и
+ * заведён, чтобы хозяин не спутал двух Николаев, и без него список лиц — это
+ * список одинаковых строк. В записку его не пустит `snapshot()`, а не отбор здесь.
+ */
+export const pomyannikPerson = (doc: any) => ({
+    id: id(doc._id ?? doc.id),
+    name: doc.name ?? "",
+    churchName: doc.churchName ?? null,
+    kind: doc.kind ?? "living",
+    sex: doc.sex ?? null,
+    rank: doc.rank ?? null,
+    relation: doc.relation ?? null,
+    born: doc.born ?? null,
+    baptized: doc.baptized ?? null,
+    died: doc.died ?? null,
+    nameDay: doc.nameDay
+        ? {
+            source: doc.nameDay.source ?? "auto",
+            style: doc.nameDay.style ?? null,
+            month: doc.nameDay.month ?? null,
+            day: doc.nameDay.day ?? null,
+            // Подвижная память записана смещением от Пасхи, и числа у неё нет
+            // вовсе: в другой год она придётся на другое число.
+            offset: doc.nameDay.offset ?? null,
+            saint: doc.nameDay.saint ?? null,
+        }
+        : null,
+    sorokoust: doc.sorokoust
+        ? { from: doc.sorokoust.from, where: doc.sorokoust.where ?? null }
+        : null,
+    groups: doc.groups ?? [],
+    order: doc.order ?? 0,
+});
+
+export const upcomingEvent = (event: any) => ({
+    date: event.date,
+    kind: event.kind,
+    personId: event.personId ?? null,
+    name: event.name ?? null,
+    years: event.years ?? null,
+    title: event.title,
+    /** День не уставный — сказать об этом обязана и выдача, а не только страница. */
+    custom: event.custom ?? false,
+    note: event.note ?? null,
+});
+
+export const memorialDay = (day: any) => ({
+    date: day.date,
+    name: day.name,
+    custom: day.custom ?? false,
+    note: day.note ?? null,
+});
+
+/**
+ * Чин с его начертаниями.
+ *
+ * `cs: null` — не «нет формы», а «книгой не подтверждено»: пять помет
+ * («болящий», «путешествующий», «заключённый», «непраздная», «убиенный») в
+ * словаре лексем не нашлись, и придумывать за книгу церковнославянское написание
+ * мы не станем. Клиент обязан донести этот `null` до записки как есть.
+ */
+export const rankInfo = (rank: any) => ({
+    key: rank.key,
+    label: rank.label,
+    genitive: rank.genitive,
+    cs: rank.cs ?? null,
+    feminine: rank.feminine
+        ? {
+            label: rank.feminine.label,
+            genitive: rank.feminine.genitive,
+            cs: rank.feminine.cs ?? null,
+        }
+        : null,
+    only: rank.only ?? null,
+});
+
+export const noteKindInfo = (kind: any) => ({
+    key: kind.key,
+    label: kind.label,
+    /** Кого можно вписать: панихида о живых не служится, молебен об усопших — тоже. */
+    about: kind.about,
+    /** Сколько дней длится поминовение. 0 — разовое. */
+    days: kind.days,
+    note: kind.note ?? "",
+});
+
+/**
+ * Имя в записке.
+ *
+ * `slavonicSource` выходит обязательно. Без него читающий примет наш именительный
+ * падеж за проверенный родительный и отдаст записку с ошибкой, которой сам бы не
+ * сделал, — это худшее, что здесь возможно (см. lib/pomyannik/slavonic).
+ */
+export const noteName = (name: any) => ({
+    name: name.name,
+    churchName: name.churchName ?? null,
+    slavonic: name.slavonic ?? null,
+    slavonicSource: name.slavonicSource ?? null,
+    kind: name.kind,
+    rank: name.rank ?? null,
+    sex: name.sex ?? null,
+});
+
+/**
+ * Поданная записка — в том виде, в каком её читает священник.
+ *
+ * `fromUserId` не выходит: кто подал, читающему не нужно, а это личность третьего
+ * лица. Стёртая по сроку записка приходит с пустыми именами и непустым
+ * `namesCount` — «было столько-то» переживает чистку нарочно.
+ */
+export const zapiska = (note: any) => ({
+    id: id(note._id ?? note.id),
+    kind: note.kind,
+    names: (note.names ?? []).map(noteName),
+    namesCount: note.namesCount ?? 0,
+    span: note.span ? { from: note.span.from, to: note.span.to } : null,
+    createdAt: iso(note.createdAt),
+    readAt: iso(note.readAt),
+    finishedAt: iso(note.finishedAt),
+    sweptAt: iso(note.sweptAt),
+});
