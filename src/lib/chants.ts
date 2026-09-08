@@ -387,6 +387,12 @@ export interface ChantDetail {
     sign: string | null;
     akathist: string | null;
     canonId: string | null;
+    /**
+     * Издание, откуда строка. То же поле, что у находки поиска: одно место
+     * службы печатают несколько изданий, и без него две строки одного места
+     * снаружи неразличимы. У акафиста издание своё, у книжной строки — группы.
+     */
+    sourceBook: string | null;
 }
 
 /**
@@ -412,6 +418,7 @@ export const getChant = (id: number): ChantDetail | null => {
                m.memory_id, m.label AS memory, m.book, m.month, m.day,
                m.pascha_offset, m.weekday, m.tone AS memory_tone,
                a.title AS akathist_title,
+               COALESCE(g.source_book, a.source_book) AS source_book,
                s.default_sign AS sign
         FROM content_items ci
         LEFT JOIN groups g ON g.group_id = ci.group_id
@@ -459,5 +466,6 @@ export const getChant = (id: number): ChantDetail | null => {
         sign: row.sign ?? null,
         akathist: row.akathist_title ?? null,
         canonId: row.canon_id ?? null,
+        sourceBook: row.source_book ?? null,
     };
 };

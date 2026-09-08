@@ -2246,6 +2246,7 @@ export const openapi = () => ({
                     sign: { type: ["string", "null"] },
                     akathist: { type: ["string", "null"] },
                     canonId: { type: ["string", "null"] },
+                    sourceBook: { type: ["string", "null"], description: "Издание, откуда строка" },
                 },
             },
             Incipit: {

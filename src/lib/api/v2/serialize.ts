@@ -103,6 +103,8 @@ export const chantDetail = (row: any) => ({
     sign: row.sign ?? null,
     akathist: row.akathist ?? null,
     canonId: row.canonId ?? null,
+    /** Издание, откуда строка, — то же, что у находки поиска. */
+    sourceBook: row.sourceBook ?? null,
 });
 
 /** Зачин в указателе: ключ, число вхождений и представительное из них. */
