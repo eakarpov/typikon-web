@@ -531,9 +531,21 @@ export const openapi = () => ({
         "/api/v2/weeks": {
             get: {
                 tags: ["Справочники"],
-                summary: "Седмицы Триоди",
-                parameters: [{ name: "cycle", in: "query", schema: { type: "string", enum: ["triodion", "penticostarion"] } }],
-                responses: { "200": ok("#/components/schemas/WeekList") },
+                summary: "Седмицы года",
+                description:
+                    "Без `cycle` — обе Триоди, постная и цветная (двадцать седмиц). "
+                    + "`out-triodion` — рядовые седмицы года, их пятьдесят три.\n\n"
+                    + "Незнакомый круг — отказ, а не подмена: прежде спросивший `out-triodion` "
+                    + "получал союз двух других кругов, и ответ выглядел правдоподобно ровно "
+                    + "настолько, чтобы ошибку не заметить.",
+                parameters: [{
+                    name: "cycle", in: "query",
+                    schema: { type: "string", enum: ["triodion", "penticostarion", "out-triodion"] },
+                }],
+                responses: {
+                    "200": ok("#/components/schemas/WeekList"),
+                    "400": errorResponse("Незнакомый круг"),
+                },
             },
         },
         "/api/v2/weeks/{alias}": {

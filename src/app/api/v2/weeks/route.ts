@@ -8,7 +8,10 @@ import {reportError} from "@/lib/reportError";
 // Седмицы подвижного круга: Постная и Цветная Триодь.
 export const revalidate = 3600;
 
-const CYCLES = ["triodion", "penticostarion"] as const;
+// «Вне Триоди» — рядовые седмицы года, их пятьдесят три. Ручка их не знала, и
+// спросивший получал не отказ, а союз двух других циклов: двадцать седмиц вместо
+// пятидесяти трёх, и по виду ответа не отличить.
+const CYCLES = ["triodion", "penticostarion", "out-triodion"] as const;
 
 export async function OPTIONS() {
     return preflight();
@@ -18,12 +21,24 @@ export async function GET(request: Request) {
     const access = await authorize(request, "calendar");
     if (access.denied) return access.denied;
 
-    const cycle = readEnum(new URL(request.url), "cycle", CYCLES);
+    const url = new URL(request.url);
+    const asked = url.searchParams.get("cycle");
+    const cycle = readEnum(url, "cycle", CYCLES);
+    // Незнакомый круг — отказ, а не молчаливая подмена. Прежде спросивший
+    // `out-triodion` получал союз двух других кругов, и ответ выглядел
+    // правдоподобно ровно настолько, чтобы ошибку не заметить.
+    if (asked && !cycle) {
+        return fail("bad_request", `Круг должен быть одним из: ${CYCLES.join(", ")}`);
+    }
+
     const filter = cycle === "triodion"
         ? { triodion: true }
         : cycle === "penticostarion"
             ? { penticostration: true }
-            : { $or: [{ triodion: true }, { penticostration: true }] };
+            : cycle === "out-triodion"
+                // Рядовые седмицы: ни Триодь постная, ни цветная.
+                ? { penticostration: false, triodion: false }
+                : { $or: [{ triodion: true }, { penticostration: true }] };
 
     try {
         const client = await clientPromise;
@@ -33,7 +48,11 @@ export async function GET(request: Request) {
 
         // Порядок — ход богослужебного года: подготовительные седмицы (Triodion),
         // затем Великий пост (Fast). По полю value внутри каждого.
-        const rank = (w: any) => (w.type === "Triodion" ? 0 : 1) * 100 + (w.value ?? 0);
+        // Рядовые седмицы идут просто по счёту: подготовительных среди них нет,
+        // и правило «Triodion раньше прочих» им ничего не даёт.
+        const rank = (w: any) => cycle === "out-triodion"
+            ? (w.value ?? 0)
+            : (w.type === "Triodion" ? 0 : 1) * 100 + (w.value ?? 0);
         items.sort((a, b) => rank(a) - rank(b));
 
         const serialized = items.map((w) => ({ ...week(w), dayCount: (w.days ?? []).length }));
