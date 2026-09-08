@@ -784,6 +784,28 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/pomyannik/name": {
+            get: {
+                tags: ["Помянник"],
+                summary: "Сверить имя до записи",
+                description:
+                    "Нужен вход. Помянник хранит СЛОВАРНУЮ форму: от неё зависят память в "
+                    + "святцах, сверка наречения и склонение для записки. Написанное косвенным "
+                    + "падежом — «о здравии Анны», как помянник и читают вслух, — молча "
+                    + "отказывает во всех трёх. Подсказка не применяется сама: «Иоанна» — и "
+                    + "родительный от «Иоанн», и самостоятельное женское имя.",
+                security: personal,
+                parameters: [{
+                    name: "q", in: "query", required: true,
+                    schema: { type: "string" }, example: "Анны",
+                }],
+                responses: {
+                    "200": ok("#/components/schemas/NameCheck"),
+                    "400": errorResponse("Нечего сверять"),
+                    "401": needsSession,
+                },
+            },
+        },
         "/api/v2/pomyannik/note/preview": {
             post: {
                 tags: ["Помянник"],
@@ -1125,6 +1147,44 @@ export const openapi = () => ({
             },
             Deleted: { type: "object", properties: { deleted: { type: "boolean" } } },
             Ok: { type: "object", properties: { ok: { type: "boolean" } } },
+            NameCheck: {
+                type: "object",
+                properties: {
+                    name: { type: "string", description: "Написание, приведённое к обычному виду" },
+                    key: { type: "string", description: "Ключ указателя: без ударений и «ё»" },
+                    status: {
+                        type: "string", enum: ["known", "civil", "unknown"],
+                        description:
+                            "`known` — имя есть в святцах; `civil` — есть подсказка (имя "
+                            + "наречения либо словарная форма вместо косвенного падежа); "
+                            + "`unknown` — не нашлось. Незнакомое ПРИНИМАЕТСЯ: указатель "
+                            + "выведен нами и неполон, и отвергать по нему имя человека нельзя.",
+                    },
+                    suggestions: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                name: { type: "string" },
+                                why: {
+                                    type: "string",
+                                    description: "Довод, по которому решает человек: «похоже на "
+                                        + "родительный падеж», «имя наречения», «похоже на описку»",
+                                },
+                            },
+                        },
+                    },
+                    slavonic: {
+                        type: "object",
+                        properties: {
+                            text: { type: "string" },
+                            genitive: { type: "string" },
+                            source: { type: "string", enum: ["lexicon", "accents", "plain"] },
+                            lexeme: { type: ["string", "null"] },
+                        },
+                    },
+                },
+            },
             NoteName: {
                 type: "object",
                 description: "Имя в записке — снимок помянника на минуту подачи, а не ссылка на него",
