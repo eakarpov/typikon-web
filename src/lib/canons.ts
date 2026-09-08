@@ -54,6 +54,13 @@ export interface CanonRow {
     acrostic: string | null;
     service: string;
     role: string | null;
+    /**
+     * Язык издания, из которого канон взят. Корпус шестиязычен, и без этого
+     * поля английский канон в перечне неотличим от славянского: метка памяти,
+     * книга и служба у них подписаны одинаково, а текст внутри — на разных
+     * языках.
+     */
+    language: string;
     odes: number;
     items: number;
 }
@@ -90,7 +97,7 @@ const AUTHOR_COLUMNS = `, wa.person_label AS author, wa.method AS author_method,
 const listSql = (withAuthors: boolean) => `
     SELECT c.canon_id, m.label AS memory, m.memory_id, m.book, m.month, m.day,
            m.pascha_offset, m.weekday, m.tone AS memory_tone,
-           c.tone, c.creator, c.acrostic, c.service, c.role,
+           c.tone, c.creator, c.acrostic, c.service, c.role, c.language,
            count(DISTINCT ci.ode) AS odes, count(ci.item_id) AS items
            ${withAuthors ? AUTHOR_COLUMNS : ""}
     FROM canons c
@@ -118,6 +125,7 @@ const rowOf = (r: any): CanonRow => ({
     acrostic: r.acrostic ?? null,
     service: r.service,
     role: r.role ?? null,
+    language: r.language ?? "cu_gr",
     odes: r.odes ?? 0,
     items: r.items ?? 0,
 });
@@ -206,7 +214,7 @@ export const getCanon = (id: string): CanonDetail | null => {
     const head = db.prepare(`
         SELECT c.canon_id, m.label AS memory, m.memory_id, m.book, m.month, m.day,
                m.pascha_offset, m.weekday, m.tone AS memory_tone,
-               c.tone, c.creator, c.acrostic, c.service, c.role,
+               c.tone, c.creator, c.acrostic, c.service, c.role, c.language,
                (SELECT count(DISTINCT ode) FROM content_items WHERE canon_id = c.canon_id) AS odes,
                (SELECT count(*) FROM content_items WHERE canon_id = c.canon_id) AS items
                ${withAuthors ? AUTHOR_COLUMNS : ""}

@@ -2032,6 +2032,12 @@ export const openapi = () => ({
                     acrostic: { type: ["string", "null"], description: "Краегранесие" },
                     service: { type: ["string", "null"] },
                     role: { type: ["string", "null"] },
+                    language: {
+                        type: ["string", "null"],
+                        description:
+                            "Язык издания. Без него английский канон в перечне неотличим от "
+                            + "славянского: подписи у них одни и те же",
+                    },
                     odes: { type: "integer", description: "Сколько песней" },
                     items: { type: "integer", description: "Сколько строк" },
                 },

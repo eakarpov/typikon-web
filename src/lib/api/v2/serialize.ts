@@ -829,6 +829,11 @@ export const canonSummary = (row: any) => ({
     acrostic: row.acrostic ?? null,
     service: row.service ?? null,
     role: row.role ?? null,
+    /**
+     * Язык издания. Без него английский канон в перечне неотличим от
+     * славянского: подписи у них одни и те же, а текст — на разных языках.
+     */
+    language: row.language ?? null,
     /** Сколько песней и сколько строк — чтобы перечень был осязаем без открытия. */
     odes: row.odes ?? 0,
     items: row.items ?? 0,
