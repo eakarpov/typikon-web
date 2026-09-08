@@ -4,6 +4,7 @@ import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
 import { SITE_HOST, SITE_URL } from "@/utils/site";
 import { BIBLE_SECTIONS } from "@/utils/bibleCanon";
 import { LANGUAGES } from "@/lib/incipits";
+import { WEEKDAYS } from "@/utils/chronology";
 
 // Машинное описание API. Держим его рядом с кодом, а не отдельным файлом в репозитории:
 // пределы постраничности и адрес лицензии берутся из тех же констант, что и в ручках,
@@ -451,6 +452,102 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/News"), "404": errorResponse("Новость не найдена") },
             },
         },
+        "/api/v2/imeniny": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Указатель имён",
+                description: "По какому имени в святцах есть кого поминать. Отбор — по началу имени.",
+                parameters: [
+                    { name: "q", in: "query", required: false, schema: { type: "string" }, example: "ан", description: "Начало имени" },
+                    ...pageParams,
+                ],
+                responses: { "200": ok("#/components/schemas/NameList") },
+            },
+        },
+        "/api/v2/imeniny/{name}": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Кого поминают под этим именем и когда",
+                description:
+                    "Даты приведены к гражданскому календарю запрошенного года: в святцах они "
+                    + "записаны числом старого стиля либо смещением от Пасхи, и второе без "
+                    + "пасхалии не разложить.\n\nПравило именин — народный обычай, а не устав; "
+                    + "оговорка приходит в самом ответе полем caveat.",
+                parameters: [
+                    { name: "name", in: "path", required: true, schema: { type: "string" }, example: "Анна" },
+                    { name: "year", in: "query", required: false, schema: { type: "integer", minimum: 1900, maximum: 2099 }, description: "Год, в котором раскладываются даты; по умолчанию нынешний" },
+                    { name: "born", in: "query", required: false, schema: { type: "string", pattern: "^\\d{1,2}-\\d{1,2}$" }, example: "03-15", description: "Месяц и число рождения — чтобы посчитать именины" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/NameEntry"),
+                    "400": errorResponse("Имя короче двух букв или закодировано неверно"),
+                    "404": errorResponse("Такого имени в указателе нет"),
+                },
+            },
+        },
+        "/api/v2/chronology": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Разбор летописной датировки",
+                description:
+                    "Перебор по условиям записи: лето, индикт, круги Солнцу и Луне, вруцелето, "
+                    + "основание, эпакта, ключ границ, день недели, месяц и число.\n\nОтвечает "
+                    + "не «вот год», а что уцелело и что чему противоречит: запись, не сошедшаяся "
+                    + "ни на одном годе, — законный ответ, он значит описку в источнике, и тогда "
+                    + "возвращаются поправки.\n\nУсловия, которые назвали, но прочесть не "
+                    + "удалось, перечислены в ignored: в переборе они не участвовали.",
+                parameters: [
+                    { name: "leto", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 9999 }, example: 6712 },
+                    { name: "indikt", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 15 } },
+                    { name: "krugSolntsu", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 28 } },
+                    { name: "krugLune", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 19 } },
+                    { name: "vrutseleto", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 7 } },
+                    { name: "osnovanie", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 30 } },
+                    { name: "epakta", in: "query", required: false, schema: { type: "integer", minimum: 0, maximum: 30 } },
+                    { name: "klyuchGranits", in: "query", required: false, schema: { type: "string" }, example: "З" },
+                    { name: "weekday", in: "query", required: false, schema: { type: "string", enum: [...WEEKDAYS] } },
+                    { name: "month", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 12 }, description: "Только вместе с day" },
+                    { name: "day", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 31 } },
+                    { name: "from", in: "query", required: false, schema: { type: "integer" }, description: "Начало перебора, по умолчанию 988" },
+                    { name: "to", in: "query", required: false, schema: { type: "integer" }, description: "Конец перебора, по умолчанию 1700; шире 1200 лет за раз не считаем" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/ChronologyAnswer"),
+                    "400": errorResponse("Не названо ни одного условия либо промежуток задан неверно"),
+                },
+            },
+        },
+        "/api/v2/dictionary": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Поиск по словарю церковнославянского",
+                parameters: [
+                    { name: "q", in: "query", required: true, schema: { type: "string", minLength: 3 }, example: "земл" },
+                    ...pageParams,
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/LexemeList"),
+                    "400": errorResponse("Запрос слишком короткий"),
+                },
+            },
+        },
+        "/api/v2/dictionary/{id}": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Словарная статья с парадигмой",
+                description:
+                    "Парадигма — плоский список ячеек; имена ячеек грамматические («sgNom», "
+                    + "«aorPl3», «partPastPass»), порядок осмысленный.\n\nУ каждой формы стоит "
+                    + "stored: выписана она в словаре или порождена по таблице склонения. Это "
+                    + "разница между фактом и выводом, и схлопывать её не следует.",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                responses: {
+                    "200": ok("#/components/schemas/Lexeme"),
+                    "400": errorResponse("Неверный идентификатор"),
+                    "404": errorResponse("Такого слова в словаре нет"),
+                },
+            },
+        },
         "/api/v2/saints/{id}": {
             get: {
                 tags: ["Справочники"],
@@ -585,6 +682,84 @@ export const openapi = () => ({
                     chapter: { type: "integer" },
                     verse: { type: "integer" },
                     content: { type: "string" },
+                },
+            },
+            Name: {
+                type: "object",
+                properties: {
+                    key: { type: "string", description: "Ключ указателя: имя без ударений, строчными" },
+                    name: { type: "string" },
+                    count: { type: "integer", description: "Сколько святых носит это имя" },
+                },
+            },
+            NameList: collection("#/components/schemas/Name"),
+            NameEntry: {
+                type: "object",
+                properties: {
+                    key: { type: "string" },
+                    name: { type: "string" },
+                    year: { type: "integer", description: "Год, в котором разложены даты" },
+                    saints: { type: "array", items: { $ref: "#/components/schemas/NamedSaint" } },
+                    memories: { type: "array", items: { $ref: "#/components/schemas/NameMemory" } },
+                    nameDay: { description: "Именины по дню рождения; null, если born не назван" },
+                    caveat: { type: "string", description: "Чем является правило именин" },
+                },
+            },
+            NamedSaint: {
+                type: "object",
+                properties: {
+                    slug: { type: "string" },
+                    name: { type: "string" },
+                    confidence: {
+                        type: "string", enum: ["sure", "guess"],
+                        description: "guess — имя вынуто из соборной памяти, где перечень идёт вперемешку",
+                    },
+                },
+            },
+            NameMemory: {
+                type: "object",
+                properties: {
+                    date: { type: "string", format: "date" },
+                    movable: { type: "boolean", description: "Подвижная память в другой год придётся на другое число" },
+                    saint: { $ref: "#/components/schemas/NamedSaint" },
+                },
+            },
+            ChronologyAnswer: {
+                type: "object",
+                description: "Что уцелело в переборе и что чему противоречит",
+                properties: {
+                    record: { type: "object", description: "Условия, как их удалось прочесть" },
+                    ignored: { type: "array", items: { type: "string" }, description: "Названное, но не прочтённое: в переборе не участвовало" },
+                    searched: { type: "object" },
+                    verdict: { type: "object" },
+                    considered: { type: "integer" },
+                    applied: { type: "array", items: { type: "string" } },
+                    survivors: { type: "array", items: { type: "object" } },
+                    fixes: { type: "array", items: { type: "object" }, description: "Какое чтение потребовалось бы на месте противоречащего условия" },
+                },
+            },
+            Lexeme: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    name: { type: "string" },
+                    scheme: { type: "string" },
+                    pos: { type: "string" },
+                    properties: { type: "array", items: { type: "string" } },
+                    known: { type: "boolean", description: "Есть ли для схемы таблица склонения" },
+                    paradigms: { type: "array", items: { type: "object" } },
+                    extra: { type: "array", items: { type: "object" }, description: "Формы словаря, не легшие ни в одну ячейку" },
+                },
+            },
+            LexemeList: collection("#/components/schemas/LexemeSummary"),
+            LexemeSummary: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    name: { type: "string" },
+                    properties: { type: "string", description: "Пометы словаря как есть — «S,m,anim»" },
+                    pos: { type: "string" },
+                    scheme: { type: "string" },
                 },
             },
             BibleBook: {

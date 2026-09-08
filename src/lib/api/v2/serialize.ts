@@ -1,4 +1,5 @@
 import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
+import { jdnToGregorian, jdnToJulian, weekdayOf } from "@/utils/chronology";
 // Что именно уходит наружу.
 //
 // Здесь белые списки, а не чёрные, и это принципиально: в v1 наружу утекали
@@ -330,3 +331,206 @@ export const bibleVerse = (doc: any) => ({
     editionVerse: doc.verse,
     content: doc.content ?? "",
 });
+
+// --- Именины -----------------------------------------------------------------
+
+const imeninySaint = (saint: any) => ({
+    slug: saint.slug,
+    name: saint.name,
+    /**
+     * `guess` — имя вынуто из соборной памяти, где перечень идёт вперемешку, и
+     * ошибиться там легко. Признак уходит наружу обязательно: догадка, выданная
+     * за факт, здесь стоит дороже обычного — речь о том, когда человеку
+     * праздновать.
+     */
+    confidence: saint.confidence ?? "sure",
+});
+
+const imeninyMemory = (memory: any) => ({
+    date: memory.date,
+    /** Подвижная память в другой год придётся на другое число. */
+    movable: memory.movable,
+    saint: imeninySaint(memory.item),
+});
+
+export const imeninyEntry = (entry: any, year: number, memories: any[], chosen: any) => ({
+    key: entry.key,
+    name: entry.name,
+    /** Год, в котором разложены даты: подвижные памяти от него и зависят. */
+    year,
+    saints: (entry.saints ?? []).map(imeninySaint),
+    memories: memories
+        .slice()
+        .sort((a: any, b: any) => String(a.date).localeCompare(String(b.date)))
+        .map(imeninyMemory),
+    /** Именины по дню рождения — только если день рождения назван. */
+    nameDay: chosen ? imeninyMemory(chosen) : null,
+    /**
+     * Оговорка уходит вместе с ответом, а не остаётся на нашей странице: всякий,
+     * кто возьмёт эту дату, обязан знать, чем она является.
+     */
+    caveat: "Правило «ближайшая память после дня рождения» — народный обычай, а не "
+        + "устав. Церковь единого порядка не устанавливает: где-то именины назначают "
+        + "по дню крещения, где-то по восьмому дню от рождения, где-то по святому, "
+        + "чьё имя дали.",
+});
+
+// --- Хронология --------------------------------------------------------------
+
+const chronologyDay = (jdn: number | null) =>
+    jdn === null
+        ? null
+        : {
+              jdn,
+              /** Как записано в источнике — юлианским счётом. */
+              julian: chronologyYmd(jdnToJulian(jdn)),
+              /** И то же число нынешним календарём. */
+              civil: chronologyYmd(jdnToGregorian(jdn)),
+              weekday: weekdayOf(jdn),
+          };
+
+const chronologyYmd = (date: { year: number; month: number; day: number }) =>
+    `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
+
+const chronologyCandidate = (candidate: any) => ({
+    label: candidate.label,
+    leto: candidate.leto,
+    /** Счета эры, давшие один и тот же ответ и потому сведённые в одну строку. */
+    styles: candidate.styles,
+    note: candidate.note ?? null,
+    /** Все семь чисел лета. */
+    marks: {
+        indikt: candidate.marks.indikt,
+        krugSolntsu: candidate.marks.krugSolntsu,
+        krugLune: candidate.marks.krugLune,
+        vrutseleto: candidate.marks.vrutseleto,
+        vrutseletoLetter: candidate.marks.vrutseletoLetter,
+        osnovanie: candidate.marks.osnovanie,
+        epakta: candidate.marks.epakta,
+        klyuchGranits: candidate.marks.klyuchGranits,
+        vysokosniy: candidate.marks.vysokosniy,
+        pascha: chronologyDay(candidate.marks.paschaJdn),
+    },
+    day: chronologyDay(candidate.jdn),
+    fits: candidate.fits,
+    /**
+     * На чём не сошлось. Голого «не подошёл» мало: перебор читают, чтобы
+     * увидеть причину, а не приговор.
+     */
+    failedOn: candidate.failedOn ?? null,
+    checks: candidate.checks,
+});
+
+export const chronologyAnswer = (
+    record: any,
+    span: { from: number; to: number },
+    result: any,
+    verdict: any,
+    fixes: any[],
+    ignored: string[],
+) => ({
+    record,
+    searched: span,
+    /**
+     * Условия, которые назвали, но прочесть не удалось, — и потому в переборе
+     * они не участвовали. Молчать об этом нельзя: ответ выглядел бы
+     * подтверждённым тем, чего в нём нет.
+     */
+    ignored,
+    verdict: { kind: verdict.kind, text: verdict.text },
+    considered: result.considered,
+    applied: result.applied,
+    /** Условие -> скольких кандидатов оно отсеяло. */
+    killed: result.killed,
+    killedByDate: result.killedByDate,
+    survivors: result.survivors.map(chronologyCandidate),
+    /**
+     * Поправки, а не «без индикта что-то есть»: какое чтение потребовалось бы на
+     * месте выброшенного условия. «Читать индикт не 6, а 7, и всё сходится на
+     * 1204» — довод, с которым можно идти к рукописи.
+     *
+     * Считаются только когда не уцелел никто: у сошедшейся записи разбирать
+     * нечего.
+     */
+    fixes: fixes.map((fix: any) => ({
+        field: fix.field,
+        label: fix.label,
+        stated: fix.stated ?? null,
+        needed: fix.needed ?? null,
+        size: fix.size ?? null,
+        note: fix.note ?? null,
+        candidate: chronologyCandidate(fix.candidate),
+    })),
+});
+
+// --- Словарь -----------------------------------------------------------------
+
+export const lexemeSummary = (found: any) => ({
+    id: found.id,
+    name: found.name,
+    /** Пометы словаря как есть — «S,m,anim». Разбирать их за клиента не беремся. */
+    properties: found.properties ?? "",
+    pos: found.pos ?? "other",
+    /** Схема склонения по книге; по ней и порождается парадигма. */
+    scheme: found.scheme ?? "",
+});
+
+/**
+ * Ячейка парадигмы. `stored` — выписана ли форма в словаре или порождена по
+ * таблице: факт и вывод, и разница между ними стоит того, чтобы её видеть.
+ */
+const lexemeSlot = (slot: string, forms: any[]) => ({
+    slot,
+    forms: (forms ?? []).map((form: any) => ({
+        value: form.value,
+        stored: form.stored === true,
+    })),
+});
+
+const lexemeParadigm = (kind: string, table: any, title: string | null = null, base: string | null = null) => ({
+    kind,
+    title,
+    base,
+    // Порядок ячеек — наш и осмысленный: идущему подряд его достаточно, чтобы
+    // разложить таблицу, не зная наших схем.
+    slots: Object.keys(table ?? {}).map(slot => lexemeSlot(slot, table[slot])),
+});
+
+export const lexemeDetail = (view: any) => {
+    const paradigms: any[] = [];
+
+    if (view.noun) paradigms.push(lexemeParadigm("noun", view.noun));
+    if (view.adjective) {
+        paradigms.push(lexemeParadigm("adjective-brev", view.adjective.brev));
+        paradigms.push(lexemeParadigm("adjective-plen", view.adjective.plen));
+    }
+    if (view.verb) paradigms.push(lexemeParadigm("verb", view.verb));
+    for (const participle of view.participles ?? []) {
+        paradigms.push(lexemeParadigm(
+            "participle-brev", participle.table.brev, participle.title, participle.base,
+        ));
+        paradigms.push(lexemeParadigm(
+            "participle-plen", participle.table.plen, participle.title, participle.base,
+        ));
+    }
+
+    return {
+        id: view.id,
+        name: view.name,
+        scheme: view.scheme,
+        pos: view.pos,
+        properties: view.properties ?? [],
+        /**
+         * Есть ли для схемы таблица. Нет — парадигмы не будет вовсе, и остаются
+         * одни выписанные формы. Сказать об этом надо: пустая таблица иначе
+         * читается как «слово не склоняется».
+         */
+        known: view.known === true,
+        paradigms,
+        /** Формы словаря, не легшие ни в одну ячейку: сокращения под титлом и прочее. */
+        extra: (view.extra ?? []).map((form: any) => ({
+            value: form.value,
+            properties: form.properties ?? "",
+        })),
+    };
+};
