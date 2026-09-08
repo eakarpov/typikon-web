@@ -37,7 +37,17 @@ const Line = ({ line }: { line: CanonLine }) => (
                 {labelOf(MARKER_LABELS, line.marker)}
             </span>
         )}
-        {line.text}
+        {line.reference ? (
+            // Ссылка есть, песнопения по ней нет: греческий слой ссылается на
+            // разделы Greek Ages, которых в корпусе нет (2697 строк в 429
+            // канонах). `lib/canons` подставляет саму ссылку, чтобы строка не
+            // вышла пустой, — но набранный тем же кеглем, что и тропари,
+            // опознаватель `he.h.m2.heHE.DefteLaoi` читается как ирмос.
+            <span className="text-sm text-slate-500 italic">
+                текста в корпусе нет, напечатано ссылкой:{" "}
+                <code className="not-italic text-xs">{line.reference}</code>
+            </span>
+        ) : line.text}
         {line.repeat > 1 && (
             <span className="text-xs text-slate-500"> [{line.repeat} раза]</span>
         )}
