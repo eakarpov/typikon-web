@@ -80,7 +80,8 @@
     "citations:stats": "tsx src/scripts/build-citation-stats.ts",
     "health:snapshot": "tsx src/scripts/take-health-snapshot.ts",
     "names:index": "tsx src/scripts/build-name-index.ts",
-    "release:data": "bash release-data.sh"
+    "release:data": "bash release-data.sh",
+    "push:pomyannik": "tsx src/scripts/send-pomyannik-push.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",
