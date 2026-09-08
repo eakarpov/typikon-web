@@ -186,10 +186,17 @@ export const DAY_SLOT_ORDER: TextType[] = [
     TextType.IPAKOI,
     TextType.POLYELEOS,
     TextType.GOSPEL_MATINS,
+    // «После Евангелия перед 50-м псалмом» — где ему стоять, сказано в самом
+    // названии. Слот был заведён, подпись ему написана, а в порядок он не попал:
+    // день, где он есть (такой один), показывался без него, и молча.
+    TextType.BEFORE_50,
     TextType.SONG_3,
     TextType.SONG_6,
     TextType.APOLUTIKA_TROPARIA,
     TextType.BEFORE_1h,
+    // Первый час — между «перед первым часом» и третьим часом. Тот же недосмотр,
+    // что и с before50: подпись есть, в порядке нет.
+    TextType.H1,
     TextType.H3,
     TextType.H6,
     TextType.H9,
