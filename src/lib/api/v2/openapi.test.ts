@@ -51,11 +51,37 @@ test("личные ручки требуют и ключа, и входа", () =
     // Ключ отмеряет частоту, сессия говорит, чей список открывать. Объявить
     // здесь одну лишь `apiKey` значило бы пообещать, что своим ключом можно
     // открыть чужой помянник.
-    for (const path of ["/api/v2/pomyannik/persons",
-                        "/api/v2/pomyannik/persons/{id}",
-                        "/api/v2/pomyannik/upcoming"]) {
-        const security = document.paths[path].get.security;
-        assert.deepEqual(security, [{ apiKey: [], cookieAuth: [] }], path);
+    const personal = [
+        "/api/v2/pomyannik/persons",
+        "/api/v2/pomyannik/persons/{id}",
+        "/api/v2/pomyannik/upcoming",
+        "/api/v2/pomyannik/note/preview",
+        "/api/v2/pomyannik/zapiski",
+        "/api/v2/pomyannik/prinyatye",
+        "/api/v2/pomyannik/prinyatye/{id}",
+    ];
+
+    for (const path of personal) {
+        const operations = Object.entries<any>(document.paths[path]);
+        assert.ok(operations.length, `не описан ${path}`);
+
+        for (const [method, operation] of operations) {
+            assert.deepEqual(
+                operation.security, [{ apiKey: [], cookieAuth: [] }], `${method} ${path}`);
+        }
+    }
+});
+
+test("всякая личная ручка объясняет разницу между «нет ключа» и «нет входа»", () => {
+    // Клиенту по этим двум надо поступать по-разному: по первому — признать
+    // ключ негодным, по второму — предложить войти. Приложение, спутавшее их,
+    // объявляет общий ключ мёртвым при всякой протухшей сессии.
+    for (const path of Object.keys(document.paths).filter(p => p.startsWith("/api/v2/pomyannik/"))) {
+        for (const [method, operation] of Object.entries<any>(document.paths[path])) {
+            if (!operation.security) continue;
+            const description = operation.responses["401"]?.description ?? "";
+            assert.match(description, /session_required/, `${method} ${path}`);
+        }
     }
 });
 

@@ -93,8 +93,13 @@ export const respond = (
  */
 export const respondPrivate = (
     body: unknown,
-    { headers = {}, access }: { headers?: Record<string, string>; access?: RespondAccess } = {},
+    { headers = {}, access, status = 200 }: {
+        headers?: Record<string, string>;
+        access?: RespondAccess;
+        status?: number;
+    } = {},
 ) => NextResponse.json(body, {
+    status,
     headers: {
         "Content-Type": "application/json; charset=utf-8",
         "Cache-Control": "private, no-store",
@@ -109,7 +114,7 @@ export const respondPrivate = (
 export const respondPrivateCollection = <T>(
     items: T[],
     meta: CollectionMeta,
-    options?: { headers?: Record<string, string>; access?: RespondAccess },
+    options?: { headers?: Record<string, string>; access?: RespondAccess; status?: number },
 ) => respondPrivate({ items, ...meta }, options);
 
 /** Коллекция — всегда в одном конверте, чтобы клиент не гадал, где считать total. */

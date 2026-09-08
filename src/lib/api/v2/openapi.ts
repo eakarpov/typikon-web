@@ -44,6 +44,19 @@ const ok = (ref: string, description = "Успешный ответ") => ({
     content: { "application/json": { schema: { $ref: ref } } },
 });
 
+const sends = (ref: string, description?: string) => ({
+    required: true,
+    description,
+    content: { "application/json": { schema: { $ref: ref } } },
+});
+
+/** Отказ, общий всем личным ручкам: нет ключа либо нет входа. */
+const needsSession = errorResponse(
+    "Нет ключа (`unauthorized`) или нет входа (`session_required`). Различать их обязательно: "
+    + "по первому клиенту следует признать ключ негодным, по второму — предложить войти.",
+);
+const personal = [{ apiKey: [], cookieAuth: [] }];
+
 export const openapi = () => ({
     openapi: "3.1.0",
     info: {
@@ -628,7 +641,7 @@ export const openapi = () => ({
                 description:
                     "Нужен вход. Со страницы этой документации не выполнится: сессия ездит в "
                     + "куке, которой у неё нет — ручка не сломана.",
-                security: [{ apiKey: [], cookieAuth: [] }],
+                security: personal,
                 parameters: [
                     {
                         name: "kind", in: "query", required: false,
@@ -639,7 +652,23 @@ export const openapi = () => ({
                 ],
                 responses: {
                     "200": ok("#/components/schemas/PersonList"),
-                    "401": errorResponse("Нет ключа (`unauthorized`) или нет входа (`session_required`)"),
+                    "401": needsSession,
+                },
+            },
+            post: {
+                tags: ["Помянник"],
+                summary: "Записать имена",
+                description:
+                    "Нужен вход. Одно лицо объектом или несколько в `persons`. Повторов не "
+                    + "отсеиваем: двух Николаев в роду не редкость, и молча слить их значило бы "
+                    + "решить за человека, что один из них лишний.",
+                security: personal,
+                requestBody: sends("#/components/schemas/PersonInput"),
+                responses: {
+                    "201": ok("#/components/schemas/PersonsCreated", "Имена записаны"),
+                    "400": errorResponse("Тело не разобрано или имени в присланном не нашлось"),
+                    "401": needsSession,
+                    "409": errorResponse("В помяннике больше имён не помещается"),
                 },
             },
         },
@@ -652,12 +681,128 @@ export const openapi = () => ({
                     + "день преставления считается первым, и повторённый на той стороне счёт "
                     + "ошибётся на день. Поле `on` — число, на которое посчитано: «новопреставленный» "
                     + "живёт сорок дней и протухает сам собою.",
-                security: [{ apiKey: [], cookieAuth: [] }],
+                security: personal,
                 parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
                 responses: {
                     "200": ok("#/components/schemas/PersonCard"),
-                    "401": errorResponse("Нет ключа или нет входа"),
+                    "401": needsSession,
                     "404": errorResponse("Такого имени в вашем помяннике нет"),
+                },
+            },
+            put: {
+                tags: ["Помянник"],
+                summary: "Поправить лицо",
+                description:
+                    "Нужен вход. Правка приходит ЦЕЛЫМ ЛИЦОМ, а не по полю: иначе пришлось бы "
+                    + "решать, что значит отсутствующее поле — «не трогай» или «сотри», — и на "
+                    + "этом вопросе рано или поздно теряется дата преставления.",
+                security: personal,
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                requestBody: sends("#/components/schemas/PersonInput"),
+                responses: {
+                    "200": ok("#/components/schemas/PersonSaved"),
+                    "400": errorResponse("Тело не разобрано"),
+                    "401": needsSession,
+                    "404": errorResponse("Такого имени в вашем помяннике нет"),
+                },
+            },
+            delete: {
+                tags: ["Помянник"],
+                summary: "Убрать имя",
+                security: personal,
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                responses: {
+                    "200": ok("#/components/schemas/Deleted"),
+                    "401": needsSession,
+                    "404": errorResponse("Такого имени в вашем помяннике нет"),
+                },
+            },
+        },
+        "/api/v2/pomyannik/zapiski": {
+            get: {
+                tags: ["Помянник"],
+                summary: "Что вы подавали",
+                description: "Нужен вход. После чистки по сроку остаётся запись без имён.",
+                security: personal,
+                parameters: pageParams,
+                responses: { "200": ok("#/components/schemas/ZapiskaList"), "401": needsSession },
+            },
+            post: {
+                tags: ["Помянник"],
+                summary: "Подать записку священнику",
+                description:
+                    "Нужен вход. Имена берутся из вашего помянника по их идентификаторам, а не из "
+                    + "тела запроса, — иначе проверка имён не значила бы ничего. Приход по "
+                    + "коду-приглашению, какой священник раздаёт сам, либо по слугу его открытой "
+                    + "страницы. Оплат нет: записку принимает священник, а не храм.",
+                security: personal,
+                requestBody: sends("#/components/schemas/NoteRequest"),
+                responses: {
+                    "201": ok("#/components/schemas/SentNote", "Записка подана"),
+                    "400": errorResponse(
+                        "Неизвестный вид, пустой список имён, панихида о живых или молебен об "
+                        + "усопших, либо этот вид поминовения не принимают",
+                    ),
+                    "401": needsSession,
+                    "404": errorResponse("Приём не найден"),
+                    "429": errorResponse("Слишком часто: записок принимается двадцать в час"),
+                },
+            },
+        },
+        "/api/v2/pomyannik/prinyatye": {
+            get: {
+                tags: ["Помянник"],
+                summary: "Поданные вам записки",
+                description:
+                    "Нужен вход и открытый приём. Неразобранные сверху — порядок задаёт сервер, "
+                    + "пересортировывать не надо. Кто подал, в ответе не значится: читающему это "
+                    + "не нужно, а это личность третьего лица.",
+                security: personal,
+                parameters: pageParams,
+                responses: {
+                    "200": ok("#/components/schemas/Prinyatye"),
+                    "401": needsSession,
+                    "403": errorResponse("Приём записок вам пока не открыт"),
+                },
+            },
+        },
+        "/api/v2/pomyannik/prinyatye/{id}": {
+            patch: {
+                tags: ["Помянник"],
+                summary: "Отметить записку",
+                description:
+                    "Нужен вход. Прочтение обратно не снимается. `404` и «уже отмечено» "
+                    + "неразличимы нарочно: по ответу нельзя узнать, существует ли чужая записка.",
+                security: personal,
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                requestBody: sends("#/components/schemas/NoteMark"),
+                responses: {
+                    "200": ok("#/components/schemas/Ok"),
+                    "400": errorResponse("Отметить можно «read» или «finished»"),
+                    "401": needsSession,
+                    "404": errorResponse("Такой записки нет или она уже отмечена"),
+                },
+            },
+        },
+        "/api/v2/pomyannik/note/preview": {
+            post: {
+                tags: ["Помянник"],
+                summary: "Записка до подачи",
+                description:
+                    "Нужен вход. Тот же лист, что уйдёт священнику, и собран он тем же кодом — "
+                    + "иначе предпросмотр и поданное разошлись бы. Церковнославянский родительный "
+                    + "падеж считается здесь: за ним стоит словарь личных имён и склонение по "
+                    + "схеме. Поле `slavonicSource` показывать обязательно: «lexicon» значит "
+                    + "настоящий родительный, прочее — что падеж остался прежним, и выдать это за "
+                    + "проверенный — худшее, что здесь возможно.",
+                security: personal,
+                requestBody: sends("#/components/schemas/NotePreviewRequest"),
+                responses: {
+                    "200": ok("#/components/schemas/NoteSheet"),
+                    "400": errorResponse(
+                        "Неизвестный вид, пустой список имён, панихида о живых или молебен об усопших",
+                    ),
+                    "401": needsSession,
                 },
             },
         },
@@ -669,7 +814,7 @@ export const openapi = () => ({
                     "Нужен вход. Годовщины, именины, третий, девятый и сороковой дни, окончание "
                     + "сорокоуста и общие поминальные субботы — в одном порядке по датам. Общие дни "
                     + "прибавляются только тогда, когда в помяннике есть кого поминать.",
-                security: [{ apiKey: [], cookieAuth: [] }],
+                security: personal,
                 parameters: [
                     {
                         name: "days", in: "query", required: false,
@@ -688,7 +833,7 @@ export const openapi = () => ({
                 responses: {
                     "200": ok("#/components/schemas/UpcomingEvents"),
                     "400": errorResponse("Дата начала записана не как ГГГГ-ММ-ДД"),
-                    "401": errorResponse("Нет ключа или нет входа"),
+                    "401": needsSession,
                 },
             },
         },
@@ -936,6 +1081,161 @@ export const openapi = () => ({
                 properties: {
                     year: { type: "integer" },
                     days: { type: "array", items: { $ref: "#/components/schemas/MemorialDay" } },
+                },
+            },
+            PersonInput: {
+                type: "object",
+                required: ["name"],
+                description:
+                    "Что принимается на запись и на правку. На правке — лицо ЦЕЛИКОМ: "
+                    + "отсутствующее поле здесь значит «стереть», а не «не трогать». Чин — ключ "
+                    + "из словаря; дата преставления сама переносит лицо на заупокойный разворот.",
+                properties: {
+                    name: { type: "string", maxLength: 60 },
+                    churchName: { type: ["string", "null"], maxLength: 60 },
+                    kind: { type: "string", enum: ["living", "departed"] },
+                    sex: { type: ["string", "null"], enum: ["m", "f", null] },
+                    rank: { type: ["string", "null"] },
+                    relation: { type: ["string", "null"], maxLength: 60 },
+                    born: { type: ["string", "null"], format: "date" },
+                    baptized: { type: ["string", "null"], format: "date" },
+                    died: { type: ["string", "null"], format: "date" },
+                    nameDay: { oneOf: [{ $ref: "#/components/schemas/NameDay" }, { type: "null" }] },
+                    sorokoust: {
+                        type: ["object", "null"],
+                        properties: {
+                            from: { type: "string", format: "date" },
+                            where: { type: ["string", "null"] },
+                        },
+                    },
+                    persons: {
+                        type: "array",
+                        description: "Пачкой: несколько лиц за раз, вместо одного в корне",
+                        items: { $ref: "#/components/schemas/PersonInput" },
+                    },
+                },
+            },
+            PersonsCreated: {
+                type: "object",
+                properties: { items: { type: "array", items: { $ref: "#/components/schemas/Person" } } },
+            },
+            PersonSaved: {
+                type: "object",
+                properties: { person: { $ref: "#/components/schemas/Person" } },
+            },
+            Deleted: { type: "object", properties: { deleted: { type: "boolean" } } },
+            Ok: { type: "object", properties: { ok: { type: "boolean" } } },
+            NoteName: {
+                type: "object",
+                description: "Имя в записке — снимок помянника на минуту подачи, а не ссылка на него",
+                properties: {
+                    name: { type: "string", description: "Как написано у подавшего" },
+                    churchName: { type: ["string", "null"] },
+                    slavonic: { type: ["string", "null"], description: "Церковнославянское начертание в родительном падеже" },
+                    slavonicSource: {
+                        type: ["string", "null"],
+                        enum: ["lexicon", "accents", "plain", null],
+                        description:
+                            "Откуда взялось написание. `lexicon` — склонено по словарной схеме, "
+                            + "это настоящий родительный. `accents` — имени в словаре нет: письмо "
+                            + "и ударение наши, а падеж остался прежним. `plain` — перевести в "
+                            + "церковное письмо не смогли. Показывать обязательно: приняв наш "
+                            + "именительный за проверенный родительный, человек отдаст записку с "
+                            + "ошибкой, которой сам бы не сделал.",
+                    },
+                    kind: { type: "string", enum: ["living", "departed"] },
+                    rank: { type: ["string", "null"] },
+                    sex: { type: ["string", "null"], enum: ["m", "f", null] },
+                },
+            },
+            NotePreviewRequest: {
+                type: "object",
+                required: ["kind", "personIds"],
+                properties: {
+                    kind: { type: "string", description: "Ключ вида поминовения из словаря" },
+                    personIds: { type: "array", items: { type: "string" }, maxItems: 20 },
+                },
+            },
+            NoteRequest: {
+                type: "object",
+                required: ["kind", "personIds"],
+                description: "Кому подаётся — кодом-приглашением или слугом открытой страницы",
+                properties: {
+                    kind: { type: "string" },
+                    personIds: { type: "array", items: { type: "string" }, maxItems: 20 },
+                    code: { type: "string", description: "Код-приглашение, какой священник раздаёт сам" },
+                    slug: { type: "string", description: "Слуг открытой страницы приёма" },
+                },
+            },
+            NoteMark: {
+                type: "object",
+                required: ["mark"],
+                properties: { mark: { type: "string", enum: ["read", "finished"] } },
+            },
+            NoteSheet: {
+                type: "object",
+                description: "Записка до подачи — тот же лист, что уйдёт священнику",
+                properties: {
+                    kind: { $ref: "#/components/schemas/NoteKindInfo" },
+                    span: {
+                        type: ["object", "null"],
+                        description:
+                            "Срок длящегося поминовения, посчитанный на сегодня. На день подачи "
+                            + "он сдвинется: считается он от дня подачи, а она ещё не случилась.",
+                        properties: {
+                            from: { type: "string", format: "date" },
+                            to: { type: "string", format: "date" },
+                        },
+                    },
+                    names: { type: "array", items: { $ref: "#/components/schemas/NoteName" } },
+                },
+            },
+            Zapiska: {
+                type: "object",
+                description:
+                    "Поданная записка. Стёртая по сроку приходит с пустыми именами и непустым "
+                    + "`namesCount`: «было столько-то» переживает чистку нарочно, а сами имена — нет.",
+                properties: {
+                    id: { type: "string" },
+                    kind: { type: "string" },
+                    names: { type: "array", items: { $ref: "#/components/schemas/NoteName" } },
+                    namesCount: { type: "integer" },
+                    span: {
+                        type: ["object", "null"],
+                        properties: {
+                            from: { type: "string", format: "date" },
+                            to: { type: "string", format: "date" },
+                        },
+                    },
+                    createdAt: { type: ["string", "null"], format: "date-time" },
+                    readAt: { type: ["string", "null"], format: "date-time" },
+                    finishedAt: { type: ["string", "null"], format: "date-time" },
+                    sweptAt: { type: ["string", "null"], format: "date-time" },
+                },
+            },
+            ZapiskaList: collection("#/components/schemas/Zapiska"),
+            SentNote: {
+                type: "object",
+                properties: {
+                    note: { $ref: "#/components/schemas/Zapiska" },
+                    to: { type: "object", properties: { title: { type: "string" } } },
+                },
+            },
+            Prinyatye: {
+                type: "object",
+                properties: {
+                    items: { type: "array", items: { $ref: "#/components/schemas/Zapiska" } },
+                    total: { type: "integer" },
+                    limit: { type: "integer" },
+                    offset: { type: "integer" },
+                    unread: { type: "integer", description: "Сколько ещё не отмечено прочитанными" },
+                    commemorator: {
+                        type: "object",
+                        properties: {
+                            title: { type: "string", example: "иерей Николай Петров" },
+                            place: { type: ["string", "null"] },
+                        },
+                    },
                 },
             },
             AccentVariant: {

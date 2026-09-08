@@ -90,6 +90,9 @@ export async function GET(request: Request) {
                 pomyannikPersons: "/api/v2/pomyannik/persons (нужен вход)",
                 pomyannikPerson: "/api/v2/pomyannik/persons/{id} (нужен вход)",
                 pomyannikUpcoming: "/api/v2/pomyannik/upcoming?days= (нужен вход)",
+                pomyannikNote: "/api/v2/pomyannik/note/preview (нужен вход)",
+                pomyannikZapiski: "/api/v2/pomyannik/zapiski (нужен вход)",
+                pomyannikPrinyatye: "/api/v2/pomyannik/prinyatye (нужен вход и открытый приём)",
                 documentation: `${SITE_URL}/api`,
             },
             // Первое, что хочет знать клиент после «что тут есть» — «сколько мне можно».

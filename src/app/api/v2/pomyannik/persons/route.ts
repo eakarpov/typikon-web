@@ -1,8 +1,10 @@
 import { authorizeUser } from "@/lib/api/v2/user";
-import { fail, respondPrivateCollection } from "@/lib/api/v2/http";
+import { fail, respondPrivate, respondPrivateCollection } from "@/lib/api/v2/http";
 import { readEnum, readPage } from "@/lib/api/v2/params";
 import { pomyannikPerson } from "@/lib/api/v2/serialize";
-import { listPersons } from "@/lib/pomyannik/service";
+import { addPersons, listPersons, TooManyPersonsError } from "@/lib/pomyannik/service";
+import { MAX_BATCH } from "@/lib/pomyannik/types";
+import type { PersonInput } from "@/lib/pomyannik/types";
 import { reportError } from "@/lib/reportError";
 
 // ПОМЯННИК ЦЕЛИКОМ.
@@ -42,5 +44,46 @@ export async function GET(request: Request) {
     } catch (e) {
         reportError(e, { where: "app/api/v2/pomyannik/persons/route#GET", source: "api" });
         return fail("internal", "Не удалось открыть помянник");
+    }
+}
+
+/**
+ * Записать имена — одно или пачкой.
+ *
+ * Тело принимается в двух видах: одно лицо объектом или несколько в `persons`.
+ * Голый массив в корне, какой берёт ручка сайта, здесь не принимаем: в v2 у
+ * ответов и запросов конверт, и коллекция в корне выбивалась бы из него одна.
+ *
+ * Повторов не отсеиваем — двух Николаев в роду не редкость, и молча слить их
+ * значило бы решить за человека, что один из них лишний.
+ */
+export async function POST(request: Request) {
+    const access = await authorizeUser(request, "pomyannik");
+    if (access.denied) return access.denied;
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+        return fail("bad_request", "Не разобрали тело запроса");
+    }
+
+    const inputs: PersonInput[] = Array.isArray((body as any).persons)
+        ? (body as any).persons
+        : [body as PersonInput];
+
+    if (inputs.length > MAX_BATCH) {
+        return fail("bad_request", `За раз принимается не больше ${MAX_BATCH} имён`);
+    }
+
+    try {
+        const created = await addPersons(access.userId, inputs);
+        // Имени в присланном не нашлось: `clean` отбрасывает строки без имени, и
+        // пустой ответ здесь значил бы «записали», ничего не записав.
+        if (!created.length) return fail("bad_request", "Имени в присланном не нашлось");
+
+        return respondPrivate({ items: created.map(pomyannikPerson) }, { access, status: 201 });
+    } catch (e) {
+        if (e instanceof TooManyPersonsError) return fail("conflict", e.message);
+        reportError(e, { where: "app/api/v2/pomyannik/persons/route#POST", source: "api" });
+        return fail("internal", "Не удалось записать имя");
     }
 }
