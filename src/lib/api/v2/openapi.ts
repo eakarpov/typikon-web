@@ -260,6 +260,27 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/chants/{id}": {
+            get: {
+                tags: ["Песнопения"],
+                summary: "Песнопение целиком",
+                description:
+                    "То, что обещало поле sampleId указателя зачинов. Идентификатор — номер "
+                    + "строки корпуса; берётся из sampleId или из witnesses[].id.\n\n"
+                    + "Текст бывает взят по ссылке: книги печатают ирмос зачином, а полный текст "
+                    + "лежит в Ирмологии. Такой ответ помечен borrowed, и помету надо донести до "
+                    + "читателя — иначе подставленный текст выдаётся за напечатанный здесь.",
+                parameters: [{
+                    name: "id", in: "path", required: true,
+                    schema: { type: "integer" }, example: 40005,
+                }],
+                responses: {
+                    "200": ok("#/components/schemas/ChantDetail"),
+                    "400": errorResponse("Идентификатор строки — целое число"),
+                    "404": errorResponse("Такого песнопения в корпусе нет"),
+                },
+            },
+        },
         "/api/v2/incipits": {
             get: {
                 tags: ["Песнопения"],
@@ -1794,7 +1815,11 @@ export const openapi = () => ({
                 properties: {
                     id: { type: "integer" },
                     snippet: { type: "array", items: { $ref: "#/components/schemas/SnippetPart" } },
-                    language: { type: ["string", "null"], description: "Язык песнопения: cu_gr, ro, grc, en" },
+                    language: {
+                        type: ["string", "null"],
+                        enum: [...LANGUAGES, null],
+                        description: "Язык самой строки; корпус шестиязычен",
+                    },
                     unit: { type: ["string", "null"], description: "Род: stichera, sedalen, troparion, irmos…" },
                     ode: { type: ["integer", "null"], description: "Песнь канона, если это канон" },
                     marker: { type: ["string", "null"], description: "Жанр напечатанного: богородичен, троичен, мученичен…" },
@@ -1808,9 +1833,77 @@ export const openapi = () => ({
                     position: { type: ["string", "null"], description: "Место службы: «Стихиры на Господи воззвах» и т.п." },
                     tone: { type: ["integer", "null"] },
                     sign: { type: ["string", "null"] },
+                    akathist: {
+                        type: ["string", "null"],
+                        description:
+                            "У строфы акафиста нет ни книги, ни дня: её адрес — имя произведения "
+                            + "и номер строфы",
+                    },
+                    stanza: { type: ["integer", "null"], description: "Номер строфы акафиста" },
+                    stanzaKind: {
+                        type: ["string", "null"], enum: ["prooimion", "stanza", null],
+                        description:
+                            "Проимий или строфа акростиха: у проимиев счёт свой, и номер их не "
+                            + "различает",
+                    },
+                    sourceBook: {
+                        type: ["string", "null"],
+                        description: "Издание, откуда строка: одно место службы печатают несколько",
+                    },
                 },
             },
             ChantList: collection("#/components/schemas/Chant"),
+            ChantDetail: {
+                type: "object",
+                description: "Песнопение целиком",
+                properties: {
+                    id: { type: "integer" },
+                    text: { type: "string", description: "Текст, как напечатан: с ударениями и разметкой строк" },
+                    borrowed: {
+                        type: "boolean",
+                        description:
+                            "Своего текста у строки нет — он взят по ссылке. Книги печатают ирмос "
+                            + "зачином («Ирмо́с: Христо́с ражда́ется:»), а полный текст лежит в "
+                            + "Ирмологии или в соседнем каноне. Показать подставленный текст "
+                            + "неподписанным значило бы выдать его за напечатанный здесь.",
+                    },
+                    textItemId: {
+                        type: ["integer", "null"],
+                        description:
+                            "Чья это строка: своя или та, откуда текст взят. Нужно всему, что "
+                            + "считается по смещениям в тексте — они посчитаны по строке со своим "
+                            + "текстом. `null` — текст пришёл из словаря формул.",
+                    },
+                    language: { type: ["string", "null"], enum: [...LANGUAGES, null] },
+                    unit: { type: ["string", "null"] },
+                    marker: { type: ["string", "null"] },
+                    markerAlt: { type: ["string", "null"] },
+                    placement: { type: ["string", "null"] },
+                    repeat: { type: "integer", description: "Сколько раз поётся: указание книги" },
+                    ode: { type: ["integer", "null"] },
+                    stanza: { type: ["integer", "null"] },
+                    stanzaKind: { type: ["string", "null"], enum: ["prooimion", "stanza", null] },
+                    tone: { type: ["integer", "null"] },
+                    podoben: {
+                        type: ["string", "null"],
+                        description: "Подобен, как напечатала книга: по нему напев выбирается прежде гласа",
+                    },
+                    service: { type: ["string", "null"] },
+                    position: { type: ["string", "null"] },
+                    groupLabel: { type: ["string", "null"] },
+                    memoryId: { type: ["string", "null"] },
+                    memory: { type: ["string", "null"] },
+                    book: { type: ["string", "null"] },
+                    month: { type: ["integer", "null"] },
+                    day: { type: ["integer", "null"] },
+                    paschaOffset: { type: ["integer", "null"] },
+                    weekday: { type: ["string", "null"] },
+                    memoryTone: { type: ["integer", "null"] },
+                    sign: { type: ["string", "null"] },
+                    akathist: { type: ["string", "null"] },
+                    canonId: { type: ["string", "null"] },
+                },
+            },
             Incipit: {
                 type: "object",
                 description: "Зачин в указателе",

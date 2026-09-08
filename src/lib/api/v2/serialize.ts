@@ -53,6 +53,56 @@ export const chantSummary = (hit: any) => ({
     akathist: hit.akathist ?? null,
     stanza: hit.stanza ?? null,
     stanzaKind: hit.stanzaKind ?? null,
+    // Издание, откуда строка. Одно место службы печатают несколько изданий, и
+    // без этого поля две строки одного места неразличимы снаружи. Просили ещё
+    // при выносе поиска наружу — отдаём теперь.
+    sourceBook: hit.sourceBook ?? null,
+});
+
+/**
+ * Песнопение целиком — то, что обещал `sampleId` указателя зачинов.
+ *
+ * Обещание стояло в описании: «чтобы за ним можно было сходить в
+ * /api/v2/chants». Сходить было некуда — та ручка принимает запрос, а не
+ * идентификатор, и всякое вхождение зачина оставалось без текста.
+ *
+ * `borrowed` и `textItemId` отдаются вместе: книга печатает ирмос зачином, а
+ * полный текст лежит в Ирмологии, и подставленный текст надо назвать
+ * подставленным. `textItemId` при этом говорит, ЧЬЯ это строка, — по ней
+ * посчитаны смещения цитат, и приложенные к чужой строке они уехали бы молча.
+ */
+export const chantDetail = (row: any) => ({
+    id: row.id,
+    text: row.text ?? "",
+    borrowed: row.borrowed === true,
+    textItemId: row.textItemId ?? null,
+    language: row.language ?? null,
+    unit: row.unit ?? null,
+    marker: row.marker ?? null,
+    markerAlt: row.markerAlt ?? null,
+    placement: row.placement ?? null,
+    /** Сколько раз строка поётся: указание книги, а не украшение. */
+    repeat: row.repeat ?? 1,
+    ode: row.ode ?? null,
+    stanza: row.stanza ?? null,
+    stanzaKind: row.stanzaKind ?? null,
+    tone: row.tone ?? null,
+    /** Подобен, как его напечатала книга: по нему напев выбирается прежде гласа. */
+    podoben: row.podoben ?? null,
+    service: row.service ?? null,
+    position: row.position ?? null,
+    groupLabel: row.groupLabel ?? null,
+    memoryId: row.memoryId ?? null,
+    memory: row.memory ?? null,
+    book: row.book ?? null,
+    month: row.month ?? null,
+    day: row.day ?? null,
+    paschaOffset: row.paschaOffset ?? null,
+    weekday: row.weekday ?? null,
+    memoryTone: row.memoryTone ?? null,
+    sign: row.sign ?? null,
+    akathist: row.akathist ?? null,
+    canonId: row.canonId ?? null,
 });
 
 /** Зачин в указателе: ключ, число вхождений и представительное из них. */
