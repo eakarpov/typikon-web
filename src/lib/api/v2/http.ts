@@ -32,7 +32,7 @@ const baseHeaders = (maxAge: number): Record<string, string> => ({
  */
 export interface RespondAccess {
     headers: Record<string, string>;
-    kind: "site" | "token" | "anonymous";
+    kind: "site" | "token" | "anonymous" | "user";
 }
 
 export interface CollectionMeta {
@@ -54,6 +54,15 @@ export interface RespondOptions {
  */
 const accessHeaders = (access?: RespondAccess): Record<string, string> => {
     if (!access) return {};
+
+    // Ответ по сессии непубличен не заголовками об остатке, а телом: там чужие
+    // имена. Правило стоит здесь, а не только в respondPrivate, нарочно — чтобы
+    // личный маршрут, списанный с публичного и оставивший respond, всё равно не
+    // попал в общий кэш. Оплошность тут стоит дороже лишней строки.
+    if (access.kind === "user") {
+        return { ...access.headers, "Cache-Control": "private, no-store", "Vary": "Cookie, Authorization" };
+    }
+
     if (access.kind !== "token") return access.headers;
 
     return { ...access.headers, "Cache-Control": "private, no-store", "Vary": "Authorization" };
@@ -64,6 +73,49 @@ export const respond = (
     body: unknown,
     { maxAge = DEFAULT_MAX_AGE, headers = {}, access }: RespondOptions = {},
 ) => NextResponse.json(body, { headers: { ...baseHeaders(maxAge), ...accessHeaders(access), ...headers } });
+
+/**
+ * Ответ с личными данными: помянник, поданные записки.
+ *
+ * Отдельный ответчик, а не `respond` с чужими заголовками, потому что убрать надо
+ * ТРИ вещи, и каждая по своей причине.
+ *
+ * **Лицензия.** `baseHeaders` штампует `X-License: CC-BY-4.0` и `Link: rel=license`
+ * на всё подряд — верно для корпуса, ложь на списке чужой родни: под свободной
+ * лицензией эти имена не выкладывал никто.
+ *
+ * **Кэш.** `public, max-age` на личном ответе — это выдача одного человека всем
+ * остальным через общий кэш.
+ *
+ * **CORS.** `Access-Control-Allow-Origin: *` открывает чтение помянника любой
+ * странице, где читатель залогинен. Личным маршрутам CORS не нужен вовсе: браузеру
+ * есть куда ходить и без v2, а приложение заголовками не связано.
+ */
+export const respondPrivate = (
+    body: unknown,
+    { headers = {}, access, status = 200 }: {
+        headers?: Record<string, string>;
+        access?: RespondAccess;
+        status?: number;
+    } = {},
+) => NextResponse.json(body, {
+    status,
+    headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "private, no-store",
+        "Vary": "Cookie, Authorization",
+        "X-Robots-Tag": "noindex, nofollow",
+        ...(access?.headers ?? {}),
+        ...headers,
+    },
+});
+
+/** Личная коллекция в том же конверте, что и публичная. */
+export const respondPrivateCollection = <T>(
+    items: T[],
+    meta: CollectionMeta,
+    options?: { headers?: Record<string, string>; access?: RespondAccess; status?: number },
+) => respondPrivate({ items, ...meta }, options);
 
 /** Коллекция — всегда в одном конверте, чтобы клиент не гадал, где считать total. */
 export const respondCollection = <T>(
@@ -80,6 +132,8 @@ export type ErrorCode =
     | "rate_limited"
     | "quota_exceeded"
     | "corpus_unavailable"
+    | "session_required"
+    | "conflict"
     | "internal";
 
 const STATUS: Record<ErrorCode, number> = {
@@ -97,6 +151,18 @@ const STATUS: Record<ErrorCode, number> = {
     // 503, а не 500 — и отдельный код, чтобы клиенту не приходилось сличать
     // русскую строку сообщения, отличая «корпуса нет» от «поиск сломался».
     corpus_unavailable: 503,
+    // Ключ есть, а сессии нет: личный раздел, и открывать его нечем. Отдельно от
+    // `unauthorized` — и это не оттенок смысла, а условие работоспособности
+    // клиента. Приложение по «401 на запрос с ключом» объявляет ключ мёртвым и
+    // уходит в анонимы всем корпусом (см. lib/api/v2/api_key.dart). Сессия сайта
+    // живёт час, то есть без отдельного кода каждая установка убивала бы общий
+    // ключ приложения к концу первого часа — и не в помяннике, а в Библии,
+    // поиске и календаре.
+    session_required: 401,
+    // Запрос верен, и отказ не в нём: в помяннике больше пятисот имён не держат.
+    // Через `bad_request` это читалось бы как ошибка клиента, а сказать надо
+    // ровно то, что случилось.
+    conflict: 409,
     internal: 500,
 };
 

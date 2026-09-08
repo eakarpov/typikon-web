@@ -20,7 +20,7 @@ export const TOKENS_DB = "typikon-users";
 export const TOKENS_COLLECTION = "apiTokens";
 
 /** Разделы API, которые можно выдавать по отдельности. */
-export const SCOPES = ["texts", "calendar", "pericopes", "news", "search", "accents"] as const;
+export const SCOPES = ["texts", "calendar", "pericopes", "news", "search", "accents", "pomyannik"] as const;
 export type Scope = (typeof SCOPES)[number];
 
 /**
@@ -28,6 +28,11 @@ export type Scope = (typeof SCOPES)[number];
  * Словарь ударений, наоборот, самая дешёвая ручка (одно чтение по _id), и его
  * распространение — смысл затеи, поэтому он в свободном наборе: без ключа можно
  * попробовать, для работы всё равно понадобится ключ.
+ *
+ * Помянника в свободном наборе нет, и не по дороговизне: за ним стоит ещё и сессия,
+ * а её проверка идёт в базу. Отсутствие раздела здесь — дешёвые ворота: аноним
+ * упирается в счётчик в памяти и до коллекции сессий не доходит. Ключ помянника
+ * ОТМЕРЯЕТ, а не пускает: чужой список им не открыть ни при каком тарифе.
  */
 export const FREE_SCOPES: readonly Scope[] = ["texts", "calendar", "pericopes", "news", "accents"];
 export const ALL_SCOPES: readonly Scope[] = SCOPES;

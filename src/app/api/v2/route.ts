@@ -82,11 +82,22 @@ export async function GET(request: Request) {
                 dictionary: "/api/v2/dictionary?q=",
                 word: "/api/v2/dictionary/{id}",
                 news: "/api/v2/news",
+                // Помянник личный: ключ отмеряет частоту, а чей список открывать,
+                // говорит сессия. Оттого он и назван здесь в перечне отдельно —
+                // одним ключом эти три адреса не открываются.
+                pomyannikVocabulary: "/api/v2/pomyannik/vocabulary",
+                pomyannikCalendar: "/api/v2/pomyannik/calendar?year=",
+                pomyannikPersons: "/api/v2/pomyannik/persons (нужен вход)",
+                pomyannikPerson: "/api/v2/pomyannik/persons/{id} (нужен вход)",
+                pomyannikUpcoming: "/api/v2/pomyannik/upcoming?days= (нужен вход)",
+                pomyannikNote: "/api/v2/pomyannik/note/preview (нужен вход)",
+                pomyannikZapiski: "/api/v2/pomyannik/zapiski (нужен вход)",
+                pomyannikPrinyatye: "/api/v2/pomyannik/prinyatye (нужен вход и открытый приём)",
                 documentation: `${SITE_URL}/api`,
             },
             // Первое, что хочет знать клиент после «что тут есть» — «сколько мне можно».
             access: {
-                anonymous: `${ANONYMOUS_ALLOWANCE.limit} запросов в час с адреса, без поиска`,
+                anonymous: `${ANONYMOUS_ALLOWANCE.limit} запросов в час с адреса, без поиска и помянника`,
                 withKey: `${TIERS.free.limit} запросов в минуту и ${TIERS.free.perDay} в сутки, все разделы`,
                 header: "Authorization: Bearer {ключ}",
                 obtain: `${SITE_URL}/profile`,
