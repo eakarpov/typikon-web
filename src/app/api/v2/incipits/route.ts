@@ -4,7 +4,6 @@ import { readEnum, readPage } from "@/lib/api/v2/params";
 import { incipitSummary } from "@/lib/api/v2/serialize";
 import { LANGUAGES, listIncipits, normalizeIncipitQuery } from "@/lib/incipits";
 import {reportError} from "@/lib/reportError";
-import { SITE_URL } from "@/utils/site";
 
 // Указатель зачинов: песнопения книг по первым словам.
 //
@@ -35,11 +34,14 @@ export async function GET(request: Request) {
     // было бы неожиданностью.
     const prefix = normalizeIncipitQuery(url.searchParams.get("q") ?? "");
     if (!prefix) {
+        // Прежде здесь стояла отсылка за полным указателем в выгрузку корпуса —
+        // обещание пустое: в выгрузке только Mongo, певческого корпуса там нет
+        // вовсе. Отсылаем туда, куда действительно можно пойти.
         return fail(
             "bad_request",
-            "Укажите начало песнопения в q. Указатель целиком отдаётся выгрузкой " +
-            `корпуса (${SITE_URL}/data), а не этой ручкой: перебор всех ` +
-            "182 650 зачинов на каждый запрос стоил бы секунду.",
+            "Укажите начало песнопения в q: перебор всех 182 650 зачинов на " +
+            "каждый запрос стоил бы секунду. Листать корпус целиком — " +
+            "/api/v2/canons, /api/v2/akathists, /api/v2/prayers.",
         );
     }
 
