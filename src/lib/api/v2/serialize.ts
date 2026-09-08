@@ -1,5 +1,6 @@
 import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
 import { jdnToGregorian, jdnToJulian, weekdayOf } from "@/utils/chronology";
+import { baseYearLabel, kindLabel, memoryDaysOf, orderLabel } from "@/lib/saintFacts";
 // Что именно уходит наружу.
 //
 // Здесь белые списки, а не чёрные, и это принципиально: в v1 наружу утекали
@@ -534,3 +535,78 @@ export const lexemeDetail = (view: any) => {
         })),
     };
 };
+
+// --- Досье святого -----------------------------------------------------------
+
+const saintMemoryRow = (row: any) => ({
+    memoryId: row.memoryId,
+    label: row.label,
+    /** Адрес памяти в месяцеслове — «16.12». */
+    address: row.address ?? null,
+    /** Знак службы по Типикону: им память и отличается от прочих в тот же день. */
+    sign: row.sign ?? null,
+});
+
+const saintDedicationRow = (row: any) => ({
+    slug: row.slug,
+    short: row.short ?? null,
+    label: row.label ?? null,
+    /** Сколько храмов с этим посвящением в каталоге. */
+    count: row.count ?? 0,
+});
+
+const saintAkathist = (row: any) => ({
+    id: row.akathist_id ?? row.id ?? null,
+    title: row.title ?? null,
+    memory: row.memory ?? null,
+    stanzas: row.stanzas ?? null,
+});
+
+export const saintDossier = (saint: any, parts: any) => ({
+    slug: saint.slug ?? null,
+    name: saint.name ?? saint.title ?? null,
+    /** Прочие именования: варианты, прозвания, мирское имя при монашеском. */
+    altNames: saint.altNames ?? [],
+    kind: saint.type ?? null,
+    kindLabel: kindLabel(saint.type),
+    orders: (saint.orders ?? []).map((code: string) => ({ code, label: orderLabel(code) })),
+    baseYear: saint.baseYear ?? null,
+    baseYearLabel: baseYearLabel(saint.baseYear),
+    /**
+     * Дни памяти, разложенные в гражданский календарь. Переходящие у святцев
+     * записаны смещением, и без разбора клиенту их не поставить.
+     */
+    memoryDates: memoryDaysOf(saint.memoryDates, new Date()),
+    roundelUrl: saint.roundelUrl ?? null,
+    images: (saint.images ?? []).map((image: any) => ({
+        url: image.url,
+        thumbUrl: image.thumbUrl ?? null,
+        title: image.title ?? null,
+    })),
+    /**
+     * Внешние ключи. Номеров святцев у записи бывает несколько: одно лицо,
+     * разведённое календарём на две памяти.
+     */
+    externals: (saint.externals ?? []).map((e: any) => ({ source: e.source, id: String(e.id) })),
+
+    memories: (parts.memories ?? []).map(saintMemoryRow),
+    texts: (parts.texts ?? []).map(textSummary),
+    mentions: (parts.mentions ?? []).map(textSummary),
+    /**
+     * `null` — корпус певческих текстов на этом сервере не выложен, и акафисты
+     * мы не смотрели вовсе. `[]` — смотрели и не нашли. Разница та же, что между
+     * `corpus_unavailable` и пустой выдачей поиска.
+     */
+    akathists: parts.akathists === null ? null : parts.akathists.map(saintAkathist),
+    dedications: (parts.dedications ?? []).map(saintDedicationRow),
+    /** Только ссылка: правления князей не показываются пока и на сайте. */
+    noble: parts.noble ? { id: String(parts.noble.id), name: parts.noble.name ?? null } : null,
+
+    /**
+     * Оговорка едет в ответе, потому что без неё пустой раздел читается как
+     * утверждение. Связи выверены меньше чем наполовину, и «храмов нет» здесь
+     * почти всегда значит «связь не проставлена».
+     */
+    caveat: "Пустой раздел чаще значит, что связь ещё не проставлена, чем что её нет: "
+        + "памяти, посвящения и акафисты сверяются вручную, и выверена пока меньшая часть.",
+});

@@ -22,8 +22,12 @@ export async function GET(request: NextRequest) {
     }
 
     const day = await trapezaDay(segment.date);
+    // День `null` значит, что служба устава не ответила: её нет в настройках,
+    // она молчит восемь секунд или отвечает не тем. Это не то же самое, что
+    // «книга на этот день молчит», и склеивать их нельзя — клиент по такому
+    // ответу не отличит исправную тишину от поломки.
     const rules = chosenVariant(day)?.fasting ?? [];
-    const answer = shortAnswer(rules);
+    const answer = shortAnswer(rules, day !== null);
 
     return NextResponse.json({
         kind: answer.kind,

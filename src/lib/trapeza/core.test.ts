@@ -221,6 +221,22 @@ describe("строка для страницы дня", () => {
         assert.equal(shortAnswer([]).kind, "silent");
     });
 
+    it("молчание службы устава отличает от молчания книги", () => {
+        // Склеенные в одно, они дают ответ, по которому клиент не отличит
+        // исправную тишину от поломки, — и приложение, показавшее «поста нет»
+        // на упавшем движке, соврало бы читателю о посте.
+        const down = shortAnswer([], false);
+        assert.equal(down.kind, "unavailable");
+        assert.equal(down.line, null);
+
+        assert.equal(shortAnswer([]).kind, "silent");
+    });
+
+    it("недоступность службы важнее всего прочего", () => {
+        // Правила, добытые не пойми откуда при неответившем движке, — не ответ.
+        assert.equal(shortAnswer([rule({ disputed: true })], false).kind, "unavailable");
+    });
+
     it("называет сословие и оговаривает общее правило", () => {
         const got = shortAnswer([
             rule({ who: "monah", allow: "syr", allowLabel: "сыр и яйца", until: null, periodLabel: null }),

@@ -75,6 +75,7 @@ export async function GET(request: Request) {
                 bibleChapter: "/api/v2/bible/{книга}/{глава}",
                 concordance: "/api/v2/concordance?ref=",
                 signs: "/api/v2/signs",
+                saint: "/api/v2/saints/dossier/{слуг|номер}",
                 imeniny: "/api/v2/imeniny?q=",
                 name: "/api/v2/imeniny/{имя}",
                 chronology: "/api/v2/chronology?leto=",
