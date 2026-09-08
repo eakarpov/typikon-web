@@ -941,6 +941,31 @@ export const akathistDetail = (row: any, prayers: any[] = []) => ({
     prayers: prayers.map(prayerSummary),
 });
 
+/**
+ * Место: то, что помечено в тексте географическим именем.
+ *
+ * Белым списком, как и всё прочее здесь: коллекция `places` ведётся руками, и
+ * поле, заведённое для редактора, ушло бы наружу само собой.
+ *
+ * Долгота и широта могут отсутствовать, и это не изъян записи: у «пустыни
+ * Иорданской» точки нет, а у Иерусалима есть.
+ */
+export const placeDetail = (row: any) => ({
+    id: row.id ?? null,
+    name: row.name ?? null,
+    alias: row.alias ?? null,
+    description: row.description ?? null,
+    /** Как ещё называется: по ним место и находят в тексте. */
+    synonyms: row.synonyms ?? [],
+    /** Куда посмотреть ещё: внешние ссылки, заведённые редактором. */
+    links: (row.links ?? []).map((link: any) => ({
+        text: link.text ?? null,
+        url: link.url ?? null,
+    })),
+    latitude: row.latitude ?? null,
+    longitude: row.longitude ?? null,
+});
+
 /** Молитва в перечне. */
 export const prayerSummary = (row: any) => ({
     id: row.id,

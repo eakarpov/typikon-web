@@ -168,6 +168,22 @@ export const openapi = () => ({
                     { name: "readiness", in: "query", schema: { type: "string", enum: ["ready", "correcting", "texted", "presence", "absence"] } },
                     { name: "saint", in: "query", schema: { type: "string" }, description: "Идентификатор святого в святцах dneslov.org" },
                     { name: "updatedSince", in: "query", schema: { type: "string", format: "date-time" }, description: "Только изменённые с этого момента" },
+                    {
+                        name: "ids", in: "query", schema: { type: "string" },
+                        description:
+                            "Поимённо, через запятую, не больше 200. Для случая, когда список "
+                            + "идентификаторов уже на руках — избранное, закладки: иначе "
+                            + "пришлось бы слать запрос на текст. Негодный идентификатор в "
+                            + "списке — отказ, а не пропуск: неполная выдача выглядит полной",
+                    },
+                    {
+                        name: "sort", in: "query", schema: { type: "string", enum: ["updated"] },
+                        description:
+                            "Обычный порядок — по месту в книге. `updated` — по времени "
+                            + "правки, новые первыми: «что пополнилось» обычным порядком не "
+                            + "спросить, updatedSince отберёт нужные, но первыми отдаст те, "
+                            + "что раньше стоят в книге",
+                    },
                 ],
                 responses: { "200": ok("#/components/schemas/TextList"), "400": errorResponse("Неверный параметр") },
             },
@@ -672,6 +688,43 @@ export const openapi = () => ({
                     "200": ok("#/components/schemas/Ok"),
                     "400": errorResponse("Нет ключа доставки"),
                     "401": errorResponse("Ключ или вход; code — unauthorized либо session_required"),
+                },
+            },
+        },
+        "/api/v2/texts/{id}/day": {
+            get: {
+                tags: ["Календарь"],
+                summary: "День, в который читается этот текст",
+                description:
+                    "Обратный ход к /api/v2/days/{alias}: там спрашивают «что читается "
+                    + "сегодня», здесь — «когда читается вот это». Связь книги с днём в самом "
+                    + "тексте не записана, и другого пути из текста в службу дня нет.\n\n"
+                    + "`404` — у текста нет дня, и это обычное дело: не всё, что лежит в "
+                    + "корпусе, положено на число. Пустым днём это не подменяется — пустой "
+                    + "читался бы как «в этот день ничего не читается».",
+                parameters: [{
+                    name: "id", in: "path", required: true, schema: { type: "string" },
+                }],
+                responses: {
+                    "200": ok("#/components/schemas/Day"),
+                    "404": errorResponse("У этого текста нет дня"),
+                },
+            },
+        },
+        "/api/v2/places/{id}": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Место",
+                description:
+                    "То, что помечено в тексте географическим именем. Спрашивается и по "
+                    + "идентификатору, и по псевдониму.\n\nШироты и долготы может не быть, "
+                    + "и это не изъян записи: у пустыни Иорданской точки нет, у Иерусалима есть.",
+                parameters: [{
+                    name: "id", in: "path", required: true, schema: { type: "string" },
+                }],
+                responses: {
+                    "200": ok("#/components/schemas/Place"),
+                    "404": errorResponse("Такого места нет"),
                 },
             },
         },
@@ -2106,6 +2159,34 @@ export const openapi = () => ({
                 },
             },
             CanonList: collectionWithFacets("#/components/schemas/Canon", "#/components/schemas/CanonFacets"),
+            Place: {
+                type: "object",
+                properties: {
+                    id: { type: ["string", "null"] },
+                    name: { type: ["string", "null"] },
+                    alias: { type: ["string", "null"] },
+                    description: { type: ["string", "null"] },
+                    synonyms: {
+                        type: "array", items: { type: "string" },
+                        description: "Как ещё называется: по ним место и находят в тексте",
+                    },
+                    links: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                text: { type: ["string", "null"] },
+                                url: { type: ["string", "null"] },
+                            },
+                        },
+                    },
+                    latitude: {
+                        type: ["number", "null"],
+                        description: "Может отсутствовать: не у всякого места есть точка",
+                    },
+                    longitude: { type: ["number", "null"] },
+                },
+            },
             AppVersion: {
                 type: "object",
                 properties: {

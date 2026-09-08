@@ -17,6 +17,10 @@ export async function OPTIONS() {
     return preflight();
 }
 
+// Столько же, сколько берут постраничные ручки: длина адреса не бесконечна, а
+// избранное у человека и не бывает в тысячу имён за один экран.
+const MAX_IDS = 200;
+
 export async function GET(request: Request) {
     const access = await authorize(request, "texts");
     if (access.denied) return access.denied;
@@ -43,6 +47,39 @@ export async function GET(request: Request) {
     const dneslovId = url.searchParams.get("saint");
     if (dneslovId) filter.dneslovId = dneslovId;
 
+    // ПОИМЕННО. Заведено ради избранного в приложении: там на руках список
+    // идентификаторов, и без этого его пришлось бы разрешать по запросу на
+    // текст — тридцать запросов там, где довольно одного.
+    //
+    // Отдельной ручкой `texts/batch`, как в первой версии API, делать не стали:
+    // тот же отбор, та же выдача, тот же разбор — а вторая ручка со своей
+    // формой ответа разошлась бы с этой при первой же правке.
+    const ids = url.searchParams.get("ids");
+    if (ids) {
+        const list = ids.split(",").map((id) => id.trim()).filter(Boolean);
+        if (!list.length) return fail("bad_request", "Параметр ids пуст");
+        if (list.length > MAX_IDS) {
+            return fail("bad_request", `Не больше ${MAX_IDS} идентификаторов за раз`);
+        }
+
+        const bad = list.find((id) => !ObjectId.isValid(id));
+        // Молча пропустить негодный — значит отдать неполную выдачу, которую
+        // клиент примет за полную: спрошено тридцать, пришло двадцать девять, и
+        // какого недостаёт, не видно.
+        if (bad) return fail("bad_request", `Не идентификатор текста: ${bad}`);
+
+        filter._id = { $in: list.map((id) => new ObjectId(id)) };
+    }
+
+    // ЧТО НОВОГО. Обычный порядок — по месту в книге, и он остаётся: список
+    // текстов книги листают именно так. Но «что пополнилось» этим порядком не
+    // спросить — `updatedSince` отберёт нужные, а первыми отдаст те, что раньше
+    // стоят в книге, а не те, что позже правились.
+    const byUpdated = url.searchParams.get("sort") === "updated";
+    const order: Record<string, -1 | 1> = byUpdated
+        ? { updatedAt: -1, _id: -1 }
+        : { bookIndex: 1, _id: 1 };
+
     try {
         const client = await clientPromise;
         const texts = client.db("typikon").collection("texts");
@@ -53,7 +90,7 @@ export async function GET(request: Request) {
                     alias: 1, name: 1, description: 1, author: 1, translator: 1, type: 1,
                     contentType: 1, readiness: 1, bookId: 1, bookIndex: 1, dneslovId: 1, updatedAt: 1,
                 },
-            }).sort({ bookIndex: 1, _id: 1 }).skip(offset).limit(limit).toArray(),
+            }).sort(order).skip(offset).limit(limit).toArray(),
             texts.countDocuments(filter),
         ]);
 
