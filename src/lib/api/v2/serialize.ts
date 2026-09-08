@@ -992,9 +992,20 @@ export const placeDetail = (row: any) => ({
         text: link.text ?? null,
         url: link.url ?? null,
     })),
-    latitude: row.latitude ?? null,
-    longitude: row.longitude ?? null,
+    // В базе координаты лежат строками («39.9199»), а схема обещает число —
+    // приводим здесь, а не оставляем клиенту гадать по типу. Не разобралось —
+    // `null`: точка, которой нет, честнее точки посреди Атлантики.
+    latitude: coordinate(row.latitude),
+    longitude: coordinate(row.longitude),
 });
+
+const coordinate = (value: unknown): number | null => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value !== "string" || !value.trim()) return null;
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+};
 
 /** Молитва в перечне. */
 export const prayerSummary = (row: any) => ({
