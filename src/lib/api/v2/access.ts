@@ -71,6 +71,40 @@ export const authorize = async (request: Request, scope: Scope): Promise<Access>
     return meter("anonymous", `anon:${ip}`, ANONYMOUS_ALLOWANCE);
 };
 
+/**
+ * Как `authorize`, но плохой ключ не запирает ручку.
+ *
+ * Заведено ради проверки версий, и причина в порядке работ, а не в удобстве.
+ * Ручка версии — то единственное, чем установленная копия узнаёт о новой; если
+ * закрыть её отказом «ключ отозван», приложение перестанет узнавать в том числе
+ * о той версии, которая этот отказ и чинит. Отзыв ключа обязан быть заменой, а
+ * не выключателем, — здесь это правило и держится.
+ *
+ * Годный ключ по-прежнему в чести: он даёт приложению его порцию по устройству,
+ * а не общую анонимную по адресу. Последнее важнее, чем кажется: за одним
+ * адресом оператора сидят десятки телефонов, и шестидесяти запросов в час на
+ * всех им не хватило бы.
+ *
+ * Мимо счётчика при этом никто не проходит: не признанный ключ считается как
+ * аноним, а исчерпанный лимит остаётся отказом — на анонимную порцию с него не
+ * перепрыгнуть.
+ */
+export const authorizeOpen = async (request: Request, scope: Scope): Promise<Access> => {
+    const headers = request.headers;
+    const ip = clientIpFromHeaders(headers);
+    const plain = readBearer(headers);
+
+    if (plain) {
+        const token = await findToken(plain);
+        // Годен — дальше обычным путём, со всеми его лимитами и квотами.
+        if (token && tokenState(token) === "ok") return authorizeToken(plain, scope, ip);
+    }
+
+    if (isSiteRequest(headers)) return meter("site", `site:${ip}`, SITE_ALLOWANCE);
+
+    return meter("anonymous", `anon:${ip}`, ANONYMOUS_ALLOWANCE);
+};
+
 const authorizeToken = async (plain: string, scope: Scope, ip: string): Promise<Access> => {
     const token = await findToken(plain);
 
