@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { CHURCH_FORMS, checkName, lexiconKeys } from "./names";
+import { CHURCH_FORMS, checkName, lexiconKeys, obliqueLemmas } from "./names";
 
 // Кусок указателя святцев: тест не поднимает базу.
 const SVYATTSY = new Set([
@@ -89,5 +89,50 @@ describe("ключи церковнославянского словаря", () 
     it("повторов не выдаёт", () => {
         const keys = lexiconKeys("Пётр");
         assert.equal(keys.length, new Set(keys).size);
+    });
+});
+
+// Помянник читают вслух — «о здравии Анны», — и пишут его так же. Хранится же в
+// нём словарная форма: от неё зависят именины по святцам, сверка наречения и
+// склонение для записки. Родительный, принятый за описку, чинился верно, но с
+// неверным доводом, — а человек решает по доводу.
+
+describe("родительный падеж вместо словарной формы", () => {
+    const SVYATTSY2 = new Set([
+        ...SVYATTSY, "анна", "андрей", "любовь", "косма", "игорь", "александра",
+    ]);
+
+    it("узнаётся как падеж, а не как описка", () => {
+        const check = checkName("Анны", SVYATTSY2);
+
+        assert.equal(check.status, "civil");
+        assert.deepEqual(check.suggestions.map(s => s.name), ["Анна"]);
+        assert.match(check.suggestions[0].why, /родительный/);
+    });
+
+    it("подтверждает догадку указатель, а не правило", () => {
+        // Выдумать имя перебор не может: годно лишь то, что нашлось в святцах.
+        assert.deepEqual(checkName("Анны", new Set(["николай"])).suggestions, []);
+    });
+
+    it("окончания отматываются по всем обычным видам", () => {
+        assert.ok(obliqueLemmas("анны").includes("анна"));
+        assert.ok(obliqueLemmas("марии").includes("мария"));
+        assert.ok(obliqueLemmas("любови").includes("любовь"));
+        assert.ok(obliqueLemmas("иоанна").includes("иоанн"));
+        assert.ok(obliqueLemmas("андрея").includes("андрей"));
+        assert.ok(obliqueLemmas("игоря").includes("игорь"));
+        assert.ok(obliqueLemmas("космы").includes("косма"));
+    });
+
+    it("имя, которое и само есть в святцах, поправлять не предлагаем", () => {
+        // «Иоанна» — и родительный от «Иоанн», и самостоятельное женское имя.
+        // Записали второе — трогать нечего.
+        assert.equal(checkName("Иоанна", new Set([...SVYATTSY2, "иоанна"])).status, "known");
+    });
+
+    it("слишком короткий остаток за имя не считается", () => {
+        // «Ия» → «И» именем не бывает, и предлагать такое хуже, чем молчать.
+        assert.deepEqual(obliqueLemmas("ия"), []);
     });
 });

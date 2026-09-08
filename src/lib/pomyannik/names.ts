@@ -151,10 +151,16 @@ const distance = (a: string, b: string, max = 2): number => {
  * оставаться чистым, чтобы правила наречения можно было проверить тестом, не
  * поднимая базу.
  *
- * Порядок разбора: сперва святцы, потом таблица наречения, потом близкие по
- * написанию — на случай описки. Опечатка предлагается ПОСЛЕДНЕЙ и только одна:
- * подсказка «может быть, Дария?» тому, кто и вправду записал Дарину, скорее
- * мешает, чем помогает.
+ * Порядок разбора: сперва святцы, потом таблица наречения, потом косвенный
+ * падеж, и только последними — близкие по написанию. Опечатка предлагается
+ * ПОСЛЕДНЕЙ и только одна: подсказка «может быть, Дария?» тому, кто и вправду
+ * записал Дарину, скорее мешает, чем помогает.
+ *
+ * КОСВЕННЫЙ ПАДЕЖ ИДЁТ ПРЕЖДЕ ОПИСКИ, и это не порядок ради порядка. Помянник
+ * читают вслух — «о здравии Анны», — и пишут его так же; «Анны» отстоит от
+ * «Анна» на одну букву, и прежде эта разница называлась опиской. Назвать её
+ * так — значит предложить верное исправление с неверным доводом, а человек
+ * решает по доводу.
  */
 export const checkName = (raw: string, known: Iterable<string>): NameCheck => {
     const name = normalizeName(raw);
@@ -167,6 +173,17 @@ export const checkName = (raw: string, known: Iterable<string>): NameCheck => {
     const forms = CHURCH_FORMS[key];
     if (forms?.length) {
         return { name, key, status: "civil", suggestions: forms.map(f => ({ ...f })) };
+    }
+
+    const oblique = obliqueLemmas(key).filter(candidate => index.has(candidate));
+    if (oblique.length) {
+        return {
+            name, key, status: "civil",
+            suggestions: oblique.map(candidate => ({
+                name: normalizeName(candidate),
+                why: "похоже на родительный падеж",
+            })),
+        };
     }
 
     let closest: { key: string; at: number } | null = null;
@@ -182,6 +199,44 @@ export const checkName = (raw: string, known: Iterable<string>): NameCheck => {
             ? [{ name: normalizeName(closest.key), why: "похоже на описку" }]
             : [],
     };
+};
+
+/**
+ * Словарные формы, из которых мог получиться этот косвенный падеж.
+ *
+ * ДОГАДКА, И ПОДТВЕРЖДАЕТ ЕЁ УКАЗАТЕЛЬ. Здесь только отматываются назад обычные
+ * родительные окончания; годным считается лишь то, что нашлось в святцах. Оттого
+ * выдумать имя этот перебор не может — он может лишь предложить существующее.
+ *
+ * Применять подсказку молча нельзя: «Иоанна» — это и родительный от «Иоанна», и
+ * самостоятельное женское имя, и решать, кого записали, не нам.
+ */
+export const obliqueLemmas = (key: string): string[] => {
+    const out: string[] = [];
+    const add = (value: string) => {
+        if (value.length >= 3 && value !== key && !out.includes(value)) out.push(value);
+    };
+
+    const head = key.slice(0, -1);
+    switch (key.slice(-1)) {
+        case "ы":               // Анны → Анна, Космы → Косма
+            add(`${head}а`);
+            break;
+        case "и":               // Марии → Мария, Любови → Любовь, Ксении → Ксения
+            add(`${head}я`);
+            add(`${head}ь`);
+            add(`${head}а`);
+            break;
+        case "а":               // Иоанна → Иоанн
+            add(head);
+            break;
+        case "я":               // Андрея → Андрей, Игоря → Игорь
+            add(`${head}й`);
+            add(`${head}ь`);
+            break;
+    }
+
+    return out;
 };
 
 /**
