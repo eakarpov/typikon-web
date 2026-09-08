@@ -1,6 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chantDetail, chantSummary } from "@/lib/api/v2/serialize";
+import {
+    akathistDetail, akathistSummary, canonDetail, canonSummary,
+    chantDetail, chantSummary, prayerDetail, prayerSummary,
+} from "@/lib/api/v2/serialize";
 import { openapi } from "@/lib/api/v2/openapi";
 
 // Описание API и то, что ручка на самом деле отдаёт, расходятся молча: схема
@@ -12,15 +15,34 @@ import { openapi } from "@/lib/api/v2/openapi";
 // Сверяем имена полей, а не значения: значения зависят от корпуса, а имена —
 // это и есть договор.
 
-const schema = (name: string): Record<string, unknown> =>
-    ((openapi() as any).components.schemas[name].properties) ?? {};
+/**
+ * Поля схемы, включая унаследованные через allOf: карточка описана прибавкой к
+ * строке перечня, и сличать надо всё вместе.
+ */
+const schema = (name: string): string[] => {
+    const found = (openapi() as any).components.schemas[name];
+    const parts = found.allOf
+        ? found.allOf.map((part: any) =>
+            part.$ref ? schema(part.$ref.split("/").pop()) : Object.keys(part.properties ?? {}))
+        : [Object.keys(found.properties ?? {})];
+    return [...new Set(parts.flat() as string[])].sort();
+};
 
 const fields = (serialized: object) => Object.keys(serialized).sort();
 
-test("схема Chant называет всё, что отдаёт сериализатор", () => {
-    assert.deepEqual(fields(chantSummary({})), Object.keys(schema("Chant")).sort());
-});
+const pairs: Array<[string, object]> = [
+    ["Chant", chantSummary({})],
+    ["ChantDetail", chantDetail({})],
+    ["Canon", canonSummary({})],
+    ["CanonDetail", canonDetail({})],
+    ["Akathist", akathistSummary({})],
+    ["AkathistDetail", akathistDetail({})],
+    ["Prayer", prayerSummary({})],
+    ["PrayerDetail", prayerDetail({})],
+];
 
-test("схема ChantDetail называет всё, что отдаёт сериализатор", () => {
-    assert.deepEqual(fields(chantDetail({})), Object.keys(schema("ChantDetail")).sort());
-});
+for (const [name, serialized] of pairs) {
+    test(`схема ${name} называет всё, что отдаёт сериализатор`, () => {
+        assert.deepEqual(fields(serialized), schema(name));
+    });
+}
