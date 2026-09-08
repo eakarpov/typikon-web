@@ -57,8 +57,10 @@ test("тариф приложения делит сутки по устройс�
     // не с кем.
     assert.equal(TIERS.app.perDevice, 5_000);
     assert.equal(TIERS.app.perClient, true);
-    assert.equal(TIERS.free.perDevice ?? null, null);
-    assert.equal(TIERS.partner.perDevice ?? null, null);
+    // Явный null, а не пропущенное поле: «потолка нет» и «о нём забыли» иначе не
+    // различить.
+    assert.equal(TIERS.free.perDevice, null);
+    assert.equal(TIERS.partner.perDevice, null);
 });
 
 test("доля устройства меньше общей квоты, и заметно", () => {

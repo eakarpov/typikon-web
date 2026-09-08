@@ -164,3 +164,11 @@ test("в ключ годится только то, что похоже на в�
         "лишние знаки: настоящий ключ в base64url, а там нет ни '=', ни '+'");
     assert.equal(looksLikeToken(""), false);
 });
+
+test("подушевая доля перекрывается в самом ключе, и null — тоже выбор", () => {
+    // Как и с perDay: `null` означает «без подушевого потолка», и это осознанное
+    // решение по одному ключу, а не отсутствие настройки.
+    assert.equal(allowanceFor(token({ tier: "app", perDevice: null })).perDevice, null);
+    assert.equal(allowanceFor(token({ tier: "app", perDevice: 100 })).perDevice, 100);
+    assert.equal(allowanceFor(token({ tier: "app" })).perDevice, TIERS.app.perDevice);
+});

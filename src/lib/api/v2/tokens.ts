@@ -57,8 +57,12 @@ export interface Allowance {
      *
      * Отсюда и мера: доля на устройство вместо общего котла. Добытый ключ тогда
      * даёт столько же, сколько даёт любому читателю, и красть его незачем.
+     *
+     * Поле обязательное, как и `perDay`: явный `null` говорит «подушевого потолка
+     * нет», а пропущенное поле говорило бы «о нём забыли», и различить их потом
+     * было бы нечем.
      */
-    perDevice?: number | null;
+    perDevice: number | null;
     scopes: readonly Scope[];
     /**
      * Считать минутный лимит для каждого клиента отдельно, а не на ключ целиком.
@@ -74,7 +78,7 @@ export const TIERS: Record<Tier, Allowance> = {
     // Рядовой ключ, который пользователь заводит себе сам в профиле. 30 в минуту хватает
     // на сборку страницы в несколько запросов, 10 тысяч в сутки — на личного бота или
     // приложение для прихода, но не на зеркало корпуса в один поток.
-    free: { limit: 30, windowSeconds: 60, perDay: 10_000, scopes: ALL_SCOPES, perClient: false },
+    free: { limit: 30, windowSeconds: 60, perDay: 10_000, perDevice: null, scopes: ALL_SCOPES, perClient: false },
     // Наше приложение: ключ один на всех пользователей, поэтому минутный лимит
     // считается по устройству, а суточный — общий и большой.
     // Пять тысяч в сутки на устройство — при том, что все установленные копии
@@ -87,12 +91,12 @@ export const TIERS: Record<Tier, Allowance> = {
         scopes: ALL_SCOPES, perClient: true,
     },
     // Договорённость с конкретным потребителем; частности правятся прямо в ключе.
-    partner: { limit: 120, windowSeconds: 60, perDay: 100_000, scopes: ALL_SCOPES, perClient: false },
+    partner: { limit: 120, windowSeconds: 60, perDay: 100_000, perDevice: null, scopes: ALL_SCOPES, perClient: false },
 };
 
 /** Свои страницы: те же 120 в минуту, что и были у API до появления ключей. */
 export const SITE_ALLOWANCE: Allowance = {
-    limit: 120, windowSeconds: 60, perDay: null, scopes: ALL_SCOPES, perClient: true,
+    limit: 120, windowSeconds: 60, perDay: null, perDevice: null, scopes: ALL_SCOPES, perClient: true,
 };
 
 /**
@@ -100,7 +104,7 @@ export const SITE_ALLOWANCE: Allowance = {
  * запрос, и не настолько, чтобы на этом жить: за ключом идти всё равно придётся.
  */
 export const ANONYMOUS_ALLOWANCE: Allowance = {
-    limit: 60, windowSeconds: 3600, perDay: null, scopes: FREE_SCOPES, perClient: true,
+    limit: 60, windowSeconds: 3600, perDay: null, perDevice: null, scopes: FREE_SCOPES, perClient: true,
 };
 
 export interface ApiToken {
@@ -117,6 +121,8 @@ export interface ApiToken {
     limit?: number;
     windowSeconds?: number;
     perDay?: number | null;
+    /** Своя подушевая доля; `null` — без неё, даже если тариф её даёт. */
+    perDevice?: number | null;
     scopes?: Scope[];
     perClient?: boolean;
     createdAt: Date;
@@ -170,7 +176,7 @@ export const readBearer = (headers: Headers): string | null => {
 };
 
 /** Тариф плюс частные поправки. Чистая функция — вся настройка доступа собрана здесь. */
-export const allowanceFor = (token: Pick<ApiToken, "tier" | "limit" | "windowSeconds" | "perDay" | "scopes" | "perClient">): Allowance => {
+export const allowanceFor = (token: Pick<ApiToken, "tier" | "limit" | "windowSeconds" | "perDay" | "perDevice" | "scopes" | "perClient">): Allowance => {
     const base = TIERS[token.tier] ?? TIERS.free;
 
     return {
@@ -179,6 +185,9 @@ export const allowanceFor = (token: Pick<ApiToken, "tier" | "limit" | "windowSec
         // perDay === null означает «без потолка» и должен перекрывать тариф,
         // поэтому проверяем именно undefined, а не ложность.
         perDay: token.perDay === undefined ? base.perDay : token.perDay,
+        // Та же причина, что и у perDay: `null` — это «без подушевого потолка»,
+        // осознанный выбор, и перекрывать им тариф надо.
+        perDevice: token.perDevice === undefined ? base.perDevice : token.perDevice,
         scopes: token.scopes ?? base.scopes,
         perClient: token.perClient ?? base.perClient,
     };
