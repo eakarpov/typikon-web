@@ -34,3 +34,39 @@ export const decide = (used: number, perDay: number | null, now: Date = new Date
 
     return { allowed: true, limit: perDay, remaining: Math.max(0, perDay - used - 1), resetIn };
 };
+
+/**
+ * Решение по двум потолкам разом: общему на ключ и подушевому.
+ *
+ * Отдельно от списания, потому что порядок здесь и есть суть. **Оба потолка
+ * проверяются до того, как списан хоть один** — иначе отказ по одному разгонял
+ * бы счётчик другого, а правило ровно обратное: исчерпавшему квоту запрос не
+ * засчитывается, иначе он разгонял бы счётчик собственными отказами и квота не
+ * обновилась бы никогда.
+ *
+ * Возвращается более тесный из двух остатков: клиент упрётся именно в него, и
+ * обещать ему запас, которого у него нет, — врать.
+ */
+export const decidePair = (
+    sharedUsed: number,
+    perDay: number | null,
+    ownUsed: number,
+    perDevice: number | null,
+    now: Date = new Date(),
+): { verdict: QuotaVerdict; charge: boolean } => {
+    const shared = decide(sharedUsed, perDay, now);
+    if (!shared.allowed) return { verdict: shared, charge: false };
+
+    const own = decide(ownUsed, perDevice, now);
+    if (!own.allowed) return { verdict: own, charge: false };
+
+    // Оба разрешили — списываем оба. `null` означает «потолка нет» и в сравнении
+    // остатков не участвует.
+    if (own.remaining === null) return { verdict: shared, charge: true };
+    if (shared.remaining === null) return { verdict: own, charge: true };
+
+    return {
+        verdict: own.remaining <= shared.remaining ? own : shared,
+        charge: true,
+    };
+};

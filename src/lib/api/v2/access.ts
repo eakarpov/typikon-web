@@ -132,12 +132,26 @@ const authorizeToken = async (plain: string, scope: Scope, ip: string): Promise<
     const metered = meter("token", key, allowance, token);
     if (metered.denied) return metered;
 
-    const quota = await spendDaily(token._id, allowance.perDay);
+    // Подушевой потолок — только там, где ключ общий на много устройств: у ключа,
+    // выданного одному потребителю, делить нечего.
+    const quota = await spendDaily(token._id, allowance.perDay, new Date(),
+        allowance.perClient && allowance.perDevice != null
+            ? { client: ip, perDevice: allowance.perDevice }
+            : null);
 
     if (!quota.allowed) {
+        // Какая именно квота кончилась, сказать надо: «исчерпана квота ключа» на
+        // подушевом потолке увело бы отладку к тарифу, тогда как дело в одном
+        // устройстве, и остальные работают.
+        const own = allowance.perDevice != null && quota.limit === allowance.perDevice;
+
         return refused(fail(
             "quota_exceeded",
-            `Исчерпана суточная квота ключа (${quota.limit}). Обновится через ${Math.ceil(quota.resetIn / 60)} мин.`,
+            own
+                ? `Исчерпана суточная доля устройства (${quota.limit}). ` +
+                  `Обновится через ${Math.ceil(quota.resetIn / 60)} мин.`
+                : `Исчерпана суточная квота ключа (${quota.limit}). ` +
+                  `Обновится через ${Math.ceil(quota.resetIn / 60)} мин.`,
             {
                 "Retry-After": String(quota.resetIn),
                 "X-Quota-Limit": String(quota.limit),

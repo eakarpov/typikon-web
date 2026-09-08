@@ -1,7 +1,7 @@
 import { ObjectId, type Collection } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { TOKENS_DB } from "@/lib/api/v2/tokens";
-import { dayKey, decide, type QuotaVerdict } from "@/lib/api/v2/quota";
+import { dayKey, decide, decidePair, type QuotaVerdict } from "@/lib/api/v2/quota";
 import {reportError} from "@/lib/reportError";
 
 // Суточный расход ключей.
@@ -27,6 +27,14 @@ export interface UsageDoc {
     day: string;
     count: number;
     updatedAt: Date;
+    /**
+     * Чей это расход внутри ключа; отсутствует — расход ключа целиком.
+     *
+     * Ключ приложения один на всех, и общий суточный потолок значит, что один
+     * поток выкачки кладёт приложение у всех остальных. Поэтому у такого ключа
+     * счётчиков два: общий бережёт сервер, подушевой — читателей друг от друга.
+     */
+    client?: string | null;
 }
 
 export const usageCollection = async (): Promise<Collection<UsageDoc>> => {
@@ -58,15 +66,31 @@ const scheduleFlush = () => {
     scheduled.unref?.();
 };
 
-const persist = async (tokenId: string, counter: Counter) => {
+/**
+ * Ключ счётчика: сам ключ API или ключ вместе с устройством.
+ *
+ * Разделитель — вертикальная черта: в шестнадцатеричном идентификаторе её быть
+ * не может, значит и спутать общий счётчик с подушевым нельзя.
+ */
+const counterKey = (tokenId: string, client: string | null): string =>
+    client === null ? tokenId : `${tokenId}|${client}`;
+
+const filterOf = (tokenId: string, client: string | null, day: string) =>
+    client === null
+        // `client: null` в фильтре, а не отсутствие поля: без этого общий
+        // счётчик нашёл бы первый попавшийся подушевой документ.
+        ? { tokenId: new ObjectId(tokenId), day, client: null }
+        : { tokenId: new ObjectId(tokenId), day, client };
+
+const persist = async (tokenId: string, client: string | null, counter: Counter) => {
     const count = counter.count;
     counter.saved = count;
 
     try {
         const usage = await usageCollection();
         await usage.updateOne(
-            { tokenId: new ObjectId(tokenId), day: counter.day },
-            { $set: { count, updatedAt: new Date() } },
+            filterOf(tokenId, client, counter.day),
+            { $set: { count, updatedAt: new Date(), client } },
             { upsert: true },
         );
     } catch (e) {
@@ -75,16 +99,17 @@ const persist = async (tokenId: string, counter: Counter) => {
     }
 };
 
-const load = async (tokenId: string, day: string): Promise<Counter> => {
+const load = async (tokenId: string, client: string | null, day: string): Promise<Counter> => {
+    const key = counterKey(tokenId, client);
     // Два первых запроса подряд не должны читать базу дважды и терять инкремент.
-    const inFlight = loading.get(tokenId);
+    const inFlight = loading.get(key);
     if (inFlight) return inFlight;
 
     const promise = (async () => {
         let count = 0;
         try {
             const usage = await usageCollection();
-            const doc = await usage.findOne({ tokenId: new ObjectId(tokenId), day });
+            const doc = await usage.findOne(filterOf(tokenId, client, day));
             count = doc?.count ?? 0;
         } catch (e) {
             // База недоступна — считаем с нуля, но доступ из-за этого не закрываем.
@@ -92,38 +117,69 @@ const load = async (tokenId: string, day: string): Promise<Counter> => {
         }
 
         const counter: Counter = { day, count, saved: count };
-        counters.set(tokenId, counter);
-        loading.delete(tokenId);
+        counters.set(key, counter);
+        loading.delete(key);
         return counter;
     })();
 
-    loading.set(tokenId, promise);
+    loading.set(key, promise);
     return promise;
 };
 
-/** Списывает один запрос из суточной квоты ключа. */
-export const spendDaily = async (
-    tokenId: ObjectId,
-    perDay: number | null,
-    now: Date = new Date(),
-): Promise<QuotaVerdict> => {
-    if (perDay === null) return decide(0, null, now);
-
-    const key = tokenId.toHexString();
-    const day = dayKey(now);
+/** Счётчик за сегодня, поднятый из базы при надобности. Без списания. */
+const counterFor = async (
+    tokenId: string,
+    client: string | null,
+    day: string,
+): Promise<Counter> => {
+    const key = counterKey(tokenId, client);
 
     let counter = counters.get(key);
     if (!counter || counter.day !== day) {
         // Смена суток: прежний счётчик дописываем в базу и заводим новый.
-        if (counter && counter.count !== counter.saved) await persist(key, counter);
+        if (counter && counter.count !== counter.saved) await persist(tokenId, client, counter);
         counters.delete(key);
-        counter = await load(key, day);
+        counter = await load(tokenId, client, day);
     }
 
-    const verdict = decide(counter.count, perDay, now);
-    if (!verdict.allowed) return verdict;
+    return counter;
+};
 
-    counter.count++;
+/**
+ * Списывает один запрос из суточной квоты.
+ *
+ * Потолков может быть два: общий на ключ и подушевой. Оба ПРОВЕРЯЮТСЯ ДО того,
+ * как хоть один списан, — иначе отказ по одному разгонял бы счётчик другого, а
+ * правило здесь ровно обратное: исчерпавшему квоту запрос не засчитывается,
+ * иначе он разгонял бы счётчик собственными отказами и квота не обновилась бы
+ * никогда.
+ *
+ * Возвращается более тесный из двух остатков: клиент упрётся именно в него, и
+ * говорить ему про запас, которого у него нет, — врать.
+ */
+export const spendDaily = async (
+    tokenId: ObjectId,
+    perDay: number | null,
+    now: Date = new Date(),
+    device: { client: string; perDevice: number | null } | null = null,
+): Promise<QuotaVerdict> => {
+    const perDevice = device?.perDevice ?? null;
+    if (perDay === null && perDevice === null) return decide(0, null, now);
+
+    const key = tokenId.toHexString();
+    const day = dayKey(now);
+
+    const shared = perDay === null ? null : await counterFor(key, null, day);
+    const own = perDevice === null || device === null
+        ? null
+        : await counterFor(key, device.client, day);
+
+    const { verdict, charge } = decidePair(
+        shared?.count ?? 0, perDay, own?.count ?? 0, perDevice, now);
+    if (!charge) return verdict;
+
+    if (shared) shared.count++;
+    if (own) own.count++;
     scheduleFlush();
 
     return verdict;
@@ -135,13 +191,19 @@ export const usageToday = async (tokenId: ObjectId, now: Date = new Date()): Pro
     if (counter && counter.day === dayKey(now)) return counter.count;
 
     const usage = await usageCollection();
-    const doc = await usage.findOne({ tokenId, day: dayKey(now) });
+    const doc = await usage.findOne({ tokenId, day: dayKey(now), client: null });
     return doc?.count ?? 0;
 };
 
 /** Дописывает всё накопленное — на случай, если понадобится снять срез немедленно. */
 export const flushUsage = async () => {
     for (const [key, counter] of counters) {
-        if (counter.count !== counter.saved) await persist(key, counter);
+        if (counter.count === counter.saved) continue;
+        // Ключ составной у подушевых счётчиков и простой у общего; разбираем
+        // обратно тем же разделителем, каким собирали.
+        const cut = key.indexOf("|");
+        const tokenId = cut === -1 ? key : key.slice(0, cut);
+        const client = cut === -1 ? null : key.slice(cut + 1);
+        await persist(tokenId, client, counter);
     }
 };

@@ -23,6 +23,15 @@ type Spec = {
     key: Record<string, 1 | -1>;
     options?: Record<string, any>;
     why: string;
+    /**
+     * Индекс, который этот заменяет: прежний сносится перед созданием нового.
+     *
+     * Нужно там, где ключ УЖЕ уникального индекса расширился. Сам по себе старый
+     * никуда не денется, а его уникальность отвергнет ровно те записи, ради
+     * которых ключ и расширяли, — и увидим мы это не здесь, а на проде, на первой
+     * такой записи.
+     */
+    replaces?: Record<string, 1 | -1>;
 };
 
 // Уникальность alias только для непустых строк: у 612 текстов alias вообще нет,
@@ -110,8 +119,11 @@ const SPECS: Spec[] = [
       why: "проверка ключа на каждом запросе к /api/v2; уникальность — страховка от двойного выпуска" },
     { db: "typikon-users", collection: "apiTokens", key: { userId: 1, createdAt: -1 },
       why: "список своих ключей в профиле" },
-    { db: "typikon-users", collection: "apiTokenUsage", key: { tokenId: 1, day: 1 }, options: { unique: true },
-      why: "суточный расход ключа: читается при первом запросе за сутки и переписывается на месте" },
+    { db: "typikon-users", collection: "apiTokenUsage", key: { tokenId: 1, day: 1, client: 1 }, options: { unique: true },
+      why: "суточный расход: читается при первом запросе за сутки и переписывается на месте. "
+         + "client в ключе — с тех пор, как у ключа приложения появилась подушевая доля: записей "
+         + "на ключ и сутки стало много, и прежний уникальный { tokenId, day } их бы отверг",
+      replaces: { tokenId: 1, day: 1 } },
 
     { db: "typikon", collection: "mentionCandidates", key: { textId: 1, dneslovId: 1 }, options: { unique: true },
       why: "кандидат на упоминание — один на пару текст/святой" },
@@ -249,6 +261,16 @@ async function main() {
         console.log(`            ${spec.why}`);
 
         if (!APPLY) continue;
+
+        // Заменяемый сносим первым: уникальный { tokenId, day } не даст завести
+        // вторую запись за те же сутки, сколько бы полей ни было в новом ключе.
+        if (spec.replaces) {
+            const stale = current.find((i) => sameKey(i.key, spec.replaces!));
+            if (stale) {
+                await collection.dropIndex(stale.name);
+                console.log(`            снесён прежний { ${keyToString(spec.replaces)} } (${stale.name})`);
+            }
+        }
 
         try {
             const started = Date.now();
