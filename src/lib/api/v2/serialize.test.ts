@@ -46,3 +46,33 @@ for (const [name, serialized] of pairs) {
         assert.deepEqual(fields(serialized), schema(name));
     });
 }
+
+// Неразрешённая ссылка. `lib/canons` подставляет её в текст, чтобы страница не
+// показала пустоту, — но наружу опознаватель `he.h.m2.heHE.DefteLaoi` уходить
+// текстом песнопения не должен: клиент напечатает его уставным кеглем, и читатель
+// прочтёт машинную строку как ирмос. Греческий слой даёт таких 2697 из 2718.
+test("неразрешённая ссылка отдаётся ссылкой, а не текстом песнопения", () => {
+    const line = (canonDetail({
+        odesList: [{ ode: 1, irmos: [{
+            unit: "irmos", text: "→ he.h.m2.heHE.DefteLaoi",
+            reference: "he.h.m2.heHE.DefteLaoi", borrowed: false,
+        }], troparia: [] }],
+    }) as any).odesList[0].irmos[0];
+
+    assert.equal(line.text, "");
+    assert.equal(line.reference, "he.h.m2.heHE.DefteLaoi");
+});
+
+test("разрешённая ссылка остаётся текстом и остаётся помеченной", () => {
+    // Подставленный текст — песнопение, и печатать его надо; но неподписанным он
+    // выдавался бы за напечатанный здесь.
+    const line = (canonDetail({
+        odesList: [{ ode: 1, irmos: [{
+            unit: "irmos", text: "Гряди́те, лю́дие", reference: null, borrowed: true,
+        }], troparia: [] }],
+    }) as any).odesList[0].irmos[0];
+
+    assert.equal(line.text, "Гряди́те, лю́дие");
+    assert.equal(line.borrowed, true);
+    assert.equal(line.reference, null);
+});

@@ -192,6 +192,13 @@ export interface CanonLine {
     text: string;
     /** Текста своего нет — он взят по ссылке (Ирмологий или соседний канон). */
     borrowed: boolean;
+    /**
+     * Ссылка, которую разрешить не удалось. Греческий слой ссылается на
+     * Ирмологий, которого в корпусе нет: 2697 строк из 2718 неразрешённых —
+     * оттуда. Опознаватель — не песнопение, и клиент вправе сказать об этом
+     * словами вместо того, чтобы печатать его читателю.
+     */
+    reference: string | null;
     marker: string | null;
     repeat: number;
 }
@@ -248,6 +255,7 @@ export const getCanon = (id: string): CanonDetail | null => {
             // тогда как оно есть, просто мы его пока не разрешили.
             text: l.text ?? resolved ?? (l.ref_id ? `→ ${l.ref_id}` : ""),
             borrowed: l.text === null && resolved !== null,
+            reference: l.text === null && resolved === null ? (l.ref_id ?? null) : null,
             marker: l.marker ?? null,
             repeat: l.repeat_count ?? 1,
         };
