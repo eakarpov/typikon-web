@@ -81,7 +81,8 @@
     "health:snapshot": "tsx src/scripts/take-health-snapshot.ts",
     "names:index": "tsx src/scripts/build-name-index.ts",
     "release:data": "bash release-data.sh",
-    "push:pomyannik": "tsx src/scripts/send-pomyannik-push.ts"
+    "push:pomyannik": "tsx src/scripts/send-pomyannik-push.ts",
+    "push:reading": "tsx src/scripts/send-day-reading-push.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

@@ -42,8 +42,17 @@ export async function POST(request: Request) {
 
     const platform = body?.platform === "ios" ? "ios" : "android";
 
+    // Час чтений дня: местный, целый, в сутках. Не прислали — `null`, и о
+    // чтениях этому устройству не пишем: молчание тут и есть выбор.
+    const raw = body?.readingHour;
+    if (raw !== undefined && raw !== null &&
+        (!Number.isInteger(raw) || raw < 0 || raw > 23)) {
+        return fail("bad_request", "readingHour — целый час от 0 до 23 либо null.");
+    }
+    const readingHour = typeof raw === "number" ? raw : null;
+
     try {
-        await rememberDevice(access.userId, token, timeZone, platform);
+        await rememberDevice(access.userId, token, timeZone, platform, readingHour);
         return respondPrivate({ ok: true }, { access });
     } catch (e) {
         reportError(e, { where: "app/api/v2/pomyannik/devices/route#POST", source: "api" });

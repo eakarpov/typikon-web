@@ -34,3 +34,15 @@ test("неизвестный пояс не роняет рассылку", () =>
     assert.equal(knownTimeZone("Марс/Олимп"), false);
     assert.equal(knownTimeZone("Europe/Moscow"), true);
 });
+
+// Час у каждого свой: рассылка чтений спрашивает не «у кого сейчас восемь», а
+// «у кого сейчас ЕГО час».
+test("свой час у каждого свой миг", () => {
+    const now = new Date("2026-09-09T05:00:00Z");
+
+    // Один и тот же запуск крона застаёт восьмой час в Москве и двенадцатый на
+    // Камчатке; кто просил восемь, получит толчок здесь, а не там.
+    assert.equal(localHour("Europe/Moscow", now), 8);
+    assert.equal(localHour("Asia/Kamchatka", now), 17);
+    assert.equal(localHour("Europe/Kaliningrad", now), 7);
+});

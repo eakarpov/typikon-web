@@ -36,6 +36,13 @@ export interface PushDevice {
     timeZone: string;
     platform: string;
     updatedAt: Date;
+    /**
+     * Час, в который человек просил говорить о чтениях дня; `null` — не просил.
+     *
+     * Час МЕСТНЫЙ, как и всё здесь: восемь утра не всеобщее время, а
+     * уведомление о чтениях, пришедшее в три ночи, хуже не пришедшего вовсе.
+     */
+    readingHour?: number | null;
 }
 
 /**
@@ -52,11 +59,12 @@ export const rememberDevice = async (
     token: string,
     timeZone: string,
     platform: string,
+    readingHour: number | null = null,
 ): Promise<void> => {
     const collection = await devices();
     await collection.updateOne(
         { token },
-        { $set: { userId, token, timeZone, platform, updatedAt: new Date() } },
+        { $set: { userId, token, timeZone, platform, readingHour, updatedAt: new Date() } },
         { upsert: true },
     );
 };
@@ -83,5 +91,22 @@ export const devicesAtLocalHour = async (hour: number, now: Date = new Date()): 
     const all = (await collection.find({}).toArray()) as unknown as PushDevice[];
 
     return all.filter((device) => localHour(device.timeZone, now) === hour);
+};
+
+/**
+ * Устройства, у которых СЕЙЧАС тот час, который они сами и назначили под чтения.
+ *
+ * Час у каждого свой, поэтому спрашивать «у кого сейчас восемь» бесполезно:
+ * сверяем местный час устройства с его же `readingHour`.
+ */
+export const devicesAwaitingReading = async (now: Date = new Date()): Promise<PushDevice[]> => {
+    const collection = await devices();
+    const all = (await collection
+        .find({ readingHour: { $ne: null } })
+        .toArray()) as unknown as PushDevice[];
+
+    return all.filter((device) =>
+        typeof device.readingHour === "number" &&
+        localHour(device.timeZone, now) === device.readingHour);
 };
 
