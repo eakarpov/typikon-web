@@ -22,6 +22,7 @@ import {
     type PartOfSpeech,
 } from "@/lib/morphology/tags";
 import {reportError} from "@/lib/reportError";
+import { splitClitic } from "@/lib/morphology/stems";
 
 // Страница словаря собирает парадигму на сервере: и порождение по таблицам, и
 // наложение выписанных в словаре форм. Клиенту уходит готовая сетка — списки строк
@@ -163,6 +164,46 @@ const participles = (
     return out;
 };
 
+/**
+ * То же для уже сведённых форм: частица приписывается только к ПОРОЖДЁННЫМ.
+ *
+ * Выписанные в словаре её уже несут; приписав второй раз, получили бы
+ * «бла́гожеже».
+ */
+const formsWithClitic = <K extends string>(
+    table: Record<K, Form[]>,
+    clitic: string,
+): Record<K, Form[]> => {
+    if (!clitic) return table;
+
+    const out = {} as Record<K, Form[]>;
+    for (const [slot, values] of Object.entries(table) as [K, Form[]][]) {
+        out[slot] = values.map((form) =>
+            form.stored ? form : { ...form, value: form.value + clitic });
+    }
+    return out;
+};
+
+/**
+ * Приписывает частицу ко всем порождённым формам таблицы.
+ *
+ * Только к порождённым: выписанные в словаре её уже несут и пишутся слитно
+ * («бла́гоже», «ви́ждуже») — потому и приписываем без плюса.
+ */
+const withClitic = <K extends string>(
+    table: Record<K, string[]> | null | undefined,
+    clitic: string,
+): Record<K, string[]> | null => {
+    if (!table) return null;
+    if (!clitic) return table;
+
+    const out = {} as Record<K, string[]>;
+    for (const [slot, values] of Object.entries(table) as [K, string[]][]) {
+        out[slot] = values.map((value) => value + clitic);
+    }
+    return out;
+};
+
 export const getItem = async (id: string): Promise<[LexemeView | null, unknown]> => {
     try {
         const client = await clientPromise;
@@ -227,24 +268,39 @@ export const getItem = async (id: string): Promise<[LexemeView | null, unknown]>
             if (!placed) view.extra.push({ value, properties: tags });
         }
 
-        const lex = { name, properties, scheme: view.scheme };
+        // Приставшая частица отделяется ДО порождения: склоняется голова, а хвост
+        // прирастает к готовым формам. Не отделив его, схема не находила своего
+        // окончания — оно не в конце строки, — и `cut` молча возвращал лемму
+        // целиком: к инфинитиву приписывалось окончание, «ви́дѣти+жиши» вместо
+        // «ви́дишиже», и так вся парадигма у ста пятидесяти восьми лемм.
+        const { head, clitic } = splitClitic(name);
+        const lex = { name: head, properties, scheme: view.scheme };
 
         if (pos === "noun") {
             const table = decline(lex);
             view.known = Boolean(table);
-            view.noun = merge(table ?? ({} as Record<Slot, string[]>), nounStored, SLOTS);
+            view.noun = merge(withClitic(table, clitic) ?? ({} as Record<Slot, string[]>), nounStored, SLOTS);
         } else if (pos === "adjective") {
             const table = declineAdjective(lex);
             view.known = Boolean(table);
             view.adjective = {
-                brev: merge(table?.brev ?? ({} as Record<AdjSlot, string[]>), brevStored, ADJ_SLOTS),
-                plen: merge(table?.plen ?? ({} as Record<AdjSlot, string[]>), plenStored, ADJ_SLOTS),
+                brev: merge(withClitic(table?.brev, clitic) ?? ({} as Record<AdjSlot, string[]>), brevStored, ADJ_SLOTS),
+                plen: merge(withClitic(table?.plen, clitic) ?? ({} as Record<AdjSlot, string[]>), plenStored, ADJ_SLOTS),
             };
         } else if (pos === "verb") {
             const table = conjugate(lex);
             view.known = Boolean(table);
-            view.verb = merge(table ?? ({} as Record<VerbSlot, string[]>), verbStored, VERB_SLOTS);
-            view.participles = participles(forms, table);
+            view.verb = merge(withClitic(table, clitic) ?? ({} as Record<VerbSlot, string[]>), verbStored, VERB_SLOTS);
+            // Причастия строятся от ЧИСТОЙ таблицы: они берут основу из спрягаемой
+            // формы, и частица, приросшая раньше времени, ушла бы внутрь основы.
+            view.participles = participles(forms, table).map((p) => ({
+                ...p,
+                base: p.base ? p.base + clitic : p.base,
+                table: {
+                    brev: formsWithClitic(p.table.brev, clitic),
+                    plen: formsWithClitic(p.table.plen, clitic),
+                },
+            }));
         }
 
         return [view, null];
