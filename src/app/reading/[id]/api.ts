@@ -7,6 +7,8 @@ import {saintFallbackTitle, saintTitles} from "@/lib/dneslov";
 import {saintNames, saintSlugs} from "@/lib/saints";
 import {coverageFor} from "@/lib/accents/store";
 import {markText} from "@/lib/accents/service";
+import {genreOfBook} from "@/lib/accents/genre";
+import type {Genre} from "@/lib/accents/mark";
 import {libFondCipher, libFondUrl, type LibFondSource} from "@/lib/libFond";
 import {bibleRedirectTarget} from "@/lib/bible/query";
 import {reportError} from "@/lib/reportError";
@@ -263,17 +265,41 @@ export interface AccentedView {
     /** Сколько знаков поставлено и сколько слов их ждали. */
     marked: number;
     expected: number;
+    /** По какому собранию считали: чтения или песнопения. См. lib/accents/genre. */
+    genre: Genre;
 }
+
+/**
+ * Имя книги, которой текст принадлежит, — ради рода (см. `genreOfBook`).
+ *
+ * Отдельным запросом, а не соединением в `loadText`: имя нужно одному только
+ * показу с ударениями, а текст читают и без него. Кэш по тому же тегу, что и
+ * книги, — переименуют книгу, пересчитается и род.
+ */
+const bookNameOf = cached(async (bookId: unknown): Promise<string | null> => {
+    if (!bookId) return null;
+
+    const id = bookId instanceof ObjectId ? bookId
+        : (typeof bookId === "string" && ObjectId.isValid(bookId) ? new ObjectId(bookId) : null);
+    if (!id) return null;
+
+    const client = await clientPromise;
+    const book = await client.db("typikon").collection("books")
+        .findOne({ _id: id }, { projection: { name: 1 } });
+
+    return book?.name ?? null;
+}, ["reading-book-name"], [CacheTag.BOOKS]);
 
 // ПВЛ — 55 тысяч слов, и разметка её каждый раз заново обошлась бы дороже самой
 // страницы. Кэш по тому же тегу, что и текст: правят текст — пересчитается и вид.
-const buildAccentedView = cached(async (id: string, content: string): Promise<AccentedView> => {
-    const result = await markText(content, "reading");
+const buildAccentedView = cached(async (id: string, content: string, genre: Genre): Promise<AccentedView> => {
+    const result = await markText(content, genre);
 
     return {
         content: result.tokens.map((token) => token.text).join(""),
         marked: result.marked,
         expected: result.expected,
+        genre,
     };
 }, ["reading-accented-view"], [CacheTag.TEXTS]);
 
@@ -287,9 +313,11 @@ export const getAccentedView = async (item: any, wanted: boolean): Promise<Accen
     try {
         const coverage = await coverageFor(item.alias);
         if (!coverage) return null;
-        if (!wanted) return { content: "", marked: 0, expected: coverage.need - coverage.has };
 
-        return await buildAccentedView(item.alias, item.content);
+        const genre = genreOfBook(await bookNameOf(item.bookId));
+        if (!wanted) return { content: "", marked: 0, expected: coverage.need - coverage.has, genre };
+
+        return await buildAccentedView(item.alias, item.content, genre);
     } catch (e) {
         reportError(e, { where: "app/reading/[id]/api#getAccentedView" });
         return null;

@@ -715,6 +715,29 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/texts/{id}/accents": {
+            get: {
+                tags: ["Ударения"],
+                summary: "Текст с расставленными ударениями",
+                description:
+                    "**Корпус остаётся вычитанным** — здесь отдаётся ВИД: та же книга, но со "
+                    + "знаками, поставленными машиной по словарю собрания. Показывать его надо с "
+                    + "прямой пометой об этом: спорные места оставлены без знака, и в самом "
+                    + "тексте ударений нет.\n\nПредлагать ли его вообще, говорит поле `accents` "
+                    + "карточки текста: `null` — текст размечен, и спрашивать здесь нечего "
+                    + "(ответ будет `404`).\n\nТекст не присылается, а спрашивается по "
+                    + "идентификатору: сервер его и так держит, а «Повесть временных лет» — "
+                    + "триста сорок девять тысяч знаков.",
+                parameters: [{
+                    name: "id", in: "path", required: true, schema: { type: "string" },
+                    example: "sluzba-06-26-nil",
+                }],
+                responses: {
+                    "200": ok("#/components/schemas/AccentedText"),
+                    "404": errorResponse("Текста нет либо он размечен в самом корпусе"),
+                },
+            },
+        },
         "/api/v2/texts/{id}/day": {
             get: {
                 tags: ["Календарь"],
@@ -1693,9 +1716,39 @@ export const openapi = () => ({
                             russianUrl: { type: ["string", "null"], description: "Ссылка на русский перевод — чужой материал" },
                             note: { type: ["string", "null"] },
                             mentionIds: { type: "array", items: { type: "string" } },
+                            accents: {
+                                type: ["object", "null"],
+                                description:
+                                    "Сколько слов в этом тексте ждут ударения (need) и сколько уже "
+                                    + "несут его в самом корпусе (has). `null` — текст размечен, и "
+                                    + "показ с ударениями предлагать нечего. Отдаётся здесь, чтобы "
+                                    + "клиент знал это ДО того, как нарисует переключатель",
+                                properties: {
+                                    need: { type: "integer" },
+                                    has: { type: "integer" },
+                                },
+                            },
                         },
                     },
                 ],
+            },
+            AccentedText: {
+                type: "object",
+                properties: {
+                    content: {
+                        type: "string",
+                        description: "Тот же текст, но со знаками, поставленными машиной",
+                    },
+                    marked: { type: "integer", description: "Сколько знаков поставлено" },
+                    expected: { type: "integer", description: "Сколько слов их ждали" },
+                    genre: {
+                        type: "string",
+                        enum: ["reading", "chant"],
+                        description:
+                            "По какому собранию считали. «спасе́» — аорист чтений, «спа́се» — "
+                            + "звательный песнопений, и частоты этих собраний не складываются",
+                    },
+                },
             },
             Verse: {
                 type: "object",

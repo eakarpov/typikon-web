@@ -60,6 +60,9 @@ export async function GET(request: Request) {
                 today: "/api/v2/calendar/today",
                 search: "/api/v2/search?q=",
                 accents: "/api/v2/accents",
+                // Текст со знаками, поставленными машиной: корпус при этом
+                // остаётся вычитанным, отдаётся вид.
+                textAccents: "/api/v2/texts/{id}/accents",
                 accent: "/api/v2/accents/{слово}",
                 // Песнопения тут не было с самого начала — недосмотр: ручка есть
                 // и работает, а в перечне её не значилось.

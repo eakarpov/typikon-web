@@ -199,8 +199,18 @@ export const textSummary = (doc: any) => ({
 });
 
 /** Текст целиком — то, ради чего API и нужен. */
-export const textDetail = (doc: any) => ({
+/**
+ * Текст целиком.
+ *
+ * `coverage` — сколько слов ждут ударения и сколько уже несут его в самом
+ * корпусе (`typikon-csl.accentCoverage`). Отдаётся затем, чтобы клиент знал
+ * ЗАРАНЕЕ, предлагать ли показ с ударениями: `null` — текст размечен, и
+ * переключателя быть не должно вовсе. Спросив об этом отдельной ручкой, клиент
+ * узнавал бы ответ уже после того, как нарисовал кнопку.
+ */
+export const textDetail = (doc: any, coverage: { need: number; has: number } | null = null) => ({
     ...textSummary(doc),
+    accents: coverage ? { need: coverage.need, has: coverage.has } : null,
     content: doc.content ?? "",
     start: doc.start || null,
     startPhrase: doc.startPhrase || null,

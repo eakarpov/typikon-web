@@ -4,6 +4,7 @@ import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { textDetail } from "@/lib/api/v2/serialize";
 import { cached, CacheTag } from "@/lib/cache";
+import { coverageFor } from "@/lib/accents/store";
 import {reportError} from "@/lib/reportError";
 
 // Текст целиком. Принимает и alias, и идентификатор: alias — устойчивый адрес,
@@ -51,7 +52,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
         if (params.id === "random") {
             const doc = await randomText();
             if (!doc) return fail("not_found", "Не нашлось ни одного готового текста");
-            return respond(textDetail(doc), { maxAge: 0, headers: { "Cache-Control": "no-store" }, access });
+            return respond(textDetail(doc, await coverageFor(doc.alias)),
+                { maxAge: 0, headers: { "Cache-Control": "no-store" }, access });
         }
 
         const doc = await loadText(params.id);
@@ -60,7 +62,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
             return fail("not_found", `Текст «${params.id}» не найден`);
         }
 
-        return respond(textDetail(doc), { access });
+        // Покрытие ударениями — чтобы клиент знал заранее, предлагать ли показ
+        // с ними. Ошибка здесь не повод не отдать текст: `coverageFor` глушит
+        // свои сами и возвращает null.
+        return respond(textDetail(doc, await coverageFor(doc.alias)), { access });
     } catch (e) {
         reportError(e, { where: "app/api/v2/texts/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить текст");
