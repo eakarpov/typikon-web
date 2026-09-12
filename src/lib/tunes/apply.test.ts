@@ -288,3 +288,23 @@ test("ни один слог не теряется между группами",
         assert.equal(fitted.colons[0].cells.length, colon.syllables.length, text);
     }
 });
+
+test("читок перед распевом вправе не взять ни одного слога", () => {
+    // Первая строка подобна «Ра́дуйся»: читок, распев на первом ударении, … .
+    // Колено начато ударным слогом, и читку перед ним петь нечего. Раньше
+    // предраспев отнимал слог всё равно, и распев съезжал с «Ра́» на «дуй».
+    const tune = glas1([line([
+        { flex: true },
+        { stress: "first" }, { flex: true }, {}, {},
+        { stress: "last" }, { flex: true }, {}, {},
+    ])]);
+    const fitted = fitTune(tune, parseChantText("Ра́дуйся, Не́бо и земля́,"));
+    const cells = fitted.colons[0].cells;
+
+    assert.equal(cells[0].syllable, "Ра́");
+    assert.deepEqual(cells[0].steps, [1]);
+    assert.equal(cells[0].flex, false);
+    // Пустой читок не непропет: ни одного повтора — законная его мера.
+    assert.equal(fitted.colons[0].unused, 0);
+    assert.deepEqual(fitted.issues, []);
+});

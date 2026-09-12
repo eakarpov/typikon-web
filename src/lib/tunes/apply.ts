@@ -239,7 +239,12 @@ const placeBounds = (segments: Segment[], n: number) => {
     }
 
     segments.forEach((segment, i) => {
-        const floor = i === 0 ? 0 : segments[i - 1].start + 1;
+        // Сосед обязан получить хотя бы слог — если только он не сплошной
+        // читок: тот вправе не взять ни одного. Иначе колено, начатое ударным
+        // слогом («Ра́дуйся», «Спа́са»), отдавало бы его предраспеву, и распев
+        // съезжал бы на слог вправо.
+        const floor = i === 0 ? 0 : segments[i - 1].start
+            + (segments[i - 1].steps.every(s => s.flex) ? 0 : 1);
         // Начало неизвестно — берём от конца соседа, а его нет, так по числу
         // его же шагов: отрезок без распева иначе не к чему привязать.
         const guess = startAt[i]
@@ -323,7 +328,8 @@ export const fitColon = (
         const head = flexAt < 0 ? own : own.slice(0, flexAt);
         const tail = flexAt < 0 ? [] : own.slice(flexAt + 1);
         const m = segment.end - segment.start + 1;
-        if (m <= 0) { unused += own.length; continue; }
+        // Читок без слогов не «непропет»: ни одного повтора — законная его мера.
+        if (m <= 0) { unused += own.filter(s => !s.flex).length; continue; }
 
         // Без читка отрезок не растягивается: за его шагами сразу начинается
         // область, где последний шаг тянется на лишние слоги.
