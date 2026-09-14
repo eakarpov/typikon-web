@@ -13,10 +13,17 @@ const loadBook = async (id: string): Promise<[any, any]> => {
             .aggregate([
                 { $match: { _id: new ObjectId(id) }},
                 {
+                    // Только поля оглавления. Без проекции $lookup вкладывал в книгу
+                    // тексты целиком, с content и полями поиска, а весь ответ — один
+                    // документ Mongo с пределом 16 МБ: книге в 4683 статьи
+                    // (энциклопедия Никифора) этого уже впритык.
                     $lookup: {
                         from: "texts",
                         localField: "texts",
                         foreignField: "_id",
+                        pipeline: [
+                            { $project: { name: 1, type: 1, readiness: 1, dneslovId: 1, bookIndex: 1 } },
+                        ],
                         as: "texts"
                     },
                 },

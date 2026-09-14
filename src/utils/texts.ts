@@ -65,6 +65,9 @@ export enum TextKind {
     SYNAXARION= "Synaxarion",
     SERVICE= "Service",
     PRAYER= "Prayer",
+    // Статья справочника: энциклопедия Никифора и подобные. Ни поучением, ни
+    // толкованием её не назвать, а род текста виден читателю в оглавлении.
+    REFERENCE= "Reference",
 }
 
 export enum DneslovKind {
@@ -91,7 +94,9 @@ export const printTextKind = (kind: TextKind) => {
           return "Последование";
       case TextKind.PRAYER:
           return "Молитва";
-  }  
+      case TextKind.REFERENCE:
+          return "Справочное";
+  }
 };
 
 export const printDneslovKind = (kind: DneslovKind) => {
