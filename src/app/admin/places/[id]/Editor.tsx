@@ -26,7 +26,7 @@ const AdminEditor = ({ value }: any) => {
     const [saved, setIsSaved] = useState(false);
 
     const onBufferClick = useCallback(() => {
-        navigator.clipboard.writeText(`${SITE_URL}/reading/${alias}`);
+        navigator.clipboard.writeText(`${SITE_URL}/places/${alias}`);
     }, [alias]);
 
     const onSubmit = () => {

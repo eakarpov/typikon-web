@@ -1,10 +1,8 @@
 'use client';
-import React, {useEffect} from "react";
+import React from "react";
 import {fromLonLat} from "ol/proj";
-import Vector from "ol/source/Vector";
-import {Point, MultiLineString, LineString} from "ol/geom";
+import {Point, LineString} from "ol/geom";
 import Feature, {FeatureLike} from "ol/Feature";
-import {Heatmap} from "ol/layer";
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
 import TileLayer from 'ol/layer/Tile.js';
@@ -17,8 +15,8 @@ import Stroke from 'ol/style/Stroke.js';
 import Style from 'ol/style/Style.js';
 import Text from 'ol/style/Text.js';
 import "ol/ol.css";
-import {Coordinate} from "ol/coordinate";
 import {reportClientError} from "@/lib/reportClientError";
+import {useOlMap} from "@/app/components/map/useOlMap";
 
 const data = [
     {
@@ -295,42 +293,28 @@ const customSource = new VectorSource({
 const PlacesPage = () => {
     const item = data[0];
 
-    const init = async () => {
-        // @ts-ignore
-        document.getElementById("map").innerHTML = "";
-
-        const latitude = item.latitude;
-        const longitude = item.longitude;
-
-        const vectorPoints = new VectorLayer({
-            source: customSource,
-            style: pointStyleFunction,
-        });
-
-        const vectorLines = new VectorLayer({
-            source: customSourceLines,
-            style: lineStyleFunction,
-        });
-
-        const map = new Map({
-            layers: [
-                new TileLayer({
-                    source: new OSM(),
-                }),
-                vectorPoints,
-                vectorLines,
-            ],
-            target: 'map',
-            view: new View({
-                center: fromLonLat([longitude, latitude]),
-                zoom: 4,
+    // Размер и снятие карты с узла — в @/app/components/map/useOlMap: прежняя
+    // сборка через getElementById меряла узел до вёрстки и оставалась без подложки.
+    const target = useOlMap((node) => new Map({
+        layers: [
+            new TileLayer({
+                source: new OSM(),
             }),
-        });
-    };
-
-    useEffect(() => {
-        init();
-    }, [item]);
+            new VectorLayer({
+                source: customSource,
+                style: pointStyleFunction,
+            }),
+            new VectorLayer({
+                source: customSourceLines,
+                style: lineStyleFunction,
+            }),
+        ],
+        target: node,
+        view: new View({
+            center: fromLonLat([item.longitude, item.latitude]),
+            zoom: 4,
+        }),
+    }), [item]);
     return (
         <>
             <div className="flex flex-col mb-2">
@@ -347,7 +331,7 @@ const PlacesPage = () => {
                     </span>
                 </span>
             </div>
-            <div id="map" style={{ height: 'calc(100vh - 100px)', width: '100%'}} />
+            <div ref={target} style={{ height: 'calc(100vh - 100px)', width: '100%'}} />
         </>
     );
 }

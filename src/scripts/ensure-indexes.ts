@@ -20,7 +20,7 @@ const APPLY = process.argv.includes("--apply");
 type Spec = {
     db: string;
     collection: string;
-    key: Record<string, 1 | -1>;
+    key: Record<string, 1 | -1 | "2dsphere">;
     options?: Record<string, any>;
     why: string;
     /**
@@ -215,6 +215,40 @@ const SPECS: Spec[] = [
       options: { partialFilterExpression: { slug: { $gt: "" } }, unique: true },
       why: "будущий адрес /saints/{slug}: уникальность заводим заранее, чтобы двух одинаковых не завелось до переезда" },
 
+    // --- typikon: места (@/lib/places/schema)
+    //
+    // Место ищут по адресу (новому и прежним), по внешнему ключу при импорте и по
+    // точке — «что рядом». Упоминания спрашивают с двух сторон: со страницы места
+    // и со страницы стиха или чтения. Уникальность упоминания держит повторный
+    // прогон сопоставления идемпотентным: один стих или текст на место — одна запись.
+    { db: "typikon", collection: "places", key: { slug: 1 },
+      options: { partialFilterExpression: { slug: { $gt: "" } }, unique: true },
+      why: "/places/{slug}; уникальность заводим до выдачи адресов" },
+    { db: "typikon", collection: "places", key: { previousSlugs: 1 },
+      why: "старый адрес места — по нему ищут, чтобы увести редиректом" },
+    { db: "typikon", collection: "places", key: { alias: 1 }, options: NON_EMPTY_ALIAS,
+      why: "прежний адрес /places/{alias}, на который ссылаются пометки {pl|…} в текстах" },
+    { db: "typikon", collection: "places", key: { "externals.source": 1, "externals.id": 1 },
+      options: { partialFilterExpression: { "externals.source": { $exists: true } }, unique: true },
+      why: "место по внешнему ключу при импорте; уникальность не даёт двум записям присвоить одно чужое место" },
+    { db: "typikon", collection: "places", key: { location: "2dsphere" },
+      why: "места рядом с точкой и в пределах карты" },
+    { db: "typikon", collection: "place_relations", key: { from: 1, type: 1 },
+      why: "связи места: преемники, вложенность, отождествления" },
+    { db: "typikon", collection: "place_relations", key: { to: 1, type: 1 },
+      why: "обратная сторона связей: предшественники и что входит в место" },
+    { db: "typikon", collection: "place_mentions", key: { placeId: 1, corpus: 1, canonRef: 1, textId: 1, chantRef: 1 },
+      options: { unique: true },
+      why: "одно упоминание на пару место/стих (текст, песнопение); повторный прогон не плодит дублей" },
+    { db: "typikon", collection: "place_mentions", key: { canonRef: 1 },
+      options: { partialFilterExpression: { canonRef: { $exists: true } } },
+      why: "места стиха и главы на странице Библии" },
+    { db: "typikon", collection: "place_mentions", key: { textId: 1 },
+      options: { partialFilterExpression: { textId: { $exists: true } } },
+      why: "места в блоке связей страницы чтения" },
+    { db: "typikon", collection: "place_mentions", key: { placeId: 1, status: 1 },
+      why: "страница места и экран ревью" },
+
     // --- typikon-meta
     { db: "typikon-meta", collection: "logs", key: { ipHash: 1, url: 1 },
       why: "счётчик просмотров ищет запись по паре ipHash+url на каждый просмотр страницы" },
@@ -222,7 +256,7 @@ const SPECS: Spec[] = [
       why: "метрика отделяет подробные записи от помесячных итогов" },
 ];
 
-const keyToString = (key: Record<string, number>) =>
+const keyToString = (key: Record<string, number | string>) =>
     Object.entries(key).map(([k, v]) => `${k}:${v}`).join(", ");
 
 const sameKey = (a: Record<string, any>, b: Record<string, any>) =>

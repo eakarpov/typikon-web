@@ -5,6 +5,7 @@ import {verifySession, verifySessionBack} from "@/lib/authorize/authorization";
 import * as process from "node:process";
 import {checkRightsBack} from "@/lib/admin/back";
 import {reportError} from "@/lib/reportError";
+import {namesWithSynonyms, toLocation} from "@/lib/places/legacy";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!process.env.SHOW_ADMIN) {
@@ -18,8 +19,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
-            await db
-                .collection("places")
+            const places = db.collection("places");
+            const current = await places.findOne({ "_id": new ObjectId(id) }, { projection: { names: 1 } });
+            // Новые поля выводятся из тех, что правит редактор (@/lib/places/legacy):
+            // иначе точка на карте и имена разошлись бы с тем, что в нём видно.
+            const location = toLocation(data.latitude, data.longitude);
+            await places
                 .updateOne(
                     { "_id" : new ObjectId(id) },
                     {
@@ -28,11 +33,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             updatedAt: new Date(),
                             name: data.name,
                             synonyms: data.synonyms,
+                            names: namesWithSynonyms(current?.names, data.synonyms, data.name),
                             description: data.description,
                             links: data.links,
                             latitude: data.latitude,
                             longitude: data.longitude,
+                            ...(location ? { location } : {}),
                         },
+                        ...(location ? {} : { $unset: { location: "" } }),
                     },
                 );
 

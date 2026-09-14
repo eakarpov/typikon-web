@@ -6,7 +6,11 @@ export const getItem = async (id: string): Promise<[any, any]> => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
-        const matcher = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { alias: id };
+        // Помимо _id и прежнего alias — адрес новой модели и его прежние формы
+        // (@/lib/places/schema): пометки в текстах ссылаются на старое.
+        const matcher = ObjectId.isValid(id)
+            ? { _id: new ObjectId(id) }
+            : { $or: [{ alias: id }, { slug: id }, { previousSlugs: id }] };
 
         const texts = await db
             .collection("places")

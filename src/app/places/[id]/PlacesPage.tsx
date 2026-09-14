@@ -1,65 +1,62 @@
 'use client';
-import React, {useEffect} from "react";
+import React from "react";
 import OSM from "ol/source/OSM";
 import TileLayer from "ol/layer/Tile";
 import Map from "ol/Map";
 import View from "ol/View";
 import {fromLonLat} from "ol/proj";
-import Vector from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
 import {Point} from "ol/geom";
 import Feature from "ol/Feature";
-import {Heatmap} from "ol/layer";
+import CircleStyle from "ol/style/Circle";
+import Fill from "ol/style/Fill";
+import Stroke from "ol/style/Stroke";
+import Style from "ol/style/Style";
+import "ol/ol.css";
+import {useOlMap} from "@/app/components/map/useOlMap";
+import {placeCoordinates} from "@/lib/places/legacy";
+
+// Карта рисуется, только если у места есть точка: у «пустыни Иорданской» её
+// может и не быть, и точка посреди Атлантики хуже, чем отсутствие карты.
+const PlaceMap = ({ latitude, longitude, name }: { latitude: number; longitude: number; name: string }) => {
+    const target = useOlMap((node) => {
+        const center = fromLonLat([longitude, latitude]);
+        const point = new Feature({ geometry: new Point(center) });
+        point.setStyle(new Style({
+            image: new CircleStyle({
+                radius: 7,
+                fill: new Fill({ color: "#1e40af" }),
+                stroke: new Stroke({ color: "#fff", width: 2 }),
+            }),
+        }));
+        return new Map({
+            target: node,
+            layers: [
+                new TileLayer({ source: new OSM() }),
+                new VectorLayer({ source: new VectorSource({ features: [point] }) }),
+            ],
+            view: new View({ center, zoom: 10 }),
+        });
+    }, [latitude, longitude]);
+
+    return <div ref={target} className="w-full h-72 rounded border border-slate-200" aria-label={`Карта: ${name}`} />;
+};
 
 const PlacesPage = ({ item }: {item: any}) => {
-
-    useEffect(() => {
-        const source = new OSM();
-        const layer = new TileLayer({
-            source: source,
-        });
-        const container = document.getElementById("map");
-        if (!container) return;
-        container.innerHTML = "";
-        const latitude = parseFloat(item.latitude);
-        const longitude = parseFloat(item.longitude);
-        const map = new Map({
-            layers: [layer],
-            target: "map",
-            view: new View({
-                center: fromLonLat([longitude, latitude]),
-                zoom: 10,
-            }),
-        });
-        const data = new Vector();
-        const coord = fromLonLat([longitude, latitude]);
-        const lonLat = new Point(coord);
-        const pointFeature = new Feature({
-            geometry: lonLat,
-            weight: 50,
-        });
-        data.addFeature(pointFeature);
-
-        const heatMapLayer = new Heatmap({
-            source: data,
-            radius: 10,
-        });
-        map.addLayer(heatMapLayer);
-    }, [item]);
+    const point = placeCoordinates(item);
     return (
         <>
             <div className="flex flex-col mb-2">
                 <span className="text-xl">
-                    Местность
+                    {item.name}
                 </span>
-                <span className="text-bold">
-                    Город: {item.name}
-                </span>
-                {item.synonyms && (
+                {item.synonyms?.length > 0 && (
                     <span>
-                        Синонимы: {item.synonyms.join(',')}
+                        Другие имена: {item.synonyms.join(', ')}
                     </span>
                 )}
-                {item.links && (
+                {item.links?.length > 0 && (
                     <span>
                         Ссылки: {item.links.map((link: any) => (
                             <span key={link.url}>
@@ -69,7 +66,7 @@ const PlacesPage = ({ item }: {item: any}) => {
                     </span>
                 )}
             </div>
-            <div id="map" style={{ height: '300px', width: '600px'}} />
+            {point && <PlaceMap latitude={point.latitude} longitude={point.longitude} name={item.name} />}
         </>
     );
 }
