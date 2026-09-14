@@ -41,6 +41,17 @@ test("ложные находки проб: «веры», «иудействую
     assert.deepEqual(findPlaceMentions("И Дави́д моля́шеся. Ве́тхий Ада́м отлага́ется.", index, true), []);
 });
 
+test("пара соседних слов — только для составного имени", () => {
+    const pairIndex = buildFormIndex([
+        { id: "devol", forms: textForms(["Девол"]) },
+        { id: "beth-shemesh", forms: textForms(["Беф-Шемеш"]) },
+    ]);
+    // «Де́во, лоза́» склеивалось в «деволоза» и считалось Деволом.
+    assert.deepEqual(findPlaceMentions("Я́ко невозде́ланная, Де́во, лоза́, красне́йший грозд", pairIndex, true), []);
+    const hits = findPlaceMentions("и пришедше в Беф Ше́меш", pairIndex, true);
+    assert.deepEqual(hits.map((h) => h.placeId), ["beth-shemesh"]);
+});
+
 test("одна форма — одно место: первое в порядке предпочтения", () => {
     const hits = findPlaceMentions("во Александри́и еги́петстей", index, true);
     assert.deepEqual(hits.map((h) => h.placeId).sort(), ["alexandria", "egypt"]);

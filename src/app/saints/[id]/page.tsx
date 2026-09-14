@@ -8,6 +8,7 @@ import { myFont } from "@/utils/font";
 import { dneslovIdsOf, getSaintByAddress, type Saint } from "@/lib/saints";
 import { memoriesOfSaint } from "@/lib/memories";
 import { dedicationsOfSaint } from "@/lib/temples";
+import { placesOfSaint } from "@/lib/places/query";
 import { SITE_URL } from "@/utils/site";
 
 // Адрес страницы святого — наш слуг (`saints.slug`). Номер памяти святцев
@@ -73,6 +74,8 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
         // сих пор просто не сходились на одной странице.
         memoriesOfSaint(known),
         dedicationsOfSaint(known),
+        // Места, названные в чтениях к этой памяти (принятые упоминания, @/lib/places/query).
+        placesOfSaint(known),
     ]);
 
     return (

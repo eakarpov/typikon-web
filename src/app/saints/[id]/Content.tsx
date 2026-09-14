@@ -4,6 +4,7 @@ import { akathistsOfSaint } from "@/lib/akathists";
 import { baseYearLabel, kindLabel, memoryDaysOf, orderLabel } from "@/lib/saintFacts";
 import type { SaintMemoryRow } from "@/lib/memories";
 import type { SaintDedication } from "@/lib/temples";
+import type { PlaceOfSaint } from "@/lib/places/query";
 
 // Значение из Promise.allSettled: отклонённое обещание — это "не смогли получить",
 // а не повод уронить всю страницу.
@@ -29,8 +30,9 @@ const Content = async ({ id, itemPromise, facts }: {
     facts?: SaintFacts,
 }) => {
 
-    const [textsResult, memoryResult, mentionsResult, nobleResult, saintMemoriesResult, dedicationsResult] =
+    const [textsResult, memoryResult, mentionsResult, nobleResult, saintMemoriesResult, dedicationsResult, placesResult] =
         await itemPromise;
+    const places = settled<PlaceOfSaint[]>(placesResult, []);
 
     const [items] = settled<[any[], any]>(textsResult, [[], null]);
     const [mentions] = settled<[any[], any]>(mentionsResult, [[], null]);
@@ -81,6 +83,7 @@ const Content = async ({ id, itemPromise, facts }: {
             akathists={akathists}
             memories={saintMemories}
             dedications={dedications}
+            places={places.map(({ id, name, href, texts }) => ({ id, name, href, texts }))}
         />
     )
 };

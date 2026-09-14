@@ -4,6 +4,8 @@ import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 import { reportError } from "@/lib/reportError";
 import { BIBLE_CANON } from "@/utils/bibleCanon";
+import { saintNames, saintSlugs } from "@/lib/saints";
+import { spanLabel } from "@/lib/places/labels";
 import { PLACE_MENTIONS, PLACE_RELATIONS, PLACES } from "@/lib/places/schema";
 import type { Confidence, PlaceKind, PlaceStatus, RelationType } from "@/lib/places/schema";
 
@@ -313,3 +315,103 @@ const loadIndex = async (): Promise<IndexPlace[]> => {
 };
 
 export const placesIndex = cached(loadIndex, ["places-index"], [CacheTag.PLACES]);
+
+// --- Святые и места
+//
+// Связь выводится, а не размечается: место названо в чтении, написанном к памяти
+// святого (texts.dneslovId), и это упоминание принято. Это «упомянуто в житии», а не
+// кафедра или родина: в житии названы и места, где святой не бывал. Так и подписано.
+
+export interface SaintOfPlace { dneslovId: string; name: string; href: string; texts: number }
+
+const loadSaintsOfPlace = async (id: string): Promise<SaintOfPlace[]> => {
+    try {
+        const rows = await (await db()).collection(PLACE_MENTIONS).aggregate([
+            { $match: { placeId: new ObjectId(id), corpus: "text", status: "approved" } },
+            { $lookup: { from: "texts", localField: "textId", foreignField: "_id", as: "text", pipeline: [{ $project: { dneslovId: 1 } }] } },
+            { $unwind: "$text" },
+            { $match: { "text.dneslovId": { $nin: [null, ""] } } },
+            { $group: { _id: "$text.dneslovId", texts: { $sum: 1 } } },
+        ]).toArray();
+        const ids = rows.map((r) => String(r._id));
+        if (!ids.length) return [];
+        const [names, slugs] = await Promise.all([saintNames(ids), saintSlugs(ids)]);
+        return rows
+            .filter((r) => names[String(r._id)])
+            .map((r) => ({
+                dneslovId: String(r._id),
+                name: names[String(r._id)]!,
+                href: `/saints/${slugs[String(r._id)] ?? r._id}`,
+                texts: r.texts,
+            }))
+            .sort((a, b) => b.texts - a.texts || a.name.localeCompare(b.name, "ru"));
+    } catch (e) {
+        reportError(e, { where: "lib/places/query#loadSaintsOfPlace" });
+        return [];
+    }
+};
+
+export const saintsOfPlace = cached(loadSaintsOfPlace, ["place-saints"], [CacheTag.PLACES, CacheTag.SAINTS, CacheTag.TEXTS]);
+
+export interface PlaceOfSaint { id: string; name: string; href: string; texts: number }
+
+const loadPlacesOfSaint = async (dneslovIds: string[]): Promise<PlaceOfSaint[]> => {
+    if (!dneslovIds.length) return [];
+    try {
+        const d = await db();
+        const texts = await d.collection("texts").find({ dneslovId: { $in: dneslovIds } }, { projection: { _id: 1 } }).toArray();
+        if (!texts.length) return [];
+        const rows = await d.collection(PLACE_MENTIONS).aggregate([
+            { $match: { textId: { $in: texts.map((t) => t._id) }, corpus: "text", status: "approved" } },
+            { $group: { _id: "$placeId", texts: { $sum: 1 } } },
+            { $lookup: { from: PLACES, localField: "_id", foreignField: "_id", as: "place", pipeline: [{ $project: { name: 1, slug: 1, alias: 1, published: 1 } }] } },
+            { $unwind: "$place" },
+            { $match: { "place.published": { $ne: false } } },
+        ]).toArray();
+        return rows
+            .map((r) => ({ id: String(r._id), name: r.place.name, href: placeHref(r.place), texts: r.texts }))
+            .sort((a, b) => b.texts - a.texts || a.name.localeCompare(b.name, "ru"));
+    } catch (e) {
+        reportError(e, { where: "lib/places/query#loadPlacesOfSaint" });
+        return [];
+    }
+};
+
+export const placesOfSaint = cached(loadPlacesOfSaint, ["saint-places"], [CacheTag.PLACES, CacheTag.TEXTS]);
+
+// --- Карта славянских поселений
+
+export interface SlavicPoint { id: string; name: string; href: string; lon: number; lat: number; from?: number; label: string }
+export interface SlavicRoute { id: string; name: string; href: string; coordinates: [number, number][] }
+
+const loadSlavic = async (): Promise<{ points: SlavicPoint[]; routes: SlavicRoute[] }> => {
+    try {
+        const rows = await (await db()).collection(PLACES).find(
+            { collections: "slavic", published: { $ne: false } },
+            { projection: { name: 1, slug: 1, alias: 1, location: 1, line: 1, periods: 1 } },
+        ).toArray();
+        const points: SlavicPoint[] = [];
+        const routes: SlavicRoute[] = [];
+        for (const r of rows) {
+            if (r.line) {
+                routes.push({ id: String(r._id), name: r.name, href: placeHref(r), coordinates: r.line.coordinates });
+                continue;
+            }
+            if (!r.location) continue;
+            const period = (r.periods ?? []).find((p: any) => p.source === "slavic-map");
+            const span = period ? spanLabel(period.from, period.to) : "";
+            points.push({
+                id: String(r._id), name: r.name, href: placeHref(r),
+                lon: r.location.coordinates[0], lat: r.location.coordinates[1],
+                ...(period?.from !== undefined ? { from: period.from } : {}),
+                label: span ? `${r.name} (${span})` : r.name,
+            });
+        }
+        return { points, routes };
+    } catch (e) {
+        reportError(e, { where: "lib/places/query#loadSlavic" });
+        return { points: [], routes: [] };
+    }
+};
+
+export const slavicPlaces = cached(loadSlavic, ["places-slavic"], [CacheTag.PLACES]);

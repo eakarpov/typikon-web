@@ -6,7 +6,7 @@ import OSM from "ol/source/OSM";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import Feature from "ol/Feature";
-import { Point } from "ol/geom";
+import { LineString, Point } from "ol/geom";
 import { fromLonLat } from "ol/proj";
 import { boundingExtent } from "ol/extent";
 import CircleStyle from "ol/style/Circle";
@@ -46,14 +46,21 @@ const styleOf = (point: MapPoint) => new Style({
     }),
 });
 
-const PlaceMap = ({ points, name }: { points: MapPoint[]; name: string }) => {
+const PlaceMap = ({ points, line, name }: { points: MapPoint[]; line?: [number, number][]; name: string }) => {
     const target = useOlMap((node) => {
-        const coords = points.map((p) => fromLonLat([p.lon, p.lat]));
-        const features = points.map((p, i) => {
+        // У пути вместо точки — линия, и карта держится на её изломах.
+        const lineCoords = (line ?? []).map((c) => fromLonLat(c));
+        const coords = [...points.map((p) => fromLonLat([p.lon, p.lat])), ...lineCoords];
+        const features: Feature[] = points.map((p, i) => {
             const f = new Feature({ geometry: new Point(coords[i]) });
             f.setStyle(styleOf(p));
             return f;
         });
+        if (lineCoords.length > 1) {
+            const f = new Feature({ geometry: new LineString(lineCoords) });
+            f.setStyle(new Style({ stroke: new Stroke({ color: COLORS.self, width: 3 }) }));
+            features.push(f);
+        }
         const map = new Map({
             target: node,
             layers: [
@@ -68,7 +75,7 @@ const PlaceMap = ({ points, name }: { points: MapPoint[]; name: string }) => {
             map.getView().fit(boundingExtent(coords), { padding: [40, 40, 40, 40], maxZoom: 10 });
         }
         return map;
-    }, [JSON.stringify(points)]);
+    }, [JSON.stringify(points), line?.length]);
 
     return <div ref={target} className="w-full h-80 rounded border border-slate-200" aria-label={`Карта: ${name}`} />;
 };

@@ -15,8 +15,9 @@
 //          npm run places:link-texts -- --sample 30  # больше примеров в отчёте
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
-import { buildFormIndex, decide, findPlaceMentions, textForms, type Signal } from "@/lib/places/textmatch";
-import { PLACE_MENTIONS, PLACES } from "@/lib/places/schema";
+import { decide, findPlaceMentions, type Signal } from "@/lib/places/textmatch";
+import { PLACE_MENTIONS } from "@/lib/places/schema";
+import { loadPlaceIndex } from "@/scripts/places/lib/formIndex";
 
 const WRITE = process.argv.includes("--write");
 const SAMPLE = Number(process.argv[process.argv.indexOf("--sample") + 1]) || 12;
@@ -28,34 +29,7 @@ const CAPITALIZING = new Set(["cu_gr", "ru"]);
 async function main() {
     const db = (await clientPromise).db("typikon");
 
-    // Формы — надёжные имена: основное, библейские формы Никифора, от редактора, метки
-    // Wikidata. Синонимы Wikidata не берутся: у Египта среди них «Фараон».
-    const places = await db.collection(PLACES).find(
-        { published: { $ne: false }, name: /[а-яё]/i },
-        { projection: { name: 1, names: 1 } },
-    ).toArray();
-    const reliable = (n: any) => n.lang === "ru" && (n.source !== "wikidata" || n.role !== "variant");
-
-    // Порядок предпочтения, если форма одна у нескольких мест (@/lib/places/textmatch#buildFormIndex):
-    // сначала место, чьё основное имя и есть эта форма, затем чаще упомянутое в Писании.
-    const scripture = new Map((await db.collection(PLACE_MENTIONS).aggregate([
-        { $match: { corpus: "bible", status: "approved" } },
-        { $group: { _id: "$placeId", n: { $sum: 1 } } },
-    ]).toArray()).map((r) => [String(r._id), r.n as number]));
-    const ordered = places
-        .map((p) => ({
-            id: String(p._id),
-            mainKey: textForms([p.name])[0]?.key,
-            forms: textForms([p.name, ...(p.names ?? []).filter(reliable).map((n: any) => n.name)]),
-        }))
-        .sort((a, b) => (scripture.get(b.id) ?? 0) - (scripture.get(a.id) ?? 0));
-    // Две волны: сперва каждое место со своим основным именем, потом прочие формы. Так
-    // «Египет» достаётся Египту, а не Древнему Египту, у которого это лишь вариант метки.
-    const index = buildFormIndex([
-        ...ordered.map((p) => ({ id: p.id, forms: p.forms.filter((f) => f.key === p.mainKey) })),
-        ...ordered.map((p) => ({ id: p.id, forms: p.forms })),
-    ]);
-    const placeById = new Map(places.map((p) => [String(p._id), p]));
+    const { index, places: placeById } = await loadPlaceIndex(db);
 
     const books = await db.collection("books").find({}, { projection: { language: 1, source: 1 } }).toArray();
     const capitalsOf = new Map(books.map((b) => [String(b._id), CAPITALIZING.has(b.language)]));
@@ -98,7 +72,7 @@ async function main() {
 
     const approved = docs.filter((d) => d.status === "approved").length;
     console.log(`\n=== Отчёт ===`);
-    console.log(`Текстов просмотрено: ${scanned}; мест в словаре: ${places.length}; уже разобрано на ревью пар: ${reviewed.size}`);
+    console.log(`Текстов просмотрено: ${scanned}; мест в словаре: ${placeById.size}; уже разобрано на ревью пар: ${reviewed.size}`);
     console.log(`Упоминаний: ${docs.length}; принято само ${approved}, на ревью ${docs.length - approved}`);
     console.log(`По признаку: рядом «град/страна/…» ${bySignal["place-word"]}, прилагательное ${bySignal.adjective}, без признака ${bySignal.none}`);
     console.log(`Чаще всего (принято / на ревью):`);

@@ -15,8 +15,8 @@ const Row = ({ item, onSet }: { item: PlaceMentionItem; onSet: (ids: string[], s
     }`}>
         <div className="text-sm">«…{item.context.replace(item.word, `⟦${item.word}⟧`)}…»</div>
         <div className="text-xs text-slate-500">
-            в тексте:{" "}
-            <Link href={`/reading/${item.textAlias || item.textId}`} target="_blank" className="underline">
+            {item.corpus === "chant" ? "в песнопении" : "в тексте"}:{" "}
+            <Link href={item.corpus === "chant" ? `/chants/${item.textId}` : `/reading/${item.textAlias || item.textId}`} target="_blank" className="underline">
                 {item.textName?.slice(0, 80) || item.textId}
             </Link>
             {" · "}{SIGNAL_LABEL[item.signal] ?? item.signal}

@@ -23,7 +23,8 @@ export type PlaceStatus = "extant" | "ruins" | "lost" | "uncertain";
 
 export type NameRole = "modern" | "biblical" | "historical" | "slavonic" | "variant";
 
-export type PlaceSource = "wikidata" | "pleiades" | "openbible" | "nikifor" | "editor";
+/** «slavic-map» — карта славянских поселений, собранная в проекте вручную (прежняя /places/common). */
+export type PlaceSource = "wikidata" | "pleiades" | "openbible" | "nikifor" | "editor" | "slavic-map";
 
 export interface PlaceName {
     /** Имя в своём письме: «Ἄγκυρα», «ⲣⲁⲕⲟⲧⲉ». */
@@ -86,6 +87,10 @@ export interface Place {
      */
     published?: boolean;
     periods?: PlacePeriod[];
+    /** Для путей («Из варяг в греки»): линия вместо точки, [долгота, широта] по порядку. */
+    line?: { type: "LineString"; coordinates: [number, number][] };
+    /** Тематические собрания, в которые входит место: «slavic» — славянские поселения. */
+    collections?: string[];
     externals?: PlaceExternal[];
     description?: string;
     links?: { url: string; text: string }[];

@@ -35,9 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
         const db = (await clientPromise).db("typikon");
+        // Чтения и песнопения; стихи Писания здесь не разбираются — у них своя сверка.
+        const corpus = { $in: ["text", "chant"] };
         const filter = placeId
-            ? { placeId: new ObjectId(placeId), corpus: "text", status: "pending", method: { $ne: "markup" } }
-            : { _id: { $in: validIds.map((id: string) => new ObjectId(id)) }, corpus: "text", method: { $ne: "markup" } };
+            ? { placeId: new ObjectId(placeId), corpus, status: "pending", method: { $ne: "markup" } }
+            : { _id: { $in: validIds.map((id: string) => new ObjectId(id)) }, corpus, method: { $ne: "markup" } };
         const result = await db.collection(PLACE_MENTIONS).updateMany(filter, {
             $set: { status, reviewedAt: status === "pending" ? undefined : new Date() },
             ...(status === "pending" ? { $unset: { reviewedAt: "" } } : {}),

@@ -4,6 +4,9 @@ import { PLACE_MENTIONS, PLACES } from "@/lib/places/schema";
 
 export interface PlaceMentionItem {
     id: string;
+    /** text — чтение корпуса, chant — песнопение корпуса typikon-rules. */
+    corpus: "text" | "chant";
+    /** Для песнопения — item_id строки. */
     textId: string;
     textName: string;
     textAlias: string | null;
@@ -34,7 +37,7 @@ export const getPlaceGroups = async (onlyPending: boolean): Promise<[PlaceGroup[
     try {
         const db = (await clientPromise).db("typikon");
         const rows = await db.collection(PLACE_MENTIONS).aggregate([
-            { $match: { corpus: "text", ...(onlyPending ? { status: "pending" } : {}) } },
+            { $match: { corpus: { $in: ["text", "chant"] }, ...(onlyPending ? { status: "pending" } : {}) } },
             { $lookup: { from: "texts", localField: "textId", foreignField: "_id", as: "text", pipeline: [{ $project: { name: 1, alias: 1 } }] } },
             { $lookup: { from: PLACES, localField: "placeId", foreignField: "_id", as: "place", pipeline: [{ $project: { name: 1, slug: 1 } }] } },
         ]).toArray();
@@ -48,8 +51,9 @@ export const getPlaceGroups = async (onlyPending: boolean): Promise<[PlaceGroup[
             };
             group.items.push({
                 id: String(r._id),
-                textId: String(r.textId),
-                textName: r.text[0]?.name ?? "",
+                corpus: r.corpus,
+                textId: r.corpus === "chant" ? String(r.chantRef) : String(r.textId),
+                textName: r.corpus === "chant" ? `песнопение ${r.chantRef}` : r.text[0]?.name ?? "",
                 textAlias: r.text[0]?.alias ?? null,
                 word: r.word ?? "",
                 context: r.context ?? "",

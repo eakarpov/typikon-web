@@ -40,7 +40,13 @@ export const splitWords = (content: string): Word[] => {
     return words;
 };
 
-export interface TextForm { name: string; key: string; stem: string }
+export interface TextForm {
+    name: string;
+    key: string;
+    stem: string;
+    /** Имя пишется в два слова или через дефис («Беф-Шемеш»): только такое ищется парой соседних слов. */
+    compound: boolean;
+}
 
 const MIN_KEY = 5;
 
@@ -55,17 +61,17 @@ const ABBREVIATED: Record<string, string[]> = { "иерусалим": ["иерл
  */
 export const textForms = (names: string[]): TextForm[] => {
     const out = new Map<string, TextForm>();
-    const add = (name: string, key: string) => {
+    const add = (name: string, key: string, compound: boolean) => {
         if (key.length < MIN_KEY || out.has(key)) return;
         // Основа — без одной конечной гласной: «Александрия» → «александри» (род. «Александрии»).
-        out.set(key, { name, key, stem: key.replace(/[аяеиоуыюьй]$/, "") });
+        out.set(key, { name, key, stem: key.replace(/[аяеиоуыюьй]$/, ""), compound });
     };
     for (const name of names) {
         if (!/[а-яё]/i.test(name)) continue;
         for (const variant of new Set([name, stripDescriptors(name)])) {
             const key = letters(variant);
-            add(name, key);
-            for (const extra of ABBREVIATED[key] ?? []) add(name, extra);
+            add(name, key, /[\s-]/.test(variant.trim()));
+            for (const extra of ABBREVIATED[key] ?? []) add(name, extra, false);
         }
     }
     return [...out.values()];
@@ -151,8 +157,10 @@ export const findPlaceMentions = (content: string, index: Map<string, IndexedFor
         if (i + 1 < words.length) candidates.push([words[i].norm + words[i + 1].norm, words[i + 1].end, true]);
         for (const [token, end, pair] of candidates) {
             for (const { placeId, form } of index.get(token.slice(0, 3)) ?? []) {
-                // Пара слов — только для имени, пишущегося раздельно или через дефис («Беф-Шемеш»).
-                if (pair && words[i].norm.length >= form.stem.length) continue;
+                // Пара слов — только для составного имени («Беф-Шемеш»), и первое слово пары
+                // должно быть началом имени целиком. Иначе склейка находит чужое: «Де́во, лоза́»
+                // давало «деволоза» — Девол.
+                if (pair && (!form.compound || !form.key.startsWith(words[i].norm) || words[i].norm.length >= form.stem.length)) continue;
                 const kind = wordMatches(token, form);
                 if (!kind) continue;
                 const nearPlaceWord = [i - 1, i - 2].some((j) => j >= 0 && PLACE_WORDS.some((w) => words[j].norm.startsWith(w)));

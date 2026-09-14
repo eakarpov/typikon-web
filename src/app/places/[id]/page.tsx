@@ -6,9 +6,10 @@ import { setMeta } from "@/lib/meta";
 import { canonBook } from "@/utils/bibleCanon";
 import { SITE_URL } from "@/utils/site";
 import {
-    getPlaceByAddress, nearbyTemples, placeArticles, placeRelations, placeScripture, placeTexts,
+    getPlaceByAddress, nearbyTemples, placeArticles, placeRelations, placeScripture, placeTexts, saintsOfPlace,
     type PlaceRelationView,
 } from "@/lib/places/query";
+import { placeChants } from "@/lib/places/chants";
 import {
     CONFIDENCE_LABELS, KIND_LABELS, langLabel, RELATION_LABELS, ROLE_LABELS, spanLabel, STATUS_LABELS,
 } from "@/lib/places/labels";
@@ -161,12 +162,14 @@ const PlacePage = async ({ params }: Props) => {
     const articleAliases = externals.filter((e) => e.source === "nikifor").map((e) => e.id);
     const [lon, lat] = place.location?.coordinates ?? [];
 
-    const [relations, scripture, texts, articles, temples] = await Promise.all([
+    const [relations, scripture, texts, articles, temples, chants, saints] = await Promise.all([
         placeRelations(place.id),
         placeScripture(place.id),
         placeTexts(place.id, place.alias, articleAliases),
         placeArticles(articleAliases),
         place.location ? nearbyTemples(lon, lat) : Promise.resolve([]),
+        placeChants(place.id),
+        saintsOfPlace(place.id),
     ]);
 
     // Точки карты: своя и точки отождествлений — у древнего места без своей точки
@@ -198,7 +201,9 @@ const PlacePage = async ({ params }: Props) => {
             </p>
             {place.description && <p className="font-serif mt-2">{place.description}</p>}
 
-            {points.length > 0 && <div className="mt-4"><PlaceMap points={points} name={place.name} /></div>}
+            {(points.length > 0 || place.line) && (
+                <div className="mt-4"><PlaceMap points={points} line={place.line?.coordinates} name={place.name} /></div>
+            )}
             {!place.location && points.length > 0 && (
                 <p className="font-serif text-sm text-slate-500 mt-1">
                     Своей точки у места нет: на карте — места, с которыми его отождествляют; чем бледнее точка, тем меньше уверенности.
@@ -269,6 +274,40 @@ const PlacePage = async ({ params }: Props) => {
                             <li key={t.id}>
                                 <Link href={`/reading/${t.alias ?? t.id}`} className="text-red-900 hover:underline">{t.name}</Link>
                                 {t.book && <span className="text-slate-500 text-sm"> — {t.book}</span>}
+                            </li>
+                        ))}
+                    </ul>
+                </Section>
+            )}
+
+            {chants.total > 0 && (
+                <Section title="В песнопениях">
+                    <p className="font-serif text-sm text-slate-500 mb-1">
+                        Упоминаний: {chants.total}{chants.items.length < chants.total && `; ниже — ${chants.items.length} разных текстов`}.
+                    </p>
+                    <ul className="space-y-2">
+                        {chants.items.map((c) => (
+                            <li key={c.id} className="font-serif">
+                                <Link href={`/chants/${c.id}`} className="text-red-900 hover:underline">{c.unit}</Link>
+                                {c.memory && <span className="text-slate-500 text-sm"> — {c.memory}</span>}
+                                <div className="text-sm">«…{c.context}…»</div>
+                            </li>
+                        ))}
+                    </ul>
+                </Section>
+            )}
+
+            {saints.length > 0 && (
+                <Section title="Святые">
+                    <p className="font-serif text-sm text-slate-500 mb-1">
+                        Место названо в чтениях к памяти этих святых — в житии, похвальном слове. Это не
+                        обязательно родина или кафедра: в житии называют и места, где святой не бывал.
+                    </p>
+                    <ul className="font-serif flex flex-wrap gap-x-4">
+                        {saints.map((s) => (
+                            <li key={s.dneslovId}>
+                                <Link href={s.href} className="text-amber-800 hover:underline">{s.name}</Link>
+                                {s.texts > 1 && <span className="text-slate-500 text-sm"> ({s.texts})</span>}
                             </li>
                         ))}
                     </ul>

@@ -116,7 +116,7 @@ enum COLLECTION_TYPE {
     AUTHOR,
 }
 
-const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [], memories = [], dedications = [] }: {
+const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [], memories = [], dedications = [], places = [] }: {
     id: string,
     card?: SaintCard,
     item: any,
@@ -126,6 +126,8 @@ const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [
     akathists?: {id: string; title: string; stanzas: number}[],
     memories?: SaintMemoryRow[],
     dedications?: SaintDedication[],
+    /** Места, названные в чтениях к этой памяти: не обязательно родина или кафедра. */
+    places?: {id: string; name: string; href: string; texts: number}[],
 }) => {
     const authorItems = useMemo(() => items.filter(el => el.dneslovType === DneslovKind.AUTHOR), [items]);
     const bookItems = useMemo(() => items.filter(el => el.dneslovType !== DneslovKind.AUTHOR), [items]); // MEMORY
@@ -282,6 +284,18 @@ const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [
                                             на карте
                                         </Link>
                                     </span>
+                                ))}
+                            </span>
+                        </Row>
+                    )}
+
+                    {!!places.length && (
+                        <Row name="Места в чтениях памяти">
+                            <span className="flex flex-row flex-wrap gap-x-3">
+                                {places.slice(0, 30).map((place) => (
+                                    <Link key={place.id} className="text-red-900 hover:underline" href={place.href}>
+                                        {place.name}
+                                    </Link>
                                 ))}
                             </span>
                         </Row>
