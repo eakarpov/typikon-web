@@ -228,9 +228,11 @@ const SPECS: Spec[] = [
       why: "старый адрес места — по нему ищут, чтобы увести редиректом" },
     { db: "typikon", collection: "places", key: { alias: 1 }, options: NON_EMPTY_ALIAS,
       why: "прежний адрес /places/{alias}, на который ссылаются пометки {pl|…} в текстах" },
+    // Не уникальный с 2026-09-15: статья Никифора законно бывает у нескольких мест
+    // («Кармил» — и город, и гора). Ключи Wikidata, Pleiades и OpenBible от двоения
+    // держат скрипты привоза, которые проверяют владельца ключа перед записью.
     { db: "typikon", collection: "places", key: { "externals.source": 1, "externals.id": 1 },
-      options: { partialFilterExpression: { "externals.source": { $exists: true } }, unique: true },
-      why: "место по внешнему ключу при импорте; уникальность не даёт двум записям присвоить одно чужое место" },
+      why: "место по внешнему ключу при импорте и ревью статей Никифора" },
     { db: "typikon", collection: "places", key: { location: "2dsphere" },
       why: "места рядом с точкой и в пределах карты" },
     { db: "typikon", collection: "place_relations", key: { from: 1, type: 1 },
@@ -281,20 +283,28 @@ async function main() {
             current = [];
         }
 
-        const already = current.some((i) => sameKey(i.key, spec.key));
+        const found = current.find((i) => sameKey(i.key, spec.key));
+        // Индекс с тем же ключом, но другой уникальностью — не тот индекс: createIndex
+        // его не поправит, а старая уникальность продолжит отвергать записи.
+        const uniqueChanged = found && Boolean(found.unique) !== Boolean(spec.options?.unique);
         const label = `${spec.db}.${spec.collection} { ${keyToString(spec.key)} }`;
 
-        if (already) {
+        if (found && !uniqueChanged) {
             existing++;
             console.log(`  есть      ${label}`);
             continue;
         }
 
         missing.push(spec);
-        console.log(`  НЕТ       ${label}`);
+        console.log(`  ${uniqueChanged ? "ИНОЙ" : "НЕТ "}      ${label}${uniqueChanged ? ` — уникальность должна быть ${spec.options?.unique ? "включена" : "снята"}` : ""}`);
         console.log(`            ${spec.why}`);
 
         if (!APPLY) continue;
+
+        if (uniqueChanged) {
+            await collection.dropIndex(found.name);
+            console.log(`            снесён прежний (${found.name})`);
+        }
 
         // Заменяемый сносим первым: уникальный { tokenId, day } не даст завести
         // вторую запись за те же сутки, сколько бы полей ни было в новом ключе.

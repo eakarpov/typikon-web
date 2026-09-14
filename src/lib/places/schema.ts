@@ -38,6 +38,8 @@ export interface PlaceName {
     from?: number;
     to?: number;
     source: PlaceSource;
+    /** У имени из энциклопедии Никифора, принятого на ревью, — алиас статьи: по нему имя снимают вместе со связью. */
+    article?: string;
 }
 
 export interface PlaceLocation {
@@ -57,6 +59,11 @@ export interface PlacePeriod {
 export interface PlaceExternal {
     source: Exclude<PlaceSource, "editor">;
     id: string;
+    /**
+     * «review» — связь поставлена человеком на ревью (у nikifor): повторный прогон
+     * сопоставления её не снимает. Без поля — поставлена скриптом.
+     */
+    by?: "review";
 }
 
 export interface Place {

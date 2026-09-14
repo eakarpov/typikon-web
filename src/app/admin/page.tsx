@@ -65,6 +65,7 @@ const SECTIONS: Section[] = [
             ["/admin/channel-posts", "Посты в Telegram/VK"],
             ["/admin/mentions", "Упоминания святых в чтениях"],
             ["/admin/places/mentions", "Упоминания мест в чтениях"],
+            ["/admin/places/nikifor", "Статьи Никифора и места"],
             ["/admin/news", "Новости"],
             ["/admin/api-tokens", "Ключи API"],
         ],

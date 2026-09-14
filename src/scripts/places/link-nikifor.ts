@@ -30,7 +30,7 @@ const WRITE = process.argv.includes("--write");
 /** Сколько примеров принятого по стихам показать в отчёте: `--sample 60`. */
 const SAMPLE = Number(process.argv[process.argv.indexOf("--sample") + 1]) || 12;
 const CACHE = path.join(process.cwd(), "script-data", "nikifor", "wikitext.json");
-const CANDIDATES = "place_nikifor_candidates";
+import { CANDIDATES } from "@/lib/places/nikiforReview";
 
 async function main() {
     const db = (await clientPromise).db("typikon");
@@ -97,6 +97,14 @@ async function main() {
         [...info.values()].filter((p) => !byWikidataPlace.has(p.id) && p.keys.size),
     ));
 
+    // Пары, разобранные на ревью (/admin/places/nikifor), не решаются заново: принятые уже
+    // записаны в место с by: "review", отклонённые не предлагаются снова.
+    const decided = new Set((await db.collection(CANDIDATES).find({ status: { $in: ["approved", "rejected"] } }, { projection: { placeId: 1, alias: 1 } }).toArray())
+        .map((c) => `${c.placeId}|${c.alias}`));
+    for (let i = matches.length - 1; i >= 0; i--) {
+        if (decided.has(`${matches[i].placeId}|${matches[i].alias}`)) matches.splice(i, 1);
+    }
+
     // Одна статья у нескольких мест. Wikidata ставит источник и элементу о древнем
     // городе, и элементу о нынешнем (Смирна и Измир), а у нас это разные записи. Статья
     // Никифора — о библейском месте, поэтому остаётся у записи со стихами OpenBible;
@@ -162,13 +170,18 @@ async function main() {
         const primary = known ?? (trusted ? single : undefined);
         const nameSource = row.nameSource ?? (row.published === false ? "openbible" : "editor");
         const set: Record<string, any> = {
+            // Поставленное на ревью (by: "review", имя с article) остаётся как есть.
             externals: [
-                ...(row.externals ?? []).filter((e: any) => e.source !== "nikifor"),
-                ...group.map((m) => ({ source: "nikifor", id: m.alias })),
+                ...(row.externals ?? []).filter((e: any) => e.source !== "nikifor" || e.by === "review"),
+                ...group
+                    .filter((m) => !(row.externals ?? []).some((e: any) => e.source === "nikifor" && e.id === m.alias && e.by === "review"))
+                    .map((m) => ({ source: "nikifor", id: m.alias })),
             ],
             names: [
-                ...(row.names ?? []).filter((n: any) => n.source !== "nikifor"),
-                ...heads.map((h) => ({ name: h, lang: "ru", role: "biblical", source: "nikifor" })),
+                ...(row.names ?? []).filter((n: any) => n.source !== "nikifor" || n.article),
+                ...heads
+                    .filter((h) => !(row.names ?? []).some((n: any) => n.source === "nikifor" && n.article && n.name === h))
+                    .map((h) => ({ name: h, lang: "ru", role: "biblical", source: "nikifor" })),
             ],
             updatedAt: now,
         };
@@ -186,9 +199,10 @@ async function main() {
     }
 
     // Снятые с места статьи (прошлый прогон принял, этот — нет) тоже надо убрать.
+    // Принятое на ревью при этом не снимается: у таких связей by: "review", у имён — article.
     await places.updateMany(
         { "externals.source": "nikifor", _id: { $nin: updates.map((u) => u._id) } },
-        { $pull: { externals: { source: "nikifor" }, names: { source: "nikifor" } } as any },
+        { $pull: { externals: { source: "nikifor", by: { $ne: "review" } }, names: { source: "nikifor", article: { $exists: false } } } as any },
     );
     for (const u of updates) await places.updateOne({ _id: u._id }, { $set: u.set });
 
