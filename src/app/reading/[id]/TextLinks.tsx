@@ -31,8 +31,12 @@ const TextLinksContent = async ({ item }: { item: any }) => {
         getTextLinks(item),
         getDayByText(item.id),
         getTextSource(item.link || null),
-        textPlaces(String(item.id), item.content || ""),
+        textPlaces(String(item.id), item.content || "", item.alias || undefined),
     ]);
+    // Статья энциклопедии о месте ведёт на его страницу отдельной строкой: это не
+    // «место упомянуто», а «вот само место, с картой».
+    const subjects = places.filter((place) => place.subject);
+    const mentioned = places.filter((place) => !place.subject);
 
     const href = day ? dayHref(day) : null;
     const origin = sourceLabel(source);
@@ -87,9 +91,19 @@ const TextLinksContent = async ({ item }: { item: any }) => {
                 </Row>
             )}
 
-            {!!places.length && (
+            {!!subjects.length && (
+                <Row label="Страница места:">
+                    {subjects.map((place) => (
+                        <Link key={place.id} className="font-serif text-red-900 hover:underline" href={place.href}>
+                            {place.name} — имена, карта, упоминания
+                        </Link>
+                    ))}
+                </Row>
+            )}
+
+            {!!mentioned.length && (
                 <Row label="Места:">
-                    {places.map((place) => (
+                    {mentioned.map((place) => (
                         <Link
                             key={place.id}
                             className="font-serif text-red-900 border rounded border-slate-300 px-2 py-0.5 text-sm hover:underline"

@@ -1,6 +1,7 @@
 import { ReadinessButton } from "@/app/components/DayPart";
 import {isFootnoteBook} from "@/utils/texts";
-import {ArrowTopRightOnSquareIcon, BookOpenIcon} from "@heroicons/react/24/outline";
+import {ArrowTopRightOnSquareIcon, BookOpenIcon, MapPinIcon} from "@heroicons/react/24/outline";
+import {textPlaces} from "@/lib/places/query";
 import TextImages from "@/app/reading/TextImages";
 import DneslovImages from "@/app/reading/DneslovImages";
 import { saintImages } from "@/lib/saints";
@@ -34,6 +35,12 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
     // Ссылки на изображения памяти — из своего снимка. Раньше их запрашивал сам
     // браузер читателя у dneslov.org на каждое открытие чтения.
     const dneslovImages = item.dneslovId ? await saintImages(String(item.dneslovId)) : null;
+
+    // Статья энциклопедии о месте — ссылка на страницу места прямо в шапке: внизу, в
+    // «Связях», её не видно, пока не дочитаешь, а за картой к статье и приходят.
+    const subjectPlaces = item.alias?.startsWith("nikifor-")
+        ? (await textPlaces(String(item.id), item.content || "", item.alias)).filter((place) => place.subject)
+        : [];
 
     if (shouldRedirect) {
         return (
@@ -75,6 +82,14 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
                             <BookOpenIcon className="w-4 h-4" />
                         </span>
                     )}
+                    {subjectPlaces.map((place) => (
+                        <span key={place.id} className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center whitespace-nowrap">
+                            <Link href={place.href}>
+                                {subjectPlaces.length > 1 ? `Место: ${place.name}` : "Место на карте"}&nbsp;
+                            </Link>
+                            <MapPinIcon className="w-4 h-4" />
+                        </span>
+                    ))}
                     <TextSave text={item} canDownloadPdf={process.env.CAN_DOWNLOAD_PDF} />
                     <TextSaveLocal name={item.name} />
                     <OfflineSave label={item.name?.replaceAll("\u0301", "") || "Чтение"} />

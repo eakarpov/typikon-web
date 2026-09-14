@@ -95,12 +95,6 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     Календарные чтения
                 </Link>
                 <Link
-                    href="/trapeza"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/trapeza`) && `text-red-600`}`}
-                >
-                    Трапеза
-                </Link>
-                <Link
                     href="/calculator"
                     className={`cursor-pointer min-w-fit font-serif ${pathname === `/calculator` && `text-red-600`}`}
                 >
@@ -154,6 +148,12 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         // служба.
                         { href: "/temples", label: "Храмы" },
                         { href: "/dedications", label: "Посвящения" },
+                        // Места — того же рода, что храмы: указатель с картой, по
+                        // которому узнают, где было названное в Писании и чтениях.
+                        { href: "/places", label: "Места" },
+                        // Трапеза — пособие, а не раздел чтений: по ней узнают,
+                        // что положено вкушать в день, а не что читать.
+                        { href: "/trapeza", label: "Трапеза" },
                         // Именины — пособие того же рода: по святцам узнают не
                         // службу, а свой день.
                         { href: "/imeniny", label: "Именины" },

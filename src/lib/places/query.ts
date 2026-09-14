@@ -239,13 +239,21 @@ export const nearbyTemples = cached(loadNearbyTemples, ["place-nearby-temples"],
 
 // --- Места текста (блок «Связи» на странице чтения)
 
-export interface TextPlace { id: string; name: string; href: string }
+export interface TextPlace {
+    id: string;
+    name: string;
+    href: string;
+    /** Текст — статья энциклопедии об этом месте (ключ nikifor), а не упоминание в нём. */
+    subject: boolean;
+}
 
 /**
- * Места, помеченные в тексте разметкой `{pl|id|…}` или найденные в нём и принятые на
- * ревью. Разметка ссылается то на идентификатор, то на прежний alias — ищем по обоим.
+ * Места текста: помеченные разметкой `{pl|id|…}`, найденные в нём и принятые на ревью,
+ * и то место, о котором сам текст, если это статья энциклопедии Никифора (ключ
+ * nikifor = алиас текста). Разметка ссылается то на идентификатор, то на прежний
+ * alias — ищем по обоим.
  */
-const loadTextPlaces = async (textId: string, content: string): Promise<TextPlace[]> => {
+const loadTextPlaces = async (textId: string, content: string, alias?: string): Promise<TextPlace[]> => {
     try {
         const keys = [...new Set([...content.matchAll(/\{pl\|([^|}]+)\|/g)].map((m) => m[1]))];
         const d = await db();
@@ -254,14 +262,20 @@ const loadTextPlaces = async (textId: string, content: string): Promise<TextPlac
                 .find({ textId: new ObjectId(textId), corpus: "text", status: "approved" }, { projection: { placeId: 1 } })
                 .toArray()
             : [];
-        if (!keys.length && !mentioned.length) return [];
+        if (!keys.length && !mentioned.length && !alias?.startsWith("nikifor-")) return [];
         const or: any[] = [{ alias: { $in: keys } }, { slug: { $in: keys } }, { _id: { $in: mentioned.map((m) => m.placeId) } }];
         const ids = keys.filter((k) => ObjectId.isValid(k)).map((k) => new ObjectId(k));
         if (ids.length) or.push({ _id: { $in: ids } });
+        if (alias) or.push({ externals: { $elemMatch: { source: "nikifor", id: alias } } });
         const rows = await d.collection(PLACES)
-            .find({ $or: or, published: { $ne: false } }, { projection: { name: 1, slug: 1, alias: 1 } })
+            .find({ $or: or, published: { $ne: false } }, { projection: { name: 1, slug: 1, alias: 1, externals: 1 } })
             .toArray();
-        return rows.map((r) => ({ id: String(r._id), name: r.name, href: placeHref(r) }))
+        return rows.map((r) => ({
+            id: String(r._id),
+            name: r.name,
+            href: placeHref(r),
+            subject: !!alias && (r.externals ?? []).some((e: any) => e.source === "nikifor" && e.id === alias),
+        }))
             .sort((a, b) => a.name.localeCompare(b.name, "ru"));
     } catch (e) {
         reportError(e, { where: "lib/places/query#loadTextPlaces" });
