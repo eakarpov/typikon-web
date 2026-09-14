@@ -69,7 +69,7 @@ export const skeleton = (name: string): string => {
     return out.replace(/[a-z]/g, "");
 };
 
-const withoutAspiration = (s: string) => s.replace(/H/g, "");
+export const withoutAspiration = (s: string) => s.replace(/H/g, "");
 
 const levenshtein = (a: string, b: string) => {
     const row = Array.from({ length: b.length + 1 }, (_, i) => i);

@@ -127,6 +127,10 @@ export interface PlaceMention {
     canonSort?: number;
     textId?: ObjectId;
     chantRef?: string;
+    /** Ссылка источника в его нумерации (у OpenBible — OSIS, английская традиция). */
+    osis?: string;
+    /** Как найден стих канона: тот же номер, соседний, сдвиг главы, поиск по главе; «none» — имя не найдено. */
+    match?: "exact" | "window" | "shift" | "chapter" | "none";
     word?: string;
     context?: string;
     method: MentionMethod;

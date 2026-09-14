@@ -63,6 +63,7 @@
     "places:enrich-wikidata": "tsx src/scripts/places/enrich-wikidata.ts",
     "places:enrich-pleiades": "tsx src/scripts/places/enrich-pleiades.ts",
     "places:link-nikifor": "tsx src/scripts/places/link-nikifor.ts",
+    "places:link-bible": "tsx src/scripts/places/link-bible-places.ts",
     "temples:match":"tsx src/scripts/match-temple-dedications.ts",
     "nobles:import-wikidata": "tsx src/scripts/import-nobles-wikidata.ts",
     "nobles:import-wikidata-rules": "tsx src/scripts/import-nobles-wikidata-rules.ts",

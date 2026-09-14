@@ -3,6 +3,7 @@ import { csFontVariables } from "@/utils/font";
 import { needsChurchFont } from "@/utils/bookLanguages";
 import type { ChapterData, EditionView } from "@/app/bible/api";
 import EditionPicker from "@/app/bible/EditionPicker";
+import type { ChapterPlace } from "@/lib/places/query";
 
 // Церковнославянское и валашское начертания обычным шрифтом не показать — в нём нет
 // ни титла, ни юса, и текст осыплется квадратами. Решает язык издания, а не догадка
@@ -189,6 +190,38 @@ const ParallelColumns = ({ data, echoes }: {
     );
 };
 
+/**
+ * Места, названные в главе, — свёрнутым списком под текстом: у стиха пометок нет,
+ * чтобы не мешать чтению, а номер стиха в списке ведёт к нему. Места, чья страница
+ * ещё не показывается, названы без ссылки.
+ */
+const ChapterPlaces = ({ places }: { places: ChapterPlace[] }) => {
+    if (!places.length) return null;
+    return (
+        <details className="font-serif text-sm border-t border-slate-200 pt-2">
+            <summary className="cursor-pointer text-red-900">Места главы ({places.length})</summary>
+            <ul className="mt-2 space-y-1">
+                {places.map((place) => (
+                    <li key={place.id}>
+                        {place.href
+                            ? <Link href={place.href} className="text-red-900 hover:underline">{place.name}</Link>
+                            : <span>{place.name}</span>}
+                        <span className="text-slate-500">
+                            {" — ст. "}
+                            {place.verses.map((verse, index) => (
+                                <span key={verse}>
+                                    {index > 0 && ", "}
+                                    <a href={`#v${verse}`} className="hover:underline">{verse}</a>
+                                </span>
+                            ))}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        </details>
+    );
+};
+
 const Chapter = ({
     data,
     codes,
@@ -196,6 +229,7 @@ const Chapter = ({
     previous,
     next,
     echoes,
+    places = [],
 }: {
     data: ChapterData;
     codes: string;
@@ -205,6 +239,8 @@ const Chapter = ({
     next: { canonId: string; chapter: number; label: string } | null;
     /** Сколько песнопений отзывается на каждый стих; пусто — слоя цитат нет. */
     echoes: Record<number, number>;
+    /** Места, названные в главе (канонический счёт); пусто — блока нет. */
+    places?: ChapterPlace[];
 }) => (
     <div className="pt-2 space-y-3">
         <div className="font-serif text-sm">
@@ -249,6 +285,8 @@ const Chapter = ({
         ) : (
             <ParallelColumns data={data} echoes={echoes} />
         )}
+
+        <ChapterPlaces places={places} />
 
         <div className="flex justify-between font-serif text-sm pt-2">
             <span>

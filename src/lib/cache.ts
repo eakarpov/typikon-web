@@ -41,6 +41,10 @@ export const CacheTag = {
     // Сбрасывается выкладкой самого движка (release-ordo.sh): на прошедшую
     // дату устав не меняется вовсе.
     ORDO: "ordo",
+    // Места и их упоминания: приезжают скриптами (places:*), правкой места в
+    // админке — редко. Отдельно от BIBLE: пересборка упоминаний не меняет текста
+    // Писания, и глава сама по себе пусть остаётся в кэше.
+    PLACES: "places",
 } as const;
 
 export type CacheTagValue = typeof CacheTag[keyof typeof CacheTag];
