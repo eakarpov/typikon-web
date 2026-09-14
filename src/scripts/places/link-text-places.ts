@@ -1,0 +1,129 @@
+// Места: упоминания в текстах корпуса (Пролог, Четьи-Минеи, отцы). Этап 4.
+//
+// Что делает (@/lib/places/textmatch): ищет в каждом тексте имена открытых мест и
+// пишет упоминания в place_mentions (corpus: "text", method: "matcher"):
+//   approved — рядом признак места («во граде», прилагательное) и имя не из тёзок;
+//   pending  — имя с заглавной буквы без признака, на ревью в /admin/places/mentions.
+//
+// Разобранное на ревью не перезаписывается: у таких записей стоит reviewedAt, и
+// повторный прогон их не трогает. Пересобираются только неразобранные найденные.
+// Энциклопедия Никифора не просматривается: её статьи о местах связаны с местами
+// ключом nikifor, и каждое имя в них было бы «упоминанием» самого себя.
+//
+// Запуск:  npm run places:link-texts                 # отчёт, ничего не пишет
+//          npm run places:link-texts -- --write      # записать
+//          npm run places:link-texts -- --sample 30  # больше примеров в отчёте
+import "@/scripts/lib/env";
+import clientPromise from "@/lib/mongodb";
+import { buildFormIndex, decide, findPlaceMentions, textForms, type Signal } from "@/lib/places/textmatch";
+import { PLACE_MENTIONS, PLACES } from "@/lib/places/schema";
+
+const WRITE = process.argv.includes("--write");
+const SAMPLE = Number(process.argv[process.argv.indexOf("--sample") + 1]) || 12;
+const LINKABLE = ["ready", "correcting", "texted"];
+
+/** Языки книг, чья печать пишет собственные имена с большой буквы (@/utils/bookLanguages). */
+const CAPITALIZING = new Set(["cu_gr", "ru"]);
+
+async function main() {
+    const db = (await clientPromise).db("typikon");
+
+    // Формы — надёжные имена: основное, библейские формы Никифора, от редактора, метки
+    // Wikidata. Синонимы Wikidata не берутся: у Египта среди них «Фараон».
+    const places = await db.collection(PLACES).find(
+        { published: { $ne: false }, name: /[а-яё]/i },
+        { projection: { name: 1, names: 1 } },
+    ).toArray();
+    const reliable = (n: any) => n.lang === "ru" && (n.source !== "wikidata" || n.role !== "variant");
+
+    // Порядок предпочтения, если форма одна у нескольких мест (@/lib/places/textmatch#buildFormIndex):
+    // сначала место, чьё основное имя и есть эта форма, затем чаще упомянутое в Писании.
+    const scripture = new Map((await db.collection(PLACE_MENTIONS).aggregate([
+        { $match: { corpus: "bible", status: "approved" } },
+        { $group: { _id: "$placeId", n: { $sum: 1 } } },
+    ]).toArray()).map((r) => [String(r._id), r.n as number]));
+    const ordered = places
+        .map((p) => ({
+            id: String(p._id),
+            mainKey: textForms([p.name])[0]?.key,
+            forms: textForms([p.name, ...(p.names ?? []).filter(reliable).map((n: any) => n.name)]),
+        }))
+        .sort((a, b) => (scripture.get(b.id) ?? 0) - (scripture.get(a.id) ?? 0));
+    // Две волны: сперва каждое место со своим основным именем, потом прочие формы. Так
+    // «Египет» достаётся Египту, а не Древнему Египту, у которого это лишь вариант метки.
+    const index = buildFormIndex([
+        ...ordered.map((p) => ({ id: p.id, forms: p.forms.filter((f) => f.key === p.mainKey) })),
+        ...ordered.map((p) => ({ id: p.id, forms: p.forms })),
+    ]);
+    const placeById = new Map(places.map((p) => [String(p._id), p]));
+
+    const books = await db.collection("books").find({}, { projection: { language: 1, source: 1 } }).toArray();
+    const capitalsOf = new Map(books.map((b) => [String(b._id), CAPITALIZING.has(b.language)]));
+    const bean = books.find((b) => b.source === "wikisource:БЭАН");
+
+    const texts = db.collection("texts").find(
+        { readiness: { $in: LINKABLE }, content: { $gt: "" }, ...(bean ? { bookId: { $ne: bean._id } } : {}) },
+        { projection: { name: 1, content: 1, bookId: 1 } },
+    );
+
+    const coll = db.collection(PLACE_MENTIONS);
+    const reviewed = new Set((await coll.find({ corpus: "text", reviewedAt: { $exists: true } }, { projection: { placeId: 1, textId: 1 } }).toArray())
+        .map((m) => `${m.placeId}|${m.textId}`));
+
+    let scanned = 0;
+    const docs: any[] = [];
+    const bySignal: Record<Signal, number> = { "place-word": 0, adjective: 0, none: 0 };
+    const byPlace = new Map<string, { approved: number; pending: number }>();
+    const samples: { status: string; line: string }[] = [];
+
+    for await (const text of texts) {
+        scanned++;
+        const capitals = capitalsOf.get(String(text.bookId)) ?? true;
+        for (const hit of findPlaceMentions(text.content, index, capitals)) {
+            if (reviewed.has(`${hit.placeId}|${text._id}`)) continue;
+            const status = decide(hit);
+            bySignal[hit.signal]++;
+            const p = byPlace.get(hit.placeId) ?? { approved: 0, pending: 0 };
+            p[status]++;
+            byPlace.set(hit.placeId, p);
+            docs.push({
+                placeId: placeById.get(hit.placeId)!._id,
+                corpus: "text", textId: text._id, canonRef: null, chantRef: null,
+                word: hit.word, context: hit.context, signal: hit.signal, count: hit.count,
+                method: "matcher", status,
+            });
+            samples.push({ status, line: `  ${placeById.get(hit.placeId)!.name} [${hit.signal}] «${hit.word}» — ${text.name?.slice(0, 40)}: «…${hit.context.slice(0, 160)}…»` });
+        }
+    }
+
+    const approved = docs.filter((d) => d.status === "approved").length;
+    console.log(`\n=== Отчёт ===`);
+    console.log(`Текстов просмотрено: ${scanned}; мест в словаре: ${places.length}; уже разобрано на ревью пар: ${reviewed.size}`);
+    console.log(`Упоминаний: ${docs.length}; принято само ${approved}, на ревью ${docs.length - approved}`);
+    console.log(`По признаку: рядом «град/страна/…» ${bySignal["place-word"]}, прилагательное ${bySignal.adjective}, без признака ${bySignal.none}`);
+    console.log(`Чаще всего (принято / на ревью):`);
+    for (const [id, c] of [...byPlace].sort((a, b) => (b[1].approved + b[1].pending) - (a[1].approved + a[1].pending)).slice(0, 25)) {
+        console.log(`  ${placeById.get(id)!.name}: ${c.approved} / ${c.pending}`);
+    }
+    const pick = (status: string) => {
+        const list = samples.filter((s) => s.status === status);
+        const step = Math.max(1, Math.floor(list.length / SAMPLE));
+        return list.filter((_, i) => i % step === 0).slice(0, SAMPLE).map((s) => s.line).join("\n");
+    };
+    console.log(`Примеры принятого:\n${pick("approved")}`);
+    console.log(`Примеры на ревью:\n${pick("pending")}`);
+
+    if (!WRITE) {
+        console.log(`Ничего не записано. Для записи: --write`);
+        process.exit(0);
+    }
+    await coll.deleteMany({ corpus: "text", method: "matcher", reviewedAt: { $exists: false } });
+    for (let i = 0; i < docs.length; i += 1000) await coll.insertMany(docs.slice(i, i + 1000));
+    console.log(`Записано: ${docs.length}`);
+    process.exit(0);
+}
+
+main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+});

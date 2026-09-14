@@ -65,6 +65,8 @@
     "places:link-nikifor": "tsx src/scripts/places/link-nikifor.ts",
     "places:link-bible": "tsx src/scripts/places/link-bible-places.ts",
     "places:slugs": "tsx src/scripts/places/assign-place-slugs.ts",
+    "places:link-texts": "tsx src/scripts/places/link-text-places.ts",
+    "places:sync-markup": "tsx src/scripts/places/sync-place-markup.ts",
     "temples:match":"tsx src/scripts/match-temple-dedications.ts",
     "nobles:import-wikidata": "tsx src/scripts/import-nobles-wikidata.ts",
     "nobles:import-wikidata-rules": "tsx src/scripts/import-nobles-wikidata-rules.ts",

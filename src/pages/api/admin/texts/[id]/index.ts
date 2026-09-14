@@ -5,6 +5,7 @@ import {checkRightsBack} from "@/lib/admin/back";
 import {buildSearchFields} from "@/lib/search";
 import {normalizeParagraphs} from "@/utils/texts";
 import {reportError} from "@/lib/reportError";
+import {syncMarkupMentions} from "@/lib/places/markup";
 
 // Один alias — один документ: адрес /texts/{alias} разрешается в один документ, и если
 // alias занят, второй становится недостижим. В базе такие пары уже есть (следствие
@@ -78,6 +79,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         },
                     },
                 );
+
+            // Пометки мест {pl|…} — в упоминания (@/lib/places/markup). Сбой здесь
+            // не должен терять сохранённый текст: он уже записан, упоминания догонит
+            // `npm run places:sync-markup`.
+            try {
+                await syncMarkupMentions(db, new ObjectId(id), normalizeParagraphs(data.content) ?? "");
+            } catch (e) {
+                reportError(e, { where: "pages/api/admin/texts/[id]/index#syncMarkupMentions", source: "api" });
+            }
 
             res.status(200).end();
         } catch (e) {

@@ -128,24 +128,29 @@ export const findForm = (
     const tokens = verseTokens(content);
     for (const f of forms) {
         if (primaryOnly && !f.primary) continue;
-        const allowed = Math.floor((f.key.length - 1) / 5);
         for (const t of tokens) {
-            if (t[0] !== f.key[0]) continue;
-            if (allowed === 0) {
-                const tail = f.stem.length >= 4 ? 5 : 3;
-                if (f.stem.length >= 2 && t.startsWith(f.stem) && t.length <= f.stem.length + tail) return { form: f.name, word: t };
-                continue;
-            }
-            // Прилагательное от имени («Египет» — «є҆гѵ́петстѣй»): начало слова — основа.
-            if (f.stem.length >= 5 && t.startsWith(f.stem) && t.length <= f.stem.length + 6) return { form: f.name, word: t };
-            if (t.length > f.key.length + 6) continue;
-            for (const cut of [f.key.length - 1, f.key.length, f.key.length + 1]) {
-                if (cut < 3 || cut > t.length) continue;
-                if (levenshtein(t.slice(0, cut), f.key) <= allowed) return { form: f.name, word: t };
-            }
+            if (tokenMatches(t, f)) return { form: f.name, word: t };
         }
     }
     return null;
+};
+
+/** Одно слово (уже сведённое `comparable`) против одной формы имени — правило описано у findForm. */
+export const tokenMatches = (t: string, f: NameForm): boolean => {
+    if (t[0] !== f.key[0]) return false;
+    const allowed = Math.floor((f.key.length - 1) / 5);
+    if (allowed === 0) {
+        const tail = f.stem.length >= 4 ? 5 : 3;
+        return f.stem.length >= 2 && t.startsWith(f.stem) && t.length <= f.stem.length + tail;
+    }
+    // Прилагательное от имени («Египет» — «є҆гѵ́петстѣй»): начало слова — основа.
+    if (f.stem.length >= 5 && t.startsWith(f.stem) && t.length <= f.stem.length + 6) return true;
+    if (t.length > f.key.length + 6) return false;
+    for (const cut of [f.key.length - 1, f.key.length, f.key.length + 1]) {
+        if (cut < 3 || cut > t.length) continue;
+        if (levenshtein(t.slice(0, cut), f.key) <= allowed) return true;
+    }
+    return false;
 };
 
 export type VerseCount = (chapter: number) => number | undefined;

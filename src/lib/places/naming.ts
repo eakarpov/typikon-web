@@ -16,12 +16,18 @@ export interface NamingRow { id: string; name: string; nameSource?: string }
 
 const LEADING = /^(?:Древн(?:ий|яя|ее)|Эллинистическ(?:ий|ая|ое)|Римск(?:ий|ая|ое)|Тель)[\s-]+(?=[А-ЯЁ])/;
 
-/** Короткое имя по метке Wikidata; прочие имена (Никифор, редактор) не трогаются. */
-export const shortName = (row: NamingRow): string => {
-    if (row.nameSource !== "wikidata") return row.name;
-    const short = row.name.replace(/\s*\([^)]*\)/g, "").replace(/\s+/g, " ").trim().replace(LEADING, "");
-    return /^[А-ЯЁ]/.test(short) ? short : row.name;
+/**
+ * Имя без уточнения в скобках, описательного прилагательного и «Тель». Если остаток
+ * не начинается с заглавной (это уже не имя), возвращается исходное.
+ */
+export const stripDescriptors = (name: string): string => {
+    const short = name.replace(/\s*\([^)]*\)/g, "").replace(/\s+/g, " ").trim().replace(LEADING, "");
+    return /^[А-ЯЁ]/.test(short) ? short : name;
 };
+
+/** Короткое имя по метке Wikidata; прочие имена (Никифор, редактор) не трогаются. */
+export const shortName = (row: NamingRow): string =>
+    row.nameSource === "wikidata" ? stripDescriptors(row.name) : row.name;
 
 /**
  * Имена для показа по всему собранию: короткое, если оно ни с кем не совпало, иначе
