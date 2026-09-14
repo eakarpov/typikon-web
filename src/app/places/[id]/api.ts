@@ -8,9 +8,13 @@ export const getItem = async (id: string): Promise<[any, any]> => {
         const db = client.db("typikon");
         // Помимо _id и прежнего alias — адрес новой модели и его прежние формы
         // (@/lib/places/schema): пометки в текстах ссылаются на старое.
-        const matcher = ObjectId.isValid(id)
-            ? { _id: new ObjectId(id) }
-            : { $or: [{ alias: id }, { slug: id }, { previousSlugs: id }] };
+        // Скрытые места (published: false — импорт без русского имени) не отдаются.
+        const matcher = {
+            ...(ObjectId.isValid(id)
+                ? { _id: new ObjectId(id) }
+                : { $or: [{ alias: id }, { slug: id }, { previousSlugs: id }] }),
+            published: { $ne: false },
+        };
 
         const texts = await db
             .collection("places")

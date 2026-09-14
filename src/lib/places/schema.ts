@@ -16,7 +16,7 @@ export const PLACE_MENTIONS = "place_mentions";
 
 export type PlaceKind =
     | "settlement" | "region" | "mountain" | "river" | "sea" | "lake"
-    | "desert" | "island" | "monastery" | "building" | "route";
+    | "valley" | "spring" | "desert" | "island" | "monastery" | "building" | "route" | "other";
 
 /** Существует ли место: город живёт, от города руины, место утрачено, отождествление не установлено. */
 export type PlaceStatus = "extant" | "ruins" | "lost" | "uncertain";
@@ -26,7 +26,10 @@ export type NameRole = "modern" | "biblical" | "historical" | "slavonic" | "vari
 export type PlaceSource = "wikidata" | "pleiades" | "openbible" | "nikifor" | "editor";
 
 export interface PlaceName {
+    /** Имя в своём письме: «Ἄγκυρα», «ⲣⲁⲕⲟⲧⲉ». */
     name: string;
+    /** Латинская транслитерация, если имя записано не латиницей: «Ankyra». */
+    transliteration?: string;
     /** Код языка: ru, csl, grc, heb, lat, ar, tr… */
     lang: string;
     role: NameRole;
@@ -63,11 +66,25 @@ export interface Place {
     /** Прежний адрес; на него ссылаются пометки в текстах. */
     alias?: string;
     name: string;
+    /**
+     * Откуда основное имя. Имя от редактора и от энциклопедии Никифора обогащение
+     * не перезаписывает; имя импорта (английское) заменяется русским из Wikidata.
+     * Отсутствие поля у записей, заведённых руками, значит «редактор».
+     */
+    nameSource?: PlaceSource;
     kind?: PlaceKind;
     status?: PlaceStatus;
     names?: PlaceName[];
     location?: PlaceLocation;
+    /** Откуда точка: поставленную редактором импорт не перезаписывает. */
+    locationSource?: PlaceSource;
     precision?: "exact" | "approx" | "area";
+    /**
+     * Показывается ли страница. Импорт заводит места скрытыми: у них пока нет
+     * русского имени, а страница с английским заголовком хуже, чем никакой.
+     * Отсутствие поля — показывается (так у мест, заведённых руками).
+     */
+    published?: boolean;
     periods?: PlacePeriod[];
     externals?: PlaceExternal[];
     description?: string;

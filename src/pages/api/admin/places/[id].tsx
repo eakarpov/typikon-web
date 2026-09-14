@@ -20,10 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const client = await clientPromise;
             const db = client.db("typikon");
             const places = db.collection("places");
-            const current = await places.findOne({ "_id": new ObjectId(id) }, { projection: { names: 1 } });
+            const current = await places.findOne({ "_id": new ObjectId(id) }, { projection: { names: 1, locationSource: 1 } });
             // Новые поля выводятся из тех, что правит редактор (@/lib/places/legacy):
             // иначе точка на карте и имена разошлись бы с тем, что в нём видно.
+            // Пустые широта и долгота у места, чья точка пришла из импорта, значат
+            // «редактор точку не ставил», а не «убрать точку».
             const location = toLocation(data.latitude, data.longitude);
+            const imported = current?.locationSource && current.locationSource !== "editor";
             await places
                 .updateOne(
                     { "_id" : new ObjectId(id) },
@@ -38,9 +41,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             links: data.links,
                             latitude: data.latitude,
                             longitude: data.longitude,
-                            ...(location ? { location } : {}),
+                            ...(location ? { location, locationSource: "editor" } : {}),
                         },
-                        ...(location ? {} : { $unset: { location: "" } }),
+                        ...(location || imported ? {} : { $unset: { location: "", locationSource: "" } }),
                     },
                 );
 

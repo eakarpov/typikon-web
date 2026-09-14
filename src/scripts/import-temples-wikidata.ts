@@ -27,9 +27,7 @@
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { slugify, uniqueAlias } from "@/lib/news/format";
-
-const ENDPOINT = "https://query.wikidata.org/sparql";
-const UA = "typikon-web/1.0 (temples import, contact: georgecarpow@gmail.com)";
+import { sparql } from "@/scripts/lib/wikidata";
 
 const QUERY = `
 SELECT ?item ?label ?year ?lat ?lon ?place WHERE {
@@ -39,30 +37,6 @@ SELECT ?item ?label ?year ?lat ?lon ?place WHERE {
   OPTIONAL { ?item wdt:P571 ?inc . BIND(YEAR(?inc) AS ?year) }
   OPTIONAL { ?item wdt:P131 ?p . ?p rdfs:label ?place . FILTER(lang(?place)="ru") }
 }`;
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-type Row = Record<string, { value: string } | undefined>;
-
-/**
- * Запрос с отступом. 502 здесь такой же рабочий ответ, как 429: служба
- * отвечает им, когда запрос не уложился в её собственный предел, и на
- * двенадцати тысячах строк это случается регулярно.
- */
-const sparql = async (query: string, retries = 4): Promise<Row[]> => {
-    const res = await fetch(`${ENDPOINT}?query=${encodeURIComponent(query)}`, {
-        headers: { Accept: "application/sparql-results+json", "User-Agent": UA },
-    });
-    if ([429, 500, 502, 503, 504].includes(res.status)) {
-        if (retries <= 0) throw new Error(`SPARQL ${res.status}: попытки исчерпаны`);
-        const wait = (Number(res.headers.get("retry-after")) || 15) * 1000;
-        console.log(`  ${res.status}; жду ${wait / 1000} с и повторяю (осталось попыток: ${retries})`);
-        await sleep(wait);
-        return sparql(query, retries - 1);
-    }
-    if (!res.ok) throw new Error(`SPARQL ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    return (await res.json()).results.bindings as Row[];
-};
 
 /**
  * Тип постройки по названию. Не украшение: часовня — не храм, престола у неё
