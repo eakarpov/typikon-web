@@ -52,6 +52,22 @@ test("пара соседних слов — только для составн�
     assert.deepEqual(hits.map((h) => h.placeId), ["beth-shemesh"]);
 });
 
+test("Константинь град: двухсловная форма от редактора находит и падеж", () => {
+    const cIndex = buildFormIndex([
+        { id: "constantinople", forms: textForms(["Константинополь", "Константинь град", "Константиня град", "Царьград"]) },
+    ]);
+    for (const text of [
+        "от премудраго же льва в Константи́нь град прино́сится",
+        "архиепископа Константи́ня гра́да, Златоустаго",
+        "и прииде во Царьград",
+        "в Константино́поле",
+    ]) {
+        assert.deepEqual(findPlaceMentions(text, cIndex, true).map((h) => h.placeId), ["constantinople"], text);
+    }
+    // Имя Константина без «града» — человек.
+    assert.deepEqual(findPlaceMentions("царь Константи́н вели́кий", cIndex, true), []);
+});
+
 test("одна форма — одно место: первое в порядке предпочтения", () => {
     const hits = findPlaceMentions("во Александри́и еги́петстей", index, true);
     assert.deepEqual(hits.map((h) => h.placeId).sort(), ["alexandria", "egypt"]);

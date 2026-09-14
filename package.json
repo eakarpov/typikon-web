@@ -69,6 +69,7 @@
     "places:sync-markup": "tsx src/scripts/places/sync-place-markup.ts",
     "places:link-chants": "NODE_ENV=development tsx src/scripts/places/link-chant-places.ts",
     "places:import-slavic": "tsx src/scripts/places/import-slavic-map.ts",
+    "places:add-wikidata": "tsx src/scripts/places/add-wikidata-places.ts",
     "temples:match":"tsx src/scripts/match-temple-dedications.ts",
     "nobles:import-wikidata": "tsx src/scripts/import-nobles-wikidata.ts",
     "nobles:import-wikidata-rules": "tsx src/scripts/import-nobles-wikidata-rules.ts",

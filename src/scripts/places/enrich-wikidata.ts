@@ -80,7 +80,7 @@ async function main() {
     const now = new Date();
 
     // 1. Ручные записи без QID — по ссылкам на Википедию.
-    const rows = await places.find({}, { projection: { name: 1, nameSource: 1, names: 1, location: 1, locationSource: 1, status: 1, externals: 1, links: 1, published: 1, kind: 1 } }).toArray();
+    const rows = await places.find({}, { projection: { name: 1, nameSource: 1, names: 1, location: 1, locationSource: 1, status: 1, externals: 1, links: 1, published: 1, kind: 1, origin: 1 } }).toArray();
     const byQid = new Map<string, any>();
     for (const row of rows) { const q = wikidataOf(row); if (q) byQid.set(q, row); }
 
@@ -120,9 +120,14 @@ async function main() {
     // запись: из OpenBible или заведённая руками. Иначе заведённые этим же скриптом
     // соседи на следующем прогоне приводили бы своих соседей, и каждый прогон
     // уходил бы на шаг дальше от Писания (Ханаан → Урарту → …).
+    //
+    // «Своя» — любая запись, кроме заведённой этим же скриптом как сосед (origin:
+    // wikidata-neighbor). Прежний признак «открыта или из OpenBible» перестал работать,
+    // как только адреса открыли и соседей: на следующем прогоне они сами стали «своими»
+    // и привели 24 соседа второго шага (исправлено 2026-09-15).
     const core = new Set<string>();
     for (const [qid, row] of byQid) {
-        if (row.published !== false || (row.externals ?? []).some((e: any) => e.source === "openbible")) core.add(qid);
+        if (row.origin !== "wikidata-neighbor") core.add(qid);
     }
     const pairs = successionPairs(facts.values()).filter(([newer, older]) => core.has(newer) || core.has(older));
     const missing = [...new Set(pairs.flat())].filter((q) => !byQid.has(q));
@@ -136,16 +141,28 @@ async function main() {
     const pleiadesConflicts: string[] = [];
     const updates: { _id: ObjectId; set: Record<string, any>; addExternal?: any[] }[] = [];
 
+    // Места, у которых есть преемник: их упразднение — смена имени, а не руины.
+    const withSuccessor = new Set(pairs.map(([, older]) => older));
+    let unruined = 0;
+
     for (const [qid, row] of byQid) {
         const f = facts.get(qid);
         if (!f) continue;
         const nameSource = row.nameSource ?? (row.published === false ? "openbible" : "editor");
-        const u = enrichUpdate({ ...row, nameSource, ancient: isAncient(row) }, f);
+        const hasSuccessor = withSuccessor.has(qid);
+        const u = enrichUpdate({ ...row, nameSource, ancient: isAncient(row), hasSuccessor }, f);
         const set: Record<string, any> = { names: u.names, updatedAt: now };
         if (u.names.some((n) => n.source === "wikidata")) withNames++;
         if (u.name) { set.name = u.name; set.nameSource = u.nameSource; renamed++; }
         if (u.location) { set.location = u.location; set.locationSource = u.locationSource; located++; }
         if (u.status) set.status = u.status;
+        // «Руины», поставленные прежним прогоном по дате упразднения, снимаем. Руины из
+        // OpenBible (телль на месте точки) не трогаем: там это наблюдение, а не вывод из P576.
+        const fromOpenBible = (row.externals ?? []).some((e: any) => e.source === "openbible");
+        if (hasSuccessor && row.status === "ruins" && f.dissolved !== undefined && !fromOpenBible) {
+            set.status = null;
+            unruined++;
+        }
         // QID, найденный по ссылке на Википедию на шаге 1, в записи ещё не лежит.
         const addExternal: any[] = resolvedRows.has(String(row._id)) ? [{ source: "wikidata", id: qid }] : [];
         if (u.pleiades) {
@@ -174,6 +191,7 @@ async function main() {
                 names: namesFromFacts(f, ancient),
                 ...(f.location ? { location: f.location, locationSource: "wikidata" } : {}),
                 externals: [{ source: "wikidata", id: qid }],
+                origin: "wikidata-neighbor",
                 published: false,
                 createdAt: now,
                 updatedAt: now,
@@ -200,6 +218,7 @@ async function main() {
     console.log(`Записей с именами из Wikidata: ${withNames}; точка поставлена: ${located}; ключ Pleiades добавлен: ${pleiadesAdded}`);
     if (pleiadesConflicts.length) console.log(`Ключ Pleiades уже у другой записи: ${pleiadesConflicts.length}`);
     console.log(`Пар преемственности: ${pairs.length}; недостающих в базе: ${missing.length}, заводится: ${created.length}; связей: ${relations.length}`);
+    console.log(`Снято «руины» у мест с преемником: ${unruined}`);
     for (const [newer, older] of pairs.slice(0, 15)) console.log(`  ${nameOfQid.get(newer) ?? newer} ← ${nameOfQid.get(older) ?? older}`);
 
     if (!WRITE) {

@@ -76,3 +76,9 @@ test("обновление: имя импорта заменяется, имя �
     assert.equal(manual.location, undefined);
     assert.equal(manual.pleiades, "638753");
 });
+
+test("упразднение: руины — только если места никто не сменил", () => {
+    const dissolved = { ...ankara(), dissolved: 1453 };
+    assert.equal(enrichUpdate({ name: "Халкидон", ancient: true }, dissolved).status, "ruins");
+    assert.equal(enrichUpdate({ name: "Константинополь", ancient: true, hasSuccessor: true }, dissolved).status, undefined);
+});

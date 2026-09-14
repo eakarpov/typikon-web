@@ -151,6 +151,12 @@ export interface EnrichTarget {
     status?: PlaceStatus;
     externals?: { source: string; id: string }[];
     ancient: boolean;
+    /**
+     * У места есть преемник на том же месте (Константинополь → Стамбул). Тогда дата
+     * упразднения (P576) — смена имени и власти, а не разрушение, и руинами место не
+     * называется.
+     */
+    hasSuccessor?: boolean;
 }
 
 export interface EnrichUpdate {
@@ -179,7 +185,7 @@ export const enrichUpdate = (target: EnrichTarget, facts: WikidataFacts): Enrich
         update.location = facts.location;
         update.locationSource = "wikidata";
     }
-    if (facts.dissolved !== undefined && !target.status) update.status = "ruins";
+    if (facts.dissolved !== undefined && !target.status && !target.hasSuccessor) update.status = "ruins";
     if (facts.pleiades && !(target.externals ?? []).some((e) => e.source === "pleiades")) update.pleiades = facts.pleiades;
     return update;
 };
