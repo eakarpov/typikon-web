@@ -4,6 +4,7 @@ import { CalendarIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import { getDayByText, getTextLinks, getTextSource } from "@/app/reading/[id]/api";
 import { sourceLabel } from "@/lib/libFond";
 import { DayDTO } from "@/types/dto/days";
+import { textPlaces } from "@/lib/places/query";
 
 // Связи текста — под самим чтением, а не в шапке: это то, куда идут, дочитав,
 // а не то, чем перебивают чтение. В шапке связь была одна ("Страница святого"),
@@ -26,16 +27,17 @@ const Row = ({ label, children }: { label: string; children: React.ReactNode }) 
 );
 
 const TextLinksContent = async ({ item }: { item: any }) => {
-    const [links, [day], source] = await Promise.all([
+    const [links, [day], source, places] = await Promise.all([
         getTextLinks(item),
         getDayByText(item.id),
         getTextSource(item.link || null),
+        textPlaces(String(item.id), item.content || ""),
     ]);
 
     const href = day ? dayHref(day) : null;
     const origin = sourceLabel(source);
 
-    if (!links.memory && !links.mentions.length && !href && !origin) return null;
+    if (!links.memory && !links.mentions.length && !places.length && !href && !origin) return null;
 
     return (
         <div className="mt-6 pt-3 border-t border-slate-300 flex flex-col gap-2 no-pdf">
@@ -80,6 +82,20 @@ const TextLinksContent = async ({ item }: { item: any }) => {
                             href={`/saints/${mention.slug ?? mention.dneslovId}`}
                         >
                             {mention.title}
+                        </Link>
+                    ))}
+                </Row>
+            )}
+
+            {!!places.length && (
+                <Row label="Места:">
+                    {places.map((place) => (
+                        <Link
+                            key={place.id}
+                            className="font-serif text-red-900 border rounded border-slate-300 px-2 py-0.5 text-sm hover:underline"
+                            href={place.href}
+                        >
+                            {place.name}
                         </Link>
                     ))}
                 </Row>

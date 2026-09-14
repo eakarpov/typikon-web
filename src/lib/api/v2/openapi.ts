@@ -783,6 +783,23 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/places": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Указатель мест",
+                description:
+                    "Места по алфавиту, постранично. Только открытые: место, заведённое импортом и "
+                    + "ещё не получившее русского имени, скрыто и здесь, и на сайте.",
+                parameters: [
+                    {
+                        name: "kind", in: "query", required: false, schema: { type: "string" },
+                        example: "river", description: "Род места: settlement, region, mountain, river…",
+                    },
+                    ...pageParams,
+                ],
+                responses: { "200": ok("#/components/schemas/PlaceList") },
+            },
+        },
         "/api/v2/news": {
             get: {
                 tags: ["Новости"],
@@ -2244,6 +2261,19 @@ export const openapi = () => ({
                 },
             },
             CanonList: collectionWithFacets("#/components/schemas/Canon", "#/components/schemas/CanonFacets"),
+            PlaceSummary: {
+                type: "object",
+                properties: {
+                    id: { type: ["string", "null"] },
+                    slug: { type: ["string", "null"], description: "Адрес страницы: /places/{slug}" },
+                    name: { type: ["string", "null"] },
+                    kind: { type: ["string", "null"] },
+                    status: { type: ["string", "null"], description: "extant, ruins, lost, uncertain" },
+                    latitude: { type: ["number", "null"] },
+                    longitude: { type: ["number", "null"] },
+                },
+            },
+            PlaceList: collection("#/components/schemas/PlaceSummary"),
             Place: {
                 type: "object",
                 properties: {
@@ -2270,6 +2300,45 @@ export const openapi = () => ({
                         description: "Может отсутствовать: не у всякого места есть точка",
                     },
                     longitude: { type: ["number", "null"] },
+                    slug: { type: ["string", "null"], description: "Адрес страницы: /places/{slug}" },
+                    kind: { type: ["string", "null"], description: "settlement, region, mountain, river, …" },
+                    status: { type: ["string", "null"], description: "extant, ruins, lost, uncertain" },
+                    names: {
+                        type: "array",
+                        description: "Имена по эпохам. Годы до Р. Х. — отрицательные.",
+                        items: {
+                            type: "object",
+                            properties: {
+                                name: { type: "string" },
+                                transliteration: { type: ["string", "null"] },
+                                lang: { type: "string" },
+                                role: { type: "string", description: "biblical, historical, slavonic, modern, variant" },
+                                from: { type: ["integer", "null"] },
+                                to: { type: ["integer", "null"] },
+                                source: { type: "string", description: "openbible, wikidata, pleiades, nikifor, editor" },
+                            },
+                        },
+                    },
+                    periods: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                label: { type: "string" },
+                                from: { type: ["integer", "null"] },
+                                to: { type: ["integer", "null"] },
+                                source: { type: "string" },
+                            },
+                        },
+                    },
+                    externals: {
+                        type: "array",
+                        description: "Ключи во внешних базах; у nikifor — алиас статьи энциклопедии в корпусе",
+                        items: {
+                            type: "object",
+                            properties: { source: { type: "string" }, id: { type: "string" } },
+                        },
+                    },
                 },
             },
             AppVersion: {

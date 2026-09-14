@@ -155,7 +155,26 @@ export const LAYERS: DumpLayer[] = [
                 title: "Описания рукописей и изданий",
                 note: "Ссылки на сканы РГБ, НЭБ и lib-fond — сами сканы принадлежат хранилищам.",
             },
-            { source: "places", file: "places", title: "Места" },
+            {
+                source: "places",
+                file: "places",
+                title: "Места",
+                note: "Имена, точки и периоды сведены из OpenBible Bible Geocoding (CC BY 4.0), "
+                    + "Pleiades (CC BY 3.0) и Wikidata (CC0); источник каждой записи назван в её полях source.",
+            },
+            {
+                source: "place_relations",
+                file: "place-relations",
+                title: "Связи мест: преемственность, отождествления, вложенность",
+                note: "Отождествления с баллами — OpenBible (CC BY 4.0); преемственность — Wikidata (CC0).",
+            },
+            {
+                source: "place_mentions",
+                file: "place-mentions",
+                title: "Упоминания мест в Писании и текстах",
+                note: "Стихи источника (OpenBible, CC BY 4.0) переведены в нумерацию Елизаветинской Библии "
+                    + "сверкой по тексту; status: approved — имя найдено в стихе, pending — не найдено.",
+            },
             { source: "memories", file: "memories", title: "Памяти святцев" },
             { source: "memory_saint_links", file: "memory-saint-links", title: "Связи памятей со святыми" },
             { source: "akathist_saint_links", file: "akathist-saint-links", title: "Связи акафистов со святыми" },

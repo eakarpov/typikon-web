@@ -101,6 +101,7 @@ export async function GET(request: Request) {
                 // в первую версию API.
                 textDay: "/api/v2/texts/{id}/day",
                 place: "/api/v2/places/{id|alias}",
+                places: "/api/v2/places?kind=&limit=&offset=",
                 // Помянник личный: ключ отмеряет частоту, а чей список открывать,
                 // говорит сессия. Оттого он и назван здесь в перечне отдельно —
                 // одним ключом эти три адреса не открываются.

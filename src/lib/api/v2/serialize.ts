@@ -1007,6 +1007,35 @@ export const placeDetail = (row: any) => ({
     // строковых полей. Не разобралось — `null`: точка, которой нет, честнее
     // точки посреди Атлантики.
     ...(placeCoordinates(row) ?? { latitude: null, longitude: null }),
+    /** Адрес страницы на сайте: /places/{slug}. */
+    slug: row.slug ?? null,
+    /** Род: settlement, region, mountain, river… */
+    kind: row.kind ?? null,
+    /** Состояние: extant, ruins, lost, uncertain. */
+    status: row.status ?? null,
+    /** Имена по эпохам: язык, роль, годы (до Р. Х. — отрицательные) и источник. */
+    names: (row.names ?? []).map((n: any) => ({
+        name: n.name,
+        transliteration: n.transliteration ?? null,
+        lang: n.lang,
+        role: n.role,
+        from: n.from ?? null,
+        to: n.to ?? null,
+        source: n.source,
+    })),
+    periods: (row.periods ?? []).map((p: any) => ({ label: p.label, from: p.from ?? null, to: p.to ?? null, source: p.source })),
+    /** Ключи во внешних базах: wikidata, pleiades, openbible, nikifor (алиас статьи в корпусе). */
+    externals: (row.externals ?? []).map((e: any) => ({ source: e.source, id: e.id })),
+});
+
+/** Место в перечне. */
+export const placeSummary = (row: any) => ({
+    id: row.id ?? null,
+    slug: row.slug ?? null,
+    name: row.name ?? null,
+    kind: row.kind ?? null,
+    status: row.status ?? null,
+    ...(placeCoordinates(row) ?? { latitude: null, longitude: null }),
 });
 
 /** Молитва в перечне. */

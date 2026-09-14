@@ -30,6 +30,7 @@ const STATIC_ROUTES = [
     { path: "/library", priority: 0.9 },
     { path: "/bible", priority: 0.9 },
     { path: "/saints", priority: 0.8 },
+    { path: "/places", priority: 0.7 },
     { path: "/accents", priority: 0.7 },
     // Только сам указатель. Адреса зачинов сюда не идут: их 182 650, и у девяти
     // десятых за адресом стоит одна строка корпуса — карта сайта разбухла бы
@@ -186,6 +187,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // в карте остаётся номер: страница по нему работает.
         const saintAddresses = await saintSlugs(saints.map((saint: any) => String(saint._id)));
 
+        // Места: только открытые и с адресом. Скрытые (имя пока английское) и
+        // заведённые до выдачи адресов в карту не идут.
+        const places = await db.collection("places")
+            .find({ published: { $ne: false }, slug: { $gt: "" } }, { projection: { slug: 1, updatedAt: 1 } })
+            .toArray();
+
         // Указатель имён строит скрипт (names:index); может и не быть — тогда
         // страниц имён в карте просто не будет, а раздел останется.
         const names = await db.collection("name_index")
@@ -243,6 +250,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 entry(`/library/${book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
             ...saints.map((saint) =>
                 entry(`/saints/${saintAddresses[String(saint._id)] ?? saint._id}`, saint.updatedAt, 0.6, "monthly")),
+            ...places.map((place) =>
+                entry(`/places/${place.slug}`, place.updatedAt, 0.5, "monthly")),
             ...bibleChapters,
             ...BIBLE_CANON.map((book) =>
                 entry(`/otzvuki/${book.id}`, new Date(), 0.5, "monthly")),
