@@ -209,6 +209,10 @@ const SPECS: Spec[] = [
       why: "святой по внешнему ключу; уникальность не даёт двум записям присвоить одну и ту же чужую "
          + "память — а это ровно та порча, которую мы и завели каталог ловить "
          + "(записи без внешних ключей уникальности не мешают: у них этого поля нет)" },
+    { db: "typikon", collection: "saints", key: { "provenance.table": 1, "provenance.id": 1 },
+      options: { partialFilterExpression: { "provenance.table": { $exists: true } }, unique: true },
+      why: "святой из нашего корпуса (import-sobor-saints.ts): повторный прогон узнаёт запись "
+         + "по ключу typikon-rules, и два святых на одно лицо корпуса не заводятся" },
     { db: "typikon", collection: "saints", key: { previousSlugs: 1 },
       why: "старый адрес после ручной смены слуга — по нему ищут, чтобы увести редиректом" },
     { db: "typikon", collection: "saints", key: { slug: 1 },

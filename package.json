@@ -54,6 +54,7 @@
     "saints:name": "tsx src/scripts/set-saint-name.ts",
     "saints:slug": "tsx src/scripts/set-saint-slug.ts",
     "saints:build": "tsx src/scripts/build-saints.ts",
+    "saints:sobor": "tsx src/scripts/import-sobor-saints.ts",
     "temples:dedications": "tsx src/scripts/build-dedications.ts",
     "temples:import-wikidata": "tsx src/scripts/import-temples-wikidata.ts",
     "temples:import-osm": "tsx src/scripts/import-temples-osm.ts",

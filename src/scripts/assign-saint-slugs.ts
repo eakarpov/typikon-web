@@ -59,7 +59,18 @@ const main = async () => {
 
     // Устойчивый порядок: сперва номер памяти числом, потом собственный _id —
     // на случай записей вовсе без внешних ключей.
-    const rows = (await saints.find({ $or: [{ slug: null }, { slug: "" }, { slug: { $exists: false } }] }).toArray())
+    //
+    // Записи из нашего корпуса (provenance без внешних ключей — Собор новомучеников,
+    // import-sobor-saints.ts) заведены БЕЗ адреса намеренно: выдавать им страницы
+    // решено отдельно. Скрипт их не берёт, пока не попросят явно: --with-corpus.
+    const withCorpus = argv.includes("--with-corpus");
+    const corpusOnly = { "provenance.0": { $exists: true }, "externals.0": { $exists: false } };
+    const rows = (await saints.find({
+        $and: [
+            { $or: [{ slug: null }, { slug: "" }, { slug: { $exists: false } }] },
+            ...(withCorpus ? [] : [{ $nor: [corpusOnly] }]),
+        ],
+    }).toArray())
         .map((s: any) => ({
             doc: s,
             order: Number((s.externals ?? []).find((e: any) => e.source === SAINT_SOURCES.dneslov.code)?.id ?? Infinity),

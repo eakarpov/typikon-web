@@ -34,6 +34,24 @@ export interface Saint {
     /** Ссылки на изображения у святцев. Файлы не наши и лежат на их CDN. */
     images: SaintImage[];
     externals: SaintExternal[];
+    /**
+     * Откуда запись взялась, если не из чужих святцев: наш корпус. Не внешний ключ —
+     * сверять его не с чем, — а свидетельство: таблица и ключ typikon-rules, издание,
+     * напечатанная строка. Заводит import-sobor-saints.ts.
+     */
+    provenance?: SaintProvenance[];
+}
+
+export interface SaintProvenance {
+    /** Таблица корпуса typikon-rules: 'sobor_lica'. */
+    table: string;
+    id: string;
+    edition: string | null;
+    chin?: string | null;
+    office?: string | null;
+    /** Строка, как её напечатала книга. */
+    text: string;
+    url?: string | null;
 }
 
 export interface SaintImage {
