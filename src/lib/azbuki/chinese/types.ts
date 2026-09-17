@@ -60,6 +60,9 @@ export interface Segment {
     parts: WordPart[];
 }
 
+/** e — точных совпадений, s — только по сегментам (тон иной), t — всего */
+export interface Accuracy { e: number; s: number; t: number }
+
 export interface Reference {
     ipa: Record<string, string>;
     /** [название ряда, [[母, буква] | null, …]] — по одной ячейке на серию */
@@ -70,8 +73,22 @@ export interface Reference {
     letters: Record<string, number>;
     /** «coda_tone|yue» → [[ключ, значение, n, доля], …] */
     corr: Record<string, [string, string, number, number][]>;
+    /** Точность вывода по выборкам — считается при сборке, а не на странице */
+    derivation: { band: number; cmn: Accuracy; yue: Accuracy }[];
+    /** Назначенные написания: у морфемы нет среднекитайского предка */
+    artificial: { ch: string; latin: string; cmn: string; derived: string;
+                  exact: boolean; kind: string }[];
     meta: Record<string, string>;
     counts: { syllables: number; characters: number; readings: number };
+}
+
+export interface Cognate {
+    c: string;        // концепт
+    n: number;        // сколько языков семьи в когнатном классе
+    oc: string;       // древнекитайская реконструкция
+    lat: string;      // написание нашей латиницей
+    /** [подгруппа, язык, название языка, форма] */
+    f: [string, string, string, string][];
 }
 
 export interface Sinitic {
@@ -88,7 +105,7 @@ export interface Engine {
     variants?: Record<string, string[]>;
     reference?: Reference;
     words?: unknown;
-    cognates?: Record<string, unknown[]>;
+    cognates?: Record<string, Cognate[]>;
     sinitic?: Sinitic;
     core: {
         lookup(ch: string): { char: string; entry: CharEntry; via: string | null } | null;
@@ -114,6 +131,7 @@ export interface Engine {
 
 /** Наборы данных по вкладкам: страница не тянет 6,8 МБ там, где нужно 0,5. */
 export const DATASETS = {
+    // справочнику словарь чтений не нужен: числа и списки посчитаны при сборке
     reference: ["reference", "syllables", "sinitic", "cognates"],
     character: ["syllables", "chars", "variants", "cognates"],
     text: ["syllables", "chars", "variants", "words"],

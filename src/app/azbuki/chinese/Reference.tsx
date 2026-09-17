@@ -1,5 +1,4 @@
 'use client';
-import { useMemo } from "react";
 import { useEngine } from "./useEngine";
 import { Faint, Failed, Han, Lat, Loading, Table, plural, row } from "./ui";
 import type { Engine, Reading } from "@/lib/azbuki/chinese/types";
@@ -83,58 +82,18 @@ const CodaTone = ({ cl, variety }: { cl: Engine; variety: "yue" | "cmn" }) => {
 const Reference = () => {
     const { engine, error } = useEngine("reference");
 
-    // Точность вывода считается по всей базе — один раз, а не при каждой отрисовке.
-    const derivation = useMemo(() => {
-        if (!engine?.chars) return null;
-        const bands = [1000, 3000, 6000];
-        const attKey: Record<string, string> = { putonghua: "cmn", gwongzau: "yue" };
-        const by: Record<number, Record<string, { e: number; s: number; t: number }>> = {};
-        for (const b of bands) by[b] = { putonghua: { e: 0, s: 0, t: 0 }, gwongzau: { e: 0, s: 0, t: 0 } };
-        for (const ch of Object.keys(engine.chars)) {
-            const e = engine.chars[ch];
-            if (!e.r?.length || !e.m || !e.f) continue;
-            const ders = e.r.map(r => engine.core.derive(engine.syllables[r[0] as number]));
-            for (const name of Object.keys(engine.core.DERIVERS)) {
-                const want = e.m[attKey[name]]?.[0];
-                if (!want) continue;
-                const verdicts = ders.map(d => {
-                    const v = (d as Record<string, string | null | undefined>)[name];
-                    return v ? engine.core.compareReading(v, want) : null;
-                });
-                for (const b of bands) {
-                    if (e.f > b) continue;
-                    const st = by[b][name];
-                    st.t++;
-                    if (verdicts.includes("exact")) st.e++;
-                    else if (verdicts.includes("segments")) st.s++;
-                }
-            }
-        }
-        return bands.map(b => ({ band: b, p: by[b].putonghua, g: by[b].gwongzau }));
-    }, [engine]);
-
-    // Назначенные написания собираются из данных, чтобы список не разъезжался
-    // с manual_readings.csv при пересборке.
-    const artificial = useMemo(() => {
-        if (!engine?.chars) return null;
-        const out: { ch: string; r: Reading }[] = [];
-        for (const ch of Object.keys(engine.chars)) {
-            const rs = engine.core.readings(engine.chars[ch]);
-            // r.from не пуст, когда чтение подхвачено от вариантного начертания:
-            // 倆 берёт его у 俩, и без проверки знак попал бы в список дважды
-            const hit = rs.find(r => r.artificial && !r.from);
-            if (hit) out.push({ ch, r: hit });
-        }
-        out.sort((a, b) => (engine.chars[a.ch].f || 1e9) - (engine.chars[b.ch].f || 1e9));
-        return out;
-    }, [engine]);
-
+    // Точность вывода и список назначенных написаний приходят готовыми:
+    // они считаются при сборке бандла. Раньше это делала страница, обходя
+    // 26 тысяч иероглифов с выводом чтений на каждое, — и ради двух таблиц
+    // ей пришлось бы тянуть весь словарь чтений (3,8 МБ).
     if (error) return <Failed error={error} />;
     if (!engine || !engine.reference) return <Loading what="справочные таблицы" />;
 
     const ref = engine.reference;
     const c = ref.counts;
-    const artExact = artificial?.filter(e => !e.r.gloss.includes("не выводится")).length ?? 0;
+    const derivation = ref.derivation || [];
+    const artificial = ref.artificial || [];
+    const artExact = artificial.filter(a => a.exact).length;
 
     return (
         <div className="max-w-3xl">
@@ -269,19 +228,17 @@ const Reference = () => {
                 без единой правки. На вкладке «Иероглиф» выведенное чтение стоит рядом
                 с засвидетельствованным, и расхождения подсвечены.
             </P>
-            {derivation && (
-                <Table
-                    caption="Доля иероглифов, для которых выведенное чтение совпадает с засвидетельствованным в Unihan. Второй столбец каждой пары — совпадение по сегментам, когда расходится только тон."
-                    head={["выборка", "путунхуа точно", "+сегментно", "кантонский точно", "+сегментно"]}
-                    rows={derivation.map(d => row(
-                        `топ-${d.band}`,
-                        <Num>{pc(d.p.e, d.p.t)}</Num>,
-                        <Faint><Num>{pc(d.p.e + d.p.s, d.p.t)}</Num></Faint>,
-                        <Num>{pc(d.g.e, d.g.t)}</Num>,
-                        <Faint><Num>{pc(d.g.e + d.g.s, d.g.t)}</Num></Faint>,
-                    ))}
-                />
-            )}
+            <Table
+                caption="Доля иероглифов, для которых выведенное чтение совпадает с засвидетельствованным в Unihan. Второй столбец каждой пары — совпадение по сегментам, когда расходится только тон. Считается при сборке базы."
+                head={["выборка", "путунхуа точно", "+сегментно", "кантонский точно", "+сегментно"]}
+                rows={derivation.map(d => row(
+                    `топ-${d.band}`,
+                    <Num>{pc(d.cmn.e, d.cmn.t)}</Num>,
+                    <Faint><Num>{pc(d.cmn.e + d.cmn.s, d.cmn.t)}</Num></Faint>,
+                    <Num>{pc(d.yue.e, d.yue.t)}</Num>,
+                    <Faint><Num>{pc(d.yue.e + d.yue.s, d.yue.t)}</Num></Faint>,
+                ))}
+            />
             <Note>
                 Остаток — настоящие нерегулярности, а не изъян правил: <Han>不</Han> даёт
                 по правилам fǒu, а читается bù; <Han>國</Han> даёт guō вместо guó. Потолок
@@ -352,23 +309,16 @@ const Reference = () => {
                 путунхуа». Им берётся ближайшее с той же инициалью, и такое написание
                 читается не так, как слово звучит.
             </P>
-            {artificial && (
-                <Table
-                    head={["знак", "чтение", "написание", "по правилам", "разряд"]}
-                    rows={artificial.map(e => {
-                        const d = engine.core.derive(e.r.syl).putonghua || "—";
-                        const exact = !e.r.gloss.includes("не выводится");
-                        const kind = /назначено: ([^;]+);/.exec(e.r.gloss);
-                        return row(
-                            <Han className="text-base">{e.ch}</Han>,
-                            engine.chars[e.ch].m?.cmn?.[0] || "—",
-                            <Lat artificial>{e.r.syl.l}</Lat>,
-                            <span className={exact ? "" : "text-amber-800"}>{d}</span>,
-                            <Faint>{kind ? kind[1] : ""}</Faint>,
-                        );
-                    })}
-                />
-            )}
+            <Table
+                head={["знак", "чтение", "написание", "по правилам", "разряд"]}
+                rows={artificial.map(a => row(
+                    <Han className="text-base">{a.ch}</Han>,
+                    a.cmn,
+                    <Lat artificial>{a.latin}</Lat>,
+                    <span className={a.exact ? "" : "text-amber-800"}>{a.derived}</span>,
+                    <Faint>{a.kind}</Faint>,
+                ))}
+            />
 
             <H>11. Минь и хакка</H>
             <SiniticBlock cl={engine} />
@@ -392,6 +342,7 @@ const Reference = () => {
                 <span className="font-mono">gri</span> — оба «нож», но слова разные,
                 и в этой таблице их нет.
             </Note>
+            <CognateTable cl={engine} />
 
             <H>13. Источники</H>
             <P className="text-sm">
@@ -403,6 +354,49 @@ const Reference = () => {
                 {ref.meta.version || "—"}.
             </P>
         </div>
+    );
+};
+
+/* Иероглифы с засвидетельствованными когнатами. Тибетский вынесен отдельной
+   колонкой: он ближайший родственник с древней письменной формой, и сравнивать
+   с ним нагляднее, чем с современными языками семьи. */
+const CognateTable = ({ cl }: { cl: Engine }) => {
+    if (!cl.cognates) return null;
+    const items = Object.entries(cl.cognates)
+        .map(([ch, list]) => ({ ch, c: list[0] }))
+        .sort((a, b) => b.c.n - a.c.n);
+    return (
+        <Table
+            caption="Иероглифы с засвидетельствованными сино-тибетскими когнатами, от самых широко представленных. Латиница выводится из среднекитайского, реконструкция — из древнекитайского: это разные эпохи, и совпадать они не обязаны."
+            head={["знак", "латиница", "древнекит.", "тибетский", "концепт", "языков", "ещё формы"]}
+            rows={items.map(({ ch, c }) => {
+                const bySub: Record<string, [string, string, string, string]> = {};
+                const order: string[] = [];
+                for (const f of c.f) {
+                    if (f[0] === "Sinitic") continue;
+                    if (!bySub[f[0]]) { bySub[f[0]] = f; order.push(f[0]); }
+                }
+                const tib = bySub["Tibetan"];
+                const rest = order.filter(x => x !== "Tibetan").slice(0, 3);
+                return row(
+                    <Han className="text-base">{ch}</Han>,
+                    <Lat>{c.lat || "—"}</Lat>,
+                    <Faint><span className="font-mono">{c.oc}</span></Faint>,
+                    tib
+                        ? <><span className="font-mono">{tib[3]}</span>
+                            {tib[1] !== "OldTibetan" && <Faint> (совр.)</Faint>}</>
+                        : <Faint>—</Faint>,
+                    <span className="text-slate-600">{c.c}</span>,
+                    <Num>{c.n}</Num>,
+                    <>{rest.map((sub, k) => (
+                        <span key={k}>
+                            {k > 0 && " · "}
+                            <span className="font-mono">{bySub[sub][3]}</span> <Faint>{sub}</Faint>
+                        </span>
+                    ))}</>,
+                );
+            })}
+        />
     );
 };
 
