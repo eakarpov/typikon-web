@@ -5,7 +5,7 @@ import { MONTH_OF } from "@/utils/chantLabels";
 import { formatDateISO } from "@/utils/dates";
 import { readOptions, renderEmbed, type EmbedDay, type EmbedReading } from "@/lib/embed/day";
 import {reportError} from "@/lib/reportError";
-import { SITE_URL } from "@/utils/site";
+import { isLegacyHost, SITE_URL } from "@/utils/site";
 
 // Виджет чтений для чужого сайта: `<iframe src="…/embed/day">`.
 //
@@ -82,7 +82,9 @@ export async function GET(request: NextRequest) {
     const fixed = request.nextUrl.searchParams.get("date");
     const maxAge = fixed ? 86400 : 600;
 
-    return new NextResponse(renderEmbed(day, options, BASE), {
+    // Хост запроса, а не SITE_URL: одно приложение отвечает с обоих адресов, и
+    // полоса о переезде нужна только рамке, которая стоит на старом.
+    return new NextResponse(renderEmbed(day, options, BASE, isLegacyHost(request.headers.get("host"))), {
         headers: {
             "Content-Type": "text/html; charset=utf-8",
             // Ради этого всё и затевалось — рамку встраивают у себя. Пишем

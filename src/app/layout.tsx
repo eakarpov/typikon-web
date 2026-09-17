@@ -13,6 +13,7 @@ import TelegramLoginRemover from "@/app/TelegramLoginRemover";
 import SessionLoader from "@/app/SessionLoader";
 import ServiceWorkerRegistrar from "@/app/ServiceWorkerRegistrar";
 import { SITE_URL } from "@/utils/site";
+import MigrationNotice from "@/app/MigrationNotice";
 
 export const viewport: Viewport = {
     initialScale: 1,
@@ -96,6 +97,10 @@ export default function RootLayout({
                       vkApp={parseInt(process.env.VK_APP!)}
                       codeVerifier={process.env.CODE_VERIFIER!}
                   />
+                  {/* ПЕРЕЕЗД, временно: полоса для пришедших на старый адрес.
+                      Клиентская — чтобы не тянуть заголовки в корневой макет и
+                      не делать динамическим весь сайт ради трёх месяцев. */}
+                  <MigrationNotice />
                   {/* На печать шапка не идёт: правило в globals.css снимает
                       её со всякого листа — на бумаге нужна записка, а не
                       строка разделов сайта */}

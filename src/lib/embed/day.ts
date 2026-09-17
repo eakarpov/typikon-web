@@ -14,6 +14,8 @@
 // Пропущенное поле — дыра не у нас, а на чужом сайте, и потому проверено
 // тестом.
 
+import { MIGRATION_NOTICE } from "@/lib/migration";
+
 /** Всё, что приходит из базы, проходит через это. Без исключений. */
 export const esc = (raw: unknown): string =>
     String(raw ?? "")
@@ -138,6 +140,8 @@ a:hover{text-decoration:underline}
 .r .s{color:var(--muted);font-size:13px;display:block}
 .f{margin-top:10px;padding-top:6px;border-top:1px solid var(--rule);
    color:var(--muted);font-size:12px}
+.mv{margin:0 0 8px;padding:6px 8px;border:1px solid var(--rule);border-radius:3px;
+    font-size:12px;line-height:1.35}
 `.trim();
 
 const memoryLine = (day: EmbedDay): string => {
@@ -177,7 +181,7 @@ export const pickReadings = (readings: EmbedReading[], only: EmbedOptions["only"
  * причину меньше всего хочется. Проверено на себе.
  */
 export const renderEmbed = (
-    day: EmbedDay | null, options: EmbedOptions, base: string,
+    day: EmbedDay | null, options: EmbedOptions, base: string, legacy = false,
 ): string => {
     const head = [
         options.title ? `<p class="t">${esc(options.title)}</p>` : "",
@@ -201,6 +205,16 @@ export const renderEmbed = (
 
     const dayHref = `${base}/calculator/${esc(options.date)}`;
 
+    // ПЕРЕЕЗД (временно, до середины января). Рамку ставили на чужой сайт один
+    // раз и строкой, которую больше никто не трогал: отключение старого адреса
+    // оставит там пустое место, и решит, что сломался сам приходский сайт.
+    // Полоса внутри рамки — единственное, что мы можем показать её хозяину:
+    // ни почты его, ни учёта рамок у нас нет.
+    const notice = legacy
+        ? `<p class="mv">${esc(MIGRATION_NOTICE)} `
+            + `<a href="${base}/widget" target="_blank" rel="noopener">Как поправить</a></p>`
+        : "";
+
     return `<!doctype html>
 <html lang="ru"><head>
 <meta charset="utf-8">
@@ -209,7 +223,7 @@ export const renderEmbed = (
 <title>${esc(options.title ?? "Чтения дня")}</title>
 <style>${styles(options.theme)}</style>
 </head><body>
-${head}${body}
+${notice}${head}${body}
 <p class="f"><a href="${dayHref}" target="_blank" rel="noopener">Уставные чтения</a> — устав, чтения и календарь</p>
 <script>
 // Рамке снаружи не видно, какой она высоты, и хозяин сайта вынужден был бы

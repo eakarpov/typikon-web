@@ -2,6 +2,7 @@ import { buildCalendar, knownTimezone, type CalendarEvent } from "@/lib/ical";
 import { parishView } from "@/lib/parish/schedule";
 import { isoDate } from "@/lib/ordo";
 import { ICS_UID_DOMAIN, SITE_HOST, SITE_URL } from "@/utils/site";
+import { migrationEvent } from "@/lib/migration";
 
 // ПОДПИСНОЙ КАЛЕНДАРЬ ПРИХОДА. Прихожанин подписывается телефоном один раз, и
 // расписание приезжает в тот календарь, которым он уже пользуется, — без
@@ -105,6 +106,9 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
             }
         }
     }
+
+    // ПЕРЕЕЗД (временно, до середины января): та же причина, что и в общей ленте.
+    events.push(migrationEvent());
 
     const body = buildCalendar({
         name: `Богослужения: ${first.title}`,
