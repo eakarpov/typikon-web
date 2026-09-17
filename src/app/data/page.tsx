@@ -56,6 +56,19 @@ const Layer = ({ layer, base }: { layer: DumpLayerInfo; base: string }) => {
                 </a>
                 . Ссылаться так: <span className="text-slate-700">{layer.attribution}</span>
             </p>
+            {layer.doi && (
+                // DOI у слоёв РАЗНЫЕ: условия у них разные, и в архив они
+                // выложены отдельными записями.
+                <p className="text-slate-700">
+                    DOI:{" "}
+                    <a
+                        href={`https://doi.org/${layer.doi}`}
+                        className="text-amber-800 underline underline-offset-4"
+                    >
+                        <code>{layer.doi}</code>
+                    </a>
+                </p>
+            )}
             {layer.rationale.split("\n\n").map((paragraph) => (
                 <p key={paragraph} className="text-slate-700">{paragraph}</p>
             ))}

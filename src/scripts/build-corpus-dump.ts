@@ -44,6 +44,7 @@ import {
     unclassified,
 } from "@/scripts/lib/dumpLayers";
 import { SITE_URL } from "@/utils/site";
+import { DEPOSITS, recordOfLayer } from "@/scripts/lib/deposits";
 
 /** Полные тексты чужих лицензий — их GPL требует передавать вместе с работой. */
 const LICENSE_SOURCE = "licenses";
@@ -519,16 +520,20 @@ const run = async () => {
         builtAt,
         version,
         versionUrl: `${SITE_URL}/dump/${version}/`,
-        // Проставляется, когда версия положена в архив с DOI (Zenodo). До того
-        // ссылаться можно на versionUrl — он тоже постоянный, но переживает
-        // переезд домена хуже, чем DOI.
-        doi: null as string | null,
+        // DOI записи «корпус»: им ссылаются, имея в виду собрание вообще. Пусто,
+        // пока версия не положена в архив; проставляется в одном месте —
+        // src/scripts/lib/deposits.ts, — и оттуда доходит и сюда, и до страницы.
+        doi: (DEPOSITS.find((record) => record.id === "corpus")?.doi?.concept ?? null) as string | null,
         citation: CITATION,
         licenseUrl: `${SITE_URL}/license`,
         layers: built.map(({ layer, files }) => ({
             id: layer.id,
             title: layer.title,
             license: layer.license,
+            // Слои выложены разными записями архива, и DOI у них разные.
+            ...(recordOfLayer(layer.id)?.doi?.concept
+                ? { doi: recordOfLayer(layer.id)!.doi!.concept }
+                : {}),
             attribution: layer.attribution,
             rationale: layer.rationale,
             files: files.map((f) => ({

@@ -98,4 +98,5 @@ scratch/
 
 # Выгрузка корпуса — собирается заново командой npm run corpus:dump
 data-dump/
+deposit/
 data-dump.zip
