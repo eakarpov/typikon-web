@@ -1,0 +1,14 @@
+{
+  "alphabet": "polish",
+  "version": "0.1.0",
+  "files": {
+    "yat": 168566
+  },
+  "counts": {
+    "yes": 117,
+    "no": 31,
+    "prefix": 27,
+    "loans": 28,
+    "gram": 13740
+  }
+}
