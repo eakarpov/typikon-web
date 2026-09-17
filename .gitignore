@@ -11,14 +11,18 @@
 
 /public/app/
 
-music/
+# Каталоги исходных материалов в корне проекта. Слеш в начале обязателен:
+# без него «chinese/» прячет ЛЮБОЙ каталог с таким именем на любой глубине,
+# включая public/azbuki/chinese с данными азбуки — и она молча не уехала бы
+# на сервер. То же ждало бы latin/ и greek/, когда дойдёт черёд до них.
+/music/
 
-romanian/
-greek/
-latin/
-chinese/
-contents/
-memories/
+/romanian/
+/greek/
+/latin/
+/chinese/
+/contents/
+/memories/
 
 /nobles.db
 *.db.bak.*
