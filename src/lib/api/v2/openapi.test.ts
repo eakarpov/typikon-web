@@ -1,5 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
+import path from "node:path";
 import { openapi } from "@/lib/api/v2/openapi";
 
 // Описание API читают машины и люди, и обе стороны молча: сломанная ссылка на
@@ -91,4 +93,38 @@ test("общие ручки помянника входа не требуют", 
     for (const path of ["/api/v2/pomyannik/vocabulary", "/api/v2/pomyannik/calendar"]) {
         assert.equal(document.paths[path].get.security, undefined, path);
     }
+});
+
+test("всякая ручка v2 описана в схеме", () => {
+    // Забывается это именно так: ручка написана, работает, а в openapi её нет —
+    // ни сборка, ни тесты не против, и узнаёт об этом тот, кто пишет клиента по
+    // описанию и не находит того, что уже отдаётся.
+    //
+    // Имя пути собирается из каталогов: [id] → {id}, route.ts отбрасывается.
+    const root = path.join(process.cwd(), "src", "app", "api", "v2");
+    const routes: string[] = [];
+
+    const walk = (dir: string) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+            if (entry.isDirectory()) walk(path.join(dir, entry.name));
+            else if (entry.name === "route.ts") {
+                const rel = path.relative(root, dir).split(path.sep).filter(Boolean)
+                    .map((segment) => segment.replace(/^\[(\.{3})?(.+)]$/, "{$2}"))
+                    .join("/");
+                routes.push(rel ? `/api/v2/${rel}` : "/api/v2");
+            }
+        }
+    };
+    walk(root);
+
+    // Имя параметра в описании не обязано совпадать с именем каталога:
+    // `[canonId]` описан как `{book}`, и это законно. Сверяем ФОРМУ пути.
+    const shape = (route: string) => route.replace(/\{[^}]*}/g, "{}");
+    const documented = new Set(Object.keys(document.paths).map(shape));
+    // Корень описания сам себя не описывает, и это не пропуск.
+    const undocumented = routes
+        .filter((route) => !documented.has(shape(route)))
+        .filter((route) => !["/api/v2", "/api/v2/openapi.json"].includes(route));
+
+    assert.deepEqual(undocumented, []);
 });

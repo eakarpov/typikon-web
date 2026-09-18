@@ -4,6 +4,7 @@ import { myFont } from "@/utils/font";
 import { setMeta } from "@/lib/meta";
 import { SITE_URL } from "@/utils/site";
 import { placesIndex } from "@/lib/places/query";
+import { matches } from "@/lib/places/search";
 import { KIND_LABELS } from "@/lib/places/labels";
 import type { PlaceKind } from "@/lib/places/schema";
 import IndexMap from "./IndexMap";
@@ -22,8 +23,6 @@ export const metadata: Metadata = {
 
 type Props = { searchParams: { q?: string; kind?: string; scripture?: string } };
 
-const normalize = (s: string) => s.toLowerCase().replace(/ё/g, "е").replace(/[\s-]+/g, "");
-
 const hrefWith = (params: Record<string, string | undefined>) => {
     const search = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) if (v) search.set(k, v);
@@ -39,7 +38,7 @@ const PlacesIndex = async ({ searchParams }: Props) => {
     const scripture = searchParams.scripture === "1";
 
     const items = all.filter((p) =>
-        (!q || normalize(p.name).includes(normalize(q)))
+        matches(p.haystack, q)
         && (!kind || p.kind === kind)
         && (!scripture || p.scripture > 0));
 

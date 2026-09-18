@@ -568,6 +568,27 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/PericopeList") },
             },
         },
+        "/api/v2/pericopes/{id}": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Зачало со стихами",
+                description:
+                    "Диапазоны зачала, разрешённые в сам текст. Нет книги на запрошенном языке — "
+                    + "отдаётся церковнославянский, и `resolvedLang` говорит об этом прямо.",
+                parameters: [
+                    { name: "id", in: "path", required: true, schema: { type: "string" } },
+                    {
+                        name: "lang", in: "query", required: false, schema: { type: "string" },
+                        example: "ru", description: "Язык издания",
+                    },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/PericopeVerses"),
+                    "400": errorResponse("Идентификатор зачала указан неверно"),
+                    "404": errorResponse("Зачало не найдено"),
+                },
+            },
+        },
         "/api/v2/bible/books": {
             get: {
                 tags: ["Библия"],
@@ -789,15 +810,98 @@ export const openapi = () => ({
                 summary: "Указатель мест",
                 description:
                     "Места по алфавиту, постранично. Только открытые: место, заведённое импортом и "
-                    + "ещё не получившее русского имени, скрыто и здесь, и на сайте.",
+                    + "ещё не получившее русского имени, скрыто и здесь, и на сайте.\n\n"
+                    + "Поиск идёт по всем именам места, а не по одному нынешнему: «Царьград» "
+                    + "находит Константинополь. Регистр, «ё» и дефисы при сравнении не в счёт.\n\n"
+                    + "`total` — сколько найдено по нынешнему отбору, а не сколько мест всего.",
                 parameters: [
+                    {
+                        name: "q", in: "query", required: false, schema: { type: "string" },
+                        example: "царьград", description: "Часть любого имени места",
+                    },
                     {
                         name: "kind", in: "query", required: false, schema: { type: "string" },
                         example: "river", description: "Род места: settlement, region, mountain, river…",
                     },
+                    {
+                        name: "scripture", in: "query", required: false,
+                        schema: { type: "string", enum: ["1"] },
+                        description: "Только те, что названы в Писании",
+                    },
                     ...pageParams,
                 ],
                 responses: { "200": ok("#/components/schemas/PlaceList") },
+            },
+        },
+        "/api/v2/places/{id}/mentions": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Что корпус знает о месте",
+                description:
+                    "Статьи энциклопедии, отождествления и преемство, книги Писания, чтения, "
+                    + "песнопения и святые.\n\n**Стихов здесь нет, только их число по книгам**: у "
+                    + "Иерусалима их 773, и с отрывками это триста с лишним килобайт на каждое "
+                    + "открытие места. Сами стихи — ручкой `/api/v2/places/{id}/scripture`.\n\n"
+                    + "Показанное принято на сверке; ожидающее её приходит числом `scripture.pending`.",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                responses: {
+                    "200": ok("#/components/schemas/PlaceMentions"),
+                    "404": errorResponse("Такого места нет"),
+                },
+            },
+        },
+        "/api/v2/places/{id}/scripture": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Стихи Писания, где место названо",
+                description:
+                    "По книге и постранично, в порядке канона. Без `book` — все книги подряд.",
+                parameters: [
+                    { name: "id", in: "path", required: true, schema: { type: "string" } },
+                    {
+                        name: "book", in: "query", required: false, schema: { type: "string" },
+                        example: "iisusa-navina", description: "Книга канона",
+                    },
+                    ...pageParams,
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/PlaceVerseList"),
+                    "400": errorResponse("Такой книги нет в каноне"),
+                    "404": errorResponse("Такого места нет"),
+                },
+            },
+        },
+        "/api/v2/texts/{id}/places": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Места, названные в тексте",
+                description:
+                    "Помеченные разметкой и найденные разбором — принятые на сверке. Для статьи "
+                    + "энциклопедии первым идёт то место, о котором она сама (`subject`).",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                responses: {
+                    "200": ok("#/components/schemas/TextPlaceList"),
+                    "404": errorResponse("Текст не найден"),
+                },
+            },
+        },
+        "/api/v2/bible/{book}/{chapter}/places": {
+            get: {
+                tags: ["Библия"],
+                summary: "Места главы",
+                description:
+                    "Что названо в стихах главы и в каких именно. Номер главы канонический: "
+                    + "упоминания привязаны к каноническому месту, и в счёте издания номера "
+                    + "указывали бы не на те строки.",
+                parameters: [
+                    { name: "book", in: "path", required: true, schema: { type: "string" }, example: "iisusa-navina" },
+                    { name: "chapter", in: "path", required: true, schema: { type: "integer" }, example: 3 },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/ChapterPlaceList"),
+                    "400": errorResponse("Номер главы указан неверно"),
+                    "404": errorResponse("Такой книги нет"),
+                },
             },
         },
         "/api/v2/news": {
@@ -2083,6 +2187,22 @@ export const openapi = () => ({
                     sign: { type: ["string", "null"], description: "Знак Типикона" },
                 },
             },
+            PericopeVerses: {
+                type: "object",
+                description: "Зачало вместе с разрешёнными стихами",
+                allOf: [{ $ref: "#/components/schemas/Pericope" }],
+                properties: {
+                    textId: { type: ["string", "null"] },
+                    textName: { type: ["string", "null"] },
+                    textAlias: { type: ["string", "null"] },
+                    requestedLang: { type: ["string", "null"] },
+                    resolvedLang: {
+                        type: ["string", "null"],
+                        description: "Язык, на котором нашлось; может отличаться от запрошенного",
+                    },
+                    verses: { type: "array", items: { $ref: "#/components/schemas/Verse" } },
+                },
+            },
             Pericope: {
                 type: "object",
                 properties: {
@@ -2271,9 +2391,177 @@ export const openapi = () => ({
                     status: { type: ["string", "null"], description: "extant, ruins, lost, uncertain" },
                     latitude: { type: ["number", "null"] },
                     longitude: { type: ["number", "null"] },
+                    scripture: { type: "integer", description: "Принятых упоминаний в Писании" },
                 },
             },
-            PlaceList: collection("#/components/schemas/PlaceSummary"),
+            PlaceFacets: {
+                type: "object",
+                description: "Чем можно сузить указатель. Считается по найденному, а не по всему корпусу",
+                properties: {
+                    kinds: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                code: { type: "string", description: "settlement, region, mountain…" },
+                                total: { type: "integer" },
+                            },
+                        },
+                    },
+                },
+            },
+            PlaceList: collectionWithFacets("#/components/schemas/PlaceSummary", "#/components/schemas/PlaceFacets"),
+            PlaceRelation: {
+                type: "object",
+                description: "Отождествление, преемство или соседство с другим местом",
+                properties: {
+                    direction: { type: "string", enum: ["out", "in"], description: "От этого места или к нему" },
+                    type: { type: "string", description: "succeeds, identified_with, part_of, located_in, near" },
+                    confidence: { type: "string", description: "certain, probable, disputed" },
+                    score: { type: ["integer", "null"] },
+                    source: { type: ["string", "null"] },
+                    other: {
+                        type: "object",
+                        properties: {
+                            id: { type: ["string", "null"] },
+                            slug: {
+                                type: ["string", "null"],
+                                description: "null — страница соседа скрыта: имя есть, перехода нет",
+                            },
+                            name: { type: ["string", "null"] },
+                            kind: { type: ["string", "null"] },
+                            status: { type: ["string", "null"] },
+                            latitude: { type: ["number", "null"] },
+                            longitude: { type: ["number", "null"] },
+                        },
+                    },
+                },
+            },
+            PlaceVerse: {
+                type: "object",
+                properties: {
+                    canonId: { type: "string" },
+                    abbr: { type: ["string", "null"], description: "Сокращение книги: «Нав»" },
+                    canonRef: { type: "string", example: "iisusa-navina.3.16" },
+                    chapter: { type: "integer" },
+                    verse: { type: "integer" },
+                    context: { type: "string", description: "Отрывок славянского текста вокруг имени" },
+                },
+            },
+            PlaceVerseList: collection("#/components/schemas/PlaceVerse"),
+            PlaceMentions: {
+                type: "object",
+                properties: {
+                    id: { type: ["string", "null"] },
+                    slug: { type: ["string", "null"] },
+                    articles: {
+                        type: "array",
+                        description: "Статьи энциклопедии Никифора об этом месте",
+                        items: { $ref: "#/components/schemas/PlaceTextRef" },
+                    },
+                    relations: { type: "array", items: { $ref: "#/components/schemas/PlaceRelation" } },
+                    scripture: {
+                        type: "object",
+                        properties: {
+                            total: { type: "integer", description: "Принятых стихов всего" },
+                            pending: { type: "integer", description: "Ещё ждут сверки и здесь не показаны" },
+                            books: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        canonId: { type: "string" },
+                                        name: { type: "string" },
+                                        abbr: { type: ["string", "null"] },
+                                        verses: { type: "integer", description: "Сколько стихов в этой книге" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    texts: { type: "array", items: { $ref: "#/components/schemas/PlaceTextRef" } },
+                    textsTruncated: { type: "boolean", description: "Чтений больше, чем отдано (предел — двести)" },
+                    chants: {
+                        type: "object",
+                        properties: {
+                            total: { type: "integer" },
+                            shown: { type: "integer" },
+                            labelled: {
+                                type: "boolean",
+                                description:
+                                    "false — певческий корпус сейчас недоступен, и подписи строк "
+                                    + "неизвестны: сами упоминания настоящие",
+                            },
+                            items: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        id: { type: ["string", "null"] },
+                                        unit: { type: ["string", "null"], description: "Тропарь, стихира, седален…" },
+                                        memory: { type: ["string", "null"] },
+                                        context: { type: "string" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    saints: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                dneslovId: { type: ["string", "null"] },
+                                slug: { type: ["string", "null"] },
+                                name: { type: ["string", "null"] },
+                                texts: { type: "integer", description: "В скольких чтениях к его памяти место названо" },
+                            },
+                        },
+                    },
+                    saintsCaveat: {
+                        type: "string",
+                        description: "Оговорка к разделу святых: связь выведена, а не размечена",
+                    },
+                    attribution: {
+                        type: "string",
+                        description:
+                            "Ссылка на источники сведений о местах. Не вежливость, а условие "
+                            + "лицензий: показывающий эти сведения показывает и её",
+                    },
+                },
+            },
+            PlaceTextRef: {
+                type: "object",
+                properties: {
+                    id: { type: ["string", "null"] },
+                    alias: { type: ["string", "null"] },
+                    name: { type: ["string", "null"] },
+                    book: { type: ["string", "null"] },
+                },
+            },
+            TextPlaceList: collection("#/components/schemas/TextPlace"),
+            TextPlace: {
+                type: "object",
+                properties: {
+                    id: { type: ["string", "null"] },
+                    slug: { type: ["string", "null"] },
+                    name: { type: ["string", "null"] },
+                    subject: { type: "boolean", description: "Текст — статья об этом месте, а не упоминание" },
+                },
+            },
+            ChapterPlaceList: collection("#/components/schemas/ChapterPlace"),
+            ChapterPlace: {
+                type: "object",
+                properties: {
+                    id: { type: ["string", "null"] },
+                    slug: { type: ["string", "null"], description: "null — страница места скрыта" },
+                    name: { type: ["string", "null"] },
+                    verses: {
+                        type: "array", items: { type: "integer" },
+                        description: "Стихи главы в канонической нумерации",
+                    },
+                },
+            },
             Place: {
                 type: "object",
                 properties: {
