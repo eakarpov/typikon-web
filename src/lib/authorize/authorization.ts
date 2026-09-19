@@ -5,14 +5,23 @@ import {NextApiRequest} from "next";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {getUserInfo} from "@/lib/authorize/users";
+import {reportError} from "@/lib/reportError";
 import { userCan, type Capability, type UserLike } from "@/lib/rights";
 
 export const verifySession = async () => {
     const cookie = (await cookies()).get('session')?.value;
     const session = await decrypt(cookie);
 
-    if (session) {
-        return { isAuth: true, userId: session.userId, expiresAt: session.expiresAt  };
+    // Подписи мало: строка в `sessions` должна быть на месте, иначе выход не
+    // гасил бы сессию, и токен жил бы до конца своего часа.
+    if (session?.sessionId) {
+        const client = await clientPromise;
+        const exists = await client.db("typikon-users")
+            .collection("sessions")
+            .findOne({ _id: new ObjectId(session.sessionId as string) }, { projection: { _id: 1 } });
+        if (exists) {
+            return { isAuth: true, userId: session.userId, expiresAt: session.expiresAt  };
+        }
     }
 
     // maybe here go to db, get vk refresh token and try to update the access one
@@ -57,6 +66,7 @@ export const verifySessionBack = async (
         }
         return false;
     } catch (error) {
+        reportError(error, { where: "lib/authorize/authorization#verifySessionBack" });
         return false;
     }
 };

@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { getSession } from "@/lib/authorize/sessions";
 import { getItem } from "@/app/profile/api";
 import { capsOf, type Capability, type UserLike } from "@/lib/rights";
 
@@ -10,9 +9,10 @@ import { capsOf, type Capability, type UserLike } from "@/lib/rights";
 export const viewer = async (): Promise<{
     userId: string | null; user: UserLike | null; caps: Set<Capability>;
 }> => {
-    const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
-    const userId = (session?.userId as string | undefined) ?? null;
+    // Не одна подпись JWT, а и строка в `sessions`: после выхода строки нет, и
+    // уведённый токен перестаёт значить что-либо, не дожидаясь своего часа.
+    const session = await getSession();
+    const userId = (session?.id as string | undefined) ?? null;
     if (!userId) return { userId: null, user: null, caps: new Set() };
     const [user] = await getItem(userId);
     return { userId, user: (user ?? null) as UserLike | null, caps: capsOf(user) };

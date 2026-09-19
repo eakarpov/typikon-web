@@ -31,7 +31,31 @@ const nextConfig = {
       headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
     }));
 
+    // Общие заголовки безопасности. Полной CSP здесь нет нарочно: вход тянет
+    // сценарии Google, VK и Telegram, и политика для них — отдельная работа с
+    // проверкой в браузере. `frame-ancestors` от неё не зависит и ставится сразу:
+    // админку и профиль нельзя поместить в чужую рамку. Рамка виджета (/embed)
+    // исключена — она для чужих сайтов и сделана, свой заголовок ставит сама.
+    const security = [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
+        ],
+      },
+      {
+        source: "/((?!embed(?:/|$)).*)",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        ],
+      },
+    ];
+
     return [
+      ...security,
       ...noIndex,
       {
         source: "/login",

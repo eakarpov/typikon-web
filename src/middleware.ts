@@ -3,8 +3,20 @@ import type { NextRequest } from "next/server";
 import { countV1Request, deprecationHeaders } from "@/lib/api/v1Deprecation";
 import { legacyHostHeaders } from "@/lib/migration";
 import { isLegacyHost } from "@/utils/site";
+import { isForeignOrigin, isUnsafeMethod } from "@/lib/originCheck";
 
 export function middleware(request: NextRequest) {
+    // Изменяющий запрос с cookie сессии и чужим Origin — подделка с другого сайта.
+    // Без cookie не трогаем: публичные ручки с ключом зовут с чужих страниц законно.
+    if (
+        request.nextUrl.pathname.startsWith("/api/")
+        && isUnsafeMethod(request.method)
+        && request.cookies.has("session")
+        && isForeignOrigin(request.headers.get("origin"), request.headers.get("host"))
+    ) {
+        return new NextResponse(null, { status: 403 });
+    }
+
     // ПЕРЕЕЗД (временно, до середины января). Чужая программа с ключом не
     // увидит ни новости, ни полосы на странице — ей говорят заголовками ответа.
     // Смотрим ХОСТ ЗАПРОСА, а не SITE_URL: приложение отвечает с обоих адресов,
