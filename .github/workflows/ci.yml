@@ -21,9 +21,9 @@ jobs:
           # Та же версия, что на сервере (см. PATH в typikon-web.service).
           node-version: '22'
 
-      # Не npm ci: package-lock.json намеренно не в репозитории (.gitignore),
-      # так что ставим по package.json.
-      - run: npm install --no-audit --no-fund
+      # npm ci, а не npm install: ставится ровно то, что записано в
+      # package-lock.json, — то же, что встанет на сервере (rebuild-remote.sh).
+      - run: npm ci --no-audit --no-fund
 
       - run: npm test
 
