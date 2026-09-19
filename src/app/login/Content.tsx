@@ -12,13 +12,11 @@ import { isLegacyHost, VK_REDIRECT_URL } from "@/utils/site";
 const Login = ({
     vkApp,
     hasVkAuth,
-    codeVerifier,
     googleApp,
     googleAppLegacy,
 }: {
     vkApp: number;
     hasVkAuth?: boolean;
-    codeVerifier: string;
     googleApp: string;
     /** ПЕРЕЕЗД, временно: клиент Google, знающий про старый адрес. */
     googleAppLegacy: string;
@@ -47,7 +45,8 @@ const Login = ({
             app: vkApp,
             redirectUrl: VK_REDIRECT_URL,
             responseMode: VKID.ConfigResponseMode.Callback,
-            codeVerifier,
+            // codeVerifier не задаётся: SDK порождает его сам на каждый вход.
+            // Прежде сюда шло одно постоянное значение из окружения сервера.
             source: VKID.ConfigSource.LOWCODE,
             scope: '', // Заполните нужными доступами по необходимости
         });
@@ -152,14 +151,9 @@ const Login = ({
         window.onTelegramAuth = async (userData: any) => {
             const toSave = {
                 type: "Telegram",
-                data: {
-                    data_check_string: Object.entries(userData)
-                        .map(([k, v]) => `${k}=${v}`)
-                        .join('\n'),
-                    hash: userData.hash,
-                    user_id: userData.id,
-                    expiresAt: userData.auth_date + 3600 * 60 * 60,
-                },
+                // Поля виджета как есть: строку для подписи собирает сервер, и
+                // идентификатор он берёт из них же (lib/authorize/telegram).
+                data: { fields: userData },
                 timestamp: Date.now(),
                 deviceId: Navigator.toString(),
             };

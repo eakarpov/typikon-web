@@ -9,7 +9,10 @@ export async function POST() {
             status: 400,
         });
     }
-    const vkInfo = sessionDb.auth?.vk;
+    // Наружу — только то, чем VK ID SDK продлевает вход: токен продления и
+    // устройство. Прочее содержимое сессии странице незачем.
+    const vk = sessionDb.auth?.vk;
+    const vkInfo = vk ? { state: { refresh_token: vk.state?.refresh_token }, deviceId: vk.deviceId } : null;
     return NextResponse.json(vkInfo, {
         status: 200,
     });

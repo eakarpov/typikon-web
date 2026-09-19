@@ -95,7 +95,6 @@ export default function RootLayout({
                   <SessionLoader />
                   <AuthorizeChecker
                       vkApp={parseInt(process.env.VK_APP!)}
-                      codeVerifier={process.env.CODE_VERIFIER!}
                   />
                   {/* ПЕРЕЕЗД, временно: полоса для пришедших на старый адрес.
                       Клиентская — чтобы не тянуть заголовки в корневой макет и

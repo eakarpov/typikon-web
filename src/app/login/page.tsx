@@ -11,7 +11,6 @@ const LoginPage = () => {
             // прежним клиентом. Отдаём оба, выбирает браузер по своему адресу —
             // так страница остаётся статической, а не читает заголовки.
             googleAppLegacy={process.env.GOOGLE_APP_OLD ?? process.env.GOOGLE_APP!}
-            codeVerifier={process.env.CODE_VERIFIER!}
             hasVkAuth={process.env.HAS_VK_AUTH! === "true"}
         />
     )
