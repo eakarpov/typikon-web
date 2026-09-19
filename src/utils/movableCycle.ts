@@ -7,6 +7,19 @@
 // "День Святаго Духа"/"Неделя всех святых"), недели 2-33 — как type:"first".
 export const typeForPenticostWeek = (week: number) => week === 1 ? "Penticostarion" : "first";
 
+/**
+ * Дата Пасхи полночью по UTC — из чисел, а не из строки.
+ *
+ * Прежде дата собиралась строкой с недополненным днём («2027-05-2»). Такая
+ * строка не ISO, и разбирается она по МЕСТНОМУ времени, тогда как входная дата
+ * («2027-05-02») — по UTC. При московском поясе Пасха оказывалась на три часа
+ * раньше, `Math.ceil` ниже округлял эти три часа до целого дня, и весь подвижный
+ * круг съезжал на день — но только в годы, где Пасха приходится на 1–9 число
+ * (2024, 2027, 2029…), и только там, где пояс процесса не UTC.
+ */
+export const easterDateUtc = (easter: { year: number; month: number; day: number }): Date =>
+    new Date(Date.UTC(easter.year, easter.month - 1, easter.day));
+
 export const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
     const diffTime = date.getTime() - easter.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

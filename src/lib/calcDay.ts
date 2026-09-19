@@ -6,7 +6,7 @@ import clientPromise from "@/lib/mongodb";
 import {resolveDayPericopes} from "@/lib/pericopes";
 import {computeLectionaryYear} from "@/utils/lectionaryCycle";
 import {getDayMemories, IDayMemories} from "@/lib/signs/dayMemories";
-import {getWeekAndDay, typeForPenticostWeek} from "@/utils/movableCycle";
+import {easterDateUtc, getWeekAndDay, typeForPenticostWeek} from "@/utils/movableCycle";
 
 export interface ICalcDayResult {
     day: any;
@@ -24,12 +24,8 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
     const prevDateObj = new Date(dateStr);
     prevDateObj.setFullYear(prevDateObj.getFullYear() - 1);
     const prevEaster = orthodoxEaster(prevDateObj);
-    const easterDate = new Date(
-        `${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`
-    );
-    const prevEasterDate = new Date(
-        `${prevEaster.year}-${prevEaster.month > 9 ? prevEaster.month : `0${prevEaster.month}`}-${prevEaster.day}`
-    );
+    const easterDate = easterDateUtc(easter);
+    const prevEasterDate = easterDateUtc(prevEaster);
 
     const searchTriodion = getWeekAndDay(dateObj, easterDate, prevEasterDate);
     const triodicPromise = getTriodicItem(searchTriodion);
