@@ -149,6 +149,10 @@ const SPECS: Spec[] = [
       why: "избранное: уникальность держит повторное добавление идемпотентным, она же обслуживает удаление по паре" },
     { db: "typikon-users", collection: "favourites", key: { userId: 1, createdAt: -1 },
       why: "выдача избранного списком, новые сверху" },
+    { db: "typikon-users", collection: "readingProgress", key: { userId: 1, textId: 1 }, options: { unique: true },
+      why: "отметка места чтения одна на пару «кто — текст»; upsert по ней же" },
+    { db: "typikon-users", collection: "readingProgress", key: { userId: 1, updatedAt: -1 },
+      why: "страница «Сегодня»: что продолжить, свежее сверху" },
 
     // --- typikon-users: помянник
     //

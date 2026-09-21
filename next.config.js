@@ -17,6 +17,7 @@ const nextConfig = {
       "/admin",
       "/admin/:path+",
       "/profile",
+      "/segodnya",
       "/settings",
       "/notes",
       "/texting",

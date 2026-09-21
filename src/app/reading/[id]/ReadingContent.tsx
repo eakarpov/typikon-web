@@ -1,6 +1,8 @@
 'use client';
 import React, {memo, MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import reactStringReplace from "react-string-replace";
+import ReadingProgressTracker from "@/app/reading/[id]/ReadingProgressTracker";
+import {paragraphAnchor} from "@/lib/personal/progress";
 import {SAINT_MARK, PLACE_MARK, RED_MARK, FOOTNOTE_MARK, splitLinkMark} from "@/lib/markup/patterns";
 import Markdown from "react-markdown";
 import Link from "next/link";
@@ -529,6 +531,7 @@ const ReadingContent = ({ item }: { item: any }) => {
             className="space-y-1 mt-2 pb-2"
             onContextMenu={onContextMenuHandler}
         >
+            {isAuthorized && item.id && <ReadingProgressTracker textId={item.id} />}
             <div
                 className="context-menu"
                 style={{
@@ -552,6 +555,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                     return (
                         <Container
                             key={`paragraph-${paragraphIndex}`}
+                            id={paragraphAnchor(paragraphIndex)}
                             data-report-container
                             data-paragraph-index={paragraphIndex}
                             className={`reading-text ${
