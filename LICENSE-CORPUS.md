@@ -99,6 +99,8 @@
 | `zh-1910` Новый Завет, Пекин | **наш** | разбор печатного издания выполнен в проекте | CC BY 4.0 |
 | `grc-lxx-pat` Новый Завет (Патриарший 1904/1912) | чужая оцифровка, **без притязаний** | [ebible.org/grcbyz](https://ebible.org/find/details.php?id=grcbyz) | **общественное достояние** |
 | `grc-lxx-pat` Ветхий Завет (Септуагинта Свита) | чужая оцифровка | [LXX-Swete-1930](https://github.com/eliranwong/LXX-Swete-1930) | **GPL-3.0** |
+| `en-brenton-kjv` Ветхий Завет (Брентон, 1851) | чужая оцифровка, **без притязаний** | [ebible.org/eng-Brenton](https://ebible.org/eng-Brenton/) | **общественное достояние** |
+| `en-brenton-kjv` Новый Завет (King James Version) | чужая оцифровка, **без притязаний** | [ebible.org/eng-kjv](https://ebible.org/eng-kjv/) | **общественное достояние** |
 | `ka-mcxeta` Грузинская древнегрузинским | чужая оцифровка, **условий не заявлено** | [orthodoxy.ge](https://www.orthodoxy.ge/tserili/biblia_sruli/sarchevi.php) | **общественное достояние** |
 | `cs-eliz` Елизаветинская, 1751 | чужая оцифровка, **условий не заявлено** | [bible.by/elzs](https://bible.by/elzs/) | **общественное достояние** |
 | `la-vulgata` Вульгата Климентины | чужая оцифровка, **условий не заявлено** | [lb42/vulgClem](https://github.com/lb42/vulgClem) | **общественное достояние** |

@@ -363,6 +363,44 @@ export const LAYERS: DumpLayer[] = [
             },
             {
                 source: "bible_verses",
+                file: "bible-verses-en-brenton",
+                edition: "en-brenton-kjv",
+                testament: "ot",
+                title: "Брентон, 1851 — текст стихов Ветхого Завета по Септуагинте",
+                license: PUBLIC_DOMAIN,
+                attribution:
+                    "Текст: Translation of the Greek Septuagint into English by Sir "
+                    + "Lancelot C. L. Brenton (1851), ebible.org/eng-Brenton — "
+                    + "общественное достояние. Разбор на книги и согласование "
+                    + "нумераций — проект «Уставные чтения» "
+                    + `(${SITE_HOST}), CC BY 4.0`,
+                note:
+                    "Половина пары: английское издание собрано из двух, как и греческое. "
+                    + "Брентон взят на Ветхий Завет потому, что переведён с Септуагинты — "
+                    + "KJV и ASV оба с еврейского, а паремии читаются по греческому. "
+                    + "Псалтирь у него греческого счёта: 151 псалом, 9-й в 39 стихов.",
+            },
+            {
+                source: "bible_verses",
+                file: "bible-verses-en-kjv",
+                edition: "en-brenton-kjv",
+                testament: "nt",
+                title: "King James Version, 1611 — текст стихов Нового Завета",
+                license: PUBLIC_DOMAIN,
+                attribution:
+                    "Текст: King James Version (набор 1769), ebible.org/eng-kjv — "
+                    + "общественное достояние. Разбор на книги и согласование "
+                    + "нумераций — проект «Уставные чтения» "
+                    + `(${SITE_HOST}), CC BY 4.0`,
+                note:
+                    "Вторая половина пары. Textus Receptus византийского типа, и это то, "
+                    + "что читается за английской службой. ASV византийского текста был "
+                    + "отведён сверкой: Патриаршее издание печатает 1 Ин. 5:7 и Деян. 8:37, "
+                    + "отбивая скобками, а тот выбрасывает оба — вышли бы две дыры там, "
+                    + "где греческая строка есть.",
+            },
+            {
+                source: "bible_verses",
                 file: "bible-verses-ka-mcxeta",
                 edition: "ka-mcxeta",
                 title: "Грузинская Библия древнегрузинским — текст стихов",
