@@ -30,7 +30,7 @@ const RELEASES = path.join(process.cwd(), "public", "app");
  * поломку. Число здесь — пол, а не истина; правится при выпуске, если каталог
  * почему-то читать перестали.
  */
-export const LAST_KNOWN: AppVersion = { major: 2, minor: 0, patch: 0 };
+export const LAST_KNOWN: AppVersion = { major: 2, minor: 2, patch: 0 };
 
 export interface AppVersion {
     major: number;
