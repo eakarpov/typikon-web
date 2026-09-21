@@ -6,12 +6,17 @@ export const BIBLE_LANGUAGE_COOKIE = "bibleLang";
 export const DEFAULT_BIBLE_LANGUAGE = "cs";
 export const FALLBACK_BIBLE_LANGUAGE = "cs";
 
-export const BIBLE_LANGUAGE_OPTIONS: Array<{ code: string; label: string }> = [
-    { code: "cs", label: "ЦС" },
-    { code: "ro", label: "РУМ" },
-    { code: "grc", label: "ГРЕЧ" },
-    { code: "la", label: "ЛАТ" },
-    { code: "zh", label: "КИТ" },
+// `label` — ярлык для тесных мест (переключатель в шапке, галочки изданий),
+// `name` — полное имя для заголовка списка. Раньше был только ярлык, и списку
+// изданий, сгруппированному по языкам, пришлось бы озаглавливать разделы
+// «ЦС» и «ГРЕЧ» — сокращением там, где места довольно на слово.
+export const BIBLE_LANGUAGE_OPTIONS: Array<{ code: string; label: string; name: string }> = [
+    { code: "cs", label: "ЦС", name: "Церковнославянский" },
+    { code: "ro", label: "РУМ", name: "Румынский" },
+    { code: "grc", label: "ГРЕЧ", name: "Греческий" },
+    { code: "la", label: "ЛАТ", name: "Латинский" },
+    { code: "zh", label: "КИТ", name: "Китайский" },
+    { code: "cv", label: "ЧВШ", name: "Чувашский" },
 ];
 
 export const getClientBibleLanguage = (): string => {
@@ -33,6 +38,10 @@ export const setClientBibleLanguage = (lang: string): void => {
  */
 export const bibleLanguageShort = (code: string): string =>
     BIBLE_LANGUAGE_OPTIONS.find((option) => option.code === code)?.label ?? code.toUpperCase();
+
+/** Полное имя языка. Незнакомый код отдаётся как есть — по той же причине. */
+export const bibleLanguageName = (code: string): string =>
+    BIBLE_LANGUAGE_OPTIONS.find((option) => option.code === code)?.name ?? code.toUpperCase();
 
 /**
  * Чем чтение отдано, если не тем, что просили.

@@ -3,9 +3,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { myFont } from "@/utils/font";
-import { BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
+import { BIBLE_LANGUAGE_COOKIE, DEFAULT_BIBLE_LANGUAGE, bibleLanguageName } from "@/utils/bibleLanguage";
 import EditionPicker from "@/app/bible/EditionPicker";
 import { getBibleIndex, resolveEditionCodes } from "@/app/bible/api";
+import type { EditionView } from "@/app/bible/api";
 import { bibleScopeTitle, DEFAULT_BIBLE_SCOPE } from "@/utils/bibleScope";
 import { coverageNote } from "@/utils/bibleCoverage";
 import { absentFromCanon, bibleEditionCanonTitle } from "@/utils/bibleEditionCanon";
@@ -24,6 +25,17 @@ export const metadata: Metadata = {
         title: "Библия — Уставные чтения",
         description: "Книги Библии по главам, с параллельным чтением изданий.",
     },
+};
+
+/** Издания по языкам, порядком самих изданий: язык появляется там, где первое его. */
+const byLanguage = (editions: EditionView[]): Array<{ lang: string; editions: EditionView[] }> => {
+    const groups: Array<{ lang: string; editions: EditionView[] }> = [];
+    for (const edition of editions) {
+        const group = groups.find((g) => g.lang === edition.langCode);
+        if (group) group.editions.push(edition);
+        else groups.push({ lang: edition.langCode, editions: [edition] });
+    }
+    return groups;
 };
 
 const Index = async ({ selected }: { selected: string }) => {
@@ -61,8 +73,17 @@ const Index = async ({ selected }: { selected: string }) => {
 
             <div className="font-serif">
                 <p className="font-bold">Издания</p>
+                {/* Плоским списком было хорошо, пока изданий было пять. Теперь их
+                    девять, и на одном языке их по два: румынское кириллицей и
+                    латиницей, чувашское гражданкой и церковной азбукой,
+                    славянское никоновское и дониконовское. Выбирают сперва язык,
+                    а уже в нём издание, — так список и устроен. Порядок языков
+                    — порядок изданий, чтобы славянский остался первым. */}
+                {byLanguage(editions).map(({ lang, editions: within }) => (
+                <div key={lang} className="mt-2">
+                <p className="text-slate-500 text-sm">{bibleLanguageName(lang)}</p>
                 <ul className="mt-1 space-y-1">
-                    {editions.map((edition) => (
+                    {within.map((edition) => (
                         <li key={edition.code}>
                             <Link href={`/bible/bytie/1?v=${edition.code}`} className="text-red-900">
                                 {edition.title}
@@ -91,6 +112,8 @@ const Index = async ({ selected }: { selected: string }) => {
                         </li>
                     ))}
                 </ul>
+                </div>
+                ))}
 
                 {editions.length > 1 && (
                     <div className="mt-2 space-y-1">
