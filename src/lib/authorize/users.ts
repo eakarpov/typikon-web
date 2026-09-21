@@ -19,31 +19,6 @@ export const getUserInfo = async (id: string) => {
     }
 };
 
-export const registerNewUserWithVK = async (id: string) => {
-    try {
-        const client = await clientPromise;
-        const db = client.db("typikon-users");
-
-        const users = await db
-            .collection("users")
-            .insertOne({
-                name: "",
-                surname: "",
-                email: "",
-                phone: "",
-                auth: {
-                    vk: {
-                        userId: id.toString(),
-                    },
-                },
-                roles: [],
-            });
-        return users.insertedId.toString();
-    } catch (e) {
-        reportError(e, { where: "lib/authorize/users#registerNewUserWithVK" });
-    }
-};
-
 export const registerNewUserWithGoogle = async (id: string) => {
     try {
         const client = await clientPromise;
@@ -94,21 +69,30 @@ export const registerNewUserWithTelegram = async (id: string) => {
     }
 };
 
-export const getUserByVKId = async (id: string) => {
+export const registerNewUserWithYandex = async (id: string) => {
     try {
         const client = await clientPromise;
         const db = client.db("typikon-users");
 
-        const user = await db
+        const users = await db
             .collection("users")
-            .findOne({
-                "auth.vk.userId": id.toString(),
+            .insertOne({
+                name: "",
+                surname: "",
+                email: "",
+                phone: "",
+                auth: {
+                    yandex: {
+                        userId: id.toString(),
+                    },
+                },
+                roles: [],
             });
-        return user;
+        return users.insertedId.toString();
     } catch (e) {
-        reportError(e, { where: "lib/authorize/users#getUserByVKId" });
+        reportError(e, { where: "lib/authorize/users#registerNewUserWithYandex" });
     }
-}
+};
 
 export const getUserByGoogleId = async (id: string) => {
     try {
@@ -139,5 +123,21 @@ export const getUserByTelegramId = async (id: string) => {
         return user;
     } catch (e) {
         reportError(e, { where: "lib/authorize/users#getUserByTelegramId" });
+    }
+}
+
+export const getUserByYandexId = async (id: string) => {
+    try {
+        const client = await clientPromise;
+        const db = client.db("typikon-users");
+
+        const user = await db
+            .collection("users")
+            .findOne({
+                "auth.yandex.userId": id.toString(),
+            });
+        return user;
+    } catch (e) {
+        reportError(e, { where: "lib/authorize/users#getUserByYandexId" });
     }
 }

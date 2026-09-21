@@ -1,19 +1,25 @@
-import {getSession} from "@/lib/authorize/sessions";
+import {prolongSession} from "@/lib/authorize/sessions";
 import {NextResponse} from "next/server";
 
-export async function POST() {
-    const sessionDb = await getSession();
+// Продление входа.
+//
+// Прежде отсюда наружу отдавался токен продления VK, а продлевал вход уже
+// браузер — обновлял токен у VK и заводил сессию заново. Продления у Google и
+// Telegram такого рода нет вовсе, и вошедший через них просто терял вход через
+// час. Теперь ручка не отдаёт ничего: она двигает окно НАШЕЙ сессии, и способ
+// входа для этого знать не нужно.
+export const dynamic = "force-dynamic";
 
-    if (!sessionDb) {
-        return new NextResponse(null, {
-            status: 400,
-        });
+export async function POST() {
+    const expiresAt = await prolongSession();
+
+    if (!expiresAt) {
+        // Сессии нет, она кончилась или упёрлась в предел от начала входа.
+        // Для страницы это значит «пора показать вход», а не «повтори запрос».
+        return new NextResponse(null, { status: 401 });
     }
-    // Наружу — только то, чем VK ID SDK продлевает вход: токен продления и
-    // устройство. Прочее содержимое сессии странице незачем.
-    const vk = sessionDb.auth?.vk;
-    const vkInfo = vk ? { state: { refresh_token: vk.state?.refresh_token }, deviceId: vk.deviceId } : null;
-    return NextResponse.json(vkInfo, {
-        status: 200,
+
+    return NextResponse.json({ expiresAt }, {
+        headers: { "Cache-Control": "no-store" },
     });
 }

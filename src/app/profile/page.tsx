@@ -3,6 +3,8 @@ import {cookies} from "next/headers";
 import {decrypt} from "@/lib/authorize/sessions";
 import Link from "next/link";
 import Content from "@/app/profile/Content";
+import Logins from "@/app/profile/Logins";
+import {isYandexConfigured} from "@/lib/authorize/yandex";
 import {getAllUserNotes} from "@/app/api/user-notes/service";
 import SidePanel from "@/app/profile/SidePanel";
 import {listTokens} from "@/app/api/api-tokens/service";
@@ -76,6 +78,15 @@ const ProfilePage = async () => {
                     </p>
                 )}
                 <Content item={item} />
+                {/* Входы отдельным блоком: их не набирают, их привязывают, и
+                    каждая привязка — разговор с провайдером, а не поле формы */}
+                <Logins
+                    auth={item.auth}
+                    googleApp={process.env.GOOGLE_APP!}
+                    googleAppLegacy={process.env.GOOGLE_APP_OLD ?? process.env.GOOGLE_APP!}
+                    telegramBot={process.env.TELEGRAM_BOT_NAME || "typikonBot"}
+                    hasYandex={isYandexConfigured()}
+                />
                 {/* СВОИ ХРАМЫ. Ответственный входил на сайт и не видел, чем
                     ведает: до собственного расписания добирался через
                     указатель храмов, как посторонний */}

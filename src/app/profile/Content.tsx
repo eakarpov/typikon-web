@@ -6,11 +6,9 @@ const Content = ({ item }: { item : any }) => {
     const [surname, setSurname] = React.useState<string>(item.surname || "");
     const [email, setEmail] = React.useState<string>(item.email || "");
     const [phone, setPhone] = React.useState<string>(item.phone || "");
-    // Привязки входа показываются, но не набираются: привязка — следствие входа,
-    // проверенного у провайдера, и сервер её из формы не принимает.
-    const vkId: string = item.auth?.vk?.userId || "";
-    const googleId: string = item.auth?.google?.userId || "";
-    const telegramId: string = item.auth?.telegram?.userId || "";
+    // Привязки входа здесь больше не показываются: они переехали в Logins,
+    // где их можно не только видеть, но и заводить. Эта форма — о том, что
+    // человек набирает сам.
 
     const [isSaved, setIsSaved] = React.useState(false);
     const [error, setError] = React.useState("");
@@ -88,39 +86,6 @@ const Content = ({ item }: { item : any }) => {
                   className="border-2"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
-              />
-          </div>
-          <div className="flex flex-col pr-4">
-              <label>
-                  VK ID
-              </label>
-              <input
-                  className="border-2"
-                  value={vkId}
-                  readOnly
-                  disabled
-              />
-          </div>
-          <div className="flex flex-col pr-4">
-              <label>
-                  Google ID
-              </label>
-              <input
-                  className="border-2"
-                  value={googleId}
-                  readOnly
-                  disabled
-              />
-          </div>
-          <div className="flex flex-col pr-4">
-              <label>
-                  Telegram ID
-              </label>
-              <input
-                  className="border-2"
-                  value={telegramId}
-                  readOnly
-                  disabled
               />
           </div>
       </div>

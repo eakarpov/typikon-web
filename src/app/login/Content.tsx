@@ -1,207 +1,166 @@
 'use client';
-import React, {memo, useEffect, useRef, useState} from "react";
-import * as VKID from '@vkid/sdk';
-import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
-import {useAppDispatch, useAppSelector} from "@/lib/hooks";
+import React, {memo, useCallback, useEffect, useState} from "react";
+import Link from "next/link";
 import {useRouter} from "next/navigation";
+import {useAppDispatch, useAppSelector} from "@/lib/hooks";
 import {AuthSlice} from "@/lib/store/auth";
-import Script from "next/script";
 import {reportClientError} from "@/lib/reportClientError";
-import { isLegacyHost, VK_REDIRECT_URL } from "@/utils/site";
+import {safeNextPath} from "@/lib/authorize/redirect";
+import GoogleSignIn from "@/app/components/auth/GoogleSignIn";
+import TelegramLoginWidget from "@/app/components/auth/TelegramLoginWidget";
+
+/**
+ * Что говорить, когда вход не состоялся.
+ *
+ * Прежде не говорилось ничего: ответ сервера разбирался как JSON независимо от
+ * кода, и на 401 или 503 страница молча спотыкалась об исключение. Человек при
+ * этом видел ровно то же, что и до нажатия, — то есть считал, что не попал по
+ * кнопке.
+ */
+const MESSAGES: Record<string, string> = {
+    "yandex-off": "Вход через Яндекс сейчас выключен.",
+    "yandex-denied": "Вход через Яндекс не состоялся: доступ не был разрешён.",
+    "yandex-state": "Вход через Яндекс не состоялся: не совпала проверочная строка. Попробуйте ещё раз.",
+    "yandex-exchange": "Яндекс не подтвердил вход. Попробуйте ещё раз.",
+    "yandex-info": "Яндекс не сказал, кто вошёл. Попробуйте ещё раз.",
+    "telegram-off": "Вход через Telegram сейчас выключен.",
+    "rejected": "Вход не подтверждён. Попробуйте ещё раз.",
+    "server": "Не вышло завести учётную запись. Попробуйте позже.",
+    "network": "Нет связи с сайтом. Проверьте подключение и попробуйте ещё раз.",
+};
+
+const ROW = "flex justify-center w-[320px] max-w-full min-h-[40px] items-center";
 
 const Login = ({
-    vkApp,
-    hasVkAuth,
     googleApp,
     googleAppLegacy,
+    telegramBot,
+    hasYandex,
 }: {
-    vkApp: number;
-    hasVkAuth?: boolean;
     googleApp: string;
     /** ПЕРЕЕЗД, временно: клиент Google, знающий про старый адрес. */
     googleAppLegacy: string;
+    telegramBot: string;
+    hasYandex: boolean;
 }) => {
-    // Какой клиент Google подставить, видно только в браузере: у Google список
-    // разрешённых источников у каждого клиента свой, и на старом адресе новый
-    // клиент вход не даст. На сервере адрес не спрашиваем нарочно — страница
-    // осталась бы динамической ради трёх месяцев.
-    const [googleClient, setGoogleClient] = useState(googleApp);
-
-    useEffect(() => {
-        if (isLegacyHost(window.location.hostname)) setGoogleClient(googleAppLegacy);
-    }, [googleAppLegacy]);
-
-    const buttonRef = useRef(null);
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const id = new Date().getTime();
-    const id2 = new Date().getTime() + 5;
-
     const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
 
+    const [error, setError] = useState<string>("");
+    // Куда вернуться после входа и что сказать о неудавшемся заходе — читается
+    // из адреса в браузере, а не через useSearchParams: тот потребовал бы
+    // границы Suspense и сделал бы страницу отрисовываемой на клиенте, а она
+    // статическая и такой остаётся.
+    const [next, setNext] = useState<string>("/");
+
     useEffect(() => {
-        if (!hasVkAuth) return;
-        VKID.Config.init({
-            app: vkApp,
-            redirectUrl: VK_REDIRECT_URL,
-            responseMode: VKID.ConfigResponseMode.Callback,
-            // codeVerifier не задаётся: SDK порождает его сам на каждый вход.
-            // Прежде сюда шло одно постоянное значение из окружения сервера.
-            source: VKID.ConfigSource.LOWCODE,
-            scope: '', // Заполните нужными доступами по необходимости
-        });
-        const oneTap = new VKID.OneTap();
-        if (buttonRef.current) {
-            oneTap.render({
-                container: buttonRef.current,
-                showAlternativeLogin: true,
-                skin: VKID.OneTapSkin.Secondary,
-            })
-                .on(VKID.WidgetEvents.ERROR, vkidOnError)
-                .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS,  (payload: { code: string; device_id: string; }) => {
-                    const code = payload.code;
-                    const deviceId = payload.device_id;
+        const params = new URLSearchParams(window.location.search);
+        setNext(safeNextPath(params.get("next")));
+        const failed = params.get("error");
+        if (failed) setError(MESSAGES[failed] ?? MESSAGES.rejected);
+    }, []);
 
-                    VKID.Auth.exchangeCode(code, deviceId)
-                        .then(vkidOnSuccess(deviceId))
-                        .catch(vkidOnError);
-                });
-        }
-    }, [vkApp, hasVkAuth]);
+    /** Общий хвост всех входов: ответ сервера — и либо внутрь, либо словами. */
+    const send = useCallback(async (payload: Record<string, unknown>) => {
+        setError("");
+        try {
+            const res = await fetch("/api/login", {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (res.status === 503) return setError(MESSAGES["telegram-off"]);
+            if (res.status === 401) return setError(MESSAGES.rejected);
+            if (!res.ok) return setError(MESSAGES.server);
 
-    const vkidOnSuccess = (deviceId: string) => async (data: Omit<TokenResult, "id_token">) => {
-        await fetch("/api/login", {
-            method: "POST",
-            body: JSON.stringify({
-                type: "VK",
-                data,
-                timestamp: Date.now(),
-                deviceId,
-            }),
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }).then(res => res.json()).then((res) => {
+            const data = await res.json();
             dispatch(AuthSlice.actions.SetAuthorized({
                 isAuth: true,
-                expiresAt: res.expiresAt,
-                userId: res.userId,
-                isVK: res.isVK,
-                isGoogle: res.isGoogle,
+                expiresAt: data.expiresAt,
+                userId: data.userId,
+                provider: data.provider,
             }));
-        });
-        router.push("/");
-    }
-
-    const vkidOnError = (error: any) => {
-        reportClientError(error, "login: вход через VK ID");
-    };
-
-    const decodeJWT = (token: string) => {
-
-        let base64Url = token.split(".")[1];
-        let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        let jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split("")
-                .map(function (c) {
-                    return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-                })
-                .join("")
-        );
-        return JSON.parse(jsonPayload);
-    }
-
-    useEffect(() => {
-        window.handleCredentialResponse = async (response: any) => {
-            const responsePayload = decodeJWT(response.credential);
-            await fetch("/api/login", {
-                method: "POST",
-                body: JSON.stringify({
-                    type: "Google",
-                    data: {
-                        access_token: response,
-                        expires_in: responsePayload.exp,
-                        user_id: responsePayload.sub,
-                    },
-                    timestamp: Date.now(),
-                    deviceId: Navigator.toString(),
-                }),
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }).then(res => res.json()).then((res) => {
-                dispatch(AuthSlice.actions.SetAuthorized({
-                    isAuth: true,
-                    expiresAt: res.expiresAt,
-                    userId: res.userId,
-                }));
-            });
-            router.push("/");
+            router.push(next);
+        } catch (e) {
+            reportClientError(e, "login: отправка входа");
+            setError(MESSAGES.network);
         }
-    }, []);
+    }, [dispatch, router, next]);
 
     useEffect(() => {
-        if (isAuthorized) {
-            router.push("/");
-        }
-    }, [isAuthorized]);
-
-    useEffect(() => {
-        window.onTelegramAuth = async (userData: any) => {
-            const toSave = {
-                type: "Telegram",
-                // Поля виджета как есть: строку для подписи собирает сервер, и
-                // идентификатор он берёт из них же (lib/authorize/telegram).
-                data: { fields: userData },
-                timestamp: Date.now(),
-                deviceId: Navigator.toString(),
-            };
-            await fetch("/api/login", {
-                method: "POST",
-                body: JSON.stringify(toSave),
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }).then(res => res.json()).then((res) => {
-                dispatch(AuthSlice.actions.SetAuthorized({
-                    isAuth: true,
-                    expiresAt: res.expiresAt,
-                    userId: res.userId,
-                }));
-            });
-            router.push("/");
-        };
-    }, []);
+        if (isAuthorized) router.push("/");
+    }, [isAuthorized, router]);
 
     return (
-        <div>
-            <label>
-                Авторизация
-            </label>
-            <div ref={buttonRef} />
-            <Script
-                id={id.toString()}
-                src={`https://accounts.google.com/gsi/client?v=${id}`}
-            ></Script>
-            <Script
-                id={id2.toString()}
-                async
-                src="https://telegram.org/js/telegram-widget.js?23"
-                data-telegram-login="typikonBot"
-                data-size="large"
-                data-onauth="onTelegramAuth(user)"
-                data-request-access="write"
-            />
-            <div
-                id="g_id_onload"
-                data-auto_prompt="false"
-                data-callback="handleCredentialResponse"
-                data-use_fedcm_for_prompt="true"
-                data-use_fedcm_for_button="true"
-                data-client_id={googleClient}
-            ></div>
-            <div className="g_id_signin"></div>
+        <div className="mx-auto w-full max-w-sm py-8 flex flex-col gap-6 font-serif">
+            <div>
+                <h1 className="font-bold text-xl">Вход</h1>
+                <p className="text-slate-800 text-sm mt-2">
+                    Вход нужен для помянника, записок, личных заметок и избранного. Читать
+                    сайт, считать дни и выгружать тексты можно и без него.
+                </p>
+            </div>
+
+            {error && (
+                <p role="alert" className="text-sm text-red-800 border border-red-300 rounded px-3 py-2">
+                    {error}
+                </p>
+            )}
+
+            <div className="flex flex-col items-center gap-3">
+                <div className={ROW}>
+                    <TelegramLoginWidget
+                        bot={telegramBot}
+                        onAuth={(fields) => {
+                            // Поля виджета как есть: строку для подписи собирает
+                            // сервер, и идентификатор он берёт из них же
+                            // (lib/authorize/telegram).
+                            void send({ type: "Telegram", data: { fields } });
+                        }}
+                    />
+                </div>
+                <div className={ROW}>
+                    <GoogleSignIn
+                        clientId={googleApp}
+                        legacyClientId={googleAppLegacy}
+                        onCredential={(credential) => {
+                            // Серверу нужен сам id_token: разбирать его в браузере
+                            // незачем, всё равно подпись проверяет он.
+                            void send({ type: "Google", data: { access_token: credential } });
+                        }}
+                    />
+                </div>
+                {hasYandex && (
+                    <a
+                        href={`/api/login/yandex/start?next=${encodeURIComponent(next)}`}
+                        className={`${ROW} justify-center rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50`}
+                    >
+                        Войти через Яндекс
+                    </a>
+                )}
+            </div>
+
+            <p className="text-xs text-slate-600">
+                От Telegram, Google или Яндекса сайт получает только их номер вашей учётной
+                записи — по нему мы вас и узнаём при следующем входе. Имя, почта и телефон
+                заполняются в профиле по желанию и ни у кого не спрашиваются.
+            </p>
+
+            {/* ПЕРЕХОДНЫЙ ПЕРИОД. Снимается, когда вошедшие через ВК разберутся:
+                до тех пор это единственное место, где они узнают, что делать, —
+                на страницу входа они и придут, обнаружив пропажу кнопки. */}
+            <p className="text-xs text-slate-600 border-t border-slate-200 pt-3">
+                <span className="text-slate-700">Вход через ВК закрыт.</span> Записи тех, кто
+                входил им, — помянник, заметки, избранное — сохранены. Пока вы ещё в записи,
+                проще всего привязать другой вход прямо в{" "}
+                <Link href="/profile" className="text-red-900 hover:underline">профиле</Link>.
+                Если попасть в неё уже нельзя, напишите через{" "}
+                <Link href="/contact" className="text-red-900 hover:underline">форму обратной связи</Link>{" "}
+                свой идентификатор ВК: на него будет выслано письмо с подтверждением, поэтому
+                страница ВК должна быть открыта. Там же укажите, каким входом хотите
+                пользоваться дальше и его идентификатор.
+            </p>
         </div>
     )
 };
