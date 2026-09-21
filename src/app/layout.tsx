@@ -9,7 +9,6 @@ import NavMenu from "@/app/NavMenu";
 import StoreProvider from "@/app/StoreProvider";
 import AuthorizeChecker from "@/app/AuthorizeChecker";
 import Script from "next/script";
-import TelegramLoginRemover from "@/app/TelegramLoginRemover";
 import SessionLoader from "@/app/SessionLoader";
 import ServiceWorkerRegistrar from "@/app/ServiceWorkerRegistrar";
 import { SITE_URL } from "@/utils/site";
@@ -89,13 +88,10 @@ export default function RootLayout({
           </noscript>
           <CountMeta />
           <ServiceWorkerRegistrar />
-          <TelegramLoginRemover />
           <StoreProvider>
               <>
                   <SessionLoader />
-                  <AuthorizeChecker
-                      vkApp={parseInt(process.env.VK_APP!)}
-                  />
+                  <AuthorizeChecker />
                   {/* ПЕРЕЕЗД, временно: полоса для пришедших на старый адрес.
                       Клиентская — чтобы не тянуть заголовки в корневой макет и
                       не делать динамическим весь сайт ради трёх месяцев. */}

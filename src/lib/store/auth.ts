@@ -8,9 +8,9 @@ export interface IAuthReducer {
     isResolved: boolean;
     userId?: string;
     user?: any;
-    cookieExpiresAt?: number;
-    isVK?: boolean;
-    isGoogle?: boolean;
+    cookieExpiresAt?: number | string;
+    /** Чем вошли: "Google", "Telegram", "Yandex". Нужен только для показа. */
+    provider?: string;
 }
 
 export const initialState: IAuthReducer = {
@@ -27,10 +27,9 @@ export const AuthSlice = createSlice({
             action: PayloadAction<{
                 isAuth: boolean;
                 userId?: string;
-                expiresAt?: number;
+                expiresAt?: number | string;
                 user?: any;
-                isVK?: boolean;
-                isGoogle?: boolean;
+                provider?: string;
             }>
         ){
             state.isAuthorized = action.payload.isAuth;
@@ -38,8 +37,13 @@ export const AuthSlice = createSlice({
             state.userId = action.payload.userId;
             state.cookieExpiresAt = action.payload.expiresAt;
             state.user = action.payload.user;
-            state.isVK = action.payload.isVK;
-            state.isGoogle = action.payload.isGoogle;
+            state.provider = action.payload.provider;
+        },
+        // Продление двигает только срок: кто вошёл и что о нём известно, от
+        // сдвига окна не меняется, а переписывать всё состояние целиком значило
+        // бы гасить уже загруженные данные пользователя.
+        Prolonged (state, action: PayloadAction<number | string>){
+            state.cookieExpiresAt = action.payload;
         },
         SetResolved (state){
             state.isResolved = true;
@@ -50,8 +54,7 @@ export const AuthSlice = createSlice({
             state.userId = undefined;
             state.cookieExpiresAt = undefined;
             state.user = undefined;
-            state.isVK = undefined;
-            state.isGoogle = undefined;
+            state.provider = undefined;
         },
     }
 })

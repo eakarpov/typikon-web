@@ -1,6 +1,16 @@
-'use server'
-import { redirect } from 'next/navigation'
-
-export async function loginRedirect() {
-    redirect(`/`)
-}
+/**
+ * Куда вернуть после входа.
+ *
+ * Значение приходит из адресной строки и из cookie, то есть снаружи, — и
+ * открытым перенаправлением становится в одну строку: `?next=https://чужое`
+ * увело бы вошедшего с сайта, а `//чужое` сделало бы это же, выглядя путём.
+ * Поэтому принимается только путь внутри сайта: одна косая черта в начале,
+ * вторая (и обратная) не допускаются.
+ */
+export const safeNextPath = (value: unknown): string => {
+    if (typeof value !== "string" || !value.startsWith("/")) return "/";
+    if (value.startsWith("//") || value.startsWith("/\\")) return "/";
+    // Страница входа как место возврата — петля: вошёл и снова на вход.
+    if (value === "/login" || value.startsWith("/login?")) return "/";
+    return value;
+};
