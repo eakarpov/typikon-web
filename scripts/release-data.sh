@@ -17,12 +17,12 @@
 #
 # Порядок:
 #   npm run corpus:dump        # собрать (нужен доступ к базе)
-#   bash release-data.sh       # выложить
+#   npm run release:data       # выложить на prod
+#   npm run release:data -- --target test
 
-export $(grep -v '^#' .env.release | xargs)
+. "$(dirname "$0")/release-target.sh"
 
 DUMP_LOCAL=${DUMP_LOCAL:-data-dump}
-DUMP_REMOTE=${DUMP_REMOTE:-/var/www/typikon-data}
 
 if [ ! -f "$DUMP_LOCAL/manifest.json" ]; then
     echo "нет $DUMP_LOCAL/manifest.json — собери выгрузку: npm run corpus:dump"
@@ -50,9 +50,10 @@ if (!m.version) { console.error('  в манифесте нет version — пе
 
 rm -f data-dump.zip
 zip -rX data-dump.zip "$DUMP_LOCAL"
-sshpass -f <(printf '%s\n' $PASSWORD) scp data-dump.zip $USERNAME@$HOST:~/data-dump.zip
+# В домашний каталог, а не сразу на место: каталога назначения при первой
+# выкладке ещё нет, и scp в него не прошёл бы.
+scp_put data-dump.zip "data-dump.zip"
 
 # DUMP_REPLACE=1 разрешает заменить уже выложенную версию. По умолчанию сервер
 # такую выкладку отклоняет: выложенная версия неизменна.
-sshpass -f <(printf '%s\n' $PASSWORD) ssh $USERNAME@$HOST \
-    "DUMP_REMOTE='$DUMP_REMOTE' DUMP_LOCAL='$DUMP_LOCAL' DUMP_REPLACE='${DUMP_REPLACE:-}' bash -s" < data-remote.sh
+ssh_run "DUMP_REMOTE='$DUMP_REMOTE' DUMP_LOCAL='$DUMP_LOCAL' DUMP_REPLACE='${DUMP_REPLACE:-}' bash -s" < "$RELEASE_DIR/data-remote.sh"

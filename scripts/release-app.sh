@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Заливка новой версии Android-приложения на прод.
+# Заливка новой версии Android-приложения.
 # Использование:
 #   bash release-app.sh 1.6.0 ~/Downloads/app-release.apk
+#   bash release-app.sh --target test 1.6.0 ~/Downloads/app-release.apk
+#
+# Ключ цели снимается с аргументов до проверки их числа (release-target.sh),
+# поэтому версия и путь к apk остаются первым и вторым.
 #
 # Требования (настраиваются один раз, вручную):
-#   - на сервере существует /var/www/typikon-app-releases
+#   - на сервере существует каталог сборок (APP_REMOTE, по умолчанию
+#     /var/www/typikon-app-releases)
 #   - nginx отдаёт location /app/ из этой папки (alias)
 #   - каталог доступен на запись пользователю admin (владелец) и на чтение всем (chmod 755),
 #     чтобы nginx мог отдавать файлы независимо от того, под каким пользователем он запущен
 
+. "$(dirname "$0")/release-target.sh"
+
 if [ "$#" -ne 2 ]; then
-    echo "Использование: bash release-app.sh <версия X.Y.Z> <путь к apk>" >&2
+    echo "Использование: bash release-app.sh [--target КЛЮЧ] <версия X.Y.Z> <путь к apk>" >&2
     exit 1
 fi
 
@@ -29,28 +36,28 @@ if [ ! -f "$APK_PATH" ]; then
     exit 1
 fi
 
-export $(grep -v '^#' .env.release | xargs)
-
-REMOTE_DIR="/var/www/typikon-app-releases"
+REMOTE_DIR="$APP_REMOTE"
 VERSIONED_NAME="app-${VERSION}.apk"
 
 echo "Заливаю $APK_PATH -> $REMOTE_DIR/$VERSIONED_NAME"
-sshpass -f <(printf '%s\n' "$PASSWORD") ssh "$USERNAME@$HOST" "mkdir -p '$REMOTE_DIR'"
-sshpass -f <(printf '%s\n' "$PASSWORD") scp "$APK_PATH" "$USERNAME@$HOST:$REMOTE_DIR/$VERSIONED_NAME"
+ssh_run "mkdir -p '$REMOTE_DIR'"
+scp_put "$APK_PATH" "$REMOTE_DIR/$VERSIONED_NAME"
 
 echo "Обновляю текущую (app.apk -> $VERSIONED_NAME)"
-sshpass -f <(printf '%s\n' "$PASSWORD") ssh "$USERNAME@$HOST" "cp '$REMOTE_DIR/$VERSIONED_NAME' '$REMOTE_DIR/app.apk'"
+ssh_run "cp '$REMOTE_DIR/$VERSIONED_NAME' '$REMOTE_DIR/app.apk'"
 
 MAJOR="${VERSION%%.*}"
 REST="${VERSION#*.}"
 MINOR="${REST%%.*}"
 
+# Версию в исходниках двигает только выкладка на прод: испытательная сборка не
+# должна менять то, что /api/v1/app/version скажет настоящим приложениям.
 VERSION_FILE="src/pages/api/v1/app/version.ts"
-if [ -f "$VERSION_FILE" ]; then
+if [ "$TARGET" = prod ] && [ -f "$VERSION_FILE" ]; then
     sed -i.bak -E "s/major: [0-9]+, minor: [0-9]+/major: $MAJOR, minor: $MINOR/" "$VERSION_FILE"
     rm -f "${VERSION_FILE}.bak"
     echo "Обновлён $VERSION_FILE -> major: $MAJOR, minor: $MINOR"
     echo "Не забудьте закоммитить и задеплоить веб (release.sh), чтобы /api/v1/app/version отдавал новую версию"
 fi
 
-echo "Готово: https://www.typikon.su/app/app.apk (версия $VERSION)"
+echo "Готово: $SITE_URL/app/app.apk (версия $VERSION)"

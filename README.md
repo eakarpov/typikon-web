@@ -11,6 +11,18 @@
 - Алиасы страниц
 - Несколько текстов в слот (интерфейс)
 
+# Выкладка
+
+- Скрипты выкладки лежат в [scripts/](scripts/) — там же их описание.
+- Цель выкладки задаётся ключом, по файлу доступов на цель
+  (`.env.release.prod`, `.env.release.test`, образец — `.env.release.example`):
+
+```
+npm run release                      # prod
+npm run release -- --target test
+TARGET=test npm run release:db -- bible_verses
+```
+
 # Синхронизация БД
 
 - Архивация осуществляется раз в день. Удаляется через 7 дней по крону.

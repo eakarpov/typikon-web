@@ -15,9 +15,16 @@
 #
 # Порядок важен: сперва корпус, потом служба. Служба при запуске читает корпус,
 # и поднимать её на старом, пока новый ещё едет, незачем.
+#
+# Цель — ключом (release-target.sh). Подключаем его и здесь, хотя сам этот
+# скрипт по ssh не ходит: он снимает ключ с аргументов и выставляет TARGET в
+# окружение, откуда оба вызываемых скрипта его и возьмут. Без этого пришлось бы
+# передавать ключ каждому из них руками, и однажды передали бы не всем.
+#
+#     npm run release:ustav -- --target test
 
 set -e
-cd "$(dirname "$0")"
+. "$(dirname "$0")/release-target.sh"
 
 RULES_SRC=${RULES_SRC:-../typikon-rules}
 DB="$RULES_SRC/src/data.db"
@@ -39,8 +46,8 @@ if [ -n "$STALE" ]; then
 fi
 
 echo "== корпус (в нём же скомпилированный устав)"
-bash rules-db-release.sh
+bash "$RELEASE_DIR/rules-db-release.sh"
 
 echo
 echo "== служба сборки (код и сами файлы правил)"
-bash release-ordo.sh
+bash "$RELEASE_DIR/release-ordo.sh"
