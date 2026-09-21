@@ -49,5 +49,10 @@ test("пустой каталог — это «не знаю», а не нуле
     // Ноль означал бы «новее вашей ничего нет» и был бы враньём; на этот случай
     // отвечает последнее известное число.
     assert.equal(latestOf([]), null);
-    assert.equal(versionLabel(LAST_KNOWN), "2.0.0");
+    // Число берётся своё, а не из LAST_KNOWN: здесь проверяется, как версия
+    // пишется, а не какая она сегодня. Пока стояло `versionLabel(LAST_KNOWN)`,
+    // с ожиданием "2.0.0" внутри, тест падал при очередном выпуске — на пустом
+    // месте и не о том (коммит «app 2.2.0»).
+    assert.equal(versionLabel({ major: 2, minor: 0, patch: 0 }), "2.0.0");
+    assert.equal(versionLabel(LAST_KNOWN), `${LAST_KNOWN.major}.${LAST_KNOWN.minor}.${LAST_KNOWN.patch}`);
 });
