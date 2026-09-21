@@ -1,0 +1,15 @@
+[Unit]
+Description=Typikon Web
+After=network.target mongod.service
+Wants=mongod.service
+
+[Service]
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm start --prefix /var/www/typikon.su/typikon-web -- -H 127.0.0.1 -p 3000
+Restart=on-failure
+RestartSec=5
+User=admin
+WorkingDirectory=/var/www/typikon.su/typikon-web
+
+[Install]
+WantedBy=multi-user.target

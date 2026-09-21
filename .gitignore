@@ -7,7 +7,18 @@
 .env.development
 .env
 .env.production
+
+# Доступы к серверам — по файлу на цель выкладки (.env.release.prod,
+# .env.release.test и сколько заведут ещё). В них пароли, и в репозиторий они не
+# едут. Исключение — образец без значений: по нему заводят новую цель.
 .env.release
+.env.release.*
+!.env.release.example
+
+# Окружение испытательной машины: .env.production.test и подобные — те же
+# токены, только другие. Правило выше про .env.production их не ловит.
+.env.production.*
+DEPLOY.md
 
 /public/app/
 

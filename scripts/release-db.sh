@@ -13,19 +13,18 @@
 #     bash release-db.sh bible_verses     # только её — после обрыва
 #     bash release-db.sh texts rest       # несколько названных
 #
+# Цель выкладки — ключом (release-target.sh), и он снимается с аргументов до
+# того, как они станут списком частей:
+#
+#     npm run release:db -- --target test
+#     npm run release:db -- --target test bible_verses
+#
 # Части независимы: каждая накатывается своим mongorestore --drop, и порядок
 # между ними ничем не связан. Оттого повтор одной части безопасен и полон.
 
 set -e
 
-export $(grep -v '^#' .env.release | xargs)
-
-REMOTE=/var/www/typikon.su/typikon-web
-
-# Молчащий ssh — это ровно то, обо что спотыкалась прежняя выкладка: пока
-# mongorestore возится с индексами, в канале тишина, и сеанс закрывают как
-# бездействующий. Keepalive шлёт пустое каждые полминуты и держит его живым.
-SSH_OPTS="-o ServerAliveInterval=30 -o ServerAliveCountMax=10"
+. "$(dirname "$0")/release-target.sh"
 
 # Тяжёлые коллекции — каждая своей частью, от большей к меньшей: если сеть
 # сегодня плоха, это выяснится на первой же части, а не на пятой.
@@ -43,9 +42,6 @@ HEAVY="dneslov_names bible_verses texts temples"
 # и `--drop` стирал приходам всё, что они о себе сказали. Перечислять их здесь
 # в исключениях больше незачем: они не в этой базе.
 
-ssh_run() { sshpass -f <(printf '%s\n' $PASSWORD) ssh $SSH_OPTS $USERNAME@$HOST "$@"; }
-scp_put() { sshpass -f <(printf '%s\n' $PASSWORD) scp $SSH_OPTS "$1" $USERNAME@$HOST:"$2"; }
-
 # Часть = дамп + архив + перегон + накат. Всё в одной функции, чтобы «часть»
 # была одним понятием, а не четырьмя шагами, которые можно перепутать местами.
 send_part() {
@@ -56,8 +52,8 @@ send_part() {
     zip -rqX "db-$part.zip" "db-$part"
 
     echo "  $part: $(du -h "db-$part.zip" | cut -f1)"
-    scp_put "db-$part.zip" "$REMOTE/db-$part.zip"
-    ssh_run "PART='$part' bash -s" < db-remote.sh
+    scp_put "db-$part.zip" "$REMOTE_ROOT/db-$part.zip"
+    ssh_run "REMOTE_ROOT='$REMOTE_ROOT' PART='$part' bash -s" < "$RELEASE_DIR/db-remote.sh"
 
     rm -rf "db-$part" "db-$part.zip"
 }
@@ -67,7 +63,7 @@ PARTS="$*"
 
 # Окружение везём один раз на всю выкладку, а не с каждой частью: оно крохотное,
 # но пять лишних scp — это пять лишних поводов сеансу оборваться.
-sshpass -f <(printf '%s\n' $PASSWORD) scp $SSH_OPTS .env.production $USERNAME@$HOST:$REMOTE/.env.production
+put_env
 
 for part in $PARTS; do
     case " $HEAVY " in
