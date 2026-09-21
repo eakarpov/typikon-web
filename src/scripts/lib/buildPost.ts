@@ -4,6 +4,7 @@ import { expandOrderAbbreviation } from "@/scripts/lib/orderAbbreviations";
 import { ChannelPostNameSource } from "@/types/dto/channelPost";
 import { saintImages, saintSlugs } from "@/lib/saints";
 import { SITE_URL } from "@/utils/site";
+import { nameHashtagWords } from "@/scripts/lib/hashtags";
 
 interface DaySongText {
     _id: string;
@@ -182,12 +183,7 @@ export const buildChannelPost = async ({
     // остаётся в хэштеге как отдельный символ.
     const toHashtag = (w: string) =>
         `#${w.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[\s,.;:!?]/g, "")}`;
-    // Имя разбиваем на отдельные хэштеги по словам ("Стефан Первомученик" -> #Стефан #Первомученик) —
-    // по одному слову искать вероятнее, чем по слитному "#СтефанПервомученик". Чисто цифровые
-    // токены (например "9" из "9 мучеников Пергийских") в хэштег не превращаем — по ним не ищут.
-    const nameWords = hero?.name
-        ? hero.name.split(/\s+/).filter((w) => /[А-Яа-яЁё]/.test(w))
-        : [];
+    const nameWords = nameHashtagWords(hero?.name);
     const hashtags = [...nameWords, ...(hero?.ranks || [])].map(toHashtag);
     hashtags.push("#Пролог");
 
@@ -206,13 +202,20 @@ export const buildChannelPost = async ({
     // Между блоками — ровно одна пустая строка; блоки, которых нет (например нет стихов),
     // просто отсутствуют в массиве, а не превращаются в пустую строку, которую потом
     // приходится вычищать регуляркой (раньше так терялся перенос перед "Стихи́:").
+    // Подвал — ссылки, хэштеги и «Помочь проекту» — идёт ОДНОЙ группой, строки в
+    // нём разделяются простым переносом. Пустая строка между ними разгоняла конец
+    // поста на три отдельных куска, хотя читается он как одна подпись.
+    const footerBlock = [
+        linksBlock,
+        hashtags.join(" "),
+        `<a href="${HELP_LINK}">Помочь проекту</a>`,
+    ].filter((l) => l !== "").join("\n");
+
     const blocks = [
         headerBlock,
         poemsBlock,
         bodyHtml,
-        linksBlock,
-        hashtags.join(" "),
-        `<a href="${HELP_LINK}">Помочь проекту</a>`,
+        footerBlock,
     ].filter((b) => b !== "");
 
     let fullText = blocks.join("\n\n").trim();
