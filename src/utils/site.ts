@@ -12,7 +12,7 @@
 // задать одно и то же — заводить рассинхрон на ровном месте. Переезд правится
 // здесь одной строкой.
 
-export const SITE_URL = "https://www.typikon.su";
+export const SITE_URL = "https://www.typikon.info";
 
 /** Полное имя хоста, как его присылает браузер: с www. */
 export const SITE_HOST_FULL = SITE_URL.replace(/^https?:\/\//, "");
@@ -49,3 +49,40 @@ export const VK_REDIRECT_URL = `${SITE_URL_NAKED}/login`;
  * адресом. После переезда эта строка не меняется больше никогда.
  */
 export const ICS_UID_DOMAIN = "typikon.info";
+
+// --- ПЕРЕЕЗД: всё ниже временное и снимается после отключения старого адреса ---
+//
+// Старый домен живёт до середины января: он продолжает отдавать API, рамку
+// виджета, подписные ленты и выгрузку, а всё прочее перенаправляет. Пока он жив,
+// пришедшему на него надо сказать, что адрес сменился, — и сказать именно ему, а
+// не всем подряд.
+//
+// Отсюда правило, которое легко нарушить: «старое поведение» опирается на ХОСТ
+// ЗАПРОСА, а не на SITE_URL. SITE_URL — константа сборки, одна на оба адреса:
+// один и тот же процесс отвечает и там, и там. Спроси у него — и полоса о
+// переезде покажется тому, кто уже пришёл на новый адрес.
+
+/** Адрес, с которого переезжаем. */
+export const LEGACY_SITE_URL = "https://www.typikon.su";
+
+export const LEGACY_HOST = "typikon.su";
+
+/**
+ * Пришёл ли запрос на старый адрес. Хост берётся из заголовка, а он приходит и
+ * с портом, и в любом регистре, и с www — поэтому сверяем окончанием, а не
+ * равенством.
+ */
+export const isLegacyHost = (host: string | null | undefined): boolean => {
+    if (!host) return false;
+    const name = host.split(":")[0].toLowerCase();
+    return name === LEGACY_HOST || name.endsWith(`.${LEGACY_HOST}`);
+};
+
+/** Когда старый адрес отключается. */
+export const LEGACY_SHUTDOWN_ISO = "2027-01-15";
+
+/** То же для заголовка Sunset (RFC 8594): HTTP-дата, а не ISO. */
+export const LEGACY_SHUTDOWN_HTTP = "Fri, 15 Jan 2027 00:00:00 GMT";
+
+/** Как называем срок в тексте для человека. */
+export const LEGACY_SHUTDOWN_LABEL = "15 января 2027 года";

@@ -29,13 +29,32 @@ const sweep = (now: number) => {
     }
 };
 
-// За nginx настоящий адрес приходит в x-forwarded-for; первый в списке — клиент.
-export const clientIp = (req: NextApiRequest): string => {
-    const forwarded = req.headers["x-forwarded-for"];
-    const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-    const first = raw?.split(",")[0]?.trim();
-    return first || req.socket.remoteAddress || "unknown";
+/**
+ * Адрес клиента по заголовкам прокси.
+ *
+ * Первому элементу `x-forwarded-for` верить нельзя: nginx с
+ * `$proxy_add_x_forwarded_for` ДОПИСЫВАЕТ увиденный адрес в конец, а начало
+ * списка — то, что прислал сам клиент. Кто ставил туда случайное значение,
+ * получал свежий счётчик на каждый запрос. Поэтому берётся `x-real-ip`, если
+ * nginx его выставляет, иначе — ПОСЛЕДНИЙ элемент списка: его писал наш прокси.
+ *
+ * Это верно, пока прокси перед Node один и порт Node снаружи закрыт; при прямом
+ * доступе к порту подделать можно любой заголовок.
+ */
+export const ipFromProxyHeaders = (
+    realIp: string | null | undefined, forwarded: string | null | undefined,
+): string | undefined => {
+    const real = realIp?.trim();
+    if (real) return real;
+    const hops = forwarded?.split(",").map((hop) => hop.trim()).filter(Boolean);
+    return hops?.length ? hops[hops.length - 1] : undefined;
 };
+
+const single = (value: string | string[] | undefined) => (Array.isArray(value) ? value.join(",") : value);
+
+export const clientIp = (req: NextApiRequest): string =>
+    ipFromProxyHeaders(single(req.headers["x-real-ip"]), single(req.headers["x-forwarded-for"]))
+    || req.socket.remoteAddress || "unknown";
 
 export interface RateLimitOptions {
     /** Сколько запросов разрешено в окне. */
@@ -84,7 +103,7 @@ export const consume = (key: string, limit: number, windowSeconds: number): Rate
 
 /** Адрес клиента из обычного Request (app-роутер). */
 export const clientIpFromHeaders = (headers: Headers): string =>
-    headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    ipFromProxyHeaders(headers.get("x-real-ip"), headers.get("x-forwarded-for")) || "unknown";
 
 /**
  * Возвращает true, если запрос пропущен. Если лимит исчерпан — сам отвечает 429
@@ -112,3 +131,8 @@ export const rateLimit = (
 // Явные счётчики для тяжёлых публичных ручек.
 export const SEARCH_LIMIT = { limit: 30, windowSeconds: 60, name: "search" };
 export const DICTIONARY_LIMIT = { limit: 30, windowSeconds: 60, name: "dictionary" };
+// Капча и письмо: человеку хватит с запасом, перебору и заливке ящика — нет.
+export const CAPTCHA_LIMIT = { limit: 20, windowSeconds: 60, name: "captcha" };
+export const CONTACT_LIMIT = { limit: 5, windowSeconds: 600, name: "contact" };
+// Сборка PDF грузит процессор; страницу чтения сохраняют не чаще.
+export const PDF_LIMIT = { limit: 10, windowSeconds: 60, name: "pdf" };

@@ -11,6 +11,7 @@ import {
     ArrowRightOnRectangleIcon,
     UserCircleIcon,
     LanguageIcon,
+    SunIcon,
 } from "@heroicons/react/20/solid";
 import {usePathname, useRouter} from "next/navigation";
 import {useCallback, useEffect, useState} from "react";
@@ -254,6 +255,17 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 {/* Помянник — единственное, за чем вошедший приходит РЕГУЛЯРНО:
                     именины и сороковины ждать не умеют. Оттого он в строке, а
                     не внутри профиля */}
+                {/* «Сегодня» — вход в личное: день, собранный вокруг человека, а не
+                    вокруг раздела. Стоит первым из личного: с него день и начинают */}
+                {isAuth && (
+                    <Link
+                        title="Сегодня для меня"
+                        href="/segodnya"
+                        className={`cursor-pointer min-w-fit flex items-center ${pathname === `/segodnya` && `text-red-600`}`}
+                    >
+                        <SunIcon className="w-4 h-4" />
+                    </Link>
+                )}
                 {isAuth && (
                     <Link
                         title="Помянник"

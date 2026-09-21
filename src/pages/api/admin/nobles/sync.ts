@@ -1,5 +1,6 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import {init} from "@/lib/sqlite";
+import {checkRightsBack} from "@/lib/admin/back";
 import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
     if (req.method === 'POST') {
+        if (!(await checkRightsBack(req, res))) return;
         try {
             const db = await init();
 

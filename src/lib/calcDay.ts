@@ -6,7 +6,7 @@ import clientPromise from "@/lib/mongodb";
 import {resolveDayPericopes} from "@/lib/pericopes";
 import {computeLectionaryYear} from "@/utils/lectionaryCycle";
 import {getDayMemories, IDayMemories} from "@/lib/signs/dayMemories";
-import {getWeekAndDay, typeForPenticostWeek} from "@/utils/movableCycle";
+import {easterDateUtc, getWeekAndDay, typeForPenticostWeek} from "@/utils/movableCycle";
 
 export interface ICalcDayResult {
     day: any;
@@ -24,12 +24,8 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
     const prevDateObj = new Date(dateStr);
     prevDateObj.setFullYear(prevDateObj.getFullYear() - 1);
     const prevEaster = orthodoxEaster(prevDateObj);
-    const easterDate = new Date(
-        `${easter.year}-${easter.month > 9 ? easter.month : `0${easter.month}`}-${easter.day}`
-    );
-    const prevEasterDate = new Date(
-        `${prevEaster.year}-${prevEaster.month > 9 ? prevEaster.month : `0${prevEaster.month}`}-${prevEaster.day}`
-    );
+    const easterDate = easterDateUtc(easter);
+    const prevEasterDate = easterDateUtc(prevEaster);
 
     const searchTriodion = getWeekAndDay(dateObj, easterDate, prevEasterDate);
     const triodicPromise = getTriodicItem(searchTriodion);
@@ -38,7 +34,26 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
     const calendarPromise = getCalendarItem(churchDate);
     const memoriesPromise = getDayMemories(churchDate.getMonth() + 1, churchDate.getDate());
 
-    const [triodicDay, calendarDay, memories] = await Promise.all([triodicPromise, calendarPromise, memoriesPromise]);
+    const [foundTriodicDay, calendarDay, memories] = await Promise.all([triodicPromise, calendarPromise, memoriesPromise]);
+    let triodicDay = foundTriodicDay;
+
+    // Седмицы с 34-й по счёту своего шаблона в базе не имеют: лекционарий кончается
+    // 33-й, а дальше — крещенская отступка, то есть повтор уже читанных седмиц.
+    // Прежде на такие дни подвижная часть пропадала вовсе. Теперь день целиком
+    // берётся из той седмицы, которая по отступке читается, — и об этом сказано в
+    // названии, чтобы «седмица 30-я» в конце января не выглядела ошибкой счёта.
+    if (!triodicDay && searchTriodion.pentecostAnchorYear && searchTriodion.week > 33) {
+        const repeated = computeLectionaryYear(searchTriodion.pentecostAnchorYear)
+            .apostleWeekMap.get(searchTriodion.week);
+        if (repeated) {
+            triodicDay = await getTriodicItem({
+                week: repeated, day: searchTriodion.day, type: typeForPenticostWeek(repeated),
+            });
+            if (triodicDay?.name) {
+                triodicDay.name = `${triodicDay.name} (по счёту седмица ${searchTriodion.week}-я: крещенская отступка)`;
+            }
+        }
+    }
 
     if (!triodicDay && !calendarDay) {
         return null;

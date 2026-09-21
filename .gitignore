@@ -11,14 +11,23 @@
 
 /public/app/
 
-music/
+# Каталоги исходных материалов в корне проекта. Слеш в начале обязателен:
+# без него «chinese/» прячет ЛЮБОЙ каталог с таким именем на любой глубине,
+# включая public/azbuki/chinese с данными азбуки — и она молча не уехала бы
+# на сервер. То же ждало бы latin/ и greek/, когда дойдёт черёд до них.
+/music/
 
-romanian/
-greek/
-latin/
-chinese/
-contents/
-memories/
+/romanian/
+/greek/
+/latin/
+/chinese/
+
+# Выгрузка чувашской Библии: 18 МБ текста Института перевода Библии. Права на
+# него не наши, и распространять его мы не распространяем — как и румынский с
+# китайским выше. Собирается заново: python3 chuvash/db/export_bible.py в azbuki.
+/chuvash/
+/contents/
+/memories/
 
 /nobles.db
 *.db.bak.*
@@ -93,9 +102,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-package-lock.json
 scratch/
 
 # Выгрузка корпуса — собирается заново командой npm run corpus:dump
 data-dump/
+deposit/
 data-dump.zip

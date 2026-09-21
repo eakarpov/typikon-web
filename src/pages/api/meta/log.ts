@@ -1,6 +1,7 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import {writeMetaData} from "@/app/api";
 import {getMeta} from "@/app/meta/api";
+import {clientIp} from "@/lib/rateLimit";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'GET') {
@@ -12,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.end();
         });
     } else {
-        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const ip = clientIp(req);
         const userAgent = req.headers['user-agent'];
         return writeMetaData({
             ip,

@@ -7,6 +7,8 @@ import { BIBLE_CANON } from "@/utils/bibleCanon";
 import { saintNames, saintSlugs } from "@/lib/saints";
 import { spanLabel } from "@/lib/places/labels";
 import { PLACE_MENTIONS, PLACE_RELATIONS, PLACES } from "@/lib/places/schema";
+import { haystackOf } from "@/lib/places/search";
+import { placeCoordinates } from "@/lib/places/legacy";
 import type { Confidence, PlaceKind, PlaceStatus, RelationType } from "@/lib/places/schema";
 
 const db = async () => (await clientPromise).db("typikon");
@@ -291,20 +293,31 @@ export interface IndexPlace {
     id: string;
     name: string;
     href: string;
+    /** Наш адрес места, если он выдан; по нему же место спрашивают наружу. */
+    slug?: string;
     kind?: PlaceKind;
     status?: PlaceStatus;
     /** [долгота, широта]. */
     point?: [number, number];
     /** Подтверждённых упоминаний в Писании. */
     scripture: number;
+    /** Имена места, приведённые для поиска, — см. `@/lib/places/search`. */
+    haystack: string;
 }
+
+/** Точка места: из GeoJSON, а за его отсутствием — из прежних строковых полей. */
+const pointOf = (row: any): [number, number] | null => {
+    const coords = placeCoordinates(row);
+    return coords ? [coords.longitude, coords.latitude] : null;
+};
 
 const loadIndex = async (): Promise<IndexPlace[]> => {
     try {
         const d = await db();
         const [rows, counts] = await Promise.all([
             d.collection(PLACES).find({ published: { $ne: false } },
-                { projection: { name: 1, slug: 1, alias: 1, kind: 1, status: 1, location: 1 } }).toArray(),
+                { projection: { name: 1, slug: 1, alias: 1, kind: 1, status: 1, location: 1,
+                    latitude: 1, longitude: 1, names: 1, synonyms: 1 } }).toArray(),
             d.collection(PLACE_MENTIONS).aggregate([
                 { $match: { corpus: "bible", status: "approved" } },
                 { $group: { _id: "$placeId", n: { $sum: 1 } } },
@@ -316,10 +329,15 @@ const loadIndex = async (): Promise<IndexPlace[]> => {
                 id: String(r._id),
                 name: r.name as string,
                 href: placeHref(r),
+                ...(r.slug ? { slug: r.slug as string } : {}),
                 ...(r.kind ? { kind: r.kind } : {}),
                 ...(r.status ? { status: r.status } : {}),
-                ...(r.location ? { point: r.location.coordinates as [number, number] } : {}),
+                // Точка — через placeCoordinates, а не прямо из location: у
+                // записей, не прошедших миграцию, координаты лежат строками в
+                // старых полях, и читая одно location, мы теряли бы их молча.
+                ...(pointOf(r) ? { point: pointOf(r)! } : {}),
                 scripture: countOf.get(String(r._id)) ?? 0,
+                haystack: haystackOf(r as any),
             }))
             .sort((a, b) => a.name.localeCompare(b.name, "ru"));
     } catch (e) {

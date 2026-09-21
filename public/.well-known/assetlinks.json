@@ -1,7 +1,12 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "typikon",
-    "package_name": "su.typikon.typikon"
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "su.typikon.typikon",
+      "sha256_cert_fingerprints": [
+        "06:4C:C2:B5:65:A8:57:4C:28:92:9F:EA:39:39:1B:3D:CE:FE:CD:FC:10:9D:F0:D8:DC:9F:E6:D4:DA:3D:CC:DB"
+      ]
+    }
   }
-}]
+]

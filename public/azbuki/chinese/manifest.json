@@ -1,0 +1,13 @@
+{
+  "alphabet": "chinese",
+  "version": "1.0.0",
+  "files": {
+    "syllables": 519702,
+    "chars": 3885660,
+    "words": 2577290,
+    "variants": 59458,
+    "reference": 26666,
+    "cognates": 90367,
+    "sinitic": 13116
+  }
+}

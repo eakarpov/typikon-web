@@ -9,9 +9,8 @@ let timeout: NodeJS.Timeout|null = null;
 
 const diff = 1000 * 60 * 5; // 5 minutes
 
-const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
+const AuthorizeChecker = ({ vkApp }: {
     vkApp: number;
-    codeVerifier: string;
 }) => {
     const expiresAt = useAppSelector(state => state.auth.cookieExpiresAt);
     const isVK = useAppSelector(state => state.auth.isVK);
@@ -52,7 +51,6 @@ const AuthorizeChecker = ({ vkApp, codeVerifier, }: {
             app: vkApp,
             redirectUrl: VK_REDIRECT_URL,
             responseMode: VKID.ConfigResponseMode.Callback,
-            codeVerifier,
             source: VKID.ConfigSource.LOWCODE,
             scope: '', // Заполните нужными доступами по необходимости
         });

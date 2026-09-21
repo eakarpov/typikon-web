@@ -122,3 +122,15 @@ test("подготовительный период считается один�
         );
     }
 });
+
+// Пасха 2027 года — 2 мая: день из одной цифры. Строка «2027-05-2» разбиралась
+// по местному времени и при московском поясе уводила весь круг на день.
+test("дата Пасхи строится полночью UTC и при дне из одной цифры", async () => {
+    const { easterDateUtc } = await import("@/utils/movableCycle");
+    const pascha = easterDateUtc({ year: 2027, month: 5, day: 2 });
+    assert.equal(pascha.toISOString(), "2027-05-02T00:00:00.000Z");
+    assert.deepEqual(
+        getWeekAndDay(new Date("2027-05-03"), pascha, easterDateUtc({ year: 2026, month: 4, day: 12 })),
+        { week: 1, day: 1, type: "Pascha" },
+    );
+});

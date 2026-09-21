@@ -1,4 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
+import {clientIpFromHeaders} from "@/lib/rateLimit";
 import {reportError} from "@/lib/reportError";
 
 // Принимает ошибки, случившиеся в браузере. До этого они не доезжали никуда:
@@ -27,7 +28,7 @@ const allowed = (ip: string) => {
 };
 
 export async function POST(request: NextRequest) {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const ip = clientIpFromHeaders(request.headers);
 
     if (!allowed(ip)) {
         return new NextResponse(null, { status: 429 });

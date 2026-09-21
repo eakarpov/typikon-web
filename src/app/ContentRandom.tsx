@@ -1,6 +1,7 @@
 'use client';
 import {BookOpenIcon, DocumentTextIcon} from "@heroicons/react/24/outline";
 import reactStringReplace from "react-string-replace";
+import {RED_MARK, FOOTNOTE_MARK} from "@/lib/markup/patterns";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import Link from "next/link";
 import {useEffect, useState} from "react";
@@ -71,10 +72,10 @@ const ContentRandom = () => {
                             {reactStringReplace(
                                 reactStringReplace(
                                     paragraph,
-                                    /\{(\d+)}/g,
+                                    FOOTNOTE_MARK,
                                     (footnote, i, offset) => <FootnoteLinkNew key={`footnote-${i}-${offset}`} footnotes={item.footnotes} value={footnote} />,
                                 ),
-                                /\{k\|(.+)}/,
+                                RED_MARK,
                                 (red, i, offset) => (
                                     <span key={`red-${i}-${offset}`} className="text-red-600">
                                         {red}

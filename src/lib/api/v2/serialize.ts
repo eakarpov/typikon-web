@@ -1028,15 +1028,119 @@ export const placeDetail = (row: any) => ({
     externals: (row.externals ?? []).map((e: any) => ({ source: e.source, id: e.id })),
 });
 
-/** Место в перечне. */
+/**
+ * Место в перечне.
+ *
+ * Принимает и запись из базы, и строку указателя (`IndexPlace`), у которой точка
+ * лежит парой `point` в порядке GeoJSON — долгота раньше широты. Перепутать их
+ * молча легче всего именно здесь, поэтому распаковка одна и на виду.
+ */
 export const placeSummary = (row: any) => ({
     id: row.id ?? null,
     slug: row.slug ?? null,
     name: row.name ?? null,
     kind: row.kind ?? null,
     status: row.status ?? null,
-    ...(placeCoordinates(row) ?? { latitude: null, longitude: null }),
+    ...(placeCoordinates(row)
+        ?? (Array.isArray(row.point)
+            ? { latitude: row.point[1], longitude: row.point[0] }
+            : { latitude: null, longitude: null })),
+    /** Подтверждённых упоминаний в Писании; по нему же идёт отбор `scripture=1`. */
+    scripture: row.scripture ?? 0,
 });
+
+// --- Упоминания места: что о нём знает корпус
+//
+// БЕЛЫЙ СПИСОК ЗДЕСЬ ВАЖНЕЕ ОБЫЧНОГО. В `place_mentions` рядом с самим
+// упоминанием лежат `method`, `osis`, `match`, `reviewedAt` и `status`; утёкший
+// наружу `status` выдал бы несверенные машинные догадки за факт. Наружу идёт
+// только принятое, и только то, что читателю показывают.
+
+/** Сосед по отождествлению или преемству. */
+export const placeRelationRef = (row: any) => ({
+    direction: row.direction,
+    type: row.type,
+    confidence: row.confidence,
+    score: row.score ?? null,
+    source: row.source ?? null,
+    other: {
+        id: row.other?.id ?? null,
+        /** `null` — страница соседа скрыта: показывать его именем, но без перехода. */
+        slug: slugFromHref(row.other?.href),
+        name: row.other?.name ?? null,
+        kind: row.other?.kind ?? null,
+        status: row.other?.status ?? null,
+        ...(Array.isArray(row.other?.location?.coordinates)
+            ? { latitude: row.other.location.coordinates[1], longitude: row.other.location.coordinates[0] }
+            : { latitude: null, longitude: null }),
+    },
+});
+
+/** Адрес места из ссылки вида `/places/<адрес>`; `null`, если ссылки нет. */
+const slugFromHref = (href: unknown): string | null =>
+    typeof href === "string" ? href.replace(/^\/places\//, "") : null;
+
+/** Текст корпуса, где место названо. */
+export const placeTextRef = (row: any) => ({
+    id: row.id ?? null,
+    alias: row.alias ?? null,
+    name: row.name ?? null,
+    book: row.book ?? null,
+});
+
+/** Книга Писания со счётом стихов: сами стихи — отдельной ручкой. */
+export const placeScriptureBook = (book: any, abbr: string | null) => ({
+    canonId: book.canonId,
+    name: book.name,
+    abbr,
+    verses: book.verses.length,
+});
+
+/** Стих Писания, где место названо. */
+export const placeVerse = (row: any) => ({
+    canonId: row.canonId,
+    abbr: row.abbr ?? null,
+    canonRef: row.canonRef,
+    chapter: row.chapter,
+    verse: row.verse,
+    context: row.context ?? "",
+});
+
+/** Песнопение, где место названо. */
+export const placeChantRef = (row: any) => ({
+    id: row.id ?? null,
+    unit: row.unit ?? null,
+    memory: row.memory ?? null,
+    context: row.context ?? "",
+});
+
+/** Святой, в чтениях к памяти которого место названо. */
+export const placeSaintRef = (row: any) => ({
+    dneslovId: row.dneslovId ?? null,
+    slug: typeof row.href === "string" ? row.href.replace(/^\/saints\//, "") : null,
+    name: row.name ?? null,
+    texts: row.texts ?? 0,
+});
+
+/**
+ * Оговорка к разделу святых. Приходит с сервера, а не пишется клиентом: связь
+ * выведена, а не размечена, и назвать её родиной или кафедрой было бы неправдой.
+ */
+export const PLACE_SAINTS_CAVEAT =
+    "Место названо в чтениях к памяти этих святых — в житии, в похвальном слове. "
+    + "Это не обязательно родина, кафедра или место кончины: в житии называют и те "
+    + "места, где святой не бывал.";
+
+/**
+ * Обязательная ссылка на источники сведений о местах.
+ *
+ * Не вежливость, а условие лицензий (см. LICENSE-CORPUS.md): OpenBible — CC BY
+ * 4.0, Pleiades — CC BY 3.0, Wikidata — CC0. Отдаётся строкой, чтобы всякий, кто
+ * показывает эти сведения, показал и её, — и чтобы формулировка была одна.
+ */
+export const PLACES_ATTRIBUTION =
+    "Места: OpenBible.info Bible Geocoding (CC BY 4.0), Pleiades (CC BY 3.0), "
+    + "Wikidata (CC0); сведение, сверка со славянским текстом и правка — проект «Уставные чтения».";
 
 /** Молитва в перечне. */
 export const prayerSummary = (row: any) => ({

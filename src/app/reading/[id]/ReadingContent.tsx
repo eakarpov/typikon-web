@@ -1,6 +1,9 @@
 'use client';
 import React, {memo, MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import reactStringReplace from "react-string-replace";
+import ReadingProgressTracker from "@/app/reading/[id]/ReadingProgressTracker";
+import {paragraphAnchor} from "@/lib/personal/progress";
+import {SAINT_MARK, PLACE_MARK, RED_MARK, FOOTNOTE_MARK, splitLinkMark} from "@/lib/markup/patterns";
 import Markdown from "react-markdown";
 import Link from "next/link";
 import './reading.scss';
@@ -352,28 +355,28 @@ const ReadingContent = ({ item }: { item: any }) => {
                             {link.split('|')[1]}
                         </Link>,
                     ),
-                    /\{st\|(.+)}/g,
+                    SAINT_MARK,
                     (results, i, offset) => <Link
                         key={`saint-${i}-${offset}`}
-                        href={`/saints/${results.split('|')[0]}`}
+                        href={`/saints/${splitLinkMark(results).id}`}
                         className="text-blue-800"
                     >
-                        {results.split('|')[1]}
+                        {splitLinkMark(results).label}
                     </Link>,
                 ),
-                /\{pl\|(.+)}/g,
+                PLACE_MARK,
                 (results, i, offset) => <Link
                     key={`place-${i}-${offset}`}
-                    href={`/places/${results.split('|')[0]}`}
+                    href={`/places/${splitLinkMark(results).id}`}
                     className="text-blue-800"
                 >
-                    {results.split('|')[1]}
+                    {splitLinkMark(results).label}
                 </Link>,
             ),
-            /\{(\d+)}/g,
+            FOOTNOTE_MARK,
             (footnote, i, offset) => <FootnoteLinkNew key={`fn-${i}-${offset}`} footnotes={item.footnotes} value={footnote} />,
         ),
-        /\{k\|(.+)}/,
+        RED_MARK,
         (red, i, offset) => (
             <span key={`red-${i}-${offset}`} className="text-red-600">
                 {red}
@@ -528,6 +531,7 @@ const ReadingContent = ({ item }: { item: any }) => {
             className="space-y-1 mt-2 pb-2"
             onContextMenu={onContextMenuHandler}
         >
+            {isAuthorized && item.id && <ReadingProgressTracker textId={item.id} />}
             <div
                 className="context-menu"
                 style={{
@@ -551,6 +555,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                     return (
                         <Container
                             key={`paragraph-${paragraphIndex}`}
+                            id={paragraphAnchor(paragraphIndex)}
                             data-report-container
                             data-paragraph-index={paragraphIndex}
                             className={`reading-text ${

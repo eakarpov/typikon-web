@@ -1,6 +1,11 @@
 import {NextRequest, NextResponse} from "next/server";
 import {getSession} from "@/lib/authorize/sessions";
 import {createProposal} from "@/app/api/texting/service";
+import {isId, isOptionalText, isText} from "@/lib/api/bodyLimits";
+
+// Предложение — целый текст, и текст бывает длинным; предел стоит от ошибки и
+// злоупотребления, а не от настоящей работы.
+const CONTENT_MAX = 1_000_000;
 
 export async function POST(request: NextRequest) {
     const sessionDb = await getSession();
@@ -11,9 +16,9 @@ export async function POST(request: NextRequest) {
         });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
 
-    if (!body.textId || !body.content || !body.content.trim()) {
+    if (!body || !isId(body.textId) || !isText(body.content, CONTENT_MAX) || !isOptionalText(body.comment, 5000)) {
         return new NextResponse(null, {
             status: 400,
         });

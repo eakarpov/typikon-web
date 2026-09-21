@@ -18,6 +18,7 @@ const BASE_URL = SITE_URL;
 const PRIVATE = [
     "/admin",
     "/profile",
+    "/segodnya",
     "/settings",
     "/notes",
     "/login",

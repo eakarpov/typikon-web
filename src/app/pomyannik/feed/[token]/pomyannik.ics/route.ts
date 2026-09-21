@@ -2,6 +2,7 @@ import { feedByToken, listPersons } from "@/lib/pomyannik/service";
 import { shift, todayIso, upcoming, type UpcomingEvent } from "@/lib/pomyannik/reckoning";
 import { buildCalendar, type CalendarEvent } from "@/lib/ical";
 import { ICS_UID_DOMAIN, SITE_HOST, SITE_URL } from "@/utils/site";
+import { migrationEvent } from "@/lib/migration";
 
 // ЛИЧНАЯ ЛЕНТА ПОМЯННИКА.
 //
@@ -72,6 +73,9 @@ export async function GET(_: Request, ctx: { params: Promise<{ token: string }> 
         description: describe(event, feed.withNames),
         ...(feed.withNames && event.personId ? { url: `${BASE_URL}/pomyannik` } : {}),
     }));
+
+    // ПЕРЕЕЗД (временно, до середины января): та же причина, что и в общей ленте.
+    calendar.push(migrationEvent());
 
     const body = buildCalendar({
         name: "Помянник",

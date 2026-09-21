@@ -27,15 +27,27 @@ export async function decrypt(session: string | undefined = '') {
     }
 }
 
+/** Предел жизни сессии; совпадает со сроком JWT в `encrypt`. */
+const SESSION_MAX_SEC = 60 * 60;
+
+/**
+ * Срок считается от времени СЕРВЕРА. Прежде он складывался из присланных
+ * клиентом `timestamp` и `expires_in` — то есть назначался самим клиентом.
+ * `providerExpiresIn` — срок токена у провайдера (у VK), он может только
+ * укоротить сессию, но не продлить её сверх предела.
+ */
 export const createNewSession = async (
     id: string,
-    state: any,
+    state: Record<string, unknown>,
     ip: string,
-    timestamp: number,
     deviceId: string,
     type: string,
+    providerExpiresIn?: number,
 ) => {
-    const expiresAt = new Date(timestamp + state.expires_in * 1000);
+    const lifetimeSec = providerExpiresIn && Number.isFinite(providerExpiresIn) && providerExpiresIn > 0
+        ? Math.min(providerExpiresIn, SESSION_MAX_SEC)
+        : SESSION_MAX_SEC;
+    const expiresAt = new Date(Date.now() + lifetimeSec * 1000);
 
     const client = await clientPromise;
     const db = client.db("typikon-users");

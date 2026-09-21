@@ -1,5 +1,5 @@
 'use client';
-import React, {memo, useEffect, useRef} from "react";
+import React, {memo, useEffect, useRef, useState} from "react";
 import * as VKID from '@vkid/sdk';
 import {TokenResult} from "@vkid/sdk/dist-sdk/types/auth/types";
 import {useAppDispatch, useAppSelector} from "@/lib/hooks";
@@ -7,19 +7,30 @@ import {useRouter} from "next/navigation";
 import {AuthSlice} from "@/lib/store/auth";
 import Script from "next/script";
 import {reportClientError} from "@/lib/reportClientError";
-import { VK_REDIRECT_URL } from "@/utils/site";
+import { isLegacyHost, VK_REDIRECT_URL } from "@/utils/site";
 
 const Login = ({
     vkApp,
     hasVkAuth,
-    codeVerifier,
     googleApp,
+    googleAppLegacy,
 }: {
     vkApp: number;
     hasVkAuth?: boolean;
-    codeVerifier: string;
     googleApp: string;
+    /** ПЕРЕЕЗД, временно: клиент Google, знающий про старый адрес. */
+    googleAppLegacy: string;
 }) => {
+    // Какой клиент Google подставить, видно только в браузере: у Google список
+    // разрешённых источников у каждого клиента свой, и на старом адресе новый
+    // клиент вход не даст. На сервере адрес не спрашиваем нарочно — страница
+    // осталась бы динамической ради трёх месяцев.
+    const [googleClient, setGoogleClient] = useState(googleApp);
+
+    useEffect(() => {
+        if (isLegacyHost(window.location.hostname)) setGoogleClient(googleAppLegacy);
+    }, [googleAppLegacy]);
+
     const buttonRef = useRef(null);
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -34,7 +45,8 @@ const Login = ({
             app: vkApp,
             redirectUrl: VK_REDIRECT_URL,
             responseMode: VKID.ConfigResponseMode.Callback,
-            codeVerifier,
+            // codeVerifier не задаётся: SDK порождает его сам на каждый вход.
+            // Прежде сюда шло одно постоянное значение из окружения сервера.
             source: VKID.ConfigSource.LOWCODE,
             scope: '', // Заполните нужными доступами по необходимости
         });
@@ -139,14 +151,9 @@ const Login = ({
         window.onTelegramAuth = async (userData: any) => {
             const toSave = {
                 type: "Telegram",
-                data: {
-                    data_check_string: Object.entries(userData)
-                        .map(([k, v]) => `${k}=${v}`)
-                        .join('\n'),
-                    hash: userData.hash,
-                    user_id: userData.id,
-                    expiresAt: userData.auth_date + 3600 * 60 * 60,
-                },
+                // Поля виджета как есть: строку для подписи собирает сервер, и
+                // идентификатор он берёт из них же (lib/authorize/telegram).
+                data: { fields: userData },
                 timestamp: Date.now(),
                 deviceId: Navigator.toString(),
             };
@@ -192,7 +199,7 @@ const Login = ({
                 data-callback="handleCredentialResponse"
                 data-use_fedcm_for_prompt="true"
                 data-use_fedcm_for_button="true"
-                data-client_id={googleApp}
+                data-client_id={googleClient}
             ></div>
             <div className="g_id_signin"></div>
         </div>

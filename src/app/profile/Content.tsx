@@ -6,41 +6,39 @@ const Content = ({ item }: { item : any }) => {
     const [surname, setSurname] = React.useState<string>(item.surname || "");
     const [email, setEmail] = React.useState<string>(item.email || "");
     const [phone, setPhone] = React.useState<string>(item.phone || "");
-    const [vkId, setVkId] = React.useState<string>(item.auth.vk?.userId || "");
-    const [googleId, setGoogleId] = React.useState<string>(item.auth.google?.userId || "");
-    const [telegramId, setTelegramId] = React.useState<string>(item.auth.telegram?.userId || "");
+    // Привязки входа показываются, но не набираются: привязка — следствие входа,
+    // проверенного у провайдера, и сервер её из формы не принимает.
+    const vkId: string = item.auth?.vk?.userId || "";
+    const googleId: string = item.auth?.google?.userId || "";
+    const telegramId: string = item.auth?.telegram?.userId || "";
 
     const [isSaved, setIsSaved] = React.useState(false);
+    const [error, setError] = React.useState("");
 
     const onSubmit = () => {
         setIsSaved(false);
-        const data: any = {
+        setError("");
+        const data = {
             name,
             surname,
             email,
             phone,
         };
-        if (vkId) {
-            data["auth.vk.userId"] = vkId;
-        }
-        if (googleId) {
-            data["auth.google.userId"] = googleId;
-        }
-        if (telegramId) {
-            data["auth.telegram.userId"] = telegramId;
-        }
         fetch(`/api/profile`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                id: item.id,
-                data,
-            }),
-        }).then(() => {
-            setIsSaved(true);
-        })
+            body: JSON.stringify({ data }),
+        }).then((res) => {
+            if (res.ok) {
+                setIsSaved(true);
+            } else if (res.status === 409) {
+                setError("Эта почта уже указана в другой учётной записи.");
+            } else {
+                setError("Не сохранено: проверьте поля.");
+            }
+        }).catch(() => setError("Не сохранено: нет связи."));
     };
 
     return (
@@ -51,6 +49,7 @@ const Content = ({ item }: { item : any }) => {
           <button onClick={onSubmit}>
               {isSaved ? "Сохранено!" : "Сохранить"}
           </button>
+          {error && <p role="alert" className="text-red-700">{error}</p>}
           <div className="flex flex-col pr-4">
               <label>
                   Имя
@@ -98,7 +97,8 @@ const Content = ({ item }: { item : any }) => {
               <input
                   className="border-2"
                   value={vkId}
-                  onChange={e => setVkId(e.target.value)}
+                  readOnly
+                  disabled
               />
           </div>
           <div className="flex flex-col pr-4">
@@ -108,7 +108,8 @@ const Content = ({ item }: { item : any }) => {
               <input
                   className="border-2"
                   value={googleId}
-                  onChange={e => setGoogleId(e.target.value)}
+                  readOnly
+                  disabled
               />
           </div>
           <div className="flex flex-col pr-4">
@@ -118,7 +119,8 @@ const Content = ({ item }: { item : any }) => {
               <input
                   className="border-2"
                   value={telegramId}
-                  onChange={e => setTelegramId(e.target.value)}
+                  readOnly
+                  disabled
               />
           </div>
       </div>

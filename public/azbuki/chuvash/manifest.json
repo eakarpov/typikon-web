@@ -1,0 +1,13 @@
+{
+  "alphabet": "chuvash",
+  "version": "0.1.0",
+  "files": {
+    "data": 23529
+  },
+  "counts": {
+    "spellings": 162,
+    "names": 900,
+    "greek": 152,
+    "titla": 35
+  }
+}

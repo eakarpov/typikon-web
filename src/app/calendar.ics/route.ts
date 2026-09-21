@@ -5,6 +5,7 @@ import { TextType, valueTitle } from "@/utils/texts";
 import { DEFAULT_BIBLE_LANGUAGE } from "@/utils/bibleLanguage";
 import {reportError} from "@/lib/reportError";
 import { ICS_UID_DOMAIN, SITE_HOST, SITE_URL } from "@/utils/site";
+import { migrationEvent } from "@/lib/migration";
 
 // Подписной календарь: чтения и памяти дня приезжают в тот календарь, которым человек
 // уже пользуется, без захода на сайт и без приложения.
@@ -118,6 +119,10 @@ export async function GET() {
             if (event) events.push(event);
         }
     }
+
+    // ПЕРЕЕЗД (временно, до середины января). Подписчика ленты мы не знаем ни по
+    // имени, ни по почте: единственная дверь к нему — сама лента.
+    events.push(migrationEvent());
 
     const body = buildCalendar({
         name: "Уставные чтения",

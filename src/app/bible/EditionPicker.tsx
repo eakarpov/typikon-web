@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import type { EditionView } from "@/app/bible/api";
 import { chapterPath } from "@/app/bible/chapterPath";
+import { bibleLanguageShort } from "@/utils/bibleLanguage";
 
 // Выбор изданий для чтения рядом.
 //
@@ -70,30 +71,64 @@ const EditionPicker = ({
         go(codes, base && next.has(base) ? base : null, base && !next.has(base) ? 1 : undefined);
     };
 
+    // Издания сгруппированы по языку, а не свалены в один ряд: на одном языке их
+    // бывает по два — румынский кириллицей и латиницей, чувашский гражданкой и
+    // церковной азбукой, славянский никоновский и дониконовский, — и плоским
+    // списком из девяти ярлыков не видно, что с чем сравниваешь. Порядок групп —
+    // порядок изданий, чтобы славянское осталось первым.
+    const groups: Array<{ lang: string; editions: EditionView[] }> = [];
+    for (const edition of editions) {
+        const group = groups.find((g) => g.lang === edition.langCode);
+        if (group) group.editions.push(edition);
+        else groups.push({ lang: edition.langCode, editions: [edition] });
+    }
+
+    // Ярлык языка ставится только там, где издание в группе не одно: «ГРЕЧ ГРЕЧ»
+    // — повтор, а одинокое «ГРЕЧ» язык и называет. Внутри же группы ярлык из
+    // названия убирается, иначе выйдет «ЦС · ЦС, ЦС стар.» — и остаётся то, чем
+    // издания разнятся: «ЦС · 1751, стар.», «ЧВШ · 2009, ЦРК». Когда после
+    // снятия ярлыка не остаётся ничего, издание называет себя годом: у двух
+    // изданий одного языка он всегда разный, иначе их незачем держать оба.
+    const withinLabel = (edition: EditionView, lang: string, alone: boolean) => {
+        if (alone) return edition.shortTitle;
+        const prefix = bibleLanguageShort(lang);
+        const rest = edition.shortTitle.startsWith(prefix)
+            ? edition.shortTitle.slice(prefix.length).trim()
+            : edition.shortTitle;
+        return rest || (edition.year ? String(edition.year) : edition.shortTitle);
+    };
+
     return (
-        <div className="font-serif text-sm flex flex-wrap items-center gap-x-3 gap-y-1">
-            {editions.map((edition) => {
-                const on = chosen.has(edition.code);
-                const last = on && chosen.size === 1;
-                return (
-                    <label
-                        key={edition.code}
-                        title={last ? "Хотя бы одно издание должно остаться" : edition.title}
-                        className={`inline-flex items-center gap-1 ${last ? "cursor-default" : "cursor-pointer"}`}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={on}
-                            disabled={last}
-                            onChange={() => toggle(edition.code)}
-                            className="accent-red-900"
-                        />
-                        <span className={on ? "text-red-900" : "text-slate-500"}>
-                            {edition.shortTitle}
-                        </span>
-                    </label>
-                );
-            })}
+        <div className="font-serif text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
+            {groups.map(({ lang, editions: within }) => (
+                <span key={lang} className="inline-flex items-center gap-x-2">
+                    {within.length > 1 && (
+                        <span className="text-slate-400 text-xs uppercase">{bibleLanguageShort(lang)}</span>
+                    )}
+                    {within.map((edition) => {
+                        const on = chosen.has(edition.code);
+                        const last = on && chosen.size === 1;
+                        return (
+                            <label
+                                key={edition.code}
+                                title={last ? "Хотя бы одно издание должно остаться" : edition.title}
+                                className={`inline-flex items-center gap-1 ${last ? "cursor-default" : "cursor-pointer"}`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={on}
+                                    disabled={last}
+                                    onChange={() => toggle(edition.code)}
+                                    className="accent-red-900"
+                                />
+                                <span className={on ? "text-red-900" : "text-slate-500"}>
+                                    {withinLabel(edition, lang, within.length === 1)}
+                                </span>
+                            </label>
+                        );
+                    })}
+                </span>
+            ))}
             <span className="text-slate-400">
                 {chosen.size === 1 ? "одно издание" : `рядом: ${chosen.size}`}
             </span>

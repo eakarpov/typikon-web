@@ -48,6 +48,8 @@ export interface DumpLayerInfo {
     id: string;
     title: string;
     license: DumpLicense;
+    /** DOI записи архива, которой выложен слой. Появляется после депозита. */
+    doi?: string;
     attribution: string;
     rationale: string;
     files: DumpFile[];

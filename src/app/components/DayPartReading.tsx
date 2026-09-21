@@ -4,6 +4,7 @@ import {BookOpenIcon, InformationCircleIcon} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import {useCallback, useMemo, useState} from "react";
 import reactStringReplace from "react-string-replace";
+import {SAINT_MARK, PLACE_MARK, RED_MARK, FOOTNOTE_MARK, splitLinkMark} from "@/lib/markup/patterns";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
 import {bibleLanguageSubstitution} from "@/utils/bibleLanguage";
 
@@ -203,11 +204,11 @@ const DayPartReading = ({
     const renderVerseMarkup = (text: string) => reactStringReplace(
         reactStringReplace(
             text,
-            /\{st\|(.+)}/g,
-            (results, i, offset) => <Link key={`saint-${i}-${offset}`} href={`/saints/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
+            SAINT_MARK,
+            (results, i, offset) => <Link key={`saint-${i}-${offset}`} href={`/saints/${splitLinkMark(results).id}`} className="text-blue-800">{splitLinkMark(results).label}</Link>,
         ),
-        /\{pl\|(.+)}/g,
-        (results, i, offset) => <Link key={`place-${i}-${offset}`} href={`/places/${results.split('|')[0]}`} className="text-blue-800">{results.split('|')[1]}</Link>,
+        PLACE_MARK,
+        (results, i, offset) => <Link key={`place-${i}-${offset}`} href={`/places/${splitLinkMark(results).id}`} className="text-blue-800">{splitLinkMark(results).label}</Link>,
     );
 
     const renderPericopeItem = (item: any, index: number) => {
@@ -356,28 +357,28 @@ const DayPartReading = ({
                                             reactStringReplace(
                                                 reactStringReplace(
                                                     paragraph,
-                                                    /\{st\|(.+)}/g,
+                                                    SAINT_MARK,
                                                     (results, i, offset) => <Link
                                                         key={`saint-${i}-${offset}`}
-                                                        href={`/saints/${results.split('|')[0]}`}
+                                                        href={`/saints/${splitLinkMark(results).id}`}
                                                         className="text-blue-800"
                                                     >
-                                                        {results.split('|')[1]}
+                                                        {splitLinkMark(results).label}
                                                     </Link>,
                                                 ),
-                                                /\{pl\|(.+)}/g,
+                                                PLACE_MARK,
                                                 (results, i, offset) => <Link
                                                     key={`place-${i}-${offset}`}
-                                                    href={`/places/${results.split('|')[0]}`}
+                                                    href={`/places/${splitLinkMark(results).id}`}
                                                     className="text-blue-800"
                                                 >
-                                                    {results.split('|')[1]}
+                                                    {splitLinkMark(results).label}
                                                 </Link>,
                                             ),
-                                            /\{(\d+)}/g,
+                                            FOOTNOTE_MARK,
                                             (footnote, i, offset) => <FootnoteLinkNew key={`footnote-${i}-${offset}`} footnotes={item.text.footnotes} value={footnote} />,
                                         ),
-                                        /\{k\|(.+)}/,
+                                        RED_MARK,
                                         (red, i, offset) => (
                                             <span key={`red-${i}-${offset}`} className="text-red-600">
                                                 {red}
