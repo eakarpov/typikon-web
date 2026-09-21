@@ -16,6 +16,8 @@ export const BIBLE_LANGUAGE_OPTIONS: Array<{ code: string; label: string; name: 
     { code: "grc", label: "ГРЕЧ", name: "Греческий" },
     { code: "la", label: "ЛАТ", name: "Латинский" },
     { code: "zh", label: "КИТ", name: "Китайский" },
+    { code: "ka", label: "ГРУЗ", name: "Грузинский" },
+    { code: "en", label: "АНГЛ", name: "Английский" },
     { code: "cv", label: "ЧВШ", name: "Чувашский" },
 ];
 
