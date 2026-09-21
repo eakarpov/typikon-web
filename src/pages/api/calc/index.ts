@@ -22,5 +22,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } catch (e) {
             res.status(500).end();
         }
+        return;
     }
+
+    // Без этой ветки обработчик просто возвращался, не закрыв ответ: запрос
+    // висел до таймаута, занимая соединение, а снаружи это выглядело как
+    // мёртвый сайт. Обычный GET по этому адресу провисал две минуты.
+    res.setHeader("Allow", "POST");
+    res.status(405).end();
 };

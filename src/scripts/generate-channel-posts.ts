@@ -57,9 +57,27 @@ const parseArgs = () => {
     };
 };
 
-const fetchDay = async (alias: string): Promise<any | null> => {
-    const res = await fetch(`${API_BASE_URL}/api/v1/days/${alias}`);
-    if (!res.ok) return null;
+/**
+ * День берётся у самого сайта, а не из базы, — и это единственное место, где
+ * скрипт зависит от того, что сайт поднят и отвечает.
+ *
+ * Прежде и недоступный сайт, и отказ ручки, и день без чтений сводились к одному
+ * `null`, а `null` вёл к тихому выходу с нулевым кодом. Крон при этом молчал, и
+ * поломка (ручка дня отвечала 400 из-за упёршейся в предел памяти агрегации)
+ * выглядела как «сегодня нечего публиковать» — ровно столько, сколько никто не
+ * смотрел в базу. Поэтому «не ответил» — это исключение, а «ответил, но чтений
+ * нет» — обычный ход дела.
+ */
+const fetchDay = async (alias: string): Promise<any> => {
+    let res: Response;
+    try {
+        res = await fetch(`${API_BASE_URL}/api/v1/days/${alias}`);
+    } catch (e) {
+        throw new Error(`${API_BASE_URL} не отвечает (${(e as Error).message}). Сайт поднят?`);
+    }
+    if (!res.ok) {
+        throw new Error(`${API_BASE_URL}/api/v1/days/${alias} ответил ${res.status}`);
+    }
     return res.json();
 };
 
@@ -68,7 +86,10 @@ const generateForDate = async (db: Db, deliveryDate: Date) => {
     const day = await fetchDay(alias);
     const items = (day?.song6?.items || []).filter((i: any) => i?.text);
 
-    if (!items.length) return;
+    if (!items.length) {
+        console.log(`${alias}: проложных чтений нет — пропускаю`);
+        return;
+    }
 
     const picked = items.slice(0, 2);
     const slots: { item: any; slot: ChannelPostSlot; scheduledAt: Date }[] =
@@ -119,6 +140,7 @@ const main = async () => {
         await generateForDate(db, date);
     }
 
+    console.log("готово");
     process.exit(0);
 };
 

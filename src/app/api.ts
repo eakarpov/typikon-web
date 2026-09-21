@@ -63,7 +63,11 @@ const loadCount = async (): Promise<[any, any]> => {
             .aggregate([
                 { $count: "Total" }
             ]).toArray();
-        return [texts[0]?.Total, null];
+        // Ноль, а не undefined: на пустой коллекции $count отдаёт пустой массив,
+        // и прежнее `texts[0]?.Total` давало undefined БЕЗ ошибки. Проверка
+        // `if (error)` в ContentMoreThan такое не ловит, и в разметку уходило
+        // `Math.floor(undefined / 10) * 10` — то есть NaN на главной странице.
+        return [texts[0]?.Total ?? 0, null];
     } catch (e) {
         reportError(e, { where: "app/api#loadCount" });
         return [null, e];

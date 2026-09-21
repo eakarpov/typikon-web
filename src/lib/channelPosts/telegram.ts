@@ -31,15 +31,34 @@ export const describeFetchError = (e: unknown): string => {
     return `${err.message}: ${cause.code ? `[${cause.code}] ` : ""}${cause.message || cause}`;
 };
 
+/**
+ * Приведение канала к тому виду, который Telegram понимает.
+ *
+ * `chat_id` бывает двух видов: числовой (у каналов он отрицательный) и
+ * `@username`. Имя БЕЗ собаки каналом не считается, и в ответ приходит
+ * «Bad Request: chat not found» — сообщение, по которому думаешь на права бота
+ * или на неверный канал, а не на один недостающий знак в окружении.
+ *
+ * Проверить это раньше было негде: до переезда api.telegram.org с прода не был
+ * доступен вовсе, и значение переменной ни разу не доходило до Telegram.
+ */
+export const normalizeChatId = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.startsWith("@")) return trimmed;
+    if (/^-?\d+$/.test(trimmed)) return trimmed;
+    return `@${trimmed}`;
+};
+
 export const sendChannelPostToTelegram = async (
     post: TelegramPostInput,
     botToken: string,
     channelId: string,
 ) => {
     const method = post.imageUrl ? "sendPhoto" : "sendMessage";
+    const chatId = normalizeChatId(channelId);
     const body = post.imageUrl
-        ? { chat_id: channelId, photo: post.imageUrl, caption: post.text, parse_mode: "HTML" }
-        : { chat_id: channelId, text: post.text, parse_mode: "HTML", disable_web_page_preview: true };
+        ? { chat_id: chatId, photo: post.imageUrl, caption: post.text, parse_mode: "HTML" }
+        : { chat_id: chatId, text: post.text, parse_mode: "HTML", disable_web_page_preview: true };
 
     let res: Response;
     try {
