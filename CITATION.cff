@@ -5,8 +5,12 @@
 # Сам корпус берётся выгрузкой — https://www.typikon.su/data, — и у каждой её
 # версии свой постоянный адрес вида /dump/2026-09-07/.
 #
-# Поле doi заполняется, когда версия положена в архив, выдающий DOI. До того
-# ссылка идёт на адрес версии: он тоже постоянный, но переезда домена не переживёт.
+# Здесь стоит КОНЦЕПТУАЛЬНЫЙ DOI: он всегда ведёт на последнюю версию, а
+# репозиторий версии не имеет — у него есть только «сейчас». DOI конкретной
+# версии стоит в манифесте самой выгрузки и в src/scripts/lib/deposits.ts.
+#
+# Только он и переживёт переезд домена: адрес версии тоже постоянный, но
+# постоянен он ровно настолько, насколько жив домен.
 cff-version: 1.2.0
 message: "Если корпус пригодился в работе, сошлитесь на него так."
 type: dataset
@@ -21,9 +25,10 @@ authors:
   - family-names: Карпов
     given-names: Егор
     orcid: "https://orcid.org/0000-0002-2394-3373"
-url: "https://www.typikon.su"
+doi: "10.5281/zenodo.22883964"
+url: "https://www.typikon.info"
 repository-code: "https://github.com/eakarpov/typikon-web"
-repository-artifact: "https://www.typikon.su/dump/latest/"
+repository-artifact: "https://www.typikon.info/dump/latest/"
 license: CC-BY-4.0
 keywords:
   - церковнославянский язык
