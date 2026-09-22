@@ -49,17 +49,8 @@ export const normalizeChatId = (value: string): string => {
     return `@${trimmed}`;
 };
 
-export const sendChannelPostToTelegram = async (
-    post: TelegramPostInput,
-    botToken: string,
-    channelId: string,
-) => {
-    const method = post.imageUrl ? "sendPhoto" : "sendMessage";
-    const chatId = normalizeChatId(channelId);
-    const body = post.imageUrl
-        ? { chat_id: chatId, photo: post.imageUrl, caption: post.text, parse_mode: "HTML" }
-        : { chat_id: chatId, text: post.text, parse_mode: "HTML", disable_web_page_preview: true };
-
+/** Один вызов к Telegram. Сетевой сбой и отказ самого Telegram различаются текстом. */
+const call = async (botToken: string, method: string, body: Record<string, unknown>) => {
     let res: Response;
     try {
         res = (await undiciFetch(`${TELEGRAM_API_BASE}/bot${botToken}/${method}` as RequestInfo, {
@@ -77,4 +68,44 @@ export const sendChannelPostToTelegram = async (
         throw new Error(`Telegram: ${data.description || res.status}`);
     }
     return data.result;
+};
+
+export const sendChannelPostToTelegram = async (
+    post: TelegramPostInput,
+    botToken: string,
+    channelId: string,
+) => {
+    const chatId = normalizeChatId(channelId);
+
+    // КАРТИНКА НЕ ДОЛЖНА УНОСИТЬ С СОБОЙ ПОСТ. Прежде отказ на ней означал, что
+    // в канал не ушло вообще ничего, а пост оседал в `failed` и больше не
+    // повторялся. Причин отказа именно на картинке уже известно две:
+    //
+    //   * формат. В святцах все изображения в webp, а его Telegram считает
+    //     форматом стикеров и как фотографию по ссылке не берёт — отвечает
+    //     «failed to get HTTP URL content»;
+    //   * длина подписи. У фотографии подпись ограничена 1024 знаками, тогда
+    //     как сам пост бывает вчетверо длиннее.
+    //
+    // Обе чинятся отдельно и по-разному; здесь же — правило, которое верно при
+    // любом исходе: лучше пост без картинки, чем ничего.
+    if (post.imageUrl) {
+        try {
+            return await call(botToken, "sendPhoto", {
+                chat_id: chatId,
+                photo: post.imageUrl,
+                caption: post.text,
+                parse_mode: "HTML",
+            });
+        } catch (e) {
+            console.warn(`картинка не ушла (${(e as Error).message}) — отправляю пост без неё`);
+        }
+    }
+
+    return call(botToken, "sendMessage", {
+        chat_id: chatId,
+        text: post.text,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+    });
 };
