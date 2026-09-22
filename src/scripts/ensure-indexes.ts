@@ -105,8 +105,9 @@ const SPECS: Spec[] = [
     { db: "typikon", collection: "signs", key: { month: 1, date: 1, order: 1 },
       why: "знаки Типикона на день; тот же ключ обслуживает сортировку списка" },
 
-    { db: "typikon", collection: "channelPosts", key: { status: 1, scheduledAt: 1 },
-      why: "публикатор выбирает готовые посты с наступившим временем" },
+    { db: "typikon-users", collection: "channelPosts", key: { status: 1, scheduledAt: 1 },
+      why: "публикатор выбирает готовые посты с наступившим временем; коллекция в typikon-users, "
+         + "потому что выкладка корпуса накатывается с --drop и стирала бы черновики (lib/channelPosts/db)" },
 
     // --- typikon-news: новости об обновлениях
     { db: "typikon-news", collection: "posts", key: { alias: 1 }, options: { unique: true },

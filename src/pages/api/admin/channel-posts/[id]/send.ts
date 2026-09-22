@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import clientPromise from "@/lib/mongodb";
+import { channelPostsDb } from "@/lib/channelPosts/db";
 import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 import { sendChannelPostToTelegram } from "@/lib/channelPosts/telegram";
@@ -29,8 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const client = await clientPromise;
-        const db = client.db("typikon");
+        const db = await channelPostsDb();
 
         const post = await db.collection("channelPosts").findOne({ _id: new ObjectId(id) });
         if (!post) {
@@ -48,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(200).end();
     } catch (e) {
         reportError(e, { where: "pages/api/admin/channel-posts/[id]/send#handler", source: "api" });
-        await (await clientPromise).db("typikon").collection("channelPosts").updateOne(
+        await (await channelPostsDb()).collection("channelPosts").updateOne(
             { _id: new ObjectId(id) },
             { $set: { status: "failed", publishError: String((e as Error)?.message || e) } },
         );

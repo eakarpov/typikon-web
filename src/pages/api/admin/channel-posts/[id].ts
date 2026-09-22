@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import clientPromise from "@/lib/mongodb";
+import { channelPostsDb } from "@/lib/channelPosts/db";
 import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
 import {reportError} from "@/lib/reportError";
@@ -20,8 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const id = req.query.id as string;
 
     try {
-        const client = await clientPromise;
-        const db = client.db("typikon");
+        const db = await channelPostsDb();
 
         if (req.method === 'DELETE') {
             await db.collection("channelPosts").deleteOne({ _id: new ObjectId(id) });

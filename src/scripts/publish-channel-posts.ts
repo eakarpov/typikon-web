@@ -10,7 +10,7 @@
 //   TELEGRAM_BOT_TOKEN  — уже есть в .env.production
 //   TELEGRAM_CHANNEL_ID — @username канала или числовой chat_id, бот должен быть администратором
 import "@/scripts/lib/env";
-import clientPromise from "@/lib/mongodb";
+import { channelPostsDb } from "@/lib/channelPosts/db";
 import { ChannelPostDTO } from "@/types/dto/channelPost";
 import { sendChannelPostToTelegram } from "@/lib/channelPosts/telegram";
 
@@ -38,8 +38,7 @@ const main = async () => {
         throw new Error("Не заданы TELEGRAM_BOT_TOKEN / TELEGRAM_CHANNEL_ID");
     }
 
-    const client = await clientPromise;
-    const db = client.db("typikon");
+    const db = await channelPostsDb();
     const now = new Date();
 
     const duePosts = await db

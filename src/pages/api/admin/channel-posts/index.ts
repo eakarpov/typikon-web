@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { channelPostsDb } from "@/lib/channelPosts/db";
 import { checkRightsBack } from "@/lib/admin/back";
 import {reportError} from "@/lib/reportError";
 
@@ -16,8 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!(await checkRightsBack(req, res))) return;
 
     try {
-        const client = await clientPromise;
-        const db = client.db("typikon");
+        const db = await channelPostsDb();
 
         if (req.method === 'POST') {
             const data = req.body;

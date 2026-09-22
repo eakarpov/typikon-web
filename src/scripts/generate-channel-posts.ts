@@ -22,7 +22,7 @@
 // где используется тот же сдвиг для "сегодня" на сайте.
 import "@/scripts/lib/env";
 import { Db } from "mongodb";
-import clientPromise from "@/lib/mongodb";
+import { channelPostsDb } from "@/lib/channelPosts/db";
 import { getMonth } from "@/lib/common/date";
 import { getZeroedNumber } from "@/utils/dates";
 import { buildChannelPost } from "@/scripts/lib/buildPost";
@@ -132,8 +132,10 @@ const generateForDate = async (db: Db, deliveryDate: Date) => {
 
 const main = async () => {
     const { daysAhead, from } = parseArgs();
-    const client = await clientPromise;
-    const db = client.db("typikon");
+    // Посты живут в typikon-users, а не рядом с корпусом: выкладка корпуса
+    // накатывается с --drop и стирала бы подготовленные черновики
+    // (src/lib/channelPosts/db.ts).
+    const db = await channelPostsDb();
 
     for (let i = 0; i <= daysAhead; i++) {
         const date = new Date(+from + i * 24 * 60 * 60 * 1000);

@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/mongodb";
+import { channelPostsDb } from "@/lib/channelPosts/db";
 import {reportError} from "@/lib/reportError";
 
 const toDTO = ({ _id, ...post }: any) => ({ ...post, id: _id.toString() });
@@ -12,8 +12,7 @@ const toDTO = ({ _id, ...post }: any) => ({ ...post, id: _id.toString() });
  */
 export const getItems = async (): Promise<[any[] | null, any]> => {
     try {
-        const client = await clientPromise;
-        const db = client.db("typikon");
+        const db = await channelPostsDb();
 
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const posts = await db
@@ -39,8 +38,7 @@ export const getItems = async (): Promise<[any[] | null, any]> => {
  */
 export const getArchive = async (): Promise<[any[] | null, any]> => {
     try {
-        const client = await clientPromise;
-        const db = client.db("typikon");
+        const db = await channelPostsDb();
 
         const posts = await db
             .collection("channelPosts")
