@@ -1,7 +1,11 @@
 // Отправка поста в Telegram — общая логика для крона (src/scripts/publish-channel-posts.ts)
 // и для ручной кнопки "Отправить сейчас" в /admin/channel-posts (используется прямо из Next.js,
 // поэтому без импортов из src/scripts — там свой бутстрап окружения через @next/env).
-import { Agent, ProxyAgent, fetch as undiciFetch, RequestInfo, RequestInit } from "undici";
+// FormData берётся ИЗ UNDICI, а не глобальная. Они разные объекты, и undici
+// проверяет тело на свою: глобальную он не узнаёт и отправляет строкой
+// «[object FormData]» — семнадцать байт вместо картинки, причём молча, с
+// успешным ответом на том конце.
+import { Agent, ProxyAgent, fetch as undiciFetch, FormData, RequestInfo, RequestInit } from "undici";
 
 export interface TelegramPostInput {
     text: string;
@@ -49,15 +53,70 @@ export const normalizeChatId = (value: string): string => {
     return `@${trimmed}`;
 };
 
+/**
+ * Картинка уходит ФАЙЛОМ, а не ссылкой.
+ *
+ * По ссылке Telegram забирает её сам — и на webp отвечает «failed to get HTTP
+ * URL content»: webp у него формат стикеров, фотографией по URL он его не
+ * берёт. А в снимке святцев все изображения именно webp, других там нет вовсе.
+ * Те же байты, отправленные multipart, он принимает и раскладывает по своим
+ * размерам — проверено живым ботом.
+ *
+ * TLS-послабление здесь своё, хотя точно такое же есть в scripts/lib/dneslov:
+ * у dneslov.org неполная цепочка сертификатов, а картинка лежит на их же CDN.
+ * Импортировать оттуда нельзя — этот модуль зовётся и из Next (см. шапку файла),
+ * а там свой бутстрап окружения.
+ */
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+let plainAgent: Agent | null = null;
+let insecureAgent: Agent | null = null;
+
+const imageDispatcher = () => {
+    if (process.env.DNESLOV_INSECURE_TLS === "true") {
+        insecureAgent ||= new Agent({ connect: { rejectUnauthorized: false } });
+        return insecureAgent;
+    }
+    plainAgent ||= new Agent();
+    return plainAgent;
+};
+
+const downloadImage = async (url: string): Promise<{ blob: Blob; filename: string } | null> => {
+    try {
+        const res = (await undiciFetch(url as RequestInfo, {
+            dispatcher: imageDispatcher(),
+            signal: AbortSignal.timeout(20_000),
+        } as RequestInit)) as unknown as Response;
+        if (!res.ok) {
+            console.warn(`картинка ${url}: ответ ${res.status}`);
+            return null;
+        }
+
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        if (bytes.byteLength > MAX_PHOTO_BYTES) {
+            console.warn(`картинка ${url}: ${bytes.byteLength} байт — больше предела Telegram`);
+            return null;
+        }
+
+        return {
+            blob: new Blob([bytes], { type: res.headers.get("content-type") || "application/octet-stream" }),
+            // Имя файла Telegram тоже смотрит, поэтому берём последний кусок пути.
+            filename: url.split("/").pop()?.split("?")[0] || "image",
+        };
+    } catch (e) {
+        console.warn(`картинка ${url} не скачалась: ${describeFetchError(e)}`);
+        return null;
+    }
+};
+
 /** Один вызов к Telegram. Сетевой сбой и отказ самого Telegram различаются текстом. */
-const call = async (botToken: string, method: string, body: Record<string, unknown>) => {
+const request = async (botToken: string, method: string, init: RequestInit) => {
     let res: Response;
     try {
         res = (await undiciFetch(`${TELEGRAM_API_BASE}/bot${botToken}/${method}` as RequestInfo, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
             dispatcher: getDispatcher(),
+            ...init,
         } as RequestInit)) as unknown as Response;
     } catch (e) {
         throw new Error(`Не удалось достучаться до ${TELEGRAM_API_BASE}: ${describeFetchError(e)}`);
@@ -70,6 +129,17 @@ const call = async (botToken: string, method: string, body: Record<string, unkno
     return data.result;
 };
 
+const call = (botToken: string, method: string, body: Record<string, unknown>) =>
+    request(botToken, method, {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    } as RequestInit);
+
+// Content-Type для multipart проставляет сам fetch — вместе с границей частей,
+// которую вручную не угадать.
+const callForm = (botToken: string, method: string, form: FormData) =>
+    request(botToken, method, { body: form } as unknown as RequestInit);
+
 export const sendChannelPostToTelegram = async (
     post: TelegramPostInput,
     botToken: string,
@@ -81,25 +151,29 @@ export const sendChannelPostToTelegram = async (
     // в канал не ушло вообще ничего, а пост оседал в `failed` и больше не
     // повторялся. Причин отказа именно на картинке уже известно две:
     //
-    //   * формат. В святцах все изображения в webp, а его Telegram считает
-    //     форматом стикеров и как фотографию по ссылке не берёт — отвечает
-    //     «failed to get HTTP URL content»;
+    //   * формат — вылечен отправкой файлом (см. downloadImage выше);
     //   * длина подписи. У фотографии подпись ограничена 1024 знаками, тогда
-    //     как сам пост бывает вчетверо длиннее.
+    //     как сам пост бывает вчетверо длиннее, и такой уходит без картинки.
+    //     Предугадывать эту длину здесь нельзя: Telegram считает знаки уже
+    //     разобранного текста, без разметки, и наша оценка была бы завышенной.
+    //     Поэтому решение оставлено ему, а нам остаётся откат.
     //
-    // Обе чинятся отдельно и по-разному; здесь же — правило, которое верно при
-    // любом исходе: лучше пост без картинки, чем ничего.
-    if (post.imageUrl) {
+    // Правило же верно при любом исходе: лучше пост без картинки, чем ничего.
+    const image = post.imageUrl ? await downloadImage(post.imageUrl) : null;
+
+    if (image) {
         try {
-            return await call(botToken, "sendPhoto", {
-                chat_id: chatId,
-                photo: post.imageUrl,
-                caption: post.text,
-                parse_mode: "HTML",
-            });
+            const form = new FormData();
+            form.set("chat_id", chatId);
+            form.set("caption", post.text);
+            form.set("parse_mode", "HTML");
+            form.set("photo", image.blob, image.filename);
+            return await callForm(botToken, "sendPhoto", form);
         } catch (e) {
             console.warn(`картинка не ушла (${(e as Error).message}) — отправляю пост без неё`);
         }
+    } else if (post.imageUrl) {
+        console.warn("картинка не получена — отправляю пост без неё");
     }
 
     return call(botToken, "sendMessage", {
