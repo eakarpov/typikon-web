@@ -88,6 +88,7 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
                     // Mongo целиком туда не сериализуется (ObjectId, Date).
                     facts={{
                         name: saint?.name ?? null,
+                        uri: saint?.uri ?? null,
                         altNames: saint?.altNames ?? [],
                         type: saint?.type ?? null,
                         orders: saint?.orders ?? [],

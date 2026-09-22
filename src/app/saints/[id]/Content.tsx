@@ -15,6 +15,8 @@ const settled = <T,>(result: PromiseSettledResult<T> | undefined, fallback: T): 
 export interface SaintFacts {
     /** Наше основное именование. Оно главнее того, как памятью подписаны святцы. */
     name: string | null;
+    /** Адрес лица по спеке корпуса, если он уже проставлен. */
+    uri: string | null;
     altNames: string[];
     type: string | null;
     orders: string[];
@@ -50,6 +52,7 @@ const Content = async ({ id, itemPromise, facts }: {
     // Дни памяти — от СЕГОДНЯШНЕГО дня: карточку читают, чтобы узнать когда.
     const card = facts && {
         name: facts.name,
+        uri: facts.uri,
         altNames: facts.altNames,
         kind: kindLabel(facts.type),
         orders: facts.orders.map(orderLabel),

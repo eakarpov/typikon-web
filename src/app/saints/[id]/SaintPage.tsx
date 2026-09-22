@@ -100,6 +100,8 @@ const Row = ({ name, children }: { name: string; children: React.ReactNode }) =>
 
 export interface SaintCard {
     name: string | null;
+    /** Адрес лица по спеке корпуса; null — ещё не проставлен. */
+    uri: string | null;
     altNames: string[];
     /** «собор святых», «святыня» — у обычного лица подписи нет. */
     kind: string | null;
@@ -109,6 +111,65 @@ export interface SaintCard {
     roundelUrl: string | null;
     images: { url: string; thumbUrl: string | null; title: string | null }[];
 }
+
+/**
+ * Адрес лица — строкой, которую можно взять и вставить.
+ *
+ * ЗАЧЕМ ОН НА СТРАНИЦЕ. Сослаться на святого до сих пор можно было только
+ * ссылкой на эту страницу, то есть на наш сайт. Адрес по спеке корпуса
+ * (typikon-rules, spec/saint.md) называет само ЛИЦО и работает у того, кто
+ * про нас не знает: `saint:ioannes/-/damascus/777/-` — Иоанн Дамаскин, и
+ * это читается без базы.
+ *
+ * ПОКАЗЫВАЕМ ТОЛЬКО ПРОСТАВЛЕННЫЙ. Пустое место лучше обещания: у трёхсот
+ * записей адреса пока нет — имени нет в словаре или под одним адресом
+ * сошлись тёзки, — и рисовать там прочерк значило бы предлагать читателю
+ * скопировать пустоту.
+ *
+ * Копирование — не украшение: адрес длинный, набирать его руками никто не
+ * станет, а выделять мышью в строке с дефисами неудобно.
+ */
+const SaintUri = ({ uri }: { uri: string }) => {
+    const [copied, setCopied] = useState(false);
+
+    const copy = useCallback(() => {
+        // Буфер бывает недоступен: старый браузер, страница не по https.
+        // Тогда молчим и оставляем текст выделяемым — он выбран целиком,
+        // и копировать его руками всё ещё можно.
+        navigator.clipboard?.writeText(uri).then(
+            () => setCopied(true),
+            () => undefined,
+        );
+    }, [uri]);
+
+    // Отметка «скопировано» гаснет сама: иначе она остаётся на странице
+    // навсегда и начинает врать про следующее нажатие.
+    useEffect(() => {
+        if (!copied) return;
+        const t = setTimeout(() => setCopied(false), 1500);
+        return () => clearTimeout(t);
+    }, [copied]);
+
+    return (
+        <p className="font-serif text-sm text-slate-500 flex flex-row items-center gap-2 mt-1">
+            <span className="text-slate-400">Адрес лица:</span>
+            <code
+                onClick={copy}
+                title="Нажмите, чтобы скопировать"
+                className="font-mono text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 cursor-pointer select-all"
+            >
+                {uri}
+            </code>
+            <button
+                type="button"
+                onClick={copy}
+                className="text-amber-800 hover:underline text-xs"
+            >
+                {copied ? "скопировано" : "копировать"}
+            </button>
+        </p>
+    );
+};
 
 enum COLLECTION_TYPE {
     BOOK,
@@ -183,6 +244,7 @@ const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [
                                 Известна также как: {altNames.join(", ")}
                             </p>
                         )}
+                        {card?.uri && <SaintUri uri={card.uri} />}
                         {item?.slug && (
                             <span className="font-serif text-amber-800 cursor-pointer flex flex-row items-center text-sm">
                                 <Link target="_blank" href={`https://dneslov.org/${item.slug}?c=днес,рпц`}>
