@@ -81,7 +81,7 @@ const TextLinksContent = async ({ item }: { item: any }) => {
                 <Row label="Упоминаются:">
                     {links.mentions.map((mention) => (
                         <Link
-                            key={mention.dneslovId}
+                            key={mention.slug ?? mention.dneslovId ?? mention.title}
                             className="font-serif text-amber-800 border rounded border-slate-300 px-2 py-0.5 text-sm hover:underline"
                             href={`/saints/${mention.slug ?? mention.dneslovId}`}
                         >

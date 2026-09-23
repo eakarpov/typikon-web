@@ -305,7 +305,7 @@ const PlacePage = async ({ params }: Props) => {
                     </p>
                     <ul className="font-serif flex flex-wrap gap-x-4">
                         {saints.map((s) => (
-                            <li key={s.dneslovId}>
+                            <li key={s.key}>
                                 <Link href={s.href} className="text-amber-800 hover:underline">{s.name}</Link>
                                 {s.texts > 1 && <span className="text-slate-500 text-sm"> ({s.texts})</span>}
                             </li>

@@ -66,26 +66,26 @@ const SaintGroupItem = ({ group }: { group: SaintGroup }) => {
         await fetch("/api/admin/mentions/bulk", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dneslovId: group.dneslovId, status }),
+            // Группа решается по ключу каталога; святой вне каталога — по номеру.
+            body: JSON.stringify(group.saintId ? { saintId: group.saintId, status } : { dneslovId: group.dneslovId, status }),
         });
         setBusy(false);
         router.refresh();
-    }, [group.dneslovId, router]);
+    }, [group.saintId, group.dneslovId, router]);
 
     return (
         <div className={`border border-slate-300 rounded p-2 flex flex-col gap-2 ${busy ? "opacity-50" : ""}`}>
             <div className="flex flex-row items-baseline gap-3 flex-wrap">
                 <button type="button" onClick={() => setOpen(!open)} className="font-bold text-left">
-                    {open ? "▾" : "▸"} {group.saintTitle || `dneslov ${group.dneslovId}`}
+                    {open ? "▾" : "▸"} {group.saintTitle || `святой № ${group.dneslovId}`}
                 </button>
-                <a
-                    href={`https://dneslov.org/api/v0/memories/${group.dneslovId}.json`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs underline text-slate-500"
-                >
-                    dneslov {group.dneslovId}
-                </a>
+                {group.slug ? (
+                    <a href={`/saints/${group.slug}`} target="_blank" rel="noreferrer" className="text-xs underline text-slate-500">
+                        страница святого
+                    </a>
+                ) : (
+                    <span className="text-xs text-slate-500">в каталоге нет — святой № {group.dneslovId}</span>
+                )}
                 <span className="text-sm text-slate-600">
                     кандидатов {group.candidates.length}
                     {group.pending > 0 && ` · не разобрано ${group.pending}`}

@@ -50,7 +50,7 @@ const Content = async ({
             )}
 
             {groups.map((g) => (
-                <SaintGroupItem key={g.dneslovId} group={g} />
+                <SaintGroupItem key={g.key} group={g} />
             ))}
         </div>
     );

@@ -420,7 +420,7 @@ const AdminEditor = ({ value }: any) => {
                 </div>
                 <div className="flex flex-col pr-4">
                     <label>
-                        Идентификатор святого
+                        Святой (ссылка на страницу или адрес в каталоге)
                     </label>
                     <input
                         className="border-2"

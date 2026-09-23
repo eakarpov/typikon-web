@@ -154,11 +154,16 @@ export interface TextLink {
 }
 
 export interface TextLinks {
-    memory: { dneslovId: string; slug: string | null; title: string; siblings: TextLink[]; total: number } | null;
-    mentions: { dneslovId: string; slug: string | null; title: string }[];
+    /** `dneslovId` — только для памяти вне каталога: ссылка тогда идёт по номеру. */
+    memory: { dneslovId: string | null; slug: string | null; title: string; siblings: TextLink[]; total: number } | null;
+    mentions: { dneslovId: string | null; slug: string | null; title: string }[];
 }
 
-const loadSiblings = cached(async (dneslovId: string, selfId: string) => {
+/**
+ * Другие тексты той же памяти — по ключу каталога (`texts.saintId`), а для
+ * текстов, ещё не сверенных с каталогом, по номеру святцев.
+ */
+const loadSiblings = cached(async (saintId: string | null, dneslovId: string, selfId: string) => {
     const client = await clientPromise;
     const db = client.db("typikon");
 
@@ -166,7 +171,7 @@ const loadSiblings = cached(async (dneslovId: string, selfId: string) => {
         .collection("texts")
         .find(
             {
-                dneslovId,
+                ...(saintId ? { saintId } : { dneslovId }),
                 _id: { $ne: new ObjectId(selfId) },
                 readiness: { $in: LINKABLE },
                 name: { $nin: ["", null] },
@@ -210,40 +215,62 @@ export const getTextSource = cached(async (link: string | null): Promise<LibFond
 export const getTextLinks = async (item: any): Promise<TextLinks> => {
     const dneslovId: string = item?.dneslovId || "";
     const mentionIds: string[] = Array.isArray(item?.mentionIds) ? item.mentionIds.filter(Boolean) : [];
+    // Ключи каталога (@/lib/textSaints): по ним имя и адрес берутся из записи
+    // каталога напрямую, и святой нашего корпуса без номера святцев тоже виден.
+    const saintId: string | null = item?.saintId && ObjectId.isValid(item.saintId) ? String(item.saintId) : null;
+    const mentionSaintIds: string[] = Array.isArray(item?.mentionSaintIds) ? item.mentionSaintIds.filter(Boolean) : [];
 
-    if (!dneslovId && !mentionIds.length) {
+    if (!dneslovId && !mentionIds.length && !saintId && !mentionSaintIds.length) {
         return { memory: null, mentions: [] };
     }
 
     try {
-        const ids = [dneslovId, ...mentionIds].filter(Boolean);
+        const keys = [...new Set([saintId, ...mentionSaintIds].filter(Boolean))] as string[];
+        const cards = keys.length
+            ? await (await clientPromise).db("typikon").collection("saints")
+                .find({ _id: { $in: keys.map((k) => new ObjectId(k)) } }, { projection: { name: 1, slug: 1 } })
+                .toArray()
+            : [];
+        const card = new Map(cards.map((c: any) => [String(c._id), { name: c.name as string, slug: (c.slug as string) ?? null }]));
+
+        // Номера — только для того, что ключом не покрыто: память вне каталога
+        // или текст, ещё не сверенный.
+        const numbers = [
+            ...(!saintId && dneslovId ? [dneslovId] : []),
+            ...(mentionSaintIds.length ? [] : mentionIds),
+        ];
 
         // Имена и адреса — из своего каталога. Раньше здесь стоял saintTitles(), то есть
         // поход в чужие святцы на КАЖДОЕ открытие чтения; теперь сеть остаётся только
         // запасным путём для памятей, до которых каталог ещё не дошёл.
         const [siblings, names, slugs] = await Promise.all([
-            dneslovId && item?.id ? loadSiblings(dneslovId, item.id) : Promise.resolve([]),
-            saintNames(ids),
-            saintSlugs(ids),
+            (saintId || dneslovId) && item?.id ? loadSiblings(saintId, dneslovId, item.id) : Promise.resolve([]),
+            numbers.length ? saintNames(numbers) : Promise.resolve({} as Record<string, string>),
+            numbers.length ? saintSlugs(numbers) : Promise.resolve({} as Record<string, string>),
         ]);
 
-        const missing = ids.filter((id) => !names[id]);
+        const missing = numbers.filter((id) => !names[id]);
         const fallback = missing.length ? await saintTitles(missing) : {};
         const titleOf = (id: string) => names[id] || fallback[id] || saintFallbackTitle(id);
 
+        const memoryCard = saintId ? card.get(saintId) : null;
+        const memory = memoryCard
+            ? { dneslovId: null, slug: memoryCard.slug, title: memoryCard.name }
+            : dneslovId ? { dneslovId, slug: slugs[dneslovId] ?? null, title: titleOf(dneslovId) } : null;
+
         return {
-            memory: dneslovId
+            memory: memory
                 ? {
-                    dneslovId,
-                    slug: slugs[dneslovId] ?? null,
-                    title: titleOf(dneslovId),
+                    ...memory,
                     // Показываем горсть, а не весь список: у самых представленных
                     // памятей текстов под два десятка, и это уже не связь, а оглавление.
                     siblings: siblings.slice(0, 5),
                     total: siblings.length,
                 }
                 : null,
-            mentions: mentionIds.map((id) => ({ dneslovId: id, slug: slugs[id] ?? null, title: titleOf(id) })),
+            mentions: mentionSaintIds.length
+                ? mentionSaintIds.map((k) => card.get(k)).filter(Boolean).map((c) => ({ dneslovId: null, slug: c!.slug, title: c!.name }))
+                : mentionIds.map((id) => ({ dneslovId: id, slug: slugs[id] ?? null, title: titleOf(id) })),
         };
     } catch (e) {
         reportError(e, { where: "app/reading/[id]/api#getTextLinks" });

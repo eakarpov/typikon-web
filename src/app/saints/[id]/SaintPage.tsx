@@ -2,6 +2,8 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {DneslovKind} from "@/utils/texts";
 import Link from "next/link";
+import RelicLine from "@/app/components/RelicLine";
+import type { Relic } from "@/lib/pilgrimage/relics";
 import Markdown from "react-markdown";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 import {SIGN_LABELS} from "@/utils/chantLabels";
@@ -177,7 +179,7 @@ enum COLLECTION_TYPE {
     AUTHOR,
 }
 
-const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [], memories = [], dedications = [], places = [] }: {
+const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [], memories = [], dedications = [], places = [], relics = [] }: {
     id: string,
     card?: SaintCard,
     item: any,
@@ -189,6 +191,8 @@ const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [
     dedications?: SaintDedication[],
     /** Места, названные в чтениях к этой памяти: не обязательно родина или кафедра. */
     places?: {id: string; name: string; href: string; texts: number}[],
+    /** Где пребывают мощи — принятые записи реестра святынь. */
+    relics?: Relic[],
 }) => {
     const authorItems = useMemo(() => items.filter(el => el.dneslovType === DneslovKind.AUTHOR), [items]);
     const bookItems = useMemo(() => items.filter(el => el.dneslovType !== DneslovKind.AUTHOR), [items]); // MEMORY
@@ -348,6 +352,16 @@ const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [
                                     </span>
                                 ))}
                             </span>
+                        </Row>
+                    )}
+
+                    {/* СВЯТЫНИ — только из реестра и каждая с источником. Посвящение
+                        храма (строка выше) о мощах не говорит ничего. */}
+                    {!!relics.length && (
+                        <Row name="Святыни">
+                            <ul>
+                                {relics.map((relic) => <RelicLine key={relic.id} relic={relic} showSaint={false} />)}
+                            </ul>
                         </Row>
                     )}
 

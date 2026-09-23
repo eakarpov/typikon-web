@@ -7,6 +7,7 @@
 //
 //   праздник (месяц и число) -> memories корпуса устава (RULES_DB)
 //   память                   -> memory_saint_links -> saints (Mongo)
+//                               или запись каталога, заведённая из этой памяти (provenance)
 //
 // Без первой связи посвящение не поедет в устав: движку нужен memory_id, из
 // него он берёт и тропарь, и кондак, и канон храма. Без второй на карточке
@@ -115,22 +116,46 @@ const main = async () => {
             if (e.source === "dneslov") saintBy.set(String(e.id), s);
         }
     }
+    // Святые нашего корпуса, заведённые из самой памяти (import-memory-saints.ts):
+    // связь с памятью у них по построению — выверять её не с чем, и она идёт в
+    // `saints`, а не в кандидаты.
+    const ownBy = new Map<string, any>();
+    for (const s of await saints.find({ provenance: { $elemMatch: { table: "memories", id: { $in: memoryIds } } } }).toArray()) {
+        for (const p of ((s as any).provenance ?? []) as any[]) if (p.table === "memories") ownBy.set(String(p.id), s);
+    }
 
     const APPROVED = ["ok", "approved", "confirmed"];
 
     const docs = resolved.map(({ dedication: d, feasts }) => {
         const linked = feasts
-            .map((f) => (f.memoryId ? linkBy.get(f.memoryId) : null))
-            .filter(Boolean)
-            .map((l: any) => {
-                const s = saintBy.get(String(l.dneslovId));
-                return {
-                    dneslovId: String(l.dneslovId), fromMemory: l.memoryId, status: l.status,
-                    name: s?.name ?? l.saintName ?? null, slug: s?.slug ?? null,
-                };
-            });
+            .filter((f) => f.memoryId)
+            .map((f) => {
+                const l: any = linkBy.get(f.memoryId!);
+                const bySnapshot = l ? saintBy.get(String(l.dneslovId)) : null;
+                const own = ownBy.get(f.memoryId!);
+                // Выверенная связь со святцами — первая; не выверенная уступает
+                // записи, заведённой из самой памяти.
+                if (l && (APPROVED.includes(l.status) || !own)) {
+                    return {
+                        saintId: bySnapshot ? String(bySnapshot._id) : null,
+                        dneslovId: String(l.dneslovId), fromMemory: l.memoryId, status: l.status,
+                        name: bySnapshot?.name ?? l.saintName ?? null, slug: bySnapshot?.slug ?? null,
+                    };
+                }
+                if (own) {
+                    return {
+                        saintId: String(own._id), dneslovId: null, fromMemory: f.memoryId!, status: "ok",
+                        name: own.name ?? null, slug: own.slug ?? null,
+                    };
+                }
+                return null;
+            })
+            .filter(Boolean) as { saintId: string | null; dneslovId: string | null; fromMemory: string; status: string; name: string | null; slug: string | null }[];
         const seen = new Set<string>();
-        const unique = linked.filter((s) => !seen.has(s.dneslovId) && seen.add(s.dneslovId));
+        const unique = linked.filter((s) => {
+            const key = s.saintId ?? `n:${s.dneslovId}`;
+            return !seen.has(key) && !!seen.add(key);
+        });
         return {
             slug: d.slug, label: d.label, short: d.short, kind: d.kind,
             ...(d.canonized ? { canonized: d.canonized } : {}),

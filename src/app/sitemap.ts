@@ -1,5 +1,4 @@
 import {MetadataRoute} from "next";
-import { saintSlugs } from "@/lib/saints";
 import clientPromise from "@/lib/mongodb";
 import {TextReadiness} from "@/utils/texts";
 import {BIBLE_CANON} from "@/utils/bibleCanon";
@@ -31,6 +30,8 @@ const STATIC_ROUTES = [
     { path: "/bible", priority: 0.9 },
     { path: "/saints", priority: 0.8 },
     { path: "/places", priority: 0.7 },
+    { path: "/ryadom", priority: 0.5 },
+    { path: "/palomnichestvo", priority: 0.5 },
     { path: "/accents", priority: 0.7 },
     // Только сам указатель. Адреса зачинов сюда не идут: их 182 650, и у девяти
     // десятых за адресом стоит одна строка корпуса — карта сайта разбухла бы
@@ -164,14 +165,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             });
         });
 
-        // Страницы святых: дата правки — самая свежая среди наших текстов этой памяти.
-        // Адрес с 2026-08-31 наш собственный (`saints.slug`); номер святцев остаётся
-        // рабочим и уводит редиректом, но в карту сайта идёт конечный адрес, а не тот,
-        // с которого перебрасывает.
-        const saints = await db.collection("texts").aggregate([
+        // Страницы святых — все записи каталога с адресом, а не только те, у кого
+        // есть номер святцев и текст: у святых нашего корпуса (Собор новомучеников,
+        // святые из памятей Минеи) номера нет, а страница есть. Дата правки — самая
+        // свежая из правки записи и наших текстов её номеров.
+        // Даты текстов — по ключам каталога (@/lib/textSaints); по номерам — только
+        // у текстов, чей святой в каталоге не нашёлся.
+        const keyDates = await db.collection("texts").aggregate([
+            { $match: { readiness: { $in: READABLE_TEXTS }, $or: [{ saintId: { $nin: [null, ""] } }, { mentionSaintIds: { $exists: true, $ne: [] } }] } },
+            { $project: { updatedAt: 1, keys: { $setUnion: [
+                { $cond: [{ $in: ["$saintId", [null, ""]] }, [], ["$saintId"]] },
+                { $ifNull: ["$mentionSaintIds", []] },
+            ] } } },
+            { $unwind: "$keys" },
+            { $group: { _id: "$keys", updatedAt: { $max: "$updatedAt" } } },
+        ]).toArray();
+        const keyDateOf = new Map(keyDates.map((t: any) => [String(t._id), t.updatedAt as Date | undefined]));
+        const textDates = await db.collection("texts").aggregate([
             {
                 $match: {
                     readiness: { $in: READABLE_TEXTS },
+                    saintId: { $in: [null, ""] },
                     $or: [
                         { dneslovId: { $nin: [null, ""] } },
                         { mentionIds: { $exists: true, $ne: [] } },
@@ -192,10 +206,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             { $unwind: "$saintIds" },
             { $group: { _id: "$saintIds", updatedAt: { $max: "$updatedAt" } } },
         ]).toArray();
-
-        // Номер святцев -> наш адрес. Памяти, до которой каталог ещё не дошёл,
-        // в карте остаётся номер: страница по нему работает.
-        const saintAddresses = await saintSlugs(saints.map((saint: any) => String(saint._id)));
+        const textDateOf = new Map(textDates.map((t: any) => [String(t._id), t.updatedAt as Date | undefined]));
+        const catalog = await db.collection("saints")
+            .find({ slug: { $type: "string" } }, { projection: { slug: 1, updatedAt: 1, externals: 1 } })
+            .toArray();
+        const latest = (dates: (Date | undefined | null)[]) =>
+            dates.filter(Boolean).reduce<Date | undefined>((a, b) => (!a || b! > a ? b! : a), undefined);
+        const covered = new Set<string>();
+        const saints = catalog.map((s: any) => {
+            const numbers = (s.externals ?? []).filter((e: any) => e.source === "dneslov").map((e: any) => String(e.id));
+            numbers.forEach((n: string) => covered.add(n));
+            return { path: `/saints/${s.slug}`, updatedAt: latest([s.updatedAt, keyDateOf.get(String(s._id)), ...numbers.map((n: string) => textDateOf.get(n))]) };
+        });
+        // Памяти вне каталога — по номеру, как прежде: страница по нему работает.
+        for (const [n, updatedAt] of textDateOf) if (!covered.has(n)) saints.push({ path: `/saints/${n}`, updatedAt });
 
         // Места: только открытые и с адресом. Скрытые (имя пока английское) и
         // заведённые до выдачи адресов в карту не идут.
@@ -259,7 +283,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             ...books.map((book) =>
                 entry(`/library/${book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
             ...saints.map((saint) =>
-                entry(`/saints/${saintAddresses[String(saint._id)] ?? saint._id}`, saint.updatedAt, 0.6, "monthly")),
+                entry(saint.path, saint.updatedAt, 0.6, "monthly")),
             ...places.map((place) =>
                 entry(`/places/${place.slug}`, place.updatedAt, 0.5, "monthly")),
             ...bibleChapters,

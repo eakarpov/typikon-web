@@ -2,7 +2,7 @@
 // Запускается по крону ежедневно, готовит черновики вперёд (по умолчанию на 3 дня),
 // чтобы оставалось время на ручную проверку перед публикацией.
 //
-// Запуск (см. также README крона в ROADMAP.md):
+// Запуск (см. также раздел об автопостинге в docs/archive/product.md):
 //   npm run channel-posts:generate
 //   npm run channel-posts:generate -- --days-ahead=5
 //   npm run channel-posts:generate -- --from=2026-08-20

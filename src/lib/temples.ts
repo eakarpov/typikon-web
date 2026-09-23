@@ -5,25 +5,18 @@
 // и «свята́го, его́же есть храм» сегодня один, а завтра другой. Отсюда
 // множественное число во всех полях и отдельный выбор престола на карточке.
 //
-// ДАТЫ ПРЕСТОЛЬНЫХ ПРАЗДНИКОВ СЧИТАЕМ ЗДЕСЬ, а не спрашиваем у службы устава:
+// ДАТЫ ПРЕСТОЛЬНЫХ ПРАЗДНИКОВ СЧИТАЕМ САМИ (@/utils/feastDate), а не у службы устава:
 // это простая арифметика (месяцеслов плюс тринадцать дней, подвижные — от
 // Пасхи), и ради неё поднимать отдельную службу незачем. Сборка последования —
 // другое дело, за ней ходят к ней.
 
-import { orthodoxEaster } from "date-easter";
 import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 import { quantile, spreadOf } from "@/lib/geoSpread";
+import { feastDate, type TempleFeast } from "@/utils/feastDate";
 
-export interface TempleFeast {
-    month?: number;
-    day?: number;
-    paschaOffset?: number;
-    note?: string;
-    memoryId?: string | null;
-    memoryLabel?: string | null;
-    sign?: string | null;
-}
+export type { TempleFeast };
+export { feastDate };
 
 export interface TemplePrestol {
     dedication: string;
@@ -91,28 +84,6 @@ export const KIND_LABELS: Record<string, string> = {
     "not-temple": "постройка",
 };
 
-/**
- * Гражданская дата престольного праздника в этом году.
- *
- * Неподвижная память напечатана в Минее по СТАРОМУ стилю, и к ней прибавляются
- * те же тринадцать дней, на которые церковная дата отстаёт в @/lib/calcDay.
- * Подвижная считается от Пасхи — и потому у Троицкого храма престольный
- * праздник каждый год в разный день; этого не показывает ни один календарь,
- * потому что списка престолов ни у кого нет.
- */
-export const feastDate = (feast: TempleFeast, year: number): Date | null => {
-    if (feast.paschaOffset !== undefined) {
-        const e = orthodoxEaster(year);
-        const pascha = new Date(Date.UTC(e.year, e.month - 1, e.day));
-        pascha.setUTCDate(pascha.getUTCDate() + feast.paschaOffset);
-        return pascha;
-    }
-    if (feast.month === undefined || feast.day === undefined) return null;
-    const d = new Date(Date.UTC(year, feast.month - 1, feast.day));
-    d.setUTCDate(d.getUTCDate() + 13);
-    return d;
-};
-
 const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня",
     "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 
@@ -128,8 +99,11 @@ export interface TempleQuery {
     page?: number;
 }
 
-/** Условие выборки. Общее у указателя и у карты, чтобы фильтр значил одно и то же. */
-const filterOf = ({ query, dedication, kind }: TempleQuery) => {
+/**
+ * Условие выборки. Общее у указателя, карты и свода «что рядом», чтобы фильтр
+ * значил одно и то же.
+ */
+export const filterOf = ({ query, dedication, kind }: TempleQuery) => {
     const where: Record<string, unknown> = { kind: { $ne: "not-temple" }, orthodox: { $ne: false } };
     if (dedication) where["prestoly.dedication"] = dedication;
     if (kind) where.kind = kind;
@@ -264,8 +238,12 @@ export interface DedicationDoc {
     /** Год прославления — черта на волне построек. */
     canonized?: number;
     feasts: TempleFeast[];
-    saints: { dneslovId: string; name: string | null; slug: string | null }[];
-    saintCandidates?: { dneslovId: string; name: string | null; slug: string | null }[];
+    /**
+     * Святые посвящения. `saintId` — ключ каталога: у святых нашего корпуса номера
+     * святцев нет, и искать их по `dneslovId` значило бы не найти вовсе.
+     */
+    saints: { saintId?: string | null; dneslovId: string | null; name: string | null; slug: string | null }[];
+    saintCandidates?: { saintId?: string | null; dneslovId: string | null; name: string | null; slug: string | null }[];
 }
 
 export const getDedication = async (slug: string): Promise<DedicationDoc | null> =>
@@ -448,12 +426,17 @@ export interface SaintDedication {
  * Храмы считаются тем же условием `filterOf`, каким отбирает указатель: иначе
  * число на карточке и выдача /temples?dedication= говорили бы разное.
  */
-export const dedicationsOfSaint = cached(async (dneslovIds: string[]): Promise<SaintDedication[]> => {
+export const dedicationsOfSaint = cached(async (saintId: string | null, dneslovIds: string[]): Promise<SaintDedication[]> => {
     const ids = [...new Set((dneslovIds ?? []).filter(Boolean).map(String))];
-    if (!ids.length) return [];
+    // По ключу каталога — основная дорога; по номеру святцев — для словаря,
+    // собранного до того, как в нём появился ключ.
+    const or: Record<string, unknown>[] = [];
+    if (saintId) or.push({ "saints.saintId": saintId });
+    if (ids.length) or.push({ "saints.dneslovId": { $in: ids } });
+    if (!or.length) return [];
 
     const dedications = await (await clientPromise).db("typikon").collection("dedications")
-        .find({ "saints.dneslovId": { $in: ids } },
+        .find({ $or: or },
             { projection: { _id: 0, slug: 1, short: 1, label: 1 } })
         .toArray();
     if (!dedications.length) return [];

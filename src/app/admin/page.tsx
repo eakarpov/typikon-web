@@ -66,6 +66,8 @@ const SECTIONS: Section[] = [
             ["/admin/mentions", "Упоминания святых в чтениях"],
             ["/admin/places/mentions", "Упоминания мест в чтениях"],
             ["/admin/places/nikifor", "Статьи Никифора и места"],
+            ["/admin/relics", "Реестр святынь"],
+            ["/admin/saints/proposals", "Святые из памятей Минеи: на разбор"],
             ["/admin/news", "Новости"],
             ["/admin/api-tokens", "Ключи API"],
         ],

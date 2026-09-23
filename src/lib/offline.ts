@@ -15,10 +15,12 @@ export type SavedPage = {
     label: string;
     savedAt: number;
     bytes: number;
+    /** Поездка, с которой страница сохранена: так её и убирают — всю разом. */
+    group?: string;
 };
 
 export type OfflineAnswer =
-    | { ok: true; saved: SavedPage[]; bytes?: number }
+    | { ok: true; saved: SavedPage[]; bytes?: number; failed?: string[] }
     | { ok: false; error: string };
 
 /** Подкладки страницы: всё, без чего сохранённый HTML откроется голым. */
@@ -87,18 +89,31 @@ const activeWorker = async (): Promise<ServiceWorker | null> => {
     return registration?.active || null;
 };
 
-const ask = async (message: object, waitMs = 60000): Promise<OfflineAnswer> => {
+export type SaveProgress = { done: number; total: number; url: string };
+
+const ask = async (
+    message: object, waitMs = 60000, onProgress?: (p: SaveProgress) => void,
+): Promise<OfflineAnswer> => {
     const worker = await activeWorker();
     if (!worker) return { ok: false, error: "офлайн-режим ещё не включился" };
 
     return new Promise((resolve) => {
         const channel = new MessageChannel();
-        const timer = setTimeout(
-            () => resolve({ ok: false, error: "воркер не ответил" }),
-            waitMs,
-        );
+        let timer: ReturnType<typeof setTimeout>;
+        const arm = () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => resolve({ ok: false, error: "воркер не ответил" }), waitMs);
+        };
+        arm();
 
         channel.port1.onmessage = (event) => {
+            // Ход долгой работы: не ответ, а знак жизни — и срок ожидания
+            // отсчитывается заново, иначе месяц дней не уложился бы в минуту.
+            if (event.data && "progress" in event.data) {
+                onProgress?.(event.data.progress);
+                arm();
+                return;
+            }
             clearTimeout(timer);
             resolve(event.data as OfflineAnswer);
         };
@@ -112,7 +127,16 @@ export const listSaved = () => ask({ type: "offline:list" }, 5000);
 export const savePage = (url: string, label: string) =>
     ask({ type: "offline:save", url, label, assets: collectAssets() });
 
+/**
+ * Пачка страниц одной группой — поездка. Подкладки воркер берёт и из самих
+ * страниц, но и свои отсюда присылаем: шрифты приходят из CSS, в разметке их нет.
+ */
+export const saveMany = (items: { url: string; label: string }[], group: string, onProgress?: (p: SaveProgress) => void) =>
+    ask({ type: "offline:save-many", items, group, assets: collectAssets() }, 60000, onProgress);
+
 export const forgetPage = (url: string) => ask({ type: "offline:forget", url });
+
+export const forgetGroup = (group: string) => ask({ type: "offline:forget-group", group });
 
 export const clearSaved = () => ask({ type: "offline:clear" });
 

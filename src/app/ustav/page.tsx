@@ -18,10 +18,23 @@ export const metadata: Metadata = {
 };
 
 const Ustav = async ({ searchParams }: { searchParams: Record<string, string | undefined> }) => {
-    const [services, options, result] = await Promise.all([
-        ordoServices(),
+    // СПИСОК КАНВ НУЖЕН ПРЕЖДЕ СБОРКИ: сборка по дате слушает СЛУЖБУ, а
+    // выбирают здесь канву, и служба при канве записана только в этом
+    // списке. Пока его брали разом со сборкой, выбор службы с заданной
+    // датой не действовал вовсе — какую бы канву ни выбрали, приходила
+    // вечерня.
+    const services = await ordoServices();
+    const выбранная = services.find(s => s.ordoId === searchParams.ordo);
+
+    // СЛОИ БЕРЁМ ВСЕХ УСТАВОВ РАЗОМ, а отбирает их форма. Служба умеет отдать
+    // и один устав (`ordoOptions(ustav)`), но форме нужны все: при смене
+    // устава она обязана СБРОСИТЬ знак, которого у нового нет, — пасхальных
+    // знаков у дониконовского не написано, — а для этого надо знать чужие
+    // слои прежде, чем на них переключились.
+    const [options, result] = await Promise.all([
         ordoOptions(),
         buildOrdo({
+            ustav: searchParams.ustav,
             ordo: searchParams.ordo,
             month: searchParams.month,
             day: searchParams.day,
@@ -37,6 +50,8 @@ const Ustav = async ({ searchParams }: { searchParams: Record<string, string | u
             date: searchParams.date,
             prihod: searchParams.prihod,
             prestol: searchParams.prestol,
+            service: выбранная?.service ?? undefined,
+            parallel: searchParams.parallel,
         }),
     ]);
 
@@ -65,6 +80,7 @@ const Ustav = async ({ searchParams }: { searchParams: Record<string, string | u
     const ctx = result.context;
     const effective: Record<string, string | undefined> = {
         ...searchParams,
+        ustav: searchParams.ustav || result.ustav?.ustav || undefined,
         ordo: searchParams.ordo || result.requestedOrdo,
         month: searchParams.month || (ctx.month != null ? String(ctx.month) : undefined),
         day: searchParams.day || (ctx.day != null ? String(ctx.day) : undefined),

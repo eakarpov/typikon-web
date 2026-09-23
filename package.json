@@ -101,7 +101,12 @@
     "names:index": "tsx src/scripts/build-name-index.ts",
     "release:data": "bash scripts/release-data.sh",
     "push:pomyannik": "tsx src/scripts/send-pomyannik-push.ts",
-    "push:reading": "tsx src/scripts/send-day-reading-push.ts"
+    "push:reading": "tsx src/scripts/send-day-reading-push.ts",
+    "relics:crawl": "tsx src/scripts/crawl-temple-sites.ts",
+    "relics:azbyka": "tsx src/scripts/import-azbyka-relics.ts",
+    "saints:memories": "tsx src/scripts/import-memory-saints.ts",
+    "texts:saints": "tsx src/scripts/sync-text-saints.ts",
+    "saints:merge": "tsx src/scripts/merge-saints.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

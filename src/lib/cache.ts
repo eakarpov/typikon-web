@@ -45,6 +45,7 @@ export const CacheTag = {
     // админке — редко. Отдельно от BIBLE: пересборка упоминаний не меняет текста
     // Писания, и глава сама по себе пусть остаётся в кэше.
     PLACES: "places",
+    RELICS: "relics",
 } as const;
 
 export type CacheTagValue = typeof CacheTag[keyof typeof CacheTag];

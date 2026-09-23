@@ -5,10 +5,11 @@ import { setMeta } from "@/lib/meta";
 import { getItems, getLinkedNoble, getMemory, getMentions } from "@/app/saints/[id]/api";
 import Content from "@/app/saints/[id]/Content";
 import { myFont } from "@/utils/font";
-import { dneslovIdsOf, getSaintByAddress, type Saint } from "@/lib/saints";
+import { dneslovIdsOf, getSaintByAddress, memoryIdsOf, type Saint } from "@/lib/saints";
 import { memoriesOfSaint } from "@/lib/memories";
 import { dedicationsOfSaint } from "@/lib/temples";
 import { placesOfSaint } from "@/lib/places/query";
+import { relicsOfSaint } from "@/lib/pilgrimage/relicsStore";
 import { SITE_URL } from "@/utils/site";
 
 // Адрес страницы святого — наш слуг (`saints.slug`). Номер памяти святцев
@@ -65,17 +66,20 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
     const known = dneslovIds.length ? dneslovIds : (/^\d+$/.test(address) ? [address] : []);
 
     const itemPromise = Promise.allSettled([
-        getItems(known),
+        getItems(saint?._id ? String(saint._id) : null, known),
         getMemory(known[0]),
-        getMentions(known),
+        getMentions(saint?._id ? String(saint._id) : null, known),
         getLinkedNoble(known),
         // Досье: службы, назначенные этому лицу книгами, и храмы, ему посвящённые.
         // Ни то, ни другое не собирается заново — обе связи уже проставлены и до
         // сих пор просто не сходились на одной странице.
-        memoriesOfSaint(known),
-        dedicationsOfSaint(known),
+        memoriesOfSaint(saint?._id ? String(saint._id) : null, known),
+        dedicationsOfSaint(saint?._id ? String(saint._id) : null, known),
         // Места, названные в чтениях к этой памяти (принятые упоминания, @/lib/places/query).
-        placesOfSaint(known),
+        placesOfSaint(saint?._id ? String(saint._id) : null, known),
+        // Где пребывают мощи — из реестра святынь, только принятое и с источником.
+        // Реестр знает святого ключом каталога, а не номером святцев.
+        relicsOfSaint(saint?._id ? [String(saint._id)] : []),
     ]);
 
     return (
@@ -84,6 +88,8 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
                 <Content
                     id={known[0] ?? address}
                     itemPromise={itemPromise}
+                    dneslovIds={known}
+                    memoryIds={memoryIdsOf(saint)}
                     // Только простые поля: дальше клиентский компонент, и документ
                     // Mongo целиком туда не сериализуется (ObjectId, Date).
                     facts={{

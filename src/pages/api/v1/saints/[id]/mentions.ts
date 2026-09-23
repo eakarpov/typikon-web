@@ -10,7 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(400).end();
             return;
         }
-        const [texts, error] = await getMentions([id]);
+        // v1 — прежний договор: святой номером святцев.
+        const [texts, error] = await getMentions(null, [id]);
         if (error) {
             res.status(400).end();
             return;

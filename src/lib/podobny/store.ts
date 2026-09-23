@@ -121,7 +121,7 @@ const selectorOf = (unit: PodobenUnit) => {
  *
  * Единицу в SQL не выразить (она — результат нормализации), поэтому в запрос
  * едут ключ и список написаний. Всё — плейсхолдерами: имя приходит из адреса
- * страницы, и подставлять его в SQL нельзя (см. аудит в ROADMAP).
+ * страницы, и подставлять его в SQL нельзя (см. docs/archive/audits.md).
  */
 export const podobenStichera = (
     unit: PodobenUnit,

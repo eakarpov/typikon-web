@@ -6,12 +6,24 @@ import {
     clearSaved,
     formatBytes,
     formatSavedAt,
+    forgetGroup,
     forgetPage,
     isSupported,
     plural,
     SavedPage,
     savedUsage,
 } from "@/lib/offline";
+import { TRIPS_KEY, type Trip } from "@/lib/pilgrimage/trip";
+
+/** Названия поездок — из самих поездок в браузере; удалённая поездка остаётся номером. */
+const tripTitles = (): Record<string, string> => {
+    try {
+        const trips = JSON.parse(localStorage.getItem(TRIPS_KEY) ?? "[]") as Trip[];
+        return Object.fromEntries(trips.map((t) => [t.id, t.title]));
+    } catch {
+        return {};
+    }
+};
 
 // Список отложенного: что именно человек оставил себе на случай без интернета,
 // сколько это занимает и как убрать. Занятое место считает воркер по факту
@@ -53,6 +65,13 @@ const OfflinePages = () => {
         setBusy(false);
     }, [refresh]);
 
+    const onForgetGroup = useCallback(async (group: string) => {
+        setBusy(true);
+        await forgetGroup(group);
+        await refresh();
+        setBusy(false);
+    }, [refresh]);
+
     const onClear = useCallback(async () => {
         setBusy(true);
         await clearSaved();
@@ -75,14 +94,43 @@ const OfflinePages = () => {
         );
     }
 
+    // Поездка — одной строкой: тридцать дней чтений поштучно в этом списке
+    // заслонили бы всё остальное, а убирают их после поездки всё равно разом.
+    const titles = tripTitles();
+    const groups = new Map<string, SavedPage[]>();
+    for (const page of pages) {
+        if (!page.group) continue;
+        groups.set(page.group, [...(groups.get(page.group) ?? []), page]);
+    }
+    const single = pages.filter((page) => !page.group);
+
     return (
         <div className="flex flex-col gap-2">
+            {[...groups].map(([group, list]) => (
+                <details key={group} className="font-serif">
+                    <summary>
+                        Поездка «{titles[group] ?? group}»: {list.length} {plural(list.length, "страница", "страницы", "страниц")}
+                        {" · "}
+                        <button type="button" disabled={busy} onClick={() => onForgetGroup(group)}
+                                className="text-sm text-slate-500 hover:text-red-600 disabled:cursor-wait">
+                            убрать поездку
+                        </button>
+                    </summary>
+                    <ul className="ml-4 text-sm">
+                        {list.map((page) => (
+                            <li key={page.url}>
+                                <Link href={page.url} className="text-amber-800 underline underline-offset-4">{page.label}</Link>
+                            </li>
+                        ))}
+                    </ul>
+                </details>
+            ))}
             <p className="font-serif text-sm text-slate-500">
                 {pages.length} {plural(pages.length, "страница", "страницы", "страниц")} для чтения без интернета
                 {bytes !== null && `, вместе со шрифтами и разметкой — ${formatBytes(bytes)}`}.
             </p>
             <ul className="flex flex-col gap-1">
-                {pages.map((page) => (
+                {single.map((page) => (
                     <li key={page.url} className="flex flex-row items-center gap-2">
                         <button
                             type="button"
