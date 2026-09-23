@@ -362,3 +362,80 @@ export const plain = (s: string) => s.normalize("NFC")
     .replace(/[̀́̑҃-҉]/g, "")
     .replace(/ѐ/g, "е").replace(/ѝ/g, "и")
     .toLowerCase().replace(/ё/g, "е");
+
+/**
+ * Святой каталога для сличения догадок: имена (основное и прочие), приведённые,
+ * и из каждого — первое слово отдельно.
+ */
+export type SaintRow = { dneslovId: string; name: string; slug: string | null; hay: string; firsts?: string[] };
+
+const firstWords = (s: SaintRow) => s.firsts ?? s.hay.split(/\s+/).slice(0, 1);
+
+/**
+ * Святые каталога по догадке «прп. Сергия Радонежского».
+ *
+ * Имя обязано совпасть с НАЧАЛОМ имени святого, а прочие основы — с началом
+ * какого-нибудь слова: иначе «Александра» находит «Кирилла Александрийского».
+ * Если совпавших несколько, решают слова из названия места («Александро-Свирский
+ * монастырь» — значит, Александр Свирский): святой, в чьём имени они есть,
+ * вероятнее прочих. Не больше пяти — дальше решает человек.
+ */
+export const matchSaints = (guess: string | null, saints: SaintRow[], context = "") => {
+    if (!guess) return [];
+    const [first, ...rest] = nameStems(guess);
+    if (!first) return [];
+    const wordStarts = (hay: string, stem: string) => hay.split(/[\s,()-]+/).some((w) => w.startsWith(stem));
+    let hits = saints.filter((s) => firstWords(s).some((w) => w.startsWith(first)) && rest.every((stem) => wordStarts(s.hay, stem)));
+    if (hits.length > 1 && context) {
+        const ctx = plain(context).split(/[^а-я]+/).filter((w) => w.length >= 5).map((w) => w.slice(0, 5));
+        const preferred = hits.filter((s) => ctx.some((c) => s.hay.split(/[\s,()-]+/).slice(1).some((w) => w.startsWith(c))));
+        if (preferred.length) hits = preferred;
+    }
+    return hits.slice(0, 5).map(({ dneslovId, name, slug }) => ({ dneslovId, name, slug }));
+};
+
+const TITLE_RUN = new RegExp(`(?:${TITLE}\\s+)+`, "gi");
+/** Прилагательное множественного числа: «Воронежских», «Муромских» — общее прозвание, а не имя. */
+const PLURAL_ADJ = /^[А-ЯЁ][а-яё-]+(?:их|ых)$/;
+
+export interface SaintInLine {
+    /** «святителей Митрофана» — звание и имя, как в строке. */
+    guess: string;
+    /** Общие прозвания строки («Воронежских»): подсказка для выбора среди тёзок. */
+    context: string;
+}
+
+/**
+ * Все святые строки — их бывает несколько: «ковчежец с частицами мощей
+ * святителей Воронежских Митрофана и Тихона и преподобных Кирилла и Марии
+ * Радонежских». Звание стоит перед группой имён и относится ко всем, кто за
+ * ним через запятую или «и», до следующего звания. Прилагательное во
+ * множественном числе — общее прозвание группы: святым оно не становится, а
+ * идёт подсказкой к выбору из тёзок. Скобки — пояснения («подарена братией…»),
+ * их пропускаем.
+ */
+export const saintsInLine = (text: string): SaintInLine[] => {
+    const clean = text.replace(/\([^()]*\)/g, " ").replace(/\s+/g, " ");
+    const runs = [...clean.matchAll(TITLE_RUN)];
+    const out: SaintInLine[] = [];
+    const seen = new Set<string>();
+    runs.forEach((run, i) => {
+        const start = (run.index ?? 0) + run[0].length;
+        const end = i + 1 < runs.length ? runs[i + 1].index ?? clean.length : clean.length;
+        const segment = clean.slice(start, end).split(/[.;:!?]|\s[—–-]\s/)[0];
+        const title = run[0].trim();
+        const parts = segment.split(/\s*,\s*|\s+и\s+/).map((p) => p.trim()).filter(Boolean);
+        const adjectives = parts.flatMap((p) => p.split(/\s+/)).filter((w) => PLURAL_ADJ.test(w));
+        const context = adjectives.join(" ");
+        for (const part of parts) {
+            const words = part.split(/\s+/).filter((w) => !PLURAL_ADJ.test(w));
+            if (!words.length || !/^[А-ЯЁ]/.test(words[0])) continue;
+            const name = words.slice(0, 3).join(" ").replace(/[^А-Яа-яЁё\s-]+$/g, "");
+            const guess = `${title} ${name}`;
+            if (seen.has(guess)) continue;
+            seen.add(guess);
+            out.push({ guess, context });
+        }
+    });
+    return out;
+};

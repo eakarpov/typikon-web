@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-    articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, mentionsOf, nameStems, newsSections,
+    articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, matchSaints, mentionsOf, nameStems, newsSections,
     parseRobots, plain, publishedOf, robotsAllows, siteOf, sitemapLocs, textOf, visitOf,
 } from "./crawl";
 
@@ -137,4 +137,13 @@ test("заголовок документа в текст не идёт", () => 
 test("святой берётся до конца строки, а не обрывается", () => {
     const [, m] = mentionsOf("Принесение ковчега\nВ храм будет принесён ковчег с частицей мощей святого благоверного великого князя Александра Невского и святителя Николая Чудотворца.", null);
     assert.equal(m.saintGuess, "святого благоверного великого князя Александра Невского");
+});
+
+test("святой по догадке: имя с начала, прозвание — по месту", () => {
+    const row = (dneslovId: string, name: string) => ({ dneslovId, name, slug: null, hay: plain(name) });
+    const saints = [row("1", "Кири́лл Александри́йский"), row("2", "Алекса́ндр Сви́рский"), row("3", "Алекса́ндр Не́вский"), row("4", "Се́ргий Ра́донежский")];
+    assert.deepEqual(matchSaints("прп. Сергия Радонежского", saints).map((s) => s.dneslovId), ["4"]);
+    assert.deepEqual(matchSaints("прп. Александра", saints).map((s) => s.dneslovId), ["2", "3"]);
+    assert.deepEqual(matchSaints("прп. Александра", saints, "Александро-Свирский мужской монастырь").map((s) => s.dneslovId), ["2"]);
+    assert.deepEqual(matchSaints(null, saints), []);
 });

@@ -9,7 +9,7 @@
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { RELIC_CANDIDATES } from "./relics";
-import type { GuessKind, GuessState, Mention } from "./crawl";
+import { plain, type GuessKind, type GuessState, type Mention, type SaintRow } from "./crawl";
 
 export const RELIC_CRAWL = "relicCrawl";
 
@@ -28,6 +28,10 @@ export interface Candidate {
     visit: { from: string; to: string } | null;
     saintGuess: string | null;
     saintCandidates: { dneslovId: string; name: string; slug: string | null }[];
+    /** Откуда находка: сайт прихода (новость) или «Азбука паломника» (страница о храме). */
+    origin?: "site" | "azbyka";
+    /** Уточнение места внутри обители: «в Троицком соборе». */
+    where?: string | null;
     status: CandidateStatus;
     foundAt: string;
 }
@@ -62,6 +66,7 @@ const toCandidate = (r: any): Candidate => ({
     id: String(r._id), url: r.url, site: r.site, templeSlugs: r.templeSlugs ?? [], title: r.title ?? null,
     published: r.published ?? null, mentions: r.mentions ?? [], kind: r.kind, state: r.state ?? null,
     visit: r.visit ?? null, saintGuess: r.saintGuess ?? null, saintCandidates: r.saintCandidates ?? [],
+    origin: r.origin ?? "site", where: r.where ?? null,
     status: r.status, foundAt: new Date(r.foundAt).toISOString(),
 });
 
@@ -84,3 +89,18 @@ export const setCandidateStatus = async (id: string, status: CandidateStatus): P
         .updateOne({ _id: new ObjectId(id) }, { $set: { status, updatedAt: new Date() } });
     return res.matchedCount > 0;
 };
+
+/** Святые каталога для сличения догадок обходчика и импорта. */
+export const loadSaintIndex = async (): Promise<SaintRow[]> =>
+    (await (await clientPromise).db("typikon").collection("saints")
+        .find({}, { projection: { _id: 0, name: 1, altNames: 1, slug: 1, externals: 1 } }).toArray())
+        .map((s: any) => {
+            const names = [s.name, ...(s.altNames ?? [])].filter(Boolean).map((n: string) => plain(n));
+            return {
+                dneslovId: String((s.externals ?? []).find((e: any) => e.source === "dneslov")?.id ?? ""),
+                name: s.name, slug: s.slug ?? null,
+                hay: names.join(" "),
+                firsts: names.map((n: string) => n.split(/\s+/)[0]),
+            };
+        })
+        .filter((s) => s.dneslovId);

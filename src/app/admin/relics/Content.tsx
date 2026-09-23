@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Relic } from "@/lib/pilgrimage/relics";
 import type { Candidate } from "@/lib/pilgrimage/candidates";
-import RelicForm, { type RelicFormValue } from "@/app/components/RelicForm";
+import RelicForm, { EMPTY_RELIC, toPayload, type RelicFormValue } from "@/app/components/RelicForm";
 import RelicLine from "@/app/components/RelicLine";
 
 const call = async (body: unknown): Promise<string[] | null> => {
@@ -63,8 +63,17 @@ const formOfCandidate = (c: Candidate): Partial<RelicFormValue> => ({
     kind: c.kind,
     state: c.state === "visiting" ? "visiting" : "present",
     visitFrom: c.visit?.from ?? "", visitTo: c.visit?.to ?? "",
-    sourceType: "news", sourceRef: c.url, sourceDate: c.published ?? "",
+    where: c.where?.replace(/^(в|во)\s+/, "") ?? "",
+    // Новость сайта — источник с датой; страница «Азбуки паломника» — страница
+    // о храме, и ссылка на неё без якоря строки: якорь нужен только нам как ключ.
+    ...(c.origin === "azbyka"
+        ? { sourceType: "url", sourceRef: c.url.replace(/#.*$/, ""), sourceDate: "", sourceNote: "Азбука паломника, раздел «Святыни»" }
+        : { sourceType: "news", sourceRef: c.url, sourceDate: c.published ?? "" }),
 });
+
+/** Находка, которую можно принять одним нажатием: святой однозначен, храм найден. */
+const isClear = (c: Candidate) => c.saintCandidates.length === 1 && c.templeSlugs.length > 0 && c.state !== null
+    && (c.state !== "visiting" || !!c.visit);
 
 const CandidateRow = ({ c }: { c: Candidate }) => {
     const router = useRouter();
@@ -95,7 +104,21 @@ const CandidateRow = ({ c }: { c: Candidate }) => {
                 {c.saintGuess && <> · в тексте: «{c.saintGuess}»</>}
                 {!!c.saintCandidates.length && <> · в каталоге: {c.saintCandidates.map((s) => s.name).join("; ")}</>}
             </div>
+            {c.where && <div className="text-slate-600">Где: {c.where}</div>}
             <div className="flex gap-3 mt-1">
+                {isClear(c) && (
+                    <button disabled={pending} className="text-green-800"
+                            title={`${c.saintCandidates[0].name} — ${c.templeSlugs[0]}`}
+                            onClick={() => start(async () => {
+                                const v = formOfCandidate(c);
+                                const errs = await call({ action: "create", candidateId: c.id, relic: toPayload({ ...EMPTY_RELIC, ...v } as RelicFormValue) });
+                                // Не принялось — говорим почему; тогда её оформляют формой.
+                                if (errs) alert(errs.join("\n"));
+                                router.refresh();
+                            })}>
+                        принять как есть
+                    </button>
+                )}
                 <button className="text-amber-800" onClick={() => setOpen(!open)}>{open ? "закрыть" : "оформить запись"}</button>
                 <button disabled={pending} className="text-red-800"
                         onClick={() => start(async () => { await call({ action: "dismiss-candidate", id: c.id }); router.refresh(); })}>

@@ -173,6 +173,7 @@
 | `cslav:build` | после правки свёртки написаний, следом за `db:search-index` |
 | `db:fix-paragraphs`, `db:fix-accents`, `accents:add` | после импортов текстов |
 | `accents:load` | после правки книг, песнопений или `lexems`; локально с `NODE_ENV=development` |
+| `relics:azbyka` | по желанию: постоянные святыни из раздела «Святыни» «Азбуки паломника», находки на разбор (без `--write` — только показать) |
 | `relics:crawl` | на сервере, по желанию раз в месяц: обход сайтов храмов, находки на разбор в `/admin/relics` (без `--write` — только показать) |
 | `citations:stats`, `names:index`, `health:snapshot` | после выкладки корпуса песнопений или указателя имён |
 | `bible:*`, `recompute-bible-canon.ts`, `verify-bible-migration.ts` | после правки `src/lib/bible/mappings.ts` или нового издания |

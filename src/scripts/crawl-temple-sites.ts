@@ -4,10 +4,10 @@ import { writeFileSync } from "node:fs";
 import clientPromise from "@/lib/mongodb";
 import { filterOf } from "@/lib/temples";
 import {
-    articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, mentionsOf, nameStems, newsSections,
-    parseRobots, plain, publishedOf, robotsAllows, siteOf, sitemapLocs, textOf, titleOf, type RobotsRules,
+    articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, mentionsOf, newsSections,
+    matchSaints, parseRobots, publishedOf, robotsAllows, siteOf, sitemapLocs, textOf, titleOf, type RobotsRules, type SaintRow,
 } from "@/lib/pilgrimage/crawl";
-import { recentlyCrawled, recordCrawl, upsertCandidate, type CandidateInput } from "@/lib/pilgrimage/candidates";
+import { loadSaintIndex, recentlyCrawled, recordCrawl, upsertCandidate, type CandidateInput } from "@/lib/pilgrimage/candidates";
 
 // Обходчик сайтов храмов: ищет новости о святынях и кладёт их кандидатами на
 // разбор в /admin/relics. В реестр не пишет ничего (см. @/lib/pilgrimage/crawl).
@@ -145,19 +145,6 @@ interface SiteResult {
     pages: number;
     candidates: CandidateInput[];
 }
-
-/** Святые каталога для сличения догадок: имя и прочие имена, приведённые. */
-type SaintRow = { dneslovId: string; name: string; slug: string | null; hay: string };
-
-const matchSaints = (guess: string | null, saints: SaintRow[]) => {
-    if (!guess) return [];
-    const stems = nameStems(guess);
-    if (!stems.length) return [];
-    return saints
-        .filter((s) => stems.every((stem) => s.hay.includes(stem)))
-        .slice(0, 5)
-        .map(({ dneslovId, name, slug }) => ({ dneslovId, name, slug }));
-};
 
 const crawlSite = async (site: Site, saints: SaintRow[]): Promise<SiteResult> => {
     const result: SiteResult = { site: site.key, outcome: "ok", pages: 0, candidates: [] };
@@ -304,14 +291,7 @@ const main = async () => {
     const recent = FORCE || ONLY_SITE ? new Set<string>() : await recentlyCrawled(new Date(Date.now() - RECRAWL_DAYS * 86400000));
     const todo = [...sites.values()].filter((s) => !recent.has(s.key)).slice(0, LIMIT);
 
-    const saints: SaintRow[] = (await client.db("typikon").collection("saints")
-        .find({}, { projection: { _id: 0, name: 1, altNames: 1, slug: 1, externals: 1 } }).toArray())
-        .map((s: any) => ({
-            dneslovId: String((s.externals ?? []).find((e: any) => e.source === "dneslov")?.id ?? ""),
-            name: s.name, slug: s.slug ?? null,
-            hay: plain([s.name, ...(s.altNames ?? [])].join(" ")),
-        }))
-        .filter((s) => s.dneslovId);
+    const saints = await loadSaintIndex();
 
     console.log(`храмов с сайтом: ${temples.length}; сайтов: ${sites.size}; соцсети и прочее пропущено: ${skippedSocial}`);
     console.log(`обойдено недавно (${RECRAWL_DAYS} дн.): ${recent.size}; к обходу: ${todo.length}`
