@@ -10,16 +10,22 @@ import {reportError} from "@/lib/reportError";
 // внешние ключи хранятся списком). Поэтому выборки берут не номер, а их набор.
 
 /** Тексты, написанные к памяти святого (или им самим — см. dneslovType). */
-export const getItems = cachedTuple(async (ids: string[]): Promise<[any, any]> => {
+//
+// По ключу каталога (`texts.saintId`, @/lib/textSaints); номер святцев — запасной
+// путь для текстов, ещё не сверенных с каталогом.
+export const getItems = cachedTuple(async (saintId: string | null, ids: string[]): Promise<[any, any]> => {
     try {
-        if (!ids.length) return [[], null];
+        const or: Record<string, unknown>[] = [];
+        if (saintId) or.push({ saintId });
+        if (ids.length) or.push({ dneslovId: { $in: ids } });
+        if (!or.length) return [[], null];
         const client = await clientPromise;
         const db = client.db("typikon");
 
         const texts = await db
             .collection("texts")
             .aggregate([
-                { $match: { dneslovId: { $in: ids } } },
+                { $match: { $or: or } },
                 {
                     $addFields: {
                         id: { $toString: "$_id" },
@@ -38,16 +44,19 @@ export const getItems = cachedTuple(async (ids: string[]): Promise<[any, any]> =
 // Тексты, в которых святой упомянут, — обратная сторона mentionIds. Вместе с текстом
 // отдаём и сам фрагмент (texts.mentions[].context): ради него ревью в /admin/mentions
 // и затевалось, а список одних заголовков читать нечем.
-export const getMentions = cachedTuple(async (ids: string[]): Promise<[any, any]> => {
+export const getMentions = cachedTuple(async (saintId: string | null, ids: string[]): Promise<[any, any]> => {
     try {
-        if (!ids.length) return [[], null];
+        const or: Record<string, unknown>[] = [];
+        if (saintId) or.push({ mentionSaintIds: saintId });
+        if (ids.length) or.push({ mentionIds: { $elemMatch: { $in: ids } } });
+        if (!or.length) return [[], null];
         const client = await clientPromise;
         const db = client.db("typikon");
 
         const texts = await db
             .collection("texts")
             .aggregate([
-                { $match: { mentionIds: { $elemMatch: { $in: ids } } } },
+                { $match: { $or: or } },
                 {
                     $addFields: {
                         id: { $toString: "$_id" },

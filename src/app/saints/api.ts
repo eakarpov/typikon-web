@@ -40,13 +40,24 @@ export const getSaintRows = cached(async (): Promise<SaintRow[]> => {
     const db = client.db("typikon");
     const texts = db.collection("texts");
 
-    const [own, mentioned, saints] = await Promise.all([
+    // Счёт — по ключам каталога (@/lib/textSaints); номера — только у текстов,
+    // чей святой в каталоге не нашёлся (память вне каталога).
+    const [ownByKey, mentionedByKey, own, mentioned, saints] = await Promise.all([
         texts.aggregate([
-            { $match: { dneslovId: { $nin: [null, ""] }, readiness: { $in: LINKABLE } } },
+            { $match: { saintId: { $nin: [null, ""] }, readiness: { $in: LINKABLE } } },
+            { $group: { _id: "$saintId", n: { $sum: 1 } } },
+        ]).toArray(),
+        texts.aggregate([
+            { $match: { mentionSaintIds: { $exists: true, $ne: [] }, readiness: { $in: LINKABLE } } },
+            { $unwind: "$mentionSaintIds" },
+            { $group: { _id: "$mentionSaintIds", n: { $sum: 1 } } },
+        ]).toArray(),
+        texts.aggregate([
+            { $match: { dneslovId: { $nin: [null, ""] }, saintId: { $in: [null, ""] }, readiness: { $in: LINKABLE } } },
             { $group: { _id: "$dneslovId", n: { $sum: 1 } } },
         ]).toArray(),
         texts.aggregate([
-            { $match: { mentionIds: { $exists: true, $ne: [] }, readiness: { $in: LINKABLE } } },
+            { $match: { mentionIds: { $exists: true, $ne: [] }, mentionSaintIds: { $in: [null, []] }, readiness: { $in: LINKABLE } } },
             { $unwind: "$mentionIds" },
             { $group: { _id: "$mentionIds", n: { $sum: 1 } } },
         ]).toArray(),
@@ -55,6 +66,8 @@ export const getSaintRows = cached(async (): Promise<SaintRow[]> => {
     ]);
     const textsOf = new Map(own.map((r) => [String(r._id), r.n as number]));
     const mentionsOf = new Map(mentioned.map((r) => [String(r._id), r.n as number]));
+    const textsByKey = new Map(ownByKey.map((r) => [String(r._id), r.n as number]));
+    const mentionsByKey = new Map(mentionedByKey.map((r) => [String(r._id), r.n as number]));
 
     const rows: SaintRow[] = [];
     const covered = new Set<string>();
@@ -63,8 +76,8 @@ export const getSaintRows = cached(async (): Promise<SaintRow[]> => {
         numbers.forEach((n: string) => covered.add(n));
         rows.push({
             key: String(s._id), dneslovId: null, slug: s.slug, name: s.name ?? null, altNames: s.altNames ?? [],
-            texts: numbers.reduce((sum: number, n: string) => sum + (textsOf.get(n) ?? 0), 0),
-            mentions: numbers.reduce((sum: number, n: string) => sum + (mentionsOf.get(n) ?? 0), 0),
+            texts: (textsByKey.get(String(s._id)) ?? 0) + numbers.reduce((sum: number, n: string) => sum + (textsOf.get(n) ?? 0), 0),
+            mentions: (mentionsByKey.get(String(s._id)) ?? 0) + numbers.reduce((sum: number, n: string) => sum + (mentionsOf.get(n) ?? 0), 0),
         });
     }
     // Памяти вне каталога — прежние строки по номеру.

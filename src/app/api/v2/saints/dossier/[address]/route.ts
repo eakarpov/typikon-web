@@ -59,8 +59,8 @@ export async function GET(
         const corpus = rulesDb() !== null;
 
         const [texts, mentions, memories, dedications, noble] = await Promise.all([
-            getItems(ids).then(([rows]) => rows ?? []),
-            getMentions(ids).then(([rows]) => rows ?? []),
+            getItems(String(saint._id), ids).then(([rows]) => rows ?? []),
+            getMentions(String(saint._id), ids).then(([rows]) => rows ?? []),
             memoriesOfSaint(String(saint._id), ids),
             dedicationsOfSaint(String(saint._id), ids),
             getLinkedNoble(ids).then(([row]) => row ?? null),

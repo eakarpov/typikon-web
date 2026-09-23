@@ -579,6 +579,9 @@ async function main() {
         );
         updated++;
     }
+    // Ключи каталога у новых упоминаний (@/lib/textSaints).
+    const { syncTextSaintsOf } = await import("@/lib/textSaints");
+    await syncTextSaintsOf([...grouped.keys()]);
     console.log(`\nОбновлено текстов: ${updated}`);
     process.exit(0);
 }

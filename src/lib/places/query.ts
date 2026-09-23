@@ -357,28 +357,48 @@ export const placesIndex = cached(loadIndex, ["places-index"], [CacheTag.PLACES]
 // святого (texts.dneslovId), и это упоминание принято. Это «упомянуто в житии», а не
 // кафедра или родина: в житии названы и места, где святой не бывал. Так и подписано.
 
-export interface SaintOfPlace { dneslovId: string; name: string; href: string; texts: number }
+export interface SaintOfPlace {
+    /** Ключ строки: ключ записи каталога или, для памяти вне каталога, номер святцев. */
+    dneslovId: string;
+    name: string;
+    href: string;
+    texts: number;
+}
 
 const loadSaintsOfPlace = async (id: string): Promise<SaintOfPlace[]> => {
     try {
         const rows = await (await db()).collection(PLACE_MENTIONS).aggregate([
             { $match: { placeId: new ObjectId(id), corpus: "text", status: "approved" } },
-            { $lookup: { from: "texts", localField: "textId", foreignField: "_id", as: "text", pipeline: [{ $project: { dneslovId: 1 } }] } },
+            { $lookup: { from: "texts", localField: "textId", foreignField: "_id", as: "text", pipeline: [{ $project: { dneslovId: 1, saintId: 1 } }] } },
             { $unwind: "$text" },
-            { $match: { "text.dneslovId": { $nin: [null, ""] } } },
-            { $group: { _id: "$text.dneslovId", texts: { $sum: 1 } } },
+            // Святой текста — ключом каталога (@/lib/textSaints), номером — только
+            // у текстов, чей святой в каталоге не нашёлся.
+            { $project: { key: { $cond: [{ $in: ["$text.saintId", [null, ""]] }, { $concat: ["n:", { $ifNull: ["$text.dneslovId", ""] }] }, "$text.saintId"] } } },
+            { $match: { key: { $nin: ["n:", null] } } },
+            { $group: { _id: "$key", texts: { $sum: 1 } } },
         ]).toArray();
-        const ids = rows.map((r) => String(r._id));
-        if (!ids.length) return [];
-        const [names, slugs] = await Promise.all([saintNames(ids), saintSlugs(ids)]);
+        const keys = rows.map((r) => String(r._id)).filter((k) => !k.startsWith("n:"));
+        const numbers = rows.map((r) => String(r._id)).filter((k) => k.startsWith("n:")).map((k) => k.slice(2));
+        if (!keys.length && !numbers.length) return [];
+        const [cards, names, slugs] = await Promise.all([
+            keys.length ? (await db()).collection("saints")
+                .find({ _id: { $in: keys.filter((k) => ObjectId.isValid(k)).map((k) => new ObjectId(k)) } }, { projection: { name: 1, slug: 1 } })
+                .toArray() : Promise.resolve([]),
+            numbers.length ? saintNames(numbers) : Promise.resolve({} as Record<string, string>),
+            numbers.length ? saintSlugs(numbers) : Promise.resolve({} as Record<string, string>),
+        ]);
+        const card = new Map((cards as any[]).map((c) => [String(c._id), c]));
         return rows
-            .filter((r) => names[String(r._id)])
-            .map((r) => ({
-                dneslovId: String(r._id),
-                name: names[String(r._id)]!,
-                href: `/saints/${slugs[String(r._id)] ?? r._id}`,
-                texts: r.texts,
-            }))
+            .map((r) => {
+                const key = String(r._id);
+                if (key.startsWith("n:")) {
+                    const n = key.slice(2);
+                    return names[n] ? { dneslovId: n, name: names[n]!, href: `/saints/${slugs[n] ?? n}`, texts: r.texts } : null;
+                }
+                const c = card.get(key);
+                return c?.name && c?.slug ? { dneslovId: key, name: c.name as string, href: `/saints/${c.slug}`, texts: r.texts } : null;
+            })
+            .filter((r): r is SaintOfPlace => !!r)
             .sort((a, b) => b.texts - a.texts || a.name.localeCompare(b.name, "ru"));
     } catch (e) {
         reportError(e, { where: "lib/places/query#loadSaintsOfPlace" });
@@ -390,11 +410,15 @@ export const saintsOfPlace = cached(loadSaintsOfPlace, ["place-saints"], [CacheT
 
 export interface PlaceOfSaint { id: string; name: string; href: string; texts: number }
 
-const loadPlacesOfSaint = async (dneslovIds: string[]): Promise<PlaceOfSaint[]> => {
-    if (!dneslovIds.length) return [];
+const loadPlacesOfSaint = async (saintId: string | null, dneslovIds: string[]): Promise<PlaceOfSaint[]> => {
+    // Тексты святого — по ключу каталога и, для несверенных, по номеру святцев.
+    const or: Record<string, unknown>[] = [];
+    if (saintId) or.push({ saintId });
+    if (dneslovIds.length) or.push({ dneslovId: { $in: dneslovIds } });
+    if (!or.length) return [];
     try {
         const d = await db();
-        const texts = await d.collection("texts").find({ dneslovId: { $in: dneslovIds } }, { projection: { _id: 1 } }).toArray();
+        const texts = await d.collection("texts").find({ $or: or }, { projection: { _id: 1 } }).toArray();
         if (!texts.length) return [];
         const rows = await d.collection(PLACE_MENTIONS).aggregate([
             { $match: { textId: { $in: texts.map((t) => t._id) }, corpus: "text", status: "approved" } },

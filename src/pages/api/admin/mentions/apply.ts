@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from "@/lib/mongodb";
+import { syncTextSaintsOf } from "@/lib/textSaints";
 import { checkRightsBack } from "@/lib/admin/back";
 import {reportError} from "@/lib/reportError";
 
@@ -68,6 +69,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             );
             links += ids.length;
         }
+
+        // Ключи каталога у упоминаний — по номерам (@/lib/textSaints).
+        await syncTextSaintsOf([...byText.values()].map((e) => e.textId));
 
         await collection.updateMany(
             { status: "approved" },

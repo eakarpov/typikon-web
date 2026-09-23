@@ -169,10 +169,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // есть номер святцев и текст: у святых нашего корпуса (Собор новомучеников,
         // святые из памятей Минеи) номера нет, а страница есть. Дата правки — самая
         // свежая из правки записи и наших текстов её номеров.
+        // Даты текстов — по ключам каталога (@/lib/textSaints); по номерам — только
+        // у текстов, чей святой в каталоге не нашёлся.
+        const keyDates = await db.collection("texts").aggregate([
+            { $match: { readiness: { $in: READABLE_TEXTS }, $or: [{ saintId: { $nin: [null, ""] } }, { mentionSaintIds: { $exists: true, $ne: [] } }] } },
+            { $project: { updatedAt: 1, keys: { $setUnion: [
+                { $cond: [{ $in: ["$saintId", [null, ""]] }, [], ["$saintId"]] },
+                { $ifNull: ["$mentionSaintIds", []] },
+            ] } } },
+            { $unwind: "$keys" },
+            { $group: { _id: "$keys", updatedAt: { $max: "$updatedAt" } } },
+        ]).toArray();
+        const keyDateOf = new Map(keyDates.map((t: any) => [String(t._id), t.updatedAt as Date | undefined]));
         const textDates = await db.collection("texts").aggregate([
             {
                 $match: {
                     readiness: { $in: READABLE_TEXTS },
+                    saintId: { $in: [null, ""] },
                     $or: [
                         { dneslovId: { $nin: [null, ""] } },
                         { mentionIds: { $exists: true, $ne: [] } },
@@ -203,7 +216,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const saints = catalog.map((s: any) => {
             const numbers = (s.externals ?? []).filter((e: any) => e.source === "dneslov").map((e: any) => String(e.id));
             numbers.forEach((n: string) => covered.add(n));
-            return { path: `/saints/${s.slug}`, updatedAt: latest([s.updatedAt, ...numbers.map((n: string) => textDateOf.get(n))]) };
+            return { path: `/saints/${s.slug}`, updatedAt: latest([s.updatedAt, keyDateOf.get(String(s._id)), ...numbers.map((n: string) => textDateOf.get(n))]) };
         });
         // Памяти вне каталога — по номеру, как прежде: страница по нему работает.
         for (const [n, updatedAt] of textDateOf) if (!covered.has(n)) saints.push({ path: `/saints/${n}`, updatedAt });
