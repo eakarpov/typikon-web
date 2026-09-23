@@ -161,7 +161,7 @@ const SOURCE_CONDITION: Record<string, string> = {
 /**
  * Условия отбора. Все — через плейсхолдеры: в этом самом месте, но в поиске по
  * родословной, строка запроса однажды уже оказалась подставленной в SQL
- * напрямую (см. аудит в ROADMAP).
+ * напрямую (см. docs/archive/audits.md).
  */
 export const conditionsFor = (filters: ChantFilters): Condition[] => {
     const out: Condition[] = [];

@@ -15,7 +15,7 @@ export interface TelegramPostInput {
 // Если api.telegram.org недоступен напрямую (блокировка у хостера/региона) — два способа обхода,
 // оба включаются переменными окружения, менять код не нужно:
 //   TELEGRAM_API_BASE  — базовый URL вместо https://api.telegram.org (например свой релей-воркер
-//                        на Cloudflare — см. ROADMAP.md за готовым кодом воркера);
+//                        на Cloudflare — готовый код воркера — telegram-relay/worker.js);
 //   TELEGRAM_PROXY_URL — адрес HTTP/SOCKS5-прокси (например http://user:pass@host:port),
 //                        запросы к TELEGRAM_API_BASE пойдут через него.
 const TELEGRAM_API_BASE = process.env.TELEGRAM_API_BASE || "https://api.telegram.org";

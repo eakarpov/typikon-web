@@ -1,6 +1,6 @@
 // Тянет из Wikidata княжеский ствол Рюриковичей (прямой P53=Рюриковичи) + одну границу наружу
 // (супруги и дети, не помеченные P53=Рюриковичи — точки стыковки с другими родами) и раскладывает
-// в staging_families/staging_nobles/staging_couples (см. migration-001, ROADMAP.md) на ревью в
+// в staging_families/staging_nobles/staging_couples (см. migration-001, docs/archive/product.md) на ревью в
 // /admin/nobles/import. Ничего не пишет в nobles/families/couples напрямую — только staging.
 //
 // Запуск (локально, .env.development):
