@@ -186,7 +186,7 @@ describe("варианты службы", () => {
         date: "2026-06-12", churchDate: { month: 5, day: 30 }, weekday: "pyatnitsa",
         weekdayLabel: "пятница", dayVariant: "obychny", pascha: "2026-04-12",
         paschaOffset: 61, tone: 4, triod: null, triodLabel: null, postWeek: null,
-        memories: [], variants,
+        memories: [], variants, transfers: [],
     });
 
     it("принимает первый вариант — тот, что назначает устав", () => {

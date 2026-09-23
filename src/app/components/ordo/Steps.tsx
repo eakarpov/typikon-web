@@ -123,9 +123,9 @@ const Parallel = ({ item }: { item: any }) => {
 };
 
 /** Обычная строка места: текст, язык, откуда, и языки рядом. */
-const Plain = ({ item }: { item: any }) => (
+const Plain = ({ item, cue }: { item: any; cue?: boolean }) => (
     <>
-        <Line text={item.text || item.cue} lang={item.language} />
+        <Line text={cue ? cueOf(item.text || item.cue) : (item.text || item.cue)} lang={item.language} />
         <Lang lang={item.language} />
         <Cite item={item} />
         <Parallel item={item} />
@@ -164,7 +164,7 @@ const CanonHead = ({ item }: { item: any }) => {
 };
 
 /** Единица канона, названная своим именем. Неузнанная — как обычная строка. */
-const CanonUnit = ({ item, depth }: { item: any; depth: number }) => {
+const CanonUnit = ({ item, depth, cue }: { item: any; depth: number; cue?: boolean }) => {
     if (item.is_nested_step) {
         // Ектения или седален, перенесённые внутрь канона: это ШАГ, и рисует
         // его тот же Step, иначе выйдет пустая строка.
@@ -184,7 +184,7 @@ const CanonUnit = ({ item, depth }: { item: any; depth: number }) => {
     return (
         <div className="text-sm">
             {подпись && <span className="text-slate-500 mr-1">{подпись}:</span>}
-            <Line text={item.text || item.cue} lang={item.language} />
+            <Line text={cue ? cueOf(item.text || item.cue) : (item.text || item.cue)} lang={item.language} />
             <Lang lang={item.language} />
             <Parallel item={item} />
         </div>
@@ -195,7 +195,7 @@ const isCanon = (items: any[]) =>
     items.some(it => it.is_canon_head || it.is_ode_header || it.is_irmos
         || it.is_troparion || it.is_katavasia || it.is_biblical_verse);
 
-const Canon = ({ items, depth }: { items: any[]; depth: number }) => {
+const Canon = ({ items, depth, cue }: { items: any[]; depth: number; cue?: boolean }) => {
     let последний: string | null = null;
     return (
         <div className="pl-3 border-l border-slate-200 flex flex-col gap-0.5 mt-1">
@@ -212,7 +212,7 @@ const Canon = ({ items, depth }: { items: any[]; depth: number }) => {
                                 ── {рубеж} ──
                             </div>
                         )}
-                        <CanonUnit item={item} depth={depth} />
+                        <CanonUnit item={item} depth={depth} cue={cue} />
                     </React.Fragment>
                 );
             })}
@@ -220,15 +220,19 @@ const Canon = ({ items, depth }: { items: any[]; depth: number }) => {
     );
 };
 
-const Items = ({ items, depth }: { items: any[]; depth: number }) => {
-    if (isCanon(items)) return <Canon items={items} depth={depth} />;
+/**
+ * `cue` — строки места зачином: в схеме и в чужих местах тетради нужно
+ * опознание, а не текст (assemble.cued в движке делает то же).
+ */
+const Items = ({ items, depth, cue }: { items: any[]; depth: number; cue?: boolean }) => {
+    if (isCanon(items)) return <Canon items={items} depth={depth} cue={cue} />;
     return (
         <ol className="list-none pl-3 border-l border-slate-200 flex flex-col gap-1 mt-1">
             {items.map((item, i) => (
                 <li key={i} className="text-sm">
                     {item.is_nested_step
                         ? <Step step={{ ...item.step, depth: depth + 1 }} />
-                        : <Plain item={item} />}
+                        : <Plain item={item} cue={cue} />}
                 </li>
             ))}
         </ol>
@@ -256,8 +260,23 @@ const Actions = ({ step }: { step: OrdoStep }) => {
     );
 };
 
+/**
+ * Степени тетради роли (assemble.ROLE_VIEWS): своё — крупно и с чертой слева,
+ * чужое — мельче и бледнее, но целиком. `cue` режется в самих строках.
+ */
+const DISPLAY_CLASS: Record<string, string> = {
+    loud: "border-l-2 border-red-900/50 pl-2 [&_.text-sm]:text-base",
+    quiet: "opacity-60 [&_.text-sm]:text-[13px]",
+};
+
 const Step = ({ step }: { step: OrdoStep }) => {
     if (step.display === "hidden") return null;
+    const tone = step.display ? DISPLAY_CLASS[step.display] : undefined;
+    return tone ? <div className={tone}><StepBody step={step} /></div> : <StepBody step={step} />;
+};
+
+const StepBody = ({ step }: { step: OrdoStep }) => {
+    const cue = step.display === "cue";
 
     const depth = step.depth ?? 0;
     const pad = { marginLeft: `${depth * 14}px` };
@@ -330,7 +349,7 @@ const Step = ({ step }: { step: OrdoStep }) => {
                         <span className="text-[11px] text-slate-400 ml-2">{step.condition_text}</span>
                     )}
                 </span>
-                {step.items?.length ? <Items items={step.items} depth={depth} /> : null}
+                {step.items?.length ? <Items items={step.items} depth={depth} cue={cue} /> : null}
             </div>
         );
     }
@@ -353,7 +372,7 @@ const Step = ({ step }: { step: OrdoStep }) => {
                 )}
             </div>
             {step.items?.length
-                ? <Items items={step.items} depth={depth} />
+                ? <Items items={step.items} depth={depth} cue={cue} />
                 : (
                     // Пустое место показываем, а не прячем: дыра в данных
                     // честнее молча пропущенной строки.

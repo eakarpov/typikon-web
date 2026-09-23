@@ -14,10 +14,24 @@ import {reportError} from "@/lib/reportError";
 
 export const ORDO_TIMEOUT_MS = 8000;
 
+/**
+ * Служба суток ждёт дольше: холодная сборка всенощного ходит в сеть за
+ * зачалами (typikon-rules/src/readings.py, свой тайм-аут 20 с), и оборвать
+ * её раньше значит показать «не собралась» там, где она просто небыстрая.
+ * Ждёт каждая служба в своём Suspense — остальным это не мешает.
+ */
+export const ORDO_SUTKI_TIMEOUT_MS = 25000;
+
+export type OrdoDisplay = "loud" | "full" | "quiet" | "cue" | "hidden";
+
 export interface OrdoStep {
     kind: string;
     depth?: number;
-    display?: "full" | "cue" | "hidden";
+    /**
+     * Как показать шаг. Пять степеней — из тетрадей ролей (assemble.ROLE_VIEWS):
+     * loud — своё крупно, quiet — чужое мельче, cue — зачином.
+     */
+    display?: OrdoDisplay;
     label?: string;
     speaker?: string;
     text?: string;
@@ -78,6 +92,7 @@ const ask = async <T>(
     // Повторяемые параметры отдельно: престолов у храма бывает несколько, а
     // Record такого не выражает — второй ключ затёр бы первый молча.
     repeated?: [string, string][],
+    timeoutMs: number = ORDO_TIMEOUT_MS,
 ): Promise<T | null> => {
     const root = base();
     if (!root) return null;
@@ -90,22 +105,32 @@ const ask = async <T>(
         if (v) url.searchParams.append(k, v);
     }
 
-    try {
-        const response = await fetch(url, {
-            signal: AbortSignal.timeout(ORDO_TIMEOUT_MS),
-            // Последование зависит от десятка параметров разом, и кэшировать
-            // его по адресу незачем: сборка стоит миллисекунды, а вариантов
-            // столько, что кэш всё равно не прогреется.
-            cache: "no-store",
-        });
-        if (!response.ok) {
-            console.error(`ordo service ${url.pathname}: ${response.status}`);
+    // ОДИН ПОВТОР на обрыв соединения. Служба отвечает по HTTP/1.0 и
+    // закрывает сокет после ответа, а клиент, спрашивающий её разом многими
+    // запросами (суточный круг — десяток служб), изредка попадает в уже
+    // закрытое соединение: «fetch failed», хотя до службы запрос не дошёл
+    // вовсе. Тайм-аут не повторяем — служба занята, и второй заход её не
+    // разгрузит.
+    for (let attempt = 1; ; attempt++) {
+        try {
+            const response = await fetch(url, {
+                signal: AbortSignal.timeout(timeoutMs),
+                // Последование зависит от десятка параметров разом, и кэшировать
+                // его по адресу незачем: сборка стоит миллисекунды, а вариантов
+                // столько, что кэш всё равно не прогреется.
+                cache: "no-store",
+            });
+            if (!response.ok) {
+                console.error(`ordo service ${url.pathname}: ${response.status}`);
+                return null;
+            }
+            return await response.json() as T;
+        } catch (e) {
+            const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+            if (attempt < 2 && !timedOut) continue;
+            reportError(e, { where: "lib/ordo: служба устава недоступна" });
             return null;
         }
-        return await response.json() as T;
-    } catch (e) {
-        reportError(e, { where: "lib/ordo: служба устава недоступна" });
-        return null;
     }
 };
 
@@ -213,6 +238,8 @@ export interface OrdoLayer extends OrdoOption {
     ustav: string;
 }
 
+export interface OrdoNotebook { role: string; label: string }
+
 export interface OrdoOptions {
     ustavy: OrdoUstav[];
     signs: OrdoLayer[];
@@ -220,6 +247,8 @@ export interface OrdoOptions {
     feasts: OrdoLayer[];
     feastNone: string;
     views: Record<string, string>;
+    /** Тетради действующих лиц: `role:<role>` — подача для него. */
+    notebooks: OrdoNotebook[];
     languages: OrdoOption[];
     predstoyatel: OrdoOption[];
     prihods: { prihod: string; prestoly: { key: string; label: string; isMain: boolean }[] }[];
@@ -248,6 +277,7 @@ export const ordoOptions = async (ustav?: string): Promise<OrdoOptions | null> =
         feasts: layers(raw.feasts),
         feastNone: raw.feast_none ?? "net",
         views: raw.views ?? {},
+        notebooks: raw.notebooks ?? [],
         languages: raw.languages ?? [],
         predstoyatel: raw.predstoyatel ?? [],
         prihods: (raw.prihods ?? []).map((p: any) => ({
@@ -313,6 +343,26 @@ export interface OrdoStoyanie {
     services: OrdoDayService[];
     why: string[];
 }
+
+/**
+ * ПЕРЕНЕСЁННАЯ ПАМЯТЬ — единственное, чем человек дополняет день сам: памяти
+ * дня и варианты называет устав, а перенос решает настоятель. «Главная» —
+ * ради самого святого (тогда он первый), иначе — чтобы память не пропала.
+ * Различить это может только человек (ordo_service._extra).
+ */
+export interface OrdoTransfer {
+    memoryId: string;
+    primary: boolean;
+}
+
+/** Строка адреса `ID` или `ID:primary` — так перенос лежит в адресе страницы. */
+export const parseTransfer = (raw: string): OrdoTransfer | null => {
+    const [memoryId, flag] = raw.split(":");
+    return memoryId?.trim() ? { memoryId: memoryId.trim(), primary: flag === "primary" } : null;
+};
+
+export const formatTransfer = (t: OrdoTransfer) =>
+    t.primary ? `${t.memoryId}:primary` : t.memoryId;
 
 export interface OrdoMemory {
     memoryId: string;
@@ -414,7 +464,16 @@ export interface OrdoDay {
     postWeek: number | null;
     memories: OrdoMemory[];
     variants: OrdoVariant[];
+    /** Перенесённые памяти, как их поняла служба, — с именами. */
+    transfers: (OrdoTransfer & { label: string })[];
 }
+
+// порядок значим: первый престол считается главным
+const prestolParam = (p: OrdoPrestol): [string, string] =>
+    ["prestoly", [p.memoryId, p.kind ?? "", p.label ?? ""].join("|")];
+
+const transferParam = (t: OrdoTransfer): [string, string] =>
+    ["add_memory", t.primary ? `${t.memoryId}:primary` : t.memoryId];
 
 const service = (raw: any): OrdoDayService => ({
     key: raw.key,
@@ -488,12 +547,13 @@ const variant = (raw: any): OrdoVariant => ({
  */
 export const ordoDay = async (
     date: string,
-    opts?: { ustav?: string; prestoly?: OrdoPrestol[] },
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[] },
 ): Promise<OrdoDay | null> => {
     const params: Record<string, string> = { date, ustav: opts?.ustav ?? "" };
-    const raw = await ask<any>("/day", params, (opts?.prestoly ?? []).map(p =>
-        // порядок значим: первый престол считается главным
-        ["prestoly", [p.memoryId, p.kind ?? "", p.label ?? ""].join("|")]));
+    const raw = await ask<any>("/day", params, [
+        ...(opts?.prestoly ?? []).map(prestolParam),
+        ...(opts?.transfers ?? []).map(transferParam),
+    ]);
     if (!raw || raw.error || !raw.day) return null;
 
     const d = raw.day;
@@ -513,6 +573,9 @@ export const ordoDay = async (
             memoryId: m.memory_id, label: m.label, book: m.book ?? null,
         })),
         variants: (d.variants ?? []).map(variant),
+        transfers: (raw.transfers ?? []).map((t: any) => ({
+            memoryId: t.memory_id, primary: Boolean(t.primary), label: t.label ?? t.memory_id,
+        })),
     };
 };
 
@@ -585,4 +648,155 @@ export const monthDates = (year: number, month: number): string[] => {
     }
     out.push(isoDate(d));
     return out;
+};
+
+
+// ─────────────────────────────────────────────────── суточный круг
+
+/**
+ * Абзац «Богослужебных указаний» — данными, а не HTML: прозу пишет движок
+ * (typikon-rules/src/ukazaniya.py), и грамматика её — «глас тот же», «на 8»
+ * — живёт там одна. Вёрстка наша.
+ */
+export type OrdoUkazRun =
+    | { t: string; s?: undefined }
+    | { t: string; s: "b" | "plain" | "sub" | "miss" }
+    | { t: string; s: "cite"; title: string; href?: string }
+    | { s: "rule"; label: string; note: string; t?: undefined };
+
+export type OrdoUkazParagraph =
+    | { kind: "head"; text: string }
+    | { kind: "p"; plain: boolean; runs: OrdoUkazRun[] };
+
+/**
+ * Правила подач — таблицы движка (assemble.ROLE_VIEWS и соседи). Подачу
+ * накладывает сайт, но по ЭТИМ таблицам, а не по своей копии.
+ * Шаг без роли в `roleViews` зовётся пустой строкой.
+ */
+export interface OrdoViewRules {
+    views: Record<string, string>;
+    roleAliases: Record<string, string>;
+    roleViews: Record<string, Record<string, OrdoDisplay>>;
+    readPositions: string[];
+    defaultRole: Record<string, string>;
+    notebooks: OrdoNotebook[];
+}
+
+export interface OrdoSutkiService {
+    key: string;
+    label: string;
+    /** Ключ стояния: `2026-09-26:vecher`. */
+    stoyanie: string;
+    civil: string;
+    part: OrdoStoyanie["part"];
+    partLabel: string;
+    replacedBy: string | null;
+    placementWhy: string | null;
+    /** Не собралась — и почему; остальные поля тогда пусты. */
+    error: string | null;
+    ordo: string | null;
+    feastLabel: string | null;
+    layers: string[];
+    rules: OrdoRule[];
+    /** Шаги БЕЗ подачи — как `ordo.json` пакета .ordo. */
+    steps: OrdoStep[];
+    ukazaniya: OrdoUkazParagraph[];
+}
+
+export interface OrdoSutki {
+    ustav: OrdoUstav | null;
+    date: string;
+    variant: string;
+    services: OrdoSutkiService[];
+    viewRules: OrdoViewRules;
+}
+
+export interface OrdoSutkiQuery {
+    date: string;
+    ustav?: string;
+    variant?: string;
+    transfers?: OrdoTransfer[];
+    /** Службы по ключу; не названы — все, кроме вошедших во всенощное. */
+    services?: string[];
+    /** Стояние: ключ или половина суток. */
+    part?: string;
+    lang?: string;
+    parallel?: string;
+    psalms?: string;
+    bezDiakona?: string;
+    predstoyatel?: string;
+}
+
+const viewRules = (raw: any): OrdoViewRules => ({
+    views: raw?.views ?? {},
+    roleAliases: raw?.role_aliases ?? {},
+    roleViews: raw?.role_views ?? {},
+    readPositions: raw?.read_positions ?? [],
+    defaultRole: raw?.default_role ?? {},
+    notebooks: raw?.notebooks ?? [],
+});
+
+/**
+ * Службы суток — все или названные. Сайт спрашивает их ПО ОДНОЙ, чтобы
+ * первая пришла, не дожидаясь литургии; день движок считает один раз и
+ * держит в кэше, так что лишнего это не стоит.
+ */
+export const ordoSutki = async (query: OrdoSutkiQuery): Promise<OrdoSutki | null> => {
+    const raw = await ask<any>("/sutki", {
+        date: query.date,
+        ustav: query.ustav ?? "",
+        variant: query.variant ?? "",
+        part: query.part ?? "",
+        lang: query.lang ?? "",
+        parallel: query.parallel ?? "",
+        psalms: query.psalms ?? "",
+        bez_diakona: query.bezDiakona ?? "",
+        predstoyatel: query.predstoyatel ?? "",
+    }, [
+        ...(query.transfers ?? []).map(transferParam),
+        ...(query.services ?? []).map(s => ["service", s] as [string, string]),
+    ], ORDO_SUTKI_TIMEOUT_MS);
+    if (!raw || raw.error) return null;
+    return {
+        ustav: raw.ustav ?? null,
+        date: raw.date,
+        variant: raw.variant,
+        services: (raw.services ?? []).map((s: any): OrdoSutkiService => ({
+            key: s.key,
+            label: s.label,
+            stoyanie: s.stoyanie,
+            civil: s.civil,
+            part: s.part,
+            partLabel: s.part_label,
+            replacedBy: s.replaced_by ?? null,
+            placementWhy: s.placement_why ?? null,
+            error: s.error ?? null,
+            ordo: s.ordo ?? null,
+            feastLabel: s.feast_label ?? null,
+            layers: s.layers ?? [],
+            rules: s.rules ?? [],
+            steps: s.steps ?? [],
+            ukazaniya: s.ukazaniya ?? [],
+        })),
+        viewRules: viewRules(raw.view_rules),
+    };
+};
+
+export interface OrdoMemoryFound {
+    memoryId: string;
+    label: string;
+    book: string;
+    month: number | null;
+    day: number | null;
+    sign: string | null;
+}
+
+/** Память для переноса — по имени (движок ищет по заголовку дня). */
+export const ordoMemorySearch = async (q: string): Promise<OrdoMemoryFound[] | null> => {
+    const raw = await ask<any[]>("/memories", { q, limit: "25" });
+    if (!raw) return null;
+    return raw.map(m => ({
+        memoryId: m.memory_id, label: m.label, book: m.book,
+        month: m.month ?? null, day: m.day ?? null, sign: m.sign ?? null,
+    }));
 };
