@@ -106,6 +106,9 @@ const main = async () => {
     const byPerson = new Map<string, { m: MemoryRow; person: MemoryPerson }[]>();
     for (const m of memories) {
         if (linked.has(m._id)) { skippedLinked++; continue; }
+        // Память, присоединённая к записи из святцев (слиянием или «это он»), —
+        // святой уже в каталоге; заводить и обновлять тут нечего.
+        if (((imported.get(m._id) as any)?.externals ?? []).length) { knownByDay++; continue; }
         const date = churchDate(m.month!, m.day!);
         const person = personOf(m.label, m.chin);
         if (person && !imported.has(m._id) && sameDay(person, date)) { knownByDay++; continue; }
