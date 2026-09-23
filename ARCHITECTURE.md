@@ -173,6 +173,7 @@
 | `cslav:build` | после правки свёртки написаний, следом за `db:search-index` |
 | `db:fix-paragraphs`, `db:fix-accents`, `accents:add` | после импортов текстов |
 | `accents:load` | после правки книг, песнопений или `lexems`; локально с `NODE_ENV=development` |
+| `saints:memories` | после `memories:import`: святые из памятей Минеи, которых нет в каталоге; сомнительное — в `/admin/saints/proposals`; затем `saints:slugs -- --with-corpus --write` и `push_saint_uris.py` typikon-rules |
 | `relics:azbyka` | по желанию: постоянные святыни из раздела «Святыни» «Азбуки паломника», находки на разбор (без `--write` — только показать) |
 | `relics:crawl` | на сервере, по желанию раз в месяц: обход сайтов храмов, находки на разбор в `/admin/relics` (без `--write` — только показать) |
 | `citations:stats`, `names:index`, `health:snapshot` | после выкладки корпуса песнопений или указателя имён |

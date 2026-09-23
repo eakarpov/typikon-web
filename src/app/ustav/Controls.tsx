@@ -1,7 +1,7 @@
 'use client';
 import React, { useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import type { OrdoOptions, OrdoService } from "@/lib/ordo";
+import type { OrdoLayer, OrdoOptions, OrdoService } from "@/lib/ordo";
 import { MONTH_LABELS } from "@/utils/chantLabels";
 
 // Чем задаётся вопрос к уставу. Состояние держим в адресе страницы, а не в
@@ -29,13 +29,17 @@ const Controls = ({ services, options, params }: Props) => {
         router.push(`${pathname}?${next.toString()}`);
     }, [params, pathname, router]);
 
+    // `id` — то, чем пункт отличается от соседа В СПИСКЕ, а не значение поля.
+    // У слоёв устава это не одно и то же: «без знака» есть и у никоновского,
+    // и у дониконовского, значение у них одно (`sign=bez-znaka`), а слои
+    // разные, и различает их layerId.
     const select = (name: string, empty: string | null,
-                    options: { key: string | number; label: string }[]) => (
+                    options: { key: string | number; label: string; id?: string }[]) => (
         <select className={SELECT} value={params[name] || ""}
                 onChange={e => push({ [name]: e.target.value })}>
             {empty !== null && <option value="">{empty}</option>}
             {options.map(o => (
-                <option key={o.key} value={String(o.key)}>{o.label}</option>
+                <option key={o.id ?? o.key} value={String(o.key)}>{o.label}</option>
             ))}
         </select>
     );
@@ -43,6 +47,38 @@ const Controls = ({ services, options, params }: Props) => {
     const days = Array.from({ length: 31 }, (_, i) => ({ key: i + 1, label: String(i + 1) }));
     const months = MONTH_LABELS.slice(1).map((label, i) => ({ key: i + 1, label }));
     const prihod = options?.prihods.find(p => p.prihod === params.prihod);
+
+    // ПО КАКОМУ УСТАВУ СЛУЖИМ — вопрос прежде знака, а не рядом с ним: знак,
+    // вариант дня и праздничный слой принадлежат уставу, и одного их ключа
+    // мало, чтобы назвать слой. Пока устав не спрашивался, списки шли слоями
+    // обоих уставов вперемешку: дониконовские пункты ставили те же значения,
+    // что никоновские, и выбрать их было нельзя — собиралась никоновская
+    // служба, о чём форма молчала.
+    //
+    // Устав — ось УСТАВА, а не оформления: он решает порядок службы. Редакцию
+    // самих слов заявляет извод книги, и это другой вопрос.
+    const ustav = params.ustav || options?.ustavy[0]?.ustav || "";
+    const своиСлои = (list: OrdoLayer[] | undefined) =>
+        (list ?? []).filter(l => l.ustav === ustav);
+    const signs = своиСлои(options?.signs);
+    const dayVariants = своиСлои(options?.dayVariants);
+    const feasts = своиСлои(options?.feasts);
+
+    // СМЕНА УСТАВА СБРАСЫВАЕТ ТО, ЧЕГО У НОВОГО НЕТ. Уставы совпадают не
+    // ключ в ключ: пасхальных знаков у дониконовского не написано вовсе, и
+    // оставленный знак адресовал бы несуществующий слой — служба собралась бы
+    // без единого правила, а форма показала бы пустой выбор.
+    const switchUstav = (next: string) => {
+        const has = (list: OrdoLayer[], key?: string) =>
+            !key || list.some(l => l.ustav === next && l.key === key);
+        push({
+            ustav: next,
+            sign: has(options?.signs ?? [], params.sign) ? (params.sign ?? "") : "",
+            day_variant: has(options?.dayVariants ?? [], params.day_variant)
+                ? (params.day_variant ?? "") : "",
+            feast: has(options?.feasts ?? [], params.feast) ? (params.feast ?? "") : "",
+        });
+    };
 
     return (
         <div className="flex flex-col gap-2 mb-4">
@@ -55,16 +91,23 @@ const Controls = ({ services, options, params }: Props) => {
             {options && (
                 <>
                     <div className="flex flex-wrap gap-2 items-baseline">
+                        <select className={SELECT} value={ustav}
+                                onChange={e => switchUstav(e.target.value)}>
+                            {options.ustavy.map(u => (
+                                <option key={u.ustav} value={u.ustav}>{u.label}</option>
+                            ))}
+                        </select>
                         {select("sign", "— без устава (показать всё) —",
-                            options.signs.map(s => ({ key: s.key, label: s.label })))}
+                            signs.map(s => ({ key: s.key, label: s.label, id: s.layerId })))}
                         {select("day_variant", null,
-                            options.dayVariants.map(s => ({ key: s.key, label: s.label })))}
+                            dayVariants.map(s => ({ key: s.key, label: s.label, id: s.layerId })))}
                         {select("feast", "— по дню —", [
-                            ...options.feasts.map(s => ({ key: s.key, label: s.label })),
+                            ...feasts.map(s => ({ key: s.key, label: s.label, id: s.layerId })),
                             // Слой праздника определяется по самому дню; этот
                             // пункт нужен, чтобы сказать «а сегодня не праздник»
                             // и увидеть службу без него.
-                            { key: options.feastNone, label: "— не праздничный день —" },
+                            { key: options.feastNone, id: options.feastNone,
+                              label: "— не праздничный день —" },
                         ])}
                     </div>
                     <div className="flex flex-wrap gap-2 items-baseline">

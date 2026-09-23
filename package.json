@@ -103,7 +103,8 @@
     "push:pomyannik": "tsx src/scripts/send-pomyannik-push.ts",
     "push:reading": "tsx src/scripts/send-day-reading-push.ts",
     "relics:crawl": "tsx src/scripts/crawl-temple-sites.ts",
-    "relics:azbyka": "tsx src/scripts/import-azbyka-relics.ts"
+    "relics:azbyka": "tsx src/scripts/import-azbyka-relics.ts",
+    "saints:memories": "tsx src/scripts/import-memory-saints.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

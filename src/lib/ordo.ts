@@ -34,6 +34,8 @@ export interface OrdoRule {
 }
 
 export interface OrdoResult {
+    /** Устав, по которому собрано, — применившийся, а не спрошенный. */
+    ustav: OrdoUstav | null;
     ordo: string;
     requestedOrdo: string;
     switchedFrom: string | null;
@@ -116,6 +118,8 @@ export const ordoServices = () => ask<OrdoService[]>("/services").then(list =>
 
 export interface OrdoQuery {
     ordo?: string;
+    /** Устав: «pre-nikonian/old-rite». Не назвали — движок берёт никоновский. */
+    ustav?: string;
     month?: string;
     day?: string;
     sign?: string;
@@ -144,6 +148,7 @@ export interface OrdoQuery {
 export const buildOrdo = async (query: OrdoQuery): Promise<OrdoResult | null> => {
     const raw = await ask<any>("/ordo", {
         ordo: query.ordo ?? "",
+        ustav: query.ustav ?? "",
         month: query.month ?? "",
         day: query.day ?? "",
         sign: query.sign ?? "",
@@ -164,6 +169,7 @@ export const buildOrdo = async (query: OrdoQuery): Promise<OrdoResult | null> =>
     if (!raw || raw.error) return null;
 
     return {
+        ustav: raw.ustav ?? null,
         ordo: raw.ordo,
         requestedOrdo: raw.requested_ordo,
         switchedFrom: raw.switched_from ?? null,
@@ -180,10 +186,38 @@ export const buildOrdo = async (query: OrdoQuery): Promise<OrdoResult | null> =>
 
 export interface OrdoOption { key: string; label: string }
 
+/**
+ * Устав, по которому служим: «jerusalem/rus-synodal», «pre-nikonian/old-rite».
+ *
+ * Ось УСТАВА, а не оформления: она решает порядок службы, а не редакцию слов
+ * (редакцию заявляет извод самой книги). Слои — знаки, варианты дня,
+ * праздничные — принадлежат уставу и адресуются им.
+ */
+export interface OrdoUstav {
+    ustav: string;
+    rite: string;
+    tradition: string;
+    label: string;
+    known: boolean;
+}
+
+/**
+ * Слой устава — знак службы, вариант дня, праздничный слой.
+ *
+ * КЛЮЧ У СЛОЯ СВОЙ ТОЛЬКО ВНУТРИ УСТАВА: `bez-znaka` есть и у никоновского,
+ * и у дониконовского, и это разные слои. Оттого при каждом стоит свой устав,
+ * а различать их в списке надо по `layerId` — единственному, что уникально.
+ */
+export interface OrdoLayer extends OrdoOption {
+    layerId: string;
+    ustav: string;
+}
+
 export interface OrdoOptions {
-    signs: OrdoOption[];
-    dayVariants: OrdoOption[];
-    feasts: OrdoOption[];
+    ustavy: OrdoUstav[];
+    signs: OrdoLayer[];
+    dayVariants: OrdoLayer[];
+    feasts: OrdoLayer[];
     feastNone: string;
     views: Record<string, string>;
     languages: OrdoOption[];
@@ -191,14 +225,27 @@ export interface OrdoOptions {
     prihods: { prihod: string; prestoly: { key: string; label: string; isMain: boolean }[] }[];
 }
 
-/** Из чего складывается вопрос к уставу: знаки, варианты дня, слои, приходы. */
-export const ordoOptions = async (): Promise<OrdoOptions | null> => {
-    const raw = await ask<any>("/options");
+const layers = (rows: any[]): OrdoLayer[] => (rows ?? []).map((l: any) => ({
+    key: l.key, label: l.label, layerId: l.layer_id, ustav: l.ustav,
+}));
+
+/**
+ * Из чего складывается вопрос к уставу: знаки, варианты дня, слои, приходы.
+ *
+ * Устав спрашивается ЗДЕСЬ, а не отбирается после: слои принадлежат ему, и
+ * кто их адресует, тот и обязан их отбирать. Пока /options отдавала слои всех
+ * уставов разом, списки шли с повторяющимися ключами, и дониконовские пункты
+ * ставили никоновские значения — выбрать их было нельзя вовсе.
+ * Список самих уставов приходит целиком при любом выборе.
+ */
+export const ordoOptions = async (ustav?: string): Promise<OrdoOptions | null> => {
+    const raw = await ask<any>("/options", { ustav: ustav ?? "" });
     if (!raw) return null;
     return {
-        signs: raw.signs ?? [],
-        dayVariants: raw.day_variants ?? [],
-        feasts: raw.feasts ?? [],
+        ustavy: raw.ustavy ?? [],
+        signs: layers(raw.signs),
+        dayVariants: layers(raw.day_variants),
+        feasts: layers(raw.feasts),
         feastNone: raw.feast_none ?? "net",
         views: raw.views ?? {},
         languages: raw.languages ?? [],
