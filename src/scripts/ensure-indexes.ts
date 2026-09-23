@@ -125,6 +125,14 @@ const SPECS: Spec[] = [
     { db: "typikon-users", collection: "relics", key: { status: 1, updatedAt: -1 },
       why: "очередь разбора в админке" },
 
+    // --- typikon-users: находки обходчика сайтов храмов (@/lib/pilgrimage/candidates)
+    { db: "typikon-users", collection: "relicCandidates", key: { url: 1 }, options: { unique: true },
+      why: "одна находка на страницу; повторный обход обновляет, а не плодит" },
+    { db: "typikon-users", collection: "relicCandidates", key: { status: 1, "visit.from": -1, published: -1 },
+      why: "очередь разбора находок в админке" },
+    { db: "typikon-users", collection: "relicCrawl", key: { site: 1 }, options: { unique: true },
+      why: "когда сайт обходили в последний раз — чтобы не ходить к нему каждый прогон" },
+
     // --- typikon-users: ключи публичного API
     { db: "typikon-users", collection: "apiTokens", key: { hash: 1 }, options: { unique: true },
       why: "проверка ключа на каждом запросе к /api/v2; уникальность — страховка от двойного выпуска" },

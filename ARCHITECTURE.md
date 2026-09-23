@@ -39,7 +39,7 @@
 | Хранилище | Что в нём | Откуда берётся |
 |---|---|---|
 | Mongo `typikon` | корпус: тексты, дни, месяцы, седмицы, книги, Библия, святцы, храмы, места, указатели | правится в админке и скриптами; на прод едет дампом (`release:db`) |
-| Mongo `typikon-users` | пользователи, `sessions`, ключи API и их расход, приходы (`parishSettings`, `parishSchedules`, `templeClaims`, …), помянник, место чтения, посты канала, реестр святынь (`relics`) | пишется **только на проде**; дампом не накатывается никогда |
+| Mongo `typikon-users` | пользователи, `sessions`, ключи API и их расход, приходы (`parishSettings`, `parishSchedules`, `templeClaims`, …), помянник, место чтения, посты канала, реестр святынь (`relics`) и находки обходчика (`relicCandidates`, `relicCrawl`) | пишется **только на проде**; дампом не накатывается никогда |
 | Mongo `typikon-csl` | словарь церковнославянского, ударения, указатель написаний | `release-csl` |
 | Mongo `typikon-news` | лента новостей | `news-db-release.sh` |
 | Mongo `typikon-meta` | посещения и их помесячные итоги | пишется сайтом |
@@ -173,6 +173,7 @@
 | `cslav:build` | после правки свёртки написаний, следом за `db:search-index` |
 | `db:fix-paragraphs`, `db:fix-accents`, `accents:add` | после импортов текстов |
 | `accents:load` | после правки книг, песнопений или `lexems`; локально с `NODE_ENV=development` |
+| `relics:crawl` | на сервере, по желанию раз в месяц: обход сайтов храмов, находки на разбор в `/admin/relics` (без `--write` — только показать) |
 | `citations:stats`, `names:index`, `health:snapshot` | после выкладки корпуса песнопений или указателя имён |
 | `bible:*`, `recompute-bible-canon.ts`, `verify-bible-migration.ts` | после правки `src/lib/bible/mappings.ts` или нового издания |
 
