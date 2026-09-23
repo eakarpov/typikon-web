@@ -102,6 +102,8 @@ export const nominativeName = (gen: string, feminine: boolean): string => {
         return gen;
     }
     if (last === "я" && /[иеа]/.test(prev)) return `${stem}й`;
+    // Мягкая основа: «Ла́заря» → «Ла́зарь», «И́горя» → «И́горь».
+    if (last === "я" && /[бвгджзклмнпрстфхцчшщ]/.test(prev)) return `${stem}ь`;
     if (last === "а" && !/[аеёиоуыэюя]/.test(prev)) return stem.replace(/[̀́̑]$/, "");
     if (last === "ы" || (last === "и" && /[гкх]/.test(prev))) return `${stem}а${accent}`;
     return gen;

@@ -144,7 +144,7 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
                     {!!doc?.saints?.length && (
                         <p className="font-serif mt-2">
                             {doc.saints.map((s) => (
-                                <span key={s.dneslovId} className="mr-2">
+                                <span key={s.saintId ?? s.dneslovId ?? s.name ?? ""} className="mr-2">
                                     {s.slug
                                         ? <Link className="text-amber-800 hover:underline" href={`/saints/${s.slug}`}>{s.name}</Link>
                                         : s.name}

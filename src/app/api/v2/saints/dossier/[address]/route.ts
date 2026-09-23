@@ -61,8 +61,8 @@ export async function GET(
         const [texts, mentions, memories, dedications, noble] = await Promise.all([
             getItems(ids).then(([rows]) => rows ?? []),
             getMentions(ids).then(([rows]) => rows ?? []),
-            memoriesOfSaint(ids),
-            dedicationsOfSaint(ids),
+            memoriesOfSaint(String(saint._id), ids),
+            dedicationsOfSaint(String(saint._id), ids),
             getLinkedNoble(ids).then(([row]) => row ?? null),
         ]);
 

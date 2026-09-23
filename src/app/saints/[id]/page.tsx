@@ -73,8 +73,8 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
         // Досье: службы, назначенные этому лицу книгами, и храмы, ему посвящённые.
         // Ни то, ни другое не собирается заново — обе связи уже проставлены и до
         // сих пор просто не сходились на одной странице.
-        memoriesOfSaint(known),
-        dedicationsOfSaint(known),
+        memoriesOfSaint(saint?._id ? String(saint._id) : null, known),
+        dedicationsOfSaint(saint?._id ? String(saint._id) : null, known),
         // Места, названные в чтениях к этой памяти (принятые упоминания, @/lib/places/query).
         placesOfSaint(known),
         // Где пребывают мощи — из реестра святынь, только принятое и с источником.

@@ -11,6 +11,7 @@ test("имя: мужские окончания", () => {
     assert.equal(nominativeName("Ники́ты", false), "Ники́та");
     assert.equal(nominativeName("Па́вла", false), "Па́вел");
     assert.equal(nominativeName("Лу́ки", false), "Лука́");
+    assert.equal(nominativeName("Ла́заря", false), "Ла́зарь");
 });
 
 test("имя: женские окончания", () => {

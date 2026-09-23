@@ -93,7 +93,8 @@ const main = async () => {
     const sameName = (person: MemoryPerson) => {
         if (!person.epithet) return [];
         const stem = epithetStem(person.epithet);
-        return (byGiven.get(bare(person.given)) ?? []).filter((s: any) => names(s).some((n) => n.includes(stem)));
+        // Запись попадает в указатель и по имени, и по прочим именам — сводим её в одну.
+        return [...new Set((byGiven.get(bare(person.given)) ?? []).filter((s: any) => names(s).some((n) => n.includes(stem))))];
     };
 
     let skippedLinked = 0, knownByDay = 0;

@@ -54,7 +54,7 @@ export interface DedicationRow {
     label: string;
     kind: string;
     feasts: TempleFeast[];
-    saints: { dneslovId: string; name: string | null; slug: string | null }[];
+    saints: { saintId?: string | null; dneslovId: string | null; name: string | null; slug: string | null }[];
 }
 
 export interface NearTemple { slug: string; name: string; place: string | null; distanceKm: number; lat: number; lon: number }

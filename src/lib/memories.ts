@@ -10,6 +10,7 @@
 // Данные приходят выгрузкой из корпуса (npm run memories:import) и здесь
 // только читаются: разбор устава живёт в typikon-rules, и мнения о нём у
 // портала нет.
+import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 
@@ -138,9 +139,11 @@ export const getLinkedSaint = cached(async (memoryId: string) => {
     const db = (await clientPromise).db("typikon");
     const link = await db.collection("memory_saint_links")
         .findOne({ memoryId, status: "approved" });
-    if (!link?.dneslovId) return null;
-    const saint = await db.collection("saints")
-        .findOne({ "externals.id": String(link.dneslovId) });
+    const saint = link?.dneslovId
+        ? await db.collection("saints").findOne({ "externals.id": String(link.dneslovId) })
+        // Святой, заведённый из этой самой памяти (import-memory-saints.ts): связь
+        // у него по построению, и выверять её не с чем — она в `provenance`.
+        : await db.collection("saints").findOne({ provenance: { $elemMatch: { table: "memories", id: memoryId } } });
     return saint ? JSON.parse(JSON.stringify(saint)) : null;
 }, ["memory-saint"], [CacheTag.MEMORIES, CacheTag.SAINTS]);
 
@@ -165,15 +168,26 @@ export interface SaintMemoryRow {
  * Номеров святцев у записи бывает несколько (две памяти, сведённые нами в одно
  * лицо), поэтому на входе набор, а не номер.
  */
-export const memoriesOfSaint = cached(async (dneslovIds: string[]): Promise<SaintMemoryRow[]> => {
+export const memoriesOfSaint = cached(async (saintId: string | null, dneslovIds: string[]): Promise<SaintMemoryRow[]> => {
     const ids = [...new Set((dneslovIds ?? []).filter(Boolean).map(String))];
-    if (!ids.length) return [];
-
     const db = (await clientPromise).db("typikon");
-    const links = await db.collection("memory_saint_links")
-        .find({ dneslovId: { $in: ids }, status: "approved" }, { projection: { memoryId: 1 } })
-        .toArray();
-    const memoryIds = [...new Set(links.map((l: any) => l.memoryId).filter(Boolean))];
+
+    // Две дороги к памятям лица. Проверенные связи «память → номер святцев» —
+    // у записей из снимка dneslov; памяти, из которых запись заведена, — у
+    // записей нашего корпуса (provenance). Ключ каталога знает вторые, номера —
+    // первые; страница святого спрашивает обоими.
+    const links = ids.length
+        ? await db.collection("memory_saint_links")
+            .find({ dneslovId: { $in: ids }, status: "approved" }, { projection: { memoryId: 1 } })
+            .toArray()
+        : [];
+    const own = saintId && ObjectId.isValid(saintId)
+        ? await db.collection("saints").findOne({ _id: new ObjectId(saintId) }, { projection: { provenance: 1 } })
+        : null;
+    const memoryIds = [...new Set([
+        ...links.map((l: any) => l.memoryId),
+        ...((own?.provenance ?? []) as any[]).filter((p) => p.table === "memories").map((p) => p.id),
+    ].filter(Boolean))];
     if (!memoryIds.length) return [];
 
     const rows = await db.collection("memories")

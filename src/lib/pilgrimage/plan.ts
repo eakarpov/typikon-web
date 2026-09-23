@@ -120,7 +120,12 @@ export const buildPlan = async (req: TripRequest, days: string[]): Promise<Plan>
     for (const r of relics) whyById.set(r.saintId, `мощи — ${r.siteName}`);
     const whyByNumber = new Map<string, string>();
     for (const s of loaded) for (const d of s.docs as any[]) {
-        for (const saint of d.saints ?? []) if (!whyByNumber.has(saint.dneslovId)) whyByNumber.set(saint.dneslovId, `престол — ${s.name}`);
+        for (const saint of d.saints ?? []) {
+            const why = `престол — ${s.name}`;
+            // Ключ каталога, когда словарь его знает; номер святцев — для прежней сборки словаря.
+            if (saint.saintId) { if (!whyById.has(saint.saintId)) whyById.set(saint.saintId, why); }
+            else if (saint.dneslovId && !whyByNumber.has(saint.dneslovId)) whyByNumber.set(saint.dneslovId, why);
+        }
     }
     const memoriesByDay = new Map<string, PlanDay["memories"]>();
     for (const saint of await routeSaints([...whyById.keys()], [...whyByNumber.keys()])) {

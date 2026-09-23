@@ -43,6 +43,8 @@ interface WikiPage { title: string; text: string; touched: string | null }
  * одна такая задержка не должна обрывать прогон по девяти тысячам страниц.
  * Пауза перед повтором растёт — сервер, которому тяжело, не добиваем.
  */
+const ATTEMPTS = 5;
+
 const askWiki = async (params: URLSearchParams): Promise<any> => {
     for (let attempt = 1; ; attempt++) {
         try {
@@ -51,12 +53,14 @@ const askWiki = async (params: URLSearchParams): Promise<any> => {
             });
             if (res.ok) return await res.json();
             if (res.status < 500 && res.status !== 429) throw new Error(`API ответил ${res.status}`);
-            if (attempt >= 3) throw new Error(`API ответил ${res.status}`);
+            if (attempt >= ATTEMPTS) throw new Error(`API ответил ${res.status}`);
         } catch (e) {
-            if (attempt >= 3) throw e;
+            if (attempt >= ATTEMPTS) throw e;
             console.log(`  повтор ${attempt}: ${String((e as Error).message ?? e)}`);
         }
-        await sleep(DELAY_MS * 5 * attempt);
+        // Пауза растёт до двух минут: сбой 2026-09-23 длился дольше трёх
+        // коротких попыток, и прогон падал на 6 500-й странице из 8 896.
+        await sleep(Math.min(120_000, DELAY_MS * 5 * 2 ** (attempt - 1)));
     }
 };
 
@@ -122,6 +126,10 @@ const main = async () => {
     const found: CandidateInput[] = [];
     let pages = 0, withSection = 0, noPoint = 0, former = 0, nameless = 0;
 
+    // Сайт, так и не ответивший, не должен съедать собранное: прогон
+    // останавливается, говорит где, и отчитывается о том, что успел.
+    let stoppedAt: string | null = null;
+    try {
     outer:
     for (const category of AZBYKA_CATEGORIES) {
         for await (const page of pagesOf(category)) {
@@ -160,6 +168,10 @@ const main = async () => {
             }
             if (pages % 250 === 0) console.log(`  …страниц ${pages}, с разделом «Святыни» ${withSection}, находок ${found.length}`);
         }
+    }
+    } catch (e) {
+        stoppedAt = `после ${pages}-й страницы: ${String((e as Error).message ?? e)}`;
+        console.log(`\nОСТАНОВЛЕНО ${stoppedAt} — отчёт о собранном ниже; повторный прогон начнёт сначала`);
     }
 
     const matchedTemple = found.filter((c) => c.templeSlugs.length).length;

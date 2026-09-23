@@ -238,8 +238,12 @@ export interface DedicationDoc {
     /** Год прославления — черта на волне построек. */
     canonized?: number;
     feasts: TempleFeast[];
-    saints: { dneslovId: string; name: string | null; slug: string | null }[];
-    saintCandidates?: { dneslovId: string; name: string | null; slug: string | null }[];
+    /**
+     * Святые посвящения. `saintId` — ключ каталога: у святых нашего корпуса номера
+     * святцев нет, и искать их по `dneslovId` значило бы не найти вовсе.
+     */
+    saints: { saintId?: string | null; dneslovId: string | null; name: string | null; slug: string | null }[];
+    saintCandidates?: { saintId?: string | null; dneslovId: string | null; name: string | null; slug: string | null }[];
 }
 
 export const getDedication = async (slug: string): Promise<DedicationDoc | null> =>
@@ -422,12 +426,17 @@ export interface SaintDedication {
  * Храмы считаются тем же условием `filterOf`, каким отбирает указатель: иначе
  * число на карточке и выдача /temples?dedication= говорили бы разное.
  */
-export const dedicationsOfSaint = cached(async (dneslovIds: string[]): Promise<SaintDedication[]> => {
+export const dedicationsOfSaint = cached(async (saintId: string | null, dneslovIds: string[]): Promise<SaintDedication[]> => {
     const ids = [...new Set((dneslovIds ?? []).filter(Boolean).map(String))];
-    if (!ids.length) return [];
+    // По ключу каталога — основная дорога; по номеру святцев — для словаря,
+    // собранного до того, как в нём появился ключ.
+    const or: Record<string, unknown>[] = [];
+    if (saintId) or.push({ "saints.saintId": saintId });
+    if (ids.length) or.push({ "saints.dneslovId": { $in: ids } });
+    if (!or.length) return [];
 
     const dedications = await (await clientPromise).db("typikon").collection("dedications")
-        .find({ "saints.dneslovId": { $in: ids } },
+        .find({ $or: or },
             { projection: { _id: 0, slug: 1, short: 1, label: 1 } })
         .toArray();
     if (!dedications.length) return [];
