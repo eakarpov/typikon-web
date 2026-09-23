@@ -169,7 +169,7 @@ const Day = async ({ date }: { date: string }) => {
                 <p className="font-serif text-slate-700">
                     Устав не назвал на этот день ни одной службы, а от службы зависит и трапеза.
                     Посмотреть, что об этом дне знает движок, можно в{" "}
-                    <Link href={`/ustav?date=${date}`} className="text-red-900 hover:underline">
+                    <Link href={`/posledovanie?date=${date}`} className="text-red-900 hover:underline">
                         последовании
                     </Link>.
                 </p>
@@ -248,7 +248,7 @@ const Day = async ({ date }: { date: string }) => {
                         <p className="mt-1 text-amber-700">
                             При другой допускаемой службе книга назначила бы иначе:{" "}
                             {others.map(v => `«${v.label}» — ${v.fastingLabel ?? "неизвестно"}`).join("; ")}.{" "}
-                            <Link href={`/ustav?date=${date}`} className="text-red-900 hover:underline">
+                            <Link href={`/posledovanie?date=${date}`} className="text-red-900 hover:underline">
                                 чем это решается →
                             </Link>
                         </p>
@@ -262,7 +262,7 @@ const Day = async ({ date }: { date: string }) => {
                 <Link href={`/calculator/${date}`} className="text-red-900 hover:underline">
                     чтения этого дня →
                 </Link>
-                <Link href={`/ustav?date=${date}`} className="text-red-900 hover:underline">
+                <Link href={`/posledovanie?date=${date}`} className="text-red-900 hover:underline">
                     как собрана служба →
                 </Link>
             </div>

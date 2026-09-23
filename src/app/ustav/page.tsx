@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { buildOrdo, ordoOptions, ordoServices } from "@/lib/ordo";
 import { myFont } from "@/utils/font";
 import Controls from "./Controls";
-import Ladder from "./Ladder";
-import Steps from "./Steps";
+import Ladder from "@/app/components/ordo/Ladder";
+import Steps from "@/app/components/ordo/Steps";
 
 // Служба собирается на каждый запрос: она зависит от десятка параметров разом,
 // и кэшировать её по адресу незачем — сборка стоит миллисекунды.
