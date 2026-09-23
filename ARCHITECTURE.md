@@ -39,7 +39,7 @@
 | Хранилище | Что в нём | Откуда берётся |
 |---|---|---|
 | Mongo `typikon` | корпус: тексты, дни, месяцы, седмицы, книги, Библия, святцы, храмы, места, указатели | правится в админке и скриптами; на прод едет дампом (`release:db`) |
-| Mongo `typikon-users` | пользователи, `sessions`, ключи API и их расход, приходы (`parishSettings`, `parishSchedules`, `templeClaims`, …), помянник, место чтения, посты канала | пишется **только на проде**; дампом не накатывается никогда |
+| Mongo `typikon-users` | пользователи, `sessions`, ключи API и их расход, приходы (`parishSettings`, `parishSchedules`, `templeClaims`, …), помянник, место чтения, посты канала, реестр святынь (`relics`) | пишется **только на проде**; дампом не накатывается никогда |
 | Mongo `typikon-csl` | словарь церковнославянского, ударения, указатель написаний | `release-csl` |
 | Mongo `typikon-news` | лента новостей | `news-db-release.sh` |
 | Mongo `typikon-meta` | посещения и их помесячные итоги | пишется сайтом |
@@ -83,7 +83,7 @@
 
 `src/lib/cache.ts`: выборки оборачиваются в `cached()` (обёртка над `unstable_cache`) с тегом
 раздела и сроком в час. Теги: `texts`, `days`, `months`, `books`, `weeks`, `signs`, `news`,
-`saints`, `bible`, `memories`, `temples`, `parish`, `citations`, `ordo`, `places`.
+`saints`, `bible`, `memories`, `temples`, `parish`, `citations`, `ordo`, `places`, `relics` (последний — на пять минут: принесённая на время святыня должна исчезать в тот же день).
 
 Сброс — `POST /api/revalidate` с заголовком `x-revalidate-token` (`REVALIDATE_TOKEN`) либо от
 сессии с правом `content`. Его зовут админ-редакторы (`src/lib/admin/revalidate.ts`), каждый

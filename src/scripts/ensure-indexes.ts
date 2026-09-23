@@ -115,6 +115,16 @@ const SPECS: Spec[] = [
     { db: "typikon-news", collection: "posts", key: { status: 1, publishedAt: -1 },
       why: "лента, RSS и точка «новое» в меню — все три берут последние выложенные" },
 
+    // --- typikon-users: реестр святынь (@/lib/pilgrimage/relics)
+    { db: "typikon-users", collection: "relics", key: { location: "2dsphere" },
+      why: "святыни рядом с точкой" },
+    { db: "typikon-users", collection: "relics", key: { templeSlug: 1, status: 1 },
+      why: "святыни на странице храма" },
+    { db: "typikon-users", collection: "relics", key: { saintDneslovId: 1, status: 1 },
+      why: "где пребывают мощи — в досье святого" },
+    { db: "typikon-users", collection: "relics", key: { status: 1, updatedAt: -1 },
+      why: "очередь разбора в админке" },
+
     // --- typikon-users: ключи публичного API
     { db: "typikon-users", collection: "apiTokens", key: { hash: 1 }, options: { unique: true },
       why: "проверка ключа на каждом запросе к /api/v2; уникальность — страховка от двойного выпуска" },
@@ -246,6 +256,10 @@ const SPECS: Spec[] = [
       why: "место по внешнему ключу при импорте и ревью статей Никифора" },
     { db: "typikon", collection: "places", key: { location: "2dsphere" },
       why: "места рядом с точкой и в пределах карты" },
+    // Храмы ищут по точке — «что рядом» и храмы у места. Индекс заводил один
+    // привоз из Wikidata, и свежая база без него роняла бы $geoNear.
+    { db: "typikon", collection: "temples", key: { location: "2dsphere" },
+      why: "храмы рядом с точкой: /ryadom и страница места" },
     { db: "typikon", collection: "place_relations", key: { from: 1, type: 1 },
       why: "связи места: преемники, вложенность, отождествления" },
     { db: "typikon", collection: "place_relations", key: { to: 1, type: 1 },

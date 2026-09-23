@@ -11,6 +11,9 @@ import { countryLabel, JURISDICTIONS, RUSSIAN_CATALOGUE_COUNTRIES } from "@/util
 import { lookupLinks } from "@/utils/templeSources";
 import TempleMap from "./TempleMap";
 import MyTemple from "./MyTemple";
+import ProposeRelic from "./ProposeRelic";
+import RelicLine from "@/app/components/RelicLine";
+import { relicsOfTemple } from "@/lib/pilgrimage/relicsStore";
 
 // Карточка храма. Здесь читатель называет свой храм — и с этого места
 // «свята́го, его́же есть храм» перестаёт быть пустым пазом службы.
@@ -43,6 +46,7 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
     // Никольские храмы разом.
     const dedications = await Promise.all(
         (temple.prestoly ?? []).map(async (p) => ({ prestol: p, doc: await getDedication(p.dedication) })));
+    const relics = await relicsOfTemple(temple.slug);
 
     return (
         <div className={`pt-2 ${myFont.variable}`}>
@@ -150,6 +154,16 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
                     )}
                 </section>
             ))}
+
+            {/* СВЯТЫНИ — из реестра, каждая с источником. Отдельно от престолов:
+                посвящение храма о мощах не говорит ничего. */}
+            <section className="mb-6">
+                <h2 className="font-serif text-lg">Святыни</h2>
+                {relics.length
+                    ? <ul className="mt-1">{relics.map((r) => <RelicLine key={r.id} relic={r} showSite={false} />)}</ul>
+                    : <p className="font-serif text-sm text-slate-500">В реестре святынь записей об этом храме нет.</p>}
+                <ProposeRelic slug={temple.slug} />
+            </section>
 
             {/* Престолов имя называет не все и почти никогда: в приделе престол
                 свой, а приделов у храма бывает три и четыре. К тому же

@@ -15,7 +15,7 @@
 // переживает смену версии воркера: это «я сохранил, значит открою».
 //
 // Версию поднимать при изменении правил: старые кэши удаляются при активации.
-const VERSION = "v2";
+const VERSION = "v3";
 const SHELL_CACHE = `typikon-shell-${VERSION}`;
 const ASSET_CACHE = `typikon-assets-${VERSION}`;
 const PAGE_CACHE = `typikon-pages-${VERSION}`;
@@ -34,11 +34,15 @@ const INDEX_URL = "/__offline-index";
 const PAGE_LIMIT = 100;
 
 // Разделы, чей HTML собирается на сервере из данных вошедшего человека: имя,
-// заметки, ключи API, очередь набора. Признак здесь не «закрыто от поисковика»
-// (тот список шире, см. robots.ts), а «в ответе лежит личное». Такое незачем
-// хранить на диске: показано оно будет только в офлайне, а пережить выход из
-// учётной записи и общий компьютер — переживёт.
-const PRIVATE = /^\/(api|admin|profile|texting|login)(\/|$)/;
+// заметки, ключи API, очередь набора, помянник. Признак здесь не «закрыто от
+// поисковика» (тот список шире, см. robots.ts), а «в ответе лежит личное». Такое
+// незачем хранить на диске: показано оно будет только в офлайне, а пережить
+// выход из учётной записи и общий компьютер — переживёт.
+//
+// «Сегодня», помянник, поминовение, настройки и заметки добавлены в v3: их
+// страницы читают сессию на сервере, и имена из помянника оседали в кэше
+// страниц. Подъём версии этот кэш и сносит.
+const PRIVATE = /^\/(api|admin|profile|texting|login|segodnya|pomyannik|pominovenie|settings|notes)(\/|$)/;
 
 // ignoreVary везде, где ищем по кэшам: отложенное кладёт сам воркер обычным
 // fetch, а спрашивает браузер навигацией — заголовки запросов разные, и без
@@ -191,20 +195,28 @@ self.addEventListener("fetch", (event) => {
 // имена чанков содержат хэш сборки, и после следующей выкладки прежних в общем
 // кэше уже нет.
 
-const savePage = async (url, label, assets) => {
+// Имена чанков берём и из самой сохраняемой разметки, а не только из того, что
+// прислала страница: сохраняя поездку со страницы поездки, мы кладём страницы
+// дня, и их собственных кусков (маршрут /calculator/[date]) на странице поездки
+// нет — а без них сохранённый день открылся бы без скриптов.
+const assetsOf = (html) => new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) || []);
+
+const savePage = async (url, label, assets, group) => {
     const request = new Request(url, { credentials: "same-origin" });
     const response = await fetch(request, { cache: "reload" });
     if (!response.ok) throw new Error(`страница ответила ${response.status}`);
 
     const cache = await caches.open(SAVED_CACHE);
     const measured = response.clone();
+    const html = await response.clone().text();
     await cache.put(request, response);
 
     let bytes = (await measured.blob()).size;
 
     // Подкладки кладём поштучно и молча пропускаем то, что не далось: страница
     // без одной картинки читается, а вот отказ из-за неё был бы непонятен.
-    await Promise.all((assets || []).map(async (asset) => {
+    const all = new Set([...(assets || []), ...assetsOf(html)]);
+    await Promise.all([...all].map(async (asset) => {
         try {
             const assetUrl = new URL(asset, self.location.origin);
             if (assetUrl.origin !== self.location.origin) return;
@@ -222,10 +234,29 @@ const savePage = async (url, label, assets) => {
     }));
 
     const entries = (await readIndex()).filter((entry) => entry.url !== url);
-    entries.push({ url, label, savedAt: Date.now(), bytes });
+    entries.push({ url, label, savedAt: Date.now(), bytes, ...(group ? { group } : {}) });
     await writeIndex(entries);
 
     return entries;
+};
+
+// Пачка страниц — поездка. По одной, а не разом: опись переписывается после
+// каждой страницы, и параллельные записи затирали бы друг друга; к тому же
+// месяц дней разом — это тридцать тяжёлых расчётов на сервере в одну секунду.
+// Отказ одной страницы пачку не останавливает: называем его в конце.
+const saveMany = async (items, assets, group, progress) => {
+    const failed = [];
+    let done = 0;
+    for (const item of items || []) {
+        try {
+            await savePage(item.url, item.label, assets, group);
+        } catch (e) {
+            failed.push(item.url);
+        }
+        done += 1;
+        progress({ done, total: items.length, url: item.url });
+    }
+    return { saved: await readIndex(), failed };
 };
 
 const forgetPage = async (url) => {
@@ -234,6 +265,16 @@ const forgetPage = async (url) => {
     // Подкладки не трогаем: они общие для всех сохранённых страниц, и удаление
     // вместе с одной страницей разуло бы остальные. Целиком их убирает «убрать всё».
     const entries = (await readIndex()).filter((entry) => entry.url !== url);
+    await writeIndex(entries);
+    return entries;
+};
+
+// Поездка убирается целиком: её страницы, но не общие подкладки (см. forgetPage).
+const forgetGroup = async (group) => {
+    const cache = await caches.open(SAVED_CACHE);
+    const all = await readIndex();
+    await Promise.all(all.filter((entry) => entry.group === group).map((entry) => cache.delete(entry.url)));
+    const entries = all.filter((entry) => entry.group !== group);
     await writeIndex(entries);
     return entries;
 };
@@ -269,7 +310,14 @@ self.addEventListener("message", (event) => {
             case "offline:list":
                 return { saved: await readIndex() };
             case "offline:save":
-                return { saved: await savePage(data.url, data.label, data.assets) };
+                return { saved: await savePage(data.url, data.label, data.assets, data.group) };
+            case "offline:save-many":
+                // Ход работы идёт тем же портом, отдельными сообщениями с полем
+                // progress: страница отличает их от итогового ответа по нему.
+                return await saveMany(data.items, data.assets, data.group,
+                    (progress) => port && port.postMessage({ progress }));
+            case "offline:forget-group":
+                return { saved: await forgetGroup(data.group) };
             case "offline:forget":
                 return { saved: await forgetPage(data.url) };
             case "offline:clear":

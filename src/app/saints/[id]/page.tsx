@@ -9,6 +9,7 @@ import { dneslovIdsOf, getSaintByAddress, type Saint } from "@/lib/saints";
 import { memoriesOfSaint } from "@/lib/memories";
 import { dedicationsOfSaint } from "@/lib/temples";
 import { placesOfSaint } from "@/lib/places/query";
+import { relicsOfSaint } from "@/lib/pilgrimage/relicsStore";
 import { SITE_URL } from "@/utils/site";
 
 // Адрес страницы святого — наш слуг (`saints.slug`). Номер памяти святцев
@@ -76,6 +77,8 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
         dedicationsOfSaint(known),
         // Места, названные в чтениях к этой памяти (принятые упоминания, @/lib/places/query).
         placesOfSaint(known),
+        // Где пребывают мощи — из реестра святынь, только принятое и с источником.
+        relicsOfSaint(known),
     ]);
 
     return (

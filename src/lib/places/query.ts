@@ -5,6 +5,7 @@ import { cached, CacheTag } from "@/lib/cache";
 import { reportError } from "@/lib/reportError";
 import { BIBLE_CANON } from "@/utils/bibleCanon";
 import { saintNames, saintSlugs } from "@/lib/saints";
+import { filterOf } from "@/lib/temples";
 import { spanLabel } from "@/lib/places/labels";
 import { PLACE_MENTIONS, PLACE_RELATIONS, PLACES } from "@/lib/places/schema";
 import { haystackOf } from "@/lib/places/search";
@@ -226,7 +227,9 @@ export interface NearbyTemple { slug: string; name: string; place?: string; dist
 const loadNearbyTemples = async (lon: number, lat: number): Promise<NearbyTemple[]> => {
     try {
         const rows = await (await db()).collection("temples").aggregate([
-            { $geoNear: { near: { type: "Point", coordinates: [lon, lat] }, distanceField: "distance", maxDistance: 20000, spherical: true } },
+            // Отбор тот же, что у указателя храмов: без построек и неправославных
+            // храмов — иначе «храмы рядом» у святого места звали бы в костёл.
+            { $geoNear: { near: { type: "Point", coordinates: [lon, lat] }, distanceField: "distance", maxDistance: 20000, spherical: true, query: filterOf({}) } },
             { $limit: 8 },
             { $project: { slug: 1, name: 1, place: 1, distance: 1 } },
         ]).toArray();
