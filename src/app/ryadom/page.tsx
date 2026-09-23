@@ -174,7 +174,7 @@ const RyadomPage = async ({ searchParams }: Props) => {
                                             <div className="text-sm text-slate-600">
                                                 Упомянуто в чтениях памяти:{" "}
                                                 {p.saints.slice(0, 5).map((s, i) => (
-                                                    <span key={s.dneslovId}>
+                                                    <span key={s.key}>
                                                         {i > 0 && ", "}
                                                         <Link className={more} href={s.href}>{s.name}</Link>
                                                     </span>

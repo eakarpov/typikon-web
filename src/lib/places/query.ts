@@ -358,8 +358,14 @@ export const placesIndex = cached(loadIndex, ["places-index"], [CacheTag.PLACES]
 // кафедра или родина: в житии названы и места, где святой не бывал. Так и подписано.
 
 export interface SaintOfPlace {
-    /** Ключ строки: ключ записи каталога или, для памяти вне каталога, номер святцев. */
-    dneslovId: string;
+    /** Ключ строки: ключ записи каталога или, для памяти вне каталога, `n:номер`. */
+    key: string;
+    /**
+     * Номер святцев — ТОЛЬКО номер или null у святого нашего корпуса. Поле уходит
+     * в API v2 (/places/{id}/mentions), и приложение 2.2 переходит к святому по
+     * нему: ключ каталога здесь сломал бы переход у всех святых места.
+     */
+    dneslovId: string | null;
     name: string;
     href: string;
     texts: number;
@@ -382,7 +388,7 @@ const loadSaintsOfPlace = async (id: string): Promise<SaintOfPlace[]> => {
         if (!keys.length && !numbers.length) return [];
         const [cards, names, slugs] = await Promise.all([
             keys.length ? (await db()).collection("saints")
-                .find({ _id: { $in: keys.filter((k) => ObjectId.isValid(k)).map((k) => new ObjectId(k)) } }, { projection: { name: 1, slug: 1 } })
+                .find({ _id: { $in: keys.filter((k) => ObjectId.isValid(k)).map((k) => new ObjectId(k)) } }, { projection: { name: 1, slug: 1, externals: 1 } })
                 .toArray() : Promise.resolve([]),
             numbers.length ? saintNames(numbers) : Promise.resolve({} as Record<string, string>),
             numbers.length ? saintSlugs(numbers) : Promise.resolve({} as Record<string, string>),
@@ -393,10 +399,13 @@ const loadSaintsOfPlace = async (id: string): Promise<SaintOfPlace[]> => {
                 const key = String(r._id);
                 if (key.startsWith("n:")) {
                     const n = key.slice(2);
-                    return names[n] ? { dneslovId: n, name: names[n]!, href: `/saints/${slugs[n] ?? n}`, texts: r.texts } : null;
+                    return names[n] ? { key, dneslovId: n, name: names[n]!, href: `/saints/${slugs[n] ?? n}`, texts: r.texts } : null;
                 }
                 const c = card.get(key);
-                return c?.name && c?.slug ? { dneslovId: key, name: c.name as string, href: `/saints/${c.slug}`, texts: r.texts } : null;
+                const number = ((c?.externals ?? []) as any[]).find((e) => e.source === "dneslov")?.id;
+                return c?.name && c?.slug
+                    ? { key, dneslovId: number ? String(number) : null, name: c.name as string, href: `/saints/${c.slug}`, texts: r.texts }
+                    : null;
             })
             .filter((r): r is SaintOfPlace => !!r)
             .sort((a, b) => b.texts - a.texts || a.name.localeCompare(b.name, "ru"));
