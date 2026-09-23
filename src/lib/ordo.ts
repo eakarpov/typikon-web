@@ -82,20 +82,22 @@ export interface OrdoService {
 const base = () => process.env.ORDO_SERVICE_URL || "";
 
 /**
- * Запрос к службе. Возвращает null, когда её нет: последование — раздел,
- * который может быть не поднят на этом сервере, и это не повод ронять сайт.
- * Отличать «службы нет» от «ничего не нашлось» обязан вызывающий.
+ * Ответ службы или причина, почему его нет. Причину спрашивает тот, кто
+ * показывает её человеку: «не ответила» на странице ничего не объясняет, а
+ * служба на свою ошибку отвечает её текстом.
  */
-const ask = async <T>(
+type Asked<T> = { data: T; error: null } | { data: null; error: string };
+
+const request = async <T>(
     path: string,
     params?: Record<string, string>,
     // Повторяемые параметры отдельно: престолов у храма бывает несколько, а
     // Record такого не выражает — второй ключ затёр бы первый молча.
     repeated?: [string, string][],
     timeoutMs: number = ORDO_TIMEOUT_MS,
-): Promise<T | null> => {
+): Promise<Asked<T>> => {
     const root = base();
-    if (!root) return null;
+    if (!root) return { data: null, error: "служба устава не настроена (ORDO_SERVICE_URL)" };
 
     const url = new URL(path, root);
     for (const [k, v] of Object.entries(params ?? {})) {
@@ -121,18 +123,37 @@ const ask = async <T>(
                 cache: "no-store",
             });
             if (!response.ok) {
-                console.error(`ordo service ${url.pathname}: ${response.status}`);
-                return null;
+                const said = await response.json().then(b => b?.error, () => null);
+                const error = `${response.status}${said ? `: ${said}` : ""}`;
+                console.error(`ordo service ${url.pathname}${url.search}: ${error}`);
+                return { data: null, error };
             }
-            return await response.json() as T;
+            return { data: await response.json() as T, error: null };
         } catch (e) {
             const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
             if (attempt < 2 && !timedOut) continue;
-            reportError(e, { where: "lib/ordo: служба устава недоступна" });
-            return null;
+            reportError(e, { where: "lib/ordo: служба устава недоступна", extra: { path: url.pathname } });
+            const cause = e instanceof Error && e.cause instanceof Error ? ` (${e.cause.message})` : "";
+            return {
+                data: null,
+                error: timedOut ? `не дождались ответа за ${timeoutMs / 1000} с`
+                    : `${e instanceof Error ? e.message : String(e)}${cause}`,
+            };
         }
     }
 };
+
+/**
+ * Запрос к службе. Возвращает null, когда её нет: последование — раздел,
+ * который может быть не поднят на этом сервере, и это не повод ронять сайт.
+ * Отличать «службы нет» от «ничего не нашлось» обязан вызывающий.
+ */
+const ask = async <T>(
+    path: string,
+    params?: Record<string, string>,
+    repeated?: [string, string][],
+    timeoutMs: number = ORDO_TIMEOUT_MS,
+): Promise<T | null> => (await request<T>(path, params, repeated, timeoutMs)).data;
 
 /** Канвы служб, для которых написано последование. */
 export const ordoServices = () => ask<OrdoService[]>("/services").then(list =>
@@ -741,8 +762,10 @@ const viewRules = (raw: any): OrdoViewRules => ({
  * первая пришла, не дожидаясь литургии; день движок считает один раз и
  * держит в кэше, так что лишнего это не стоит.
  */
-export const ordoSutki = async (query: OrdoSutkiQuery): Promise<OrdoSutki | null> => {
-    const raw = await ask<any>("/sutki", {
+export const ordoSutki = async (
+    query: OrdoSutkiQuery,
+): Promise<OrdoSutki | { error: string }> => {
+    const { data: raw, error } = await request<any>("/sutki", {
         date: query.date,
         ustav: query.ustav ?? "",
         variant: query.variant ?? "",
@@ -756,7 +779,7 @@ export const ordoSutki = async (query: OrdoSutkiQuery): Promise<OrdoSutki | null
         ...(query.transfers ?? []).map(transferParam),
         ...(query.services ?? []).map(s => ["service", s] as [string, string]),
     ], ORDO_SUTKI_TIMEOUT_MS);
-    if (!raw || raw.error) return null;
+    if (!raw || raw.error) return { error: error ?? raw?.error ?? "пустой ответ" };
     return {
         ustav: raw.ustav ?? null,
         date: raw.date,

@@ -3,7 +3,8 @@
 # Скрипт живёт здесь, а не в typikon-rules, по той же причине, что и остальные
 # release-*: тут лежат доступы к серверу (.env.release.<ключ>) и весь порядок выкладки.
 #
-# Едут только src/ и rules/ — код сборки и сами правила устава. Разобранные
+# Едут src/, rules/ и spec/registry/ — код сборки, правила устава и словари
+# адресов, которые сборка читает на ходу. Разобранные
 # книги (parsed/) и сырые выгрузки (raw/) на сервере не нужны: всё, что из них
 # получилось, уже лежит в корпусе, а его везёт release:rules-db.
 #
@@ -57,7 +58,11 @@ else
 fi
 
 rm -f ordo.zip
-(cd "$RULES_SRC" && zip -rX - src rules "${PSALTER[@]}" \
+# spec/registry — словари адресов (координаты книг, роли, места): их читает
+# сборка на ходу (src/address.py, formula.py, memory_address.py), и без них
+# службы с памятями падали на сервере FileNotFoundError. Остальной spec/ —
+# текст спецификации, службе он не нужен.
+(cd "$RULES_SRC" && zip -rX - src rules spec/registry "${PSALTER[@]}" \
     --exclude 'src/__pycache__/*' 'src/data.db' 'src/viewer/*') > ordo.zip
 echo "поехало: $(du -h ordo.zip | cut -f1)"
 
