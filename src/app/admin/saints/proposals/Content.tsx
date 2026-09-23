@@ -30,10 +30,12 @@ const Row = ({ p }: { p: Proposal }) => {
                     <li key={m.id}><span className="text-slate-500">{m.date} · {m.id}</span> — {m.label}</li>
                 ))}
             </ul>
+            {/* Подсказки сводятся по ключу записи: запись каталога могла попасть в
+                подсказку дважды — по имени и по прочему имени. */}
             {!!p.duplicates.length && (
                 <div className="text-slate-600">
                     Похожие в каталоге:{" "}
-                    {p.duplicates.map((d, i) => (
+                    {p.duplicates.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((d, i) => (
                         <span key={d.id}>{i > 0 && "; "}
                             {d.slug ? <a className="text-amber-800" href={`/saints/${d.slug}`} target="_blank" rel="noreferrer">{d.name}</a> : d.name}
                         </span>

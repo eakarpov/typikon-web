@@ -27,10 +27,13 @@ export interface SaintFacts {
     images: { url: string; thumbUrl: string | null; title: string | null }[];
 }
 
-const Content = async ({ id, itemPromise, facts }: {
+const Content = async ({ id, itemPromise, facts, dneslovIds = [], memoryIds = [] }: {
     id: string,
     itemPromise: Promise<any>,
     facts?: SaintFacts,
+    /** Номера святцев записи и памяти нашей Минеи, из которых она заведена: по ним ищутся акафисты. */
+    dneslovIds?: string[],
+    memoryIds?: string[],
 }) => {
 
     const [textsResult, memoryResult, mentionsResult, nobleResult, saintMemoriesResult, dedicationsResult, placesResult, relicsResult] =
@@ -47,7 +50,7 @@ const Content = async ({ id, itemPromise, facts }: {
 
     // Акафисты этому святому — из корпуса песнопений, синхронно: он лежит в
     // файле SQLite рядом с приложением, и ждать его нечего.
-    const akathists = akathistsOfSaint(id);
+    const akathists = akathistsOfSaint(dneslovIds.length ? dneslovIds : [id], memoryIds);
 
     // Подписи и даты считаются здесь, на сервере: ниже клиентский компонент, и
     // тащить в браузер словарь чинов с пасхалией ради полутора строк незачем.

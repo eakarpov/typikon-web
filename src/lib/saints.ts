@@ -82,6 +82,10 @@ export interface SaintImage {
 
 const collection = async () => (await clientPromise).db("typikon").collection("saints");
 
+/** Памяти нашей Минеи, из которых запись заведена (import-memory-saints.ts), — вторая дорога к её службам. */
+export const memoryIdsOf = (saint: { provenance?: SaintProvenance[] } | null): string[] =>
+    (saint?.provenance ?? []).filter((p) => p.table === "memories").map((p) => String(p.id));
+
 /** Номера святцев, стоящие за записью. Их может быть несколько: две памяти, сведённые нами в одно лицо. */
 export const dneslovIdsOf = (saint: Saint | null): string[] =>
     (saint?.externals ?? []).filter((e) => e.source === DNESLOV).map((e) => String(e.id));

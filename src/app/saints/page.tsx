@@ -13,10 +13,10 @@ import { SITE_URL } from "@/utils/site";
 
 export const metadata: Metadata = {
     title: "Святые в собрании",
-    description: "Указатель святых, чьи памяти и упоминания встречаются в уставных чтениях собрания.",
+    description: "Указатель святых: памяти, чтения, службы, храмы с престолом и святыни.",
     openGraph: {
         title: "Святые в собрании",
-        description: "Указатель святых, чьи памяти и упоминания встречаются в уставных чтениях собрания.",
+        description: "Указатель святых: памяти, чтения, службы, храмы с престолом и святыни.",
         url: `${SITE_URL}/saints/`,
     },
 };
@@ -51,17 +51,17 @@ const SaintsList = async ({ page, query }: { page: number; query: string }) => {
         <>
             <p className="font-serif text-slate-500 mb-2">
                 {terms.length
-                    ? `Нашлось ${rows.length} ${plural(rows.length, "память", "памяти", "памятей")} из ${all.length}.`
-                    : `Всего ${rows.length} ${plural(rows.length, "память", "памяти", "памятей")}; по убыванию числа чтений.`}
+                    ? `Нашлось ${rows.length} ${plural(rows.length, "запись", "записи", "записей")} из ${all.length}.`
+                    : `Всего ${rows.length} ${plural(rows.length, "запись", "записи", "записей")}; сперва по числу чтений, затем по алфавиту.`}
             </p>
             <ul className="flex flex-col gap-1">
                 {shown.map((item) => (
-                    <li key={item.dneslovId} className="font-serif">
+                    <li key={item.key} className="font-serif">
                         <Link className="text-amber-800 hover:underline" href={`/saints/${item.slug ?? item.dneslovId}`}>
                             {item.name ?? `Память №${item.dneslovId}`}
                         </Link>
                         <span className="text-sm text-slate-500">
-                            {" — "}
+                            {(item.texts || item.mentions) ? " — " : ""}
                             {!!item.texts && `${item.texts} ${plural(item.texts, "чтение", "чтения", "чтений")}`}
                             {!!item.texts && !!item.mentions && ", "}
                             {!!item.mentions && `${item.mentions} ${plural(item.mentions, "упоминание", "упоминания", "упоминаний")}`}
@@ -97,11 +97,13 @@ const Saints = ({ searchParams }: { searchParams?: { page?: string; q?: string }
         <div className="pt-2">
             <div className={myFont.variable}>
                 <p className="font-serif">
-                    Святые, чьи памяти и упоминания встречаются в чтениях собрания. На странице памяти
-                    собраны написанные к ней тексты и те чтения, где о святом говорится в теле текста.
+                    Святые нашего каталога — и те, чьи памяти и упоминания встречаются в чтениях собрания,
+                    и те, кого знают наши служебные книги. На странице святого собраны написанные к его
+                    памяти тексты, службы, храмы с его престолом и святыни.
                 </p>
                 <p className="font-serif text-sm text-slate-500 mb-4">
-                    Сведения о самих святых — со святцев <Link className="text-amber-800" href="https://dneslov.org" target="_blank" rel="noreferrer">dneslov.org</Link>.
+                    Каталог наш: часть записей заведена по святцам <Link className="text-amber-800" href="https://dneslov.org" target="_blank" rel="noreferrer">dneslov.org</Link>,
+                    часть — по Минее и Собору новомучеников из наших служебных книг.
                 </p>
                 {/*
                     Обычная форма с методом GET, без своего кода на клиенте: запрос

@@ -190,7 +190,11 @@ const main = async () => {
             $setOnInsert: { status: "new", createdAt: new Date() },
         }, { upsert: true });
     }
-    console.log(`записано: заведено ${inserted}, обновлено ${updated}; предложений на разбор ${propose.length}`);
+    // Нерешённое предложение, которого этот прогон уже не выдаёт, устарело: его
+    // память теперь узнаётся в каталоге или заведена. Решённые человеком не трогаем.
+    const stale = await proposals.deleteMany({ status: "new", _id: { $nin: propose.map((g) => g.key) as any[] } });
+    console.log(`записано: заведено ${inserted}, обновлено ${updated}; предложений на разбор ${propose.length}; `
+        + `снято устаревших ${stale.deletedCount}`);
     process.exit(0);
 };
 

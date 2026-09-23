@@ -170,10 +170,20 @@ export const getAkathist = (id: string): AkathistDetail | null => {
  * (typikon-web/src/scripts/export-akathist-saints.ts): dneslov_id живёт в
  * data.db, а она пересобирается с нуля, и записанное в неё руками не пережило
  * бы следующей сборки.
+ *
+ * Две дороги, как у памятей святого: номер святцев — у записей из снимка
+ * dneslov, память акафиста — у записей нашего корпуса, заведённых из этой
+ * памяти (provenance). Святой спрашивается набором того и другого.
  */
-export const akathistsOfSaint = (dneslovId: string): AkathistRow[] => {
+export const akathistsOfSaint = (dneslovIds: string[], memoryIds: string[] = []): AkathistRow[] => {
     const db = rulesDb();
-    if (!db || !dneslovId) return [];
+    const numbers = [...new Set(dneslovIds.filter(Boolean))];
+    const memories = [...new Set(memoryIds.filter(Boolean))];
+    if (!db || (!numbers.length && !memories.length)) return [];
+    const where = [
+        ...(numbers.length ? [`a.dneslov_id IN (${numbers.map(() => "?").join(",")})`] : []),
+        ...(memories.length ? [`a.memory_id IN (${memories.map(() => "?").join(",")})`] : []),
+    ].join(" OR ");
     // Корпус — артефакт сборки соседнего проекта: build_db.py сносит data.db и строит
     // заново, и на это время база заперта (SQLite отвечает «attempt to write a readonly
     // database» даже на чтение — ему негде завести временный файл). Страница святого
@@ -188,10 +198,10 @@ export const akathistsOfSaint = (dneslovId: string): AkathistRow[] => {
         FROM akathists a
         LEFT JOIN memories m ON m.memory_id = a.memory_id
         LEFT JOIN content_items ci ON ci.akathist_id = a.akathist_id
-        WHERE a.dneslov_id = ?
-        GROUP BY a.akathist_id ORDER BY a.title`).all(dneslovId) as any[]).map(rowOf);
+        WHERE ${where}
+        GROUP BY a.akathist_id ORDER BY a.title`).all(...numbers, ...memories) as any[]).map(rowOf);
     } catch (e) {
-        reportError(e, { where: "lib/akathists: корпус typikon-rules недоступен", extra: { dneslovId } });
+        reportError(e, { where: "lib/akathists: корпус typikon-rules недоступен", extra: { dneslovIds: numbers, memoryIds: memories } });
         return [];
     }
 };

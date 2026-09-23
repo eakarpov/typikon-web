@@ -5,7 +5,7 @@ import { setMeta } from "@/lib/meta";
 import { getItems, getLinkedNoble, getMemory, getMentions } from "@/app/saints/[id]/api";
 import Content from "@/app/saints/[id]/Content";
 import { myFont } from "@/utils/font";
-import { dneslovIdsOf, getSaintByAddress, type Saint } from "@/lib/saints";
+import { dneslovIdsOf, getSaintByAddress, memoryIdsOf, type Saint } from "@/lib/saints";
 import { memoriesOfSaint } from "@/lib/memories";
 import { dedicationsOfSaint } from "@/lib/temples";
 import { placesOfSaint } from "@/lib/places/query";
@@ -88,6 +88,8 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
                 <Content
                     id={known[0] ?? address}
                     itemPromise={itemPromise}
+                    dneslovIds={known}
+                    memoryIds={memoryIdsOf(saint)}
                     // Только простые поля: дальше клиентский компонент, и документ
                     // Mongo целиком туда не сериализуется (ObjectId, Date).
                     facts={{

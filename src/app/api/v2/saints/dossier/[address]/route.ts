@@ -1,6 +1,6 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
-import { dneslovIdsOf, getSaintByAddress } from "@/lib/saints";
+import { memoryIdsOf, dneslovIdsOf, getSaintByAddress } from "@/lib/saints";
 import { memoriesOfSaint } from "@/lib/memories";
 import { dedicationsOfSaint } from "@/lib/temples";
 import { akathistsOfSaint } from "@/lib/akathists";
@@ -67,7 +67,7 @@ export async function GET(
         ]);
 
         // Акафист подписан одним номером, а не набором: связка ведётся по памяти.
-        const akathists = corpus ? ids.flatMap(id => akathistsOfSaint(id)) : null;
+        const akathists = corpus ? akathistsOfSaint(ids, memoryIdsOf(saint)) : null;
 
         return respond(
             saintDossier(saint, {
