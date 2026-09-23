@@ -19,14 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     if (!(await checkRightsBack(req, res))) return;
 
-    const { ids, dneslovId, status } = req.body ?? {};
+    const { ids, saintId, dneslovId, status } = req.body ?? {};
 
     if (!ALLOWED.includes(status)) {
         res.status(400).json({ error: "Неизвестный статус" });
         return;
     }
-    if (!dneslovId && !(Array.isArray(ids) && ids.length)) {
-        res.status(400).json({ error: "Нужен ids или dneslovId" });
+    if (!saintId && !dneslovId && !(Array.isArray(ids) && ids.length)) {
+        res.status(400).json({ error: "Нужен ids, saintId или dneslovId" });
         return;
     }
 
@@ -36,8 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Уже проставленные не трогаем: связь в mentionIds живёт своей жизнью,
         // и молча переворачивать её сменой статуса кандидата нельзя.
-        const filter = dneslovId
-            ? { dneslovId: String(dneslovId), status: { $ne: "applied" } }
+        // Группа — по ключу каталога; святой вне каталога — по номеру святцев.
+        const filter = saintId
+            ? { saintId: String(saintId), status: { $ne: "applied" } }
+            : dneslovId
+            ? { dneslovId: String(dneslovId), saintId: { $in: [null, ""] }, status: { $ne: "applied" } }
             : { _id: { $in: (ids as string[]).map((id) => new ObjectId(id)) }, status: { $ne: "applied" } };
 
         const result = await db

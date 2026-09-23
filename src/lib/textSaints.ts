@@ -47,7 +47,7 @@ export const syncTextSaints = async (filter: Record<string, unknown> = {}, write
     const { byNumber, numberOf } = await catalogKeys();
     const rows = await texts.find(
         { ...filter, $or: [{ dneslovId: { $nin: [null, ""] } }, { mentionIds: { $exists: true, $ne: [] } }, { saintId: { $nin: [null, ""] } }, { mentionSaintIds: { $exists: true } }] },
-        { projection: { dneslovId: 1, mentionIds: 1, saintId: 1, mentionSaintIds: 1 } },
+        { projection: { dneslovId: 1, mentionIds: 1, saintId: 1, mentionSaintIds: 1, mentions: 1 } },
     ).toArray();
 
     const report: SyncReport = { seen: rows.length, updated: 0, unmapped: new Set() };
@@ -60,16 +60,24 @@ export const syncTextSaints = async (filter: Record<string, unknown> = {}, write
         // Святой задан ключом, а номера у текста нет — дописываем номер записи, если он у неё есть.
         const dneslovId = !number && explicit ? numberOf.get(explicit) ?? null : undefined;
 
-        const mentionSaintIds = [...new Set(((t.mentionIds ?? []) as string[]).map((n) => {
+        // Упоминания: ключи по номерам, и те, что уже поставлены ключом напрямую
+        // (разбор упоминаний теперь решает по ключу, и у святого корпуса номера нет).
+        const fromNumbers = ((t.mentionIds ?? []) as string[]).map((n) => {
             const key = byNumber.get(String(n));
             if (!key) report.unmapped.add(String(n));
             return key;
-        }).filter(Boolean))] as string[];
+        });
+        const direct = ((t.mentions ?? []) as any[]).map((m) => m?.saintId).filter((k) => k && numberOf.has(`exists:${k}`));
+        const mentionSaintIds = [...new Set([...fromNumbers, ...direct].filter(Boolean))] as string[];
+        // Контекст упоминания — тоже с ключом, чтобы страница святого находила свою строку.
+        const mentions = ((t.mentions ?? []) as any[]).map((m) =>
+            m && !m.saintId && m.dneslovId && byNumber.has(String(m.dneslovId)) ? { ...m, saintId: byNumber.get(String(m.dneslovId)) } : m);
 
         const set: Record<string, unknown> = {};
         if ((t.saintId || null) !== saintId) set.saintId = saintId;
         if (JSON.stringify(t.mentionSaintIds ?? []) !== JSON.stringify(mentionSaintIds)) set.mentionSaintIds = mentionSaintIds;
         if (dneslovId) set.dneslovId = dneslovId;
+        if (JSON.stringify(mentions) !== JSON.stringify(t.mentions ?? [])) set.mentions = mentions;
         if (Object.keys(set).length) {
             report.updated++;
             ops.push({ updateOne: { filter: { _id: t._id }, update: { $set: set } } });
@@ -77,6 +85,22 @@ export const syncTextSaints = async (filter: Record<string, unknown> = {}, write
     }
     if (write && ops.length) await texts.bulkWrite(ops, { ordered: false });
     return report;
+};
+
+/**
+ * Очередь кандидатов упоминаний — с ключом каталога. Кандидаты прежних прогонов
+ * лежат с номером святцев; ключ им дописывается по номеру.
+ */
+export const syncMentionCandidates = async (write = true): Promise<number> => {
+    const col = (await clientPromise).db("typikon").collection("mentionCandidates");
+    const { byNumber } = await catalogKeys();
+    const rows = await col.find({ saintId: { $in: [null, ""] }, dneslovId: { $nin: [null, ""] } },
+        { projection: { dneslovId: 1 } }).toArray();
+    const ops = rows
+        .filter((r: any) => byNumber.has(String(r.dneslovId)))
+        .map((r: any) => ({ updateOne: { filter: { _id: r._id }, update: { $set: { saintId: byNumber.get(String(r.dneslovId)) } } } }));
+    if (write && ops.length) await col.bulkWrite(ops, { ordered: false });
+    return ops.length;
 };
 
 /** Сверить один текст — после правки в редакторе. */

@@ -65,7 +65,7 @@ export const getMentions = cachedTuple(async (saintId: string | null, ids: strin
                                 $filter: {
                                     input: { $ifNull: ["$mentions", []] },
                                     as: "m",
-                                    cond: { $in: ["$$m.dneslovId", ids] },
+                                    cond: { $or: [{ $eq: ["$$m.saintId", saintId] }, { $in: ["$$m.dneslovId", ids] }] },
                                 },
                             },
                         },

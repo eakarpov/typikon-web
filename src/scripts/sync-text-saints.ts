@@ -4,7 +4,7 @@
 //
 // Запуск:  npm run texts:saints  [-- --write]
 import "@/scripts/lib/env";
-import { syncTextSaints } from "@/lib/textSaints";
+import { syncMentionCandidates, syncTextSaints } from "@/lib/textSaints";
 
 const main = async () => {
     const write = process.argv.includes("--write");
@@ -13,6 +13,7 @@ const main = async () => {
     if (r.unmapped.size) {
         console.log(`номеров святцев, которых нет в каталоге: ${r.unmapped.size} — ${[...r.unmapped].slice(0, 20).join(", ")}`);
     }
+    console.log(`кандидатов упоминаний без ключа каталога: ${await syncMentionCandidates(write)}`);
     console.log(write ? "записано" : "холостой прогон — ничего не записано; --write запишет");
     process.exit(0);
 };

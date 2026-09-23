@@ -25,67 +25,25 @@
 //  5. Даже с этим остаются ошибки на библейских именах: в тексте упомянут апостол Андрей,
 //     а в словаре — Андрей Стратилат. Здесь нужен либо контекст пошире, либо ручное ревью.
 //
+// С 2026-09-23 словарь имён строится из НАШЕГО каталога святых, а не из заголовков
+// dneslov: сеть не нужна, и в словарь попадают святые нашего корпуса (Собор
+// новомучеников, святые из памятей Минеи), у которых номера святцев нет. Кандидат
+// несёт ключ каталога (`saintId`), номер — только если он у святого есть.
+//
 // Запуск:
-//   npx tsx src/scripts/link-text-mentions.ts --fetch-names   # выкачать имена с dneslov (долго)
 //   npx tsx src/scripts/link-text-mentions.ts --sample 20     # отчёт с примерами в контексте
 //   npx tsx src/scripts/link-text-mentions.ts --save          # выложить кандидатов на ревью
 import "@/scripts/lib/env";
-import fs from "node:fs";
-import path from "node:path";
 import clientPromise from "@/lib/mongodb";
 import { normalizeChurchSlavonic } from "@/scripts/lib/textNormalize";
-import { getDneslovMemory } from "@/scripts/lib/dneslov";
 
 const APPLY = process.argv.includes("--apply");
 // Складывает кандидатов в mentionCandidates под ревью в /admin/mentions.
 const SAVE = process.argv.includes("--save");
-// Разбор собственных названий даёт имя автора чаще, чем имя святого дня ("Слово Иоанна
-// Златоустаго" в память Прокла), и загрязняет словарь. По умолчанию выключен.
-const TITLES_FALLBACK = process.argv.includes("--titles-fallback");
-const FETCH = (() => {
-    const i = process.argv.indexOf("--fetch-names");
-    if (i === -1) return 0;
-    const n = parseInt(process.argv[i + 1] || "", 10);
-    return Number.isNaN(n) ? Infinity : n;
-})();
-
-// Имена святых берём с dneslov.org и складываем на диск: 840 памятей по два запроса —
-// это долго и нестабильно, повторять при каждом прогоне незачем. script-data/ в .gitignore.
-const CACHE_PATH = path.resolve(process.cwd(), "script-data/dneslov-names.json");
-
-// В кэше держим сырые заголовки памятей, а не разобранные имена: разбор ещё не раз
-// поменяется, и перевыкачивать ради этого 840 памятей незачем.
-type CachedName = { id: string; titles: string[]; source: string };
-
-const loadCache = (): Record<string, CachedName> => {
-    try {
-        return JSON.parse(fs.readFileSync(CACHE_PATH, "utf8"));
-    } catch {
-        return {};
-    }
-};
-
-const saveCache = (cache: Record<string, CachedName>) => {
-    fs.mkdirSync(path.dirname(CACHE_PATH), { recursive: true });
-    fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 1));
-};
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-// Заголовки памятей из ответа dneslov. short_name намеренно не берём: там не имя,
-// а внутреннее мнемоническое название ("Незорько Священградский", "пастух", "отцов").
-const titlesFromMemory = (memory: any): string[] => {
-    const titles: string[] = [];
-    for (const event of memory?.events ?? []) {
-        for (const memo of event?.memoes ?? []) {
-            if (memo?.title) titles.push(memo.title);
-        }
-    }
-    return [...new Set(titles)];
-};
-
+// Имена берём из заголовков каталога: «Се́ргий Ра́донежский», «Алекса́ндр Не́вский» —
+// именительный с прописной, как у заголовков святцев, для которых разбор писался.
 // "Аверкий, епископ Иерапольский, чудотворец" -> имя "аверкий", эпитет "иерапольскии".
-// Разбираем ДО приведения к нижнему регистру: в заголовках dneslov имя собственное пишется
+// Разбираем ДО приведения к нижнему регистру: в заголовках имя собственное пишется
 // с большой буквы, и это единственный надёжный признак — порядок слов не постоянен
 // ("Прокопий Кесарийский", но "архидиакон Стефан, первомученик").
 const COLLECTIVE = /отцов|собор|мучеников|апостолов|святых|иже с ним|всех |прочих/i;
@@ -200,7 +158,10 @@ const stemOf = (word: string): string | null => {
 };
 
 type Saint = {
-    dneslovId: string;
+    /** Ключ каталога. */
+    saintId: string;
+    /** Номер святцев, если он у записи есть, — для mentionIds. */
+    dneslovId: string | null;
     nameStems: Set<string>;
     epithetStems: Set<string>;
     titles: string[];
@@ -254,119 +215,46 @@ async function main() {
 
     const texts = await db
         .collection("texts")
-        .find({}, { projection: { name: 1, alias: 1, content: 1, dneslovId: 1 } })
+        .find({}, { projection: { name: 1, alias: 1, content: 1, dneslovId: 1, saintId: 1 } })
         .toArray();
 
     console.log(`Текстов в базе: ${texts.length}`);
 
-    const dneslovIds = [...new Set(texts.filter((t) => t.dneslovId).map((t) => t.dneslovId as string))];
-    const cache = loadCache();
-
-    // --- 0. При необходимости добираем имена с dneslov.org
-    if (FETCH) {
-        const missing = dneslovIds.filter((id) => !cache[id]).slice(0, FETCH === Infinity ? undefined : FETCH);
-        console.log(`Нет в кэше: ${dneslovIds.filter((id) => !cache[id]).length}, запрашиваю: ${missing.length}`);
-        let done = 0;
-        let failed = 0;
-        for (const id of missing) {
-            // dneslov.org периодически отваливается по таймауту — это не "у святого нет данных".
-            // Неудачу в кэш НЕ пишем, иначе следующий прогон её уже не переспросит.
-            let memory = null;
-            for (let attempt = 1; attempt <= 3 && !memory; attempt++) {
-                memory = await getDneslovMemory(id);
-                if (!memory && attempt < 3) await sleep(2000 * attempt);
-            }
-            if (memory) {
-                cache[id] = { id, titles: titlesFromMemory(memory), source: memory.slug ?? "" };
-            } else {
-                failed++;
-            }
-            done++;
-            if (done % 20 === 0) {
-                saveCache(cache);
-                console.log(`  ...${done}/${missing.length} (не ответили: ${failed})`);
-            }
-            await sleep(900);
-        }
-        saveCache(cache);
-        console.log(`Готово, в кэше записей: ${Object.keys(cache).length}, не ответили: ${failed}`);
-    }
-
-    // --- 1. Словарь святых: имена из dneslov, если есть, иначе из названий собственных текстов
+    // --- 1. Словарь святых — из нашего каталога. Соборы и святыни не лица: их
+    // «имена» ловили бы обычные слова.
+    const catalog = await db.collection("saints").find(
+        { name: { $type: "string" }, type: { $nin: ["Council", "Thing"] } },
+        { projection: { name: 1, title: 1, externals: 1 } },
+    ).toArray();
     const saints = new Map<string, Saint>();
-    let parsed = 0;
-    let fromDneslov = 0;
-
-    const ensureSaint = (id: string) => {
-        let saint = saints.get(id);
-        if (!saint) {
-            saint = { dneslovId: id, nameStems: new Set(), epithetStems: new Set(), titles: [] };
-            saints.set(id, saint);
-        }
-        return saint;
-    };
-
-    const dneslovNamed = new Set<string>();
-    for (const id of dneslovIds) {
-        const cached = cache[id];
-        if (!cached?.titles?.length) continue;
-        const { names, epithets } = parseMemoTitles(cached.titles);
+    for (const c of catalog as any[]) {
+        const { names, epithets } = parseMemoTitles([c.name, c.title].filter(Boolean));
         if (!names.length) continue;
-        const saint = ensureSaint(id);
-        for (const n of names) {
-            const st = stemOf(n);
-            if (st) saint.nameStems.add(st);
-        }
-        for (const e of epithets) {
-            const st = stemOf(e);
-            if (st) saint.epithetStems.add(st);
-        }
-        saint.titles.push(`${cached.titles[0]}`);
-        dneslovNamed.add(id);
-        fromDneslov++;
+        const saint: Saint = {
+            saintId: String(c._id),
+            dneslovId: ((c.externals ?? []).find((e: any) => e.source === "dneslov")?.id ?? null) as string | null,
+            nameStems: new Set(), epithetStems: new Set(), titles: [c.name],
+        };
+        for (const n of names) { const st = stemOf(n); if (st) saint.nameStems.add(st); }
+        for (const e of epithets) { const st = stemOf(e); if (st) saint.epithetStems.add(st); }
+        saints.set(saint.saintId, saint);
     }
-
-    // Названия собственных текстов используем только там, где dneslov ничего не дал: они
-    // ненадёжны — в названии часто стоит автор ("Слово Иоанна Златоустаго" в память Прокла),
-    // и имя автора уезжает в словарь чужого святого.
-    for (const t of texts) {
-        if (!TITLES_FALLBACK) break;
-        if (!t.dneslovId || !t.name) continue;
-        if (dneslovNamed.has(t.dneslovId)) continue;
-        const { names, epithets } = parseTitle(t.name);
-        if (!names.length) continue;
-        parsed++;
-
-        const saint = ensureSaint(t.dneslovId);
-        for (const n of names) {
-            const s = stemOf(n);
-            if (s) saint.nameStems.add(s);
-        }
-        for (const e of epithets) {
-            const s = stemOf(e);
-            if (s) saint.epithetStems.add(s);
-        }
-        if (saint.titles.length < 3) saint.titles.push(t.name);
-    }
-
-    console.log(`Имён из dneslov: ${fromDneslov}, из названий текстов (запасной путь): ${parsed}`);
-    const withDneslov = dneslovIds.length;
     const withEpithet = [...saints.values()].filter((s) => s.epithetStems.size).length;
-    console.log(`Святых со словарём: ${saints.size} из ${withDneslov} (с эпитетом: ${withEpithet})`);
+    console.log(`Святых в словаре (из каталога): ${saints.size} из ${catalog.length} (с эпитетом: ${withEpithet})`);
 
     // --- 2. Кто владеет какой основой
     const nameOwners = new Map<string, Set<string>>();
     for (const s of saints.values()) {
         for (const stem of s.nameStems) {
             if (!nameOwners.has(stem)) nameOwners.set(stem, new Set());
-            nameOwners.get(stem)!.add(s.dneslovId);
+            nameOwners.get(stem)!.add(s.saintId);
         }
     }
     const epithetOwners = new Map<string, Set<string>>();
     for (const s of saints.values()) {
         for (const stem of s.epithetStems) {
             if (!epithetOwners.has(stem)) epithetOwners.set(stem, new Set());
-            epithetOwners.get(stem)!.add(s.dneslovId);
+            epithetOwners.get(stem)!.add(s.saintId);
         }
     }
 
@@ -387,8 +275,8 @@ async function main() {
         m.get(stem)!.add(key);
     };
     for (const s of saints.values()) {
-        for (const stem of s.nameStems) addLookup(stem, s.dneslovId, "name");
-        for (const stem of s.epithetStems) addLookup(stem, s.dneslovId, "epithet");
+        for (const stem of s.nameStems) addLookup(stem, s.saintId, "name");
+        for (const stem of s.epithetStems) addLookup(stem, s.saintId, "epithet");
     }
     let lengths = [...lookup.keys()].sort((a, b) => a - b);
 
@@ -428,7 +316,7 @@ async function main() {
 
     const nameTextCount = new Map<string, number>();
     type Hit = {
-        textId: string; textName: string; alias?: string; dneslovId: string;
+        textId: string; textName: string; alias?: string; saintId: string;
         tier: "strong" | "weak"; word: string; context: string;
     };
     const hits: Hit[] = [];
@@ -468,7 +356,7 @@ async function main() {
         }
 
         for (const [id, positions] of namePos) {
-            if (id === t.dneslovId) continue;   // собственное житие — не "упоминание"
+            if (id === t.saintId) continue;   // собственное житие — не "упоминание"
             const saint = saints.get(id)!;
             // Различает не имя, а эпитет: "Иоанн" носят 18 святых, "Златоуст" — один.
             // Поэтому подтверждением считаем только эпитет, принадлежащий одному святому.
@@ -486,7 +374,7 @@ async function main() {
                 textId: t._id.toString(),
                 textName: t.name,
                 alias: t.alias,
-                dneslovId: id,
+                saintId: id,
                 tier,
                 word: words[at],
                 context,
@@ -499,25 +387,25 @@ async function main() {
     const strong = hits.filter((h) => h.tier === "strong");
     const weak = hits.filter(
         (h) => h.tier === "weak" &&
-            (nameOwners.get([...saints.get(h.dneslovId)!.nameStems][0]) ?? new Set()).size === 1 &&
-            (nameTextCount.get(h.dneslovId) ?? 0) <= RARE_TEXTS,
+            (nameOwners.get([...saints.get(h.saintId)!.nameStems][0]) ?? new Set()).size === 1 &&
+            (nameTextCount.get(h.saintId) ?? 0) <= RARE_TEXTS,
     );
 
     console.log(`\n=== Найдено ===`);
     console.log(`Уверенных (имя + эпитет рядом, в пределах ${NEAR_WORDS} слов): ${strong.length}`);
-    console.log(`  текстов: ${new Set(strong.map((h) => h.textId)).size}, святых: ${new Set(strong.map((h) => h.dneslovId)).size}`);
+    console.log(`  текстов: ${new Set(strong.map((h) => h.textId)).size}, святых: ${new Set(strong.map((h) => h.saintId)).size}`);
     console.log(`Слабых (редкое имя без эпитета, не чаще ${RARE_TEXTS} текстов): ${weak.length}`);
-    console.log(`  текстов: ${new Set(weak.map((h) => h.textId)).size}, святых: ${new Set(weak.map((h) => h.dneslovId)).size}`);
+    console.log(`  текстов: ${new Set(weak.map((h) => h.textId)).size}, святых: ${new Set(weak.map((h) => h.saintId)).size}`);
     console.log(`Отброшено как слишком общее: ${hits.length - strong.length - weak.length}`);
 
     if (SAMPLE) {
         const show = (label: string, list: Hit[]) => {
             console.log(`\n=== ${label} (${Math.min(SAMPLE, list.length)} из ${list.length}) ===`);
             for (const h of list.slice(0, SAMPLE)) {
-                const saint = saints.get(h.dneslovId)!;
+                const saint = saints.get(h.saintId)!;
                 console.log(`  «...${h.context}...»`);
                 console.log(`     в тексте: ${(h.textName || "").slice(0, 65)}`);
-                console.log(`     -> dneslov ${h.dneslovId}: ${(saint.titles[0] || "").slice(0, 65)}`);
+                console.log(`     -> ${(saint.titles[0] || "").slice(0, 65)}`);
             }
         };
         show("Уверенные", strong);
@@ -528,12 +416,17 @@ async function main() {
         const collection = db.collection("mentionCandidates");
         // Пары, которые уже смотрели, повторно на ревью не выкладываем — иначе каждый
         // прогон возвращает отклонённое обратно в очередь.
+        // Прежние кандидаты помнятся и ключом, и номером: у старых ключ дописан
+        // сверкой (npm run texts:saints), но номер тоже держим, чтобы не вернуть их.
         const seen = new Set(
-            (await collection.find({}, { projection: { textId: 1, dneslovId: 1 } }).toArray())
-                .map((c) => `${c.textId}:${c.dneslovId}`),
+            (await collection.find({}, { projection: { textId: 1, saintId: 1, dneslovId: 1 } }).toArray())
+                .flatMap((c) => [c.saintId && `${c.textId}:${c.saintId}`, c.dneslovId && `${c.textId}:n:${c.dneslovId}`].filter(Boolean) as string[]),
         );
         const batchId = new Date().toISOString().slice(0, 19);
-        const fresh = strong.filter((h) => !seen.has(`${h.textId}:${h.dneslovId}`));
+        const fresh = strong.filter((h) => {
+            const number = saints.get(h.saintId)?.dneslovId;
+            return !seen.has(`${h.textId}:${h.saintId}`) && !(number && seen.has(`${h.textId}:n:${number}`));
+        });
 
         if (!fresh.length) {
             console.log(`\nНовых кандидатов нет — все ${strong.length} уже на ревью или разобраны.`);
@@ -546,8 +439,9 @@ async function main() {
             textId: new OID(h.textId),
             textName: h.textName,
             textAlias: h.alias ?? null,
-            dneslovId: h.dneslovId,
-            saintTitle: saints.get(h.dneslovId)?.titles[0] ?? "",
+            saintId: h.saintId,
+            dneslovId: saints.get(h.saintId)?.dneslovId ?? null,
+            saintTitle: saints.get(h.saintId)?.titles[0] ?? "",
             word: h.word,
             context: h.context,
             tier: h.tier,
@@ -568,14 +462,19 @@ async function main() {
     const grouped = new Map<string, Set<string>>();
     for (const h of strong) {
         if (!grouped.has(h.textId)) grouped.set(h.textId, new Set());
-        grouped.get(h.textId)!.add(h.dneslovId);
+        grouped.get(h.textId)!.add(h.saintId);
     }
     const { ObjectId } = await import("mongodb");
     let updated = 0;
     for (const [textId, ids] of grouped) {
         await db.collection("texts").updateOne(
             { _id: new ObjectId(textId) },
-            { $addToSet: { mentionIds: { $each: [...ids] } } },
+            {
+                $addToSet: {
+                    mentionSaintIds: { $each: [...ids] },
+                    mentionIds: { $each: [...ids].map((k) => saints.get(k)?.dneslovId).filter(Boolean) as string[] },
+                },
+            },
         );
         updated++;
     }
