@@ -367,7 +367,7 @@ export const plain = (s: string) => s.normalize("NFC")
  * Святой каталога для сличения догадок: имена (основное и прочие), приведённые,
  * и из каждого — первое слово отдельно.
  */
-export type SaintRow = { dneslovId: string; name: string; slug: string | null; hay: string; firsts?: string[] };
+export type SaintRow = { id: string; name: string; slug: string | null; hay: string; firsts?: string[] };
 
 const firstWords = (s: SaintRow) => s.firsts ?? s.hay.split(/\s+/).slice(0, 1);
 
@@ -391,7 +391,7 @@ export const matchSaints = (guess: string | null, saints: SaintRow[], context = 
         const preferred = hits.filter((s) => ctx.some((c) => s.hay.split(/[\s,()-]+/).slice(1).some((w) => w.startsWith(c))));
         if (preferred.length) hits = preferred;
     }
-    return hits.slice(0, 5).map(({ dneslovId, name, slug }) => ({ dneslovId, name, slug }));
+    return hits.slice(0, 5).map(({ id, name, slug }) => ({ id, name, slug }));
 };
 
 const TITLE_RUN = new RegExp(`(?:${TITLE}\\s+)+`, "gi");

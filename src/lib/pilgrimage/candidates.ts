@@ -27,7 +27,8 @@ export interface Candidate {
     state: GuessState;
     visit: { from: string; to: string } | null;
     saintGuess: string | null;
-    saintCandidates: { dneslovId: string; name: string; slug: string | null }[];
+    /** Святые каталога по догадке: ключ записи, имя, адрес страницы. */
+    saintCandidates: { id: string; name: string; slug: string | null }[];
     /** Откуда находка: сайт прихода (новость) или «Азбука паломника» (страница о храме). */
     origin?: "site" | "azbyka";
     /** Уточнение места внутри обители: «в Троицком соборе». */
@@ -93,14 +94,13 @@ export const setCandidateStatus = async (id: string, status: CandidateStatus): P
 /** Святые каталога для сличения догадок обходчика и импорта. */
 export const loadSaintIndex = async (): Promise<SaintRow[]> =>
     (await (await clientPromise).db("typikon").collection("saints")
-        .find({}, { projection: { _id: 0, name: 1, altNames: 1, slug: 1, externals: 1 } }).toArray())
+        .find({ name: { $type: "string" } }, { projection: { name: 1, altNames: 1, slug: 1 } }).toArray())
         .map((s: any) => {
             const names = [s.name, ...(s.altNames ?? [])].filter(Boolean).map((n: string) => plain(n));
             return {
-                dneslovId: String((s.externals ?? []).find((e: any) => e.source === "dneslov")?.id ?? ""),
+                id: String(s._id),
                 name: s.name, slug: s.slug ?? null,
                 hay: names.join(" "),
                 firsts: names.map((n: string) => n.split(/\s+/)[0]),
             };
-        })
-        .filter((s) => s.dneslovId);
+        });

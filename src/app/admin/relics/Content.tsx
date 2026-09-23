@@ -17,7 +17,7 @@ const call = async (body: unknown): Promise<string[] | null> => {
 
 /** Запись — обратно в поля формы, чтобы правка начиналась с того, что есть. */
 const formOf = (r: Relic): Partial<RelicFormValue> => ({
-    saint: r.saintDneslovId, temple: r.templeSlug ?? "", place: r.placeId ?? "",
+    saint: r.saintSlug ?? r.saintId, temple: r.templeSlug ?? "", place: r.placeId ?? "",
     kind: r.kind, state: r.state, where: r.where ?? "",
     visitFrom: r.visit?.from ?? "", visitTo: r.visit?.to ?? "",
     sourceType: r.source.type, sourceRef: r.source.ref, sourceDate: r.source.date ?? "", sourceNote: r.source.note ?? "",
@@ -58,7 +58,7 @@ const Row = ({ r }: { r: Relic }) => {
 
 /** Находка — в поля формы: всё, что обходчик сумел угадать, остаётся проверить. */
 const formOfCandidate = (c: Candidate): Partial<RelicFormValue> => ({
-    saint: c.saintCandidates[0]?.slug ?? c.saintCandidates[0]?.dneslovId ?? "",
+    saint: c.saintCandidates[0]?.slug ?? c.saintCandidates[0]?.id ?? "",
     temple: c.templeSlugs[0] ?? "",
     kind: c.kind,
     state: c.state === "visiting" ? "visiting" : "present",

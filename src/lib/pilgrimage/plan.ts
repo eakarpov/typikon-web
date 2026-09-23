@@ -1,6 +1,7 @@
 // Состав поездки по дням: чтения, престольные праздники остановок, памяти
 // святых маршрута, святыни. Чистая часть — ./trip.
 
+import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { reportError } from "@/lib/reportError";
 import { getDedication, getTemple } from "@/lib/temples";
@@ -66,14 +67,21 @@ const loadStop = async (s: TripRequest["stops"][number]) => {
     return { kind: "place" as const, slug: s.slug, name: place.name as string, href: placeHref(place), docs: [] };
 };
 
-/** Дни памяти святых по номерам святцев — из нашего каталога. */
-const saintsById = async (ids: string[]) => {
-    if (!ids.length) return [];
+/**
+ * Святые маршрута с днями памяти — из нашего каталога. Святыни ссылаются на
+ * запись каталога её ключом, престолы — номером святцев (так их связывает
+ * словарь посвящений); сводим оба к записи и дальше считаем по ней.
+ */
+const routeSaints = async (ids: string[], dneslovIds: string[]) => {
+    const or: any[] = [];
+    const oids = ids.filter((id) => ObjectId.isValid(id)).map((id) => new ObjectId(id));
+    if (oids.length) or.push({ _id: { $in: oids } });
+    if (dneslovIds.length) or.push({ externals: { $elemMatch: { source: "dneslov", id: { $in: dneslovIds } } } });
+    if (!or.length) return [];
     const rows = await (await clientPromise).db("typikon").collection("saints")
-        .find({ externals: { $elemMatch: { source: "dneslov", id: { $in: ids } } } },
-            { projection: { _id: 0, name: 1, slug: 1, memoryDates: 1, externals: 1 } })
+        .find({ $or: or }, { projection: { name: 1, slug: 1, memoryDates: 1, externals: 1 } })
         .toArray();
-    return rows as unknown as { name: string; slug: string | null; memoryDates?: string[]; externals: { source: string; id: string }[] }[];
+    return rows as unknown as { _id: ObjectId; name: string; slug: string | null; memoryDates?: string[]; externals?: { source: string; id: string }[] }[];
 };
 
 export const buildPlan = async (req: TripRequest, days: string[]): Promise<Plan> => {
@@ -108,19 +116,21 @@ export const buildPlan = async (req: TripRequest, days: string[]): Promise<Plan>
     }
 
     // Святые маршрута: чьи мощи на остановках и за кем выверенно стоят их престолы.
-    const why = new Map<string, string>();
-    for (const r of relics) why.set(r.saintDneslovId, `мощи — ${r.siteName}`);
+    const whyById = new Map<string, string>();
+    for (const r of relics) whyById.set(r.saintId, `мощи — ${r.siteName}`);
+    const whyByNumber = new Map<string, string>();
     for (const s of loaded) for (const d of s.docs as any[]) {
-        for (const saint of d.saints ?? []) if (!why.has(saint.dneslovId)) why.set(saint.dneslovId, `престол — ${s.name}`);
+        for (const saint of d.saints ?? []) if (!whyByNumber.has(saint.dneslovId)) whyByNumber.set(saint.dneslovId, `престол — ${s.name}`);
     }
     const memoriesByDay = new Map<string, PlanDay["memories"]>();
-    for (const saint of await saintsById([...why.keys()])) {
-        const id = saint.externals.find((e) => e.source === "dneslov" && why.has(String(e.id)))?.id;
+    for (const saint of await routeSaints([...whyById.keys()], [...whyByNumber.keys()])) {
+        const number = (saint.externals ?? []).find((e) => e.source === "dneslov" && whyByNumber.has(String(e.id)))?.id;
+        const why = whyById.get(String(saint._id)) ?? (number ? whyByNumber.get(String(number)) : undefined) ?? "";
         for (const raw of saint.memoryDates ?? []) {
             const day = memoryDayOf(raw, from);
             if (!day?.iso || day.iso > req.to) continue;
             const list = memoriesByDay.get(day.iso) ?? [];
-            list.push({ name: saint.name, href: saint.slug ? `/saints/${saint.slug}` : null, why: why.get(String(id)) ?? "" });
+            list.push({ name: saint.name, href: saint.slug ? `/saints/${saint.slug}` : null, why });
             memoriesByDay.set(day.iso, list);
         }
     }

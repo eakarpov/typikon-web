@@ -60,7 +60,7 @@ const RelicForm = ({ initial, fixedTemple, submitLabel, onSubmit }: {
     const needsDate = v.sourceType === "news";
     return (
         <form onSubmit={submit} className="font-serif text-sm grid gap-2 max-w-xl">
-            <label>Святой — ссылка на страницу святого или номер святцев
+            <label>Святой — ссылка на страницу святого или его адрес
                 <input className={INPUT} value={v.saint} onChange={set("saint")} placeholder="https://www.typikon.info/saints/…" required />
             </label>
             {!fixedTemple && (

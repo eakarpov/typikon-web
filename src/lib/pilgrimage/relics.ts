@@ -57,7 +57,8 @@ export interface RelicSource {
 
 /** То, что вносится руками; остальное (координаты, имя святого) выводится при записи. */
 export interface RelicInput {
-    saintDneslovId: string;
+    /** Святой — ключ записи нашего каталога (`saints._id`), а не номер святцев: у святых из нашего корпуса номера нет. */
+    saintId: string;
     kind: RelicKind;
     state: RelicState;
     templeSlug?: string | null;
@@ -105,8 +106,8 @@ export const validateRelic = (raw: unknown): { ok: true; value: RelicInput } | {
     const body = (raw ?? {}) as Record<string, any>;
     const errors: string[] = [];
 
-    const saintDneslovId = str(body.saintDneslovId);
-    if (!/^\d+$/.test(saintDneslovId)) errors.push("не указан святой (номер святцев)");
+    const saintId = str(body.saintId);
+    if (!/^[a-f0-9]{24}$/.test(saintId)) errors.push("не указан святой или его нет в каталоге");
 
     const kind = str(body.kind) as RelicKind;
     if (!(kind in RELIC_KINDS)) errors.push("неизвестный вид святыни");
@@ -151,7 +152,7 @@ export const validateRelic = (raw: unknown): { ok: true; value: RelicInput } | {
     return {
         ok: true,
         value: {
-            saintDneslovId, kind, state, templeSlug, placeId,
+            saintId, kind, state, templeSlug, placeId,
             ...(where ? { where } : {}),
             ...(visit ? { visit } : {}),
             source: {

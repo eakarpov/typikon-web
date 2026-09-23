@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { isCurrent, overlaps, sourceHref, validateRelic } from "./relics";
 
 const good = {
-    saintDneslovId: "1086",
+    saintId: "64f0c0ffee64f0c0ffee64f0",
     kind: "moshchi",
     templeSlug: "hram-spiridona",
     source: { type: "book", ref: "Поселянин Е. Русская Церковь и русские подвижники. СПб., 1905. С. 12" },
@@ -36,7 +36,7 @@ test("нужно место: храм или место каталога", () =>
 });
 
 test("святой и вид обязательны", () => {
-    assert.equal(validateRelic({ ...good, saintDneslovId: "abc" }).ok, false);
+    assert.equal(validateRelic({ ...good, saintId: "1086" }).ok, false);
     assert.equal(validateRelic({ ...good, kind: "mosch" }).ok, false);
     assert.equal(validateRelic(null).ok, false);
 });

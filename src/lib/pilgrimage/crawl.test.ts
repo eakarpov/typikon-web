@@ -140,10 +140,10 @@ test("святой берётся до конца строки, а не обры
 });
 
 test("святой по догадке: имя с начала, прозвание — по месту", () => {
-    const row = (dneslovId: string, name: string) => ({ dneslovId, name, slug: null, hay: plain(name) });
+    const row = (id: string, name: string) => ({ id, name, slug: null, hay: plain(name) });
     const saints = [row("1", "Кири́лл Александри́йский"), row("2", "Алекса́ндр Сви́рский"), row("3", "Алекса́ндр Не́вский"), row("4", "Се́ргий Ра́донежский")];
-    assert.deepEqual(matchSaints("прп. Сергия Радонежского", saints).map((s) => s.dneslovId), ["4"]);
-    assert.deepEqual(matchSaints("прп. Александра", saints).map((s) => s.dneslovId), ["2", "3"]);
-    assert.deepEqual(matchSaints("прп. Александра", saints, "Александро-Свирский мужской монастырь").map((s) => s.dneslovId), ["2"]);
+    assert.deepEqual(matchSaints("прп. Сергия Радонежского", saints).map((s) => s.id), ["4"]);
+    assert.deepEqual(matchSaints("прп. Александра", saints).map((s) => s.id), ["2", "3"]);
+    assert.deepEqual(matchSaints("прп. Александра", saints, "Александро-Свирский мужской монастырь").map((s) => s.id), ["2"]);
     assert.deepEqual(matchSaints(null, saints), []);
 });

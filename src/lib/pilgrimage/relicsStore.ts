@@ -5,7 +5,8 @@ import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 import { reportError } from "@/lib/reportError";
 import { getTemple } from "@/lib/temples";
-import { dneslovIdsOf, getSaintByAddress, saintNames, saintSlugs } from "@/lib/saints";
+import { getSaintByAddress } from "@/lib/saints";
+import { byExternal, SAINT_SOURCES } from "@/lib/saintSources";
 import { PLACES } from "@/lib/places/schema";
 import { placeCoordinates } from "@/lib/places/legacy";
 import { isCurrent, overlaps, RELICS, type Relic, type RelicInput, type RelicStatus } from "./relics";
@@ -16,7 +17,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const toRelic = (row: any): Relic => ({
     id: String(row._id),
-    saintDneslovId: row.saintDneslovId,
+    saintId: row.saintId,
     saintName: row.saintName,
     saintSlug: row.saintSlug ?? null,
     kind: row.kind,
@@ -45,9 +46,13 @@ const resolve = async (input: RelicInput): Promise<
     { ok: true; saintName: string; saintSlug: string | null; siteName: string; location: Relic["location"] }
     | { ok: false; error: string }
 > => {
-    const [names, slugs] = await Promise.all([saintNames([input.saintDneslovId]), saintSlugs([input.saintDneslovId])]);
-    const saintName = names[input.saintDneslovId];
-    if (!saintName) return { ok: false, error: "святого с таким номером святцев в каталоге нет" };
+    const saint = ObjectId.isValid(input.saintId)
+        ? await (await clientPromise).db("typikon").collection("saints")
+            .findOne({ _id: new ObjectId(input.saintId) }, { projection: { name: 1, slug: 1 } })
+        : null;
+    if (!saint?.name) return { ok: false, error: "такого святого в каталоге нет" };
+    const saintName = saint.name as string;
+    const saintSlug = (saint.slug as string | null) ?? null;
 
     if (input.templeSlug) {
         const temple = await getTemple(input.templeSlug);
@@ -56,7 +61,7 @@ const resolve = async (input: RelicInput): Promise<
             return { ok: false, error: "у храма нет координат" };
         }
         return {
-            ok: true, saintName, saintSlug: slugs[input.saintDneslovId] ?? null, siteName: temple.name,
+            ok: true, saintName, saintSlug, siteName: temple.name,
             location: { type: "Point", coordinates: [temple.longitude, temple.latitude] },
         };
     }
@@ -68,7 +73,7 @@ const resolve = async (input: RelicInput): Promise<
     const coords = placeCoordinates(place);
     if (!place || !coords) return { ok: false, error: place ? "у места нет координат" : "места с таким адресом нет" };
     return {
-        ok: true, saintName, saintSlug: slugs[input.saintDneslovId] ?? null, siteName: place.name,
+        ok: true, saintName, saintSlug, siteName: place.name,
         location: { type: "Point", coordinates: [coords.longitude, coords.latitude] },
     };
 };
@@ -88,12 +93,23 @@ export const lastSegment = (raw: unknown): string => {
     }
 };
 
-/** Номер святцев по адресу святого на сайте или по самому номеру. */
+/**
+ * Ключ святого в каталоге по тому, что вставил человек: ссылка на страницу,
+ * адрес, ключ записи или, для старых привычек, номер святцев.
+ */
 export const saintIdOf = async (raw: unknown): Promise<string | null> => {
     const address = lastSegment(raw);
     if (!address) return null;
-    if (/^\d+$/.test(address)) return address;
-    return dneslovIdsOf(await getSaintByAddress(address))[0] ?? null;
+    const saints = (await clientPromise).db("typikon").collection("saints");
+    if (/^[a-f0-9]{24}$/.test(address)) {
+        return (await saints.findOne({ _id: new ObjectId(address) }, { projection: { _id: 1 } })) ? address : null;
+    }
+    if (/^\d+$/.test(address)) {
+        const byNumber = await saints.findOne(byExternal(SAINT_SOURCES.dneslov.code, address), { projection: { _id: 1 } });
+        return byNumber ? String(byNumber._id) : null;
+    }
+    const saint = await getSaintByAddress(address);
+    return saint?._id ? String(saint._id) : null;
 };
 
 /** Новая запись: от разбирающего — сразу принятая, от прочих — предложение. */
@@ -182,7 +198,7 @@ const loadRelicsNear = async (lon: number, lat: number, radiusKm: number): Promi
 
 export const relicsNear = cached(loadRelicsNear, ["relics-near"], [CacheTag.RELICS], 300);
 
-const loadRelicsOf = async (field: "templeSlug" | "saintDneslovId", values: string[]): Promise<Relic[]> => {
+const loadRelicsOf = async (field: "templeSlug" | "saintId", values: string[]): Promise<Relic[]> => {
     if (!values.length) return [];
     try {
         const rows = await (await relics())
@@ -200,7 +216,7 @@ export const relicsOfTemple = cached((slug: string) => loadRelicsOf("templeSlug"
     ["relics-of-temple"], [CacheTag.RELICS], 300);
 
 /** Где пребывают мощи святого — для досье. */
-export const relicsOfSaint = cached((dneslovIds: string[]) => loadRelicsOf("saintDneslovId", dneslovIds),
+export const relicsOfSaint = cached((saintIds: string[]) => loadRelicsOf("saintId", saintIds),
     ["relics-of-saint"], [CacheTag.RELICS], 300);
 
 /** Святыни на остановках поездки, пребывающие хотя бы в один из её дней. */
@@ -226,7 +242,7 @@ export const relicsForTrip = async (templeSlugs: string[], placeIds: string[], f
  */
 export const inputFrom = async (body: any): Promise<Record<string, unknown>> => ({
     ...body,
-    saintDneslovId: (await saintIdOf(body?.saint ?? body?.saintDneslovId)) ?? "",
+    saintId: (await saintIdOf(body?.saint ?? body?.saintId)) ?? "",
     templeSlug: lastSegment(body?.temple ?? body?.templeSlug) || null,
     placeId: lastSegment(body?.place ?? body?.placeId) || null,
 });

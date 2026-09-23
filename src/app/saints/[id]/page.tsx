@@ -78,7 +78,8 @@ const SaintItem = async ({ params: { id: address } }: Props) => {
         // Места, названные в чтениях к этой памяти (принятые упоминания, @/lib/places/query).
         placesOfSaint(known),
         // Где пребывают мощи — из реестра святынь, только принятое и с источником.
-        relicsOfSaint(known),
+        // Реестр знает святого ключом каталога, а не номером святцев.
+        relicsOfSaint(saint?._id ? [String(saint._id)] : []),
     ]);
 
     return (
