@@ -4,7 +4,6 @@
 
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
-import { getSaintByAddress } from "@/lib/saints";
 import { byExternal, SAINT_SOURCES } from "@/lib/saintSources";
 
 /**
@@ -37,6 +36,8 @@ export const saintIdOf = async (raw: unknown): Promise<string | null> => {
         const byNumber = await saints.findOne(byExternal(SAINT_SOURCES.dneslov.code, address), { projection: { _id: 1 } });
         return byNumber ? String(byNumber._id) : null;
     }
-    const saint = await getSaintByAddress(address);
+    // Прямым запросом, а не кэшированной выборкой страниц: функцию зовут и
+    // скрипты, а у них кэша Next нет.
+    const saint = await saints.findOne({ $or: [{ slug: address }, { previousSlugs: address }] }, { projection: { _id: 1 } });
     return saint?._id ? String(saint._id) : null;
 };

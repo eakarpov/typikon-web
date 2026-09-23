@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bare, nominativeAdjective, nominativeName, personOf } from "./memorySaints";
+import { bare, nominativeAdjective, nominativeName, personOf, rankOf } from "./memorySaints";
 
 test("имя: мужские окончания", () => {
     assert.equal(nominativeName("Алекса́ндра", false), "Алекса́ндр");
@@ -93,4 +93,9 @@ test("события памяти не становятся лицами", () =>
 test("составное имя и подпись «В Неделю…»", () => {
     assert.equal(personOf("Свята́го великому́ченика Иоа́нна-Влади́мира, кня́зя Се́рбскаго")!.name, "Иоа́нн-Влади́мир Се́рбский");
     assert.equal(personOf("В Неде́лю о разсла́бленном. Пренесе́ние моще́й свята́го му́ченика Гео́ргия Бо́лгарскаго")!.name, "Гео́ргий Бо́лгарский");
+});
+
+test("чин по подписи различает тёзок", () => {
+    assert.equal(rankOf("И́же во святы́х отца́ на́шего Андре́я, архиепи́скопа Кри́тскаго"), "hierarch");
+    assert.equal(rankOf("преподобномученика Андре́я Критскаго"), "venerable-martyr");
 });

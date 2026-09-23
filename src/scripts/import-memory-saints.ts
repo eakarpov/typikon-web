@@ -24,7 +24,7 @@
 // Запуск:  npm run saints:memories  [-- --write]
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
-import { bare, CHIN_WORDS, churchDate, personOf, type MemoryPerson } from "@/lib/memorySaints";
+import { bare, CHIN_WORDS, churchDate, personOf, rankOf, type MemoryPerson } from "@/lib/memorySaints";
 
 const WRITE = process.argv.includes("--write");
 const TABLE = "memories";
@@ -86,6 +86,10 @@ const main = async () => {
     const sameDay = (person: MemoryPerson, date: string) =>
         (byGiven.get(bare(person.given)) ?? []).find((s: any) => (s.memoryDates ?? []).includes(date)
             && (!person.epithet || names(s).some((n) => n.includes(epithetStem(person.epithet!)))
+                // Одно прозвание в двух написаниях: «Ни́сский» в святцах и «Нисси́йский» в
+                // Минее. При том же имени и дне довольно совпадения первых четырёх букв.
+                || names(s).some((n) => n.split(/\s+/).slice(1).some((w) => w.length >= 5
+                    && w.slice(0, 4) === bare(person.epithet!).slice(0, 4)))
                 // Запись каталога вовсе без прозвания («Тимофе́й») с тем же днём —
                 // тот же святой: прозвание ей просто не записали. Иное прозвание
                 // или фамилия (Уксусов) — другой человек.
@@ -99,6 +103,7 @@ const main = async () => {
 
     let skippedLinked = 0, knownByDay = 0;
     const groups = new Map<string, Group>();
+    const byPerson = new Map<string, { m: MemoryRow; person: MemoryPerson }[]>();
     for (const m of memories) {
         if (linked.has(m._id)) { skippedLinked++; continue; }
         const date = churchDate(m.month!, m.day!);
@@ -108,13 +113,48 @@ const main = async () => {
         // Сводим по имени с прозванием; без прозвания или с несколькими лицами —
         // каждая память сама по себе: голое имя сводило бы разных людей.
         const clear = person && person.epithet && !person.several;
-        const key = clear ? person!.key : `memory:${m._id}`;
-        const group = groups.get(key) ?? { key, person, memories: [], reason: null, duplicates: [] };
-        group.memories.push(m);
-        groups.set(key, group);
+        if (!clear) {
+            const key = `memory:${m._id}`;
+            groups.set(key, { key, person, memories: [m], reason: null, duplicates: [] });
+            continue;
+        }
+        byPerson.set(person!.key, [...(byPerson.get(person!.key) ?? []), { m, person: person! }]);
+    }
+
+    // Памяти одного имени с прозванием делим по чину. Князь совместим с любым
+    // чином (князья — и мученики, и иноки: Михаил Черниговский, Даниил Московский),
+    // святитель — со священномучеником; прочие разные чины — разные люди
+    // (Андрей Критский: святитель 4 июля и преподобномученик 17 октября).
+    // Память мощей и память без чина идут к единственному лицу; если лиц
+    // несколько — к человеку.
+    const rankClass = (r: string) => (r === "hieromartyr" ? "hierarch" : r);
+    for (const [personKey, list] of byPerson) {
+        const ranked = new Map<string, typeof list>();
+        const loose: typeof list = [];
+        for (const item of list) {
+            const r = rankClass(rankOf(item.m.label));
+            const relics = /\/relics\//.test(item.m.address ?? "");
+            if (relics || r === "ruler" || r === "?") loose.push(item);
+            else ranked.set(r, [...(ranked.get(r) ?? []), item]);
+        }
+        const parts = [...ranked.entries()];
+        if (parts.length <= 1) {
+            const key = `${personKey}|${parts[0]?.[0] ?? "any"}`;
+            groups.set(key, { key, person: list[0].person, memories: list.map((x) => x.m), reason: null, duplicates: [] });
+            continue;
+        }
+        for (const [r, items] of parts) {
+            const key = `${personKey}|${r}`;
+            groups.set(key, { key, person: items[0].person, memories: items.map((x) => x.m), reason: null, duplicates: [] });
+        }
+        for (const item of loose) {
+            const key = `memory:${item.m._id}`;
+            groups.set(key, { key, person: item.person, memories: [item.m], reason: "several", duplicates: [] });
+        }
     }
 
     for (const g of groups.values()) {
+        if (g.reason) continue;
         if (!g.person) g.reason = "no-name";
         else if (g.person.several) g.reason = "several";
         else if (!g.person.epithet) g.reason = "no-epithet";
@@ -127,6 +167,21 @@ const main = async () => {
                 g.duplicates = similar.slice(0, 5).map((s: any) => ({ id: String(s._id), name: s.name, slug: s.slug ?? null }));
             }
         }
+    }
+
+    // Одна запись каталога не должна обновляться двумя лицами — это значит, что
+    // прежний прогон свёл их, а нынешний различил: такое решает человек.
+    const byRecord = new Map<string, string[]>();
+    for (const g of groups.values()) {
+        if (g.reason) continue;
+        const rec = g.memories.map((m) => imported.get(m._id)).find(Boolean);
+        if (rec) byRecord.set(String(rec._id), [...(byRecord.get(String(rec._id)) ?? []), g.key]);
+    }
+    const split = [...byRecord].filter(([, keys]) => keys.length > 1);
+    if (split.length) {
+        console.log(`записи, которые теперь делятся на лица (${split.length}) — развести руками:`);
+        for (const [rec, keys] of split) console.log(`  ${rec}: ${keys.join(" / ")}`);
+        if (WRITE) { console.error("запись остановлена: сначала развести эти записи"); process.exit(1); }
     }
 
     const create = [...groups.values()].filter((g) => !g.reason);
@@ -159,6 +214,10 @@ const main = async () => {
         const memoryDates = [...new Set(g.memories.map((m) => churchDate(m.month!, m.day!)))];
         const derived = { name: g.person!.name, type: "Identity", memoryDates };
         const existing = g.memories.map((m) => imported.get(m._id)).find(Boolean);
+        // Память, присоединённая к записи из святцев (слиянием или «это он»), —
+        // уже не наша запись: её имя и дни ведёт build-saints.ts, и переписывать их
+        // выведенным из Минеи нельзя.
+        if (existing && ((existing as any).externals ?? []).length) continue;
         if (existing) {
             const manual = new Set<string>((existing as any).manual ?? []);
             const set: Record<string, unknown> = { provenance: [

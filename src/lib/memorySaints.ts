@@ -208,3 +208,22 @@ export const CHIN_WORDS: Record<string, string> = {
 /** Дата памяти в формате каталога: «ДД.ММ» по старому стилю. */
 export const churchDate = (month: number, day: number) =>
     `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}`;
+
+/**
+ * Чин лица по подписи — грубо, для одного: не сводить в одно лицо тёзок разного
+ * чина. «Андре́я, архиепи́скопа Кри́тскаго» (4 июля) и «преподобномученика
+ * Андре́я Критскаго» (17 октября) — два человека, хотя имя и прозвание одни.
+ */
+export const rankOf = (label: string): string => {
+    const b = bare(label);
+    if (/преподобномуч/.test(b)) return "venerable-martyr";
+    if (/священномуч/.test(b)) return "hieromartyr";
+    if (/(^|\s)(святител|архиепископ|епископ|патриарх|митрополит)/.test(b)) return "hierarch";
+    if (/(мучени|страстотерп)/.test(b)) return "martyr";
+    if (/преподобн/.test(b)) return "venerable";
+    if (/(благоверн|княз|княгин|цар)/.test(b)) return "ruler";
+    if (/(блажен|юродив)/.test(b)) return "blessed";
+    if (/праведн/.test(b)) return "righteous";
+    if (/(апостол|равноап)/.test(b)) return "apostle";
+    return "?";
+};
