@@ -51,6 +51,16 @@ export interface OrdoResult {
 export interface OrdoService {
     ordoId: string;
     label: string;
+    /**
+     * Служба этой канвы: vespers, matins, liturgy.
+     *
+     * Нужна потому, что сборка ПО ДАТЕ слушает службу, а не канву: канву
+     * она выбирает сама, по знаку дня. Пока служба сюда не доезжала, выбор
+     * канвы с заданной датой не действовал вовсе — какую бы службу ни
+     * выбрали, приходила вечерня.
+     */
+    service?: string | null;
+    variant?: string | null;
 }
 
 const base = () => process.env.ORDO_SERVICE_URL || "";
@@ -99,7 +109,10 @@ const ask = async <T>(
 
 /** Канвы служб, для которых написано последование. */
 export const ordoServices = () => ask<OrdoService[]>("/services").then(list =>
-    (list ?? []).map((s: any) => ({ ordoId: s.ordo_id, label: s.label })));
+    (list ?? []).map((s: any) => ({
+        ordoId: s.ordo_id, label: s.label,
+        service: s.service ?? null, variant: s.variant ?? null,
+    })));
 
 export interface OrdoQuery {
     ordo?: string;
@@ -117,6 +130,15 @@ export interface OrdoQuery {
     date?: string;
     prihod?: string;
     prestol?: string;
+    /** Служба суток: её слушает сборка по дате (см. OrdoService.service). */
+    service?: string;
+    /**
+     * Языки, на которых показать ту же строку: список, `all` или пусто.
+     *
+     * Состав службы они НЕ меняют — устав решил его до них; это братья по
+     * адресу, приложенные к готовым строкам.
+     */
+    parallel?: string;
 }
 
 export const buildOrdo = async (query: OrdoQuery): Promise<OrdoResult | null> => {
@@ -136,6 +158,8 @@ export const buildOrdo = async (query: OrdoQuery): Promise<OrdoResult | null> =>
         date: query.date ?? "",
         prihod: query.prihod ?? "",
         prestol: query.prestol ?? "",
+        service: query.service ?? "",
+        parallel: query.parallel ?? "",
     });
     if (!raw || raw.error) return null;
 

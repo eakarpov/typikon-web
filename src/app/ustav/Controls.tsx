@@ -93,6 +93,17 @@ const Controls = ({ services, options, params }: Props) => {
                                    onChange={e => push({ bez_diakona: e.target.checked ? "1" : "" })} />
                             без диакона
                         </label>
+                        {/* Та же строка на других языках — подстрочником под
+                            своей. Состав службы они НЕ меняют: устав решил его
+                            до них, а это братья по адресу, приложенные к
+                            готовым строкам. Оттого и отдельная ручка, а не
+                            второй выбор языка. */}
+                        <label className="flex gap-1 items-baseline"
+                               title="Под каждой строкой — она же в других книгах. Знак ⇄ значит «перевод заявлен издателем», ~ — «только на том же месте»">
+                            <input type="checkbox" checked={!!params.parallel}
+                                   onChange={e => push({ parallel: e.target.checked ? "all" : "" })} />
+                            языки рядом
+                        </label>
                     </div>
                 </>
             )}

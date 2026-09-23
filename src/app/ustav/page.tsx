@@ -18,8 +18,15 @@ export const metadata: Metadata = {
 };
 
 const Ustav = async ({ searchParams }: { searchParams: Record<string, string | undefined> }) => {
-    const [services, options, result] = await Promise.all([
-        ordoServices(),
+    // СПИСОК КАНВ НУЖЕН ПРЕЖДЕ СБОРКИ: сборка по дате слушает СЛУЖБУ, а
+    // выбирают здесь канву, и служба при канве записана только в этом
+    // списке. Пока его брали разом со сборкой, выбор службы с заданной
+    // датой не действовал вовсе — какую бы канву ни выбрали, приходила
+    // вечерня.
+    const services = await ordoServices();
+    const выбранная = services.find(s => s.ordoId === searchParams.ordo);
+
+    const [options, result] = await Promise.all([
         ordoOptions(),
         buildOrdo({
             ordo: searchParams.ordo,
@@ -37,6 +44,8 @@ const Ustav = async ({ searchParams }: { searchParams: Record<string, string | u
             date: searchParams.date,
             prihod: searchParams.prihod,
             prestol: searchParams.prestol,
+            service: выбранная?.service ?? undefined,
+            parallel: searchParams.parallel,
         }),
     ]);
 
