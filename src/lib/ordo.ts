@@ -85,8 +85,16 @@ const base = () => process.env.ORDO_SERVICE_URL || "";
  * Ответ службы или причина, почему его нет. Причину спрашивает тот, кто
  * показывает её человеку: «не ответила» на странице ничего не объясняет, а
  * служба на свою ошибку отвечает её текстом.
+ *
+ * error.status — HTTP-статус ответа службы; null — тайм-аут или обрыв,
+ * ответа не было вовсе (тогда «дата неизвестна» и «служба лежит» не
+ * различить, и это честно сказано в message). version — её X-Ordo-Version:
+ * фасад /api/v2/ordo пробрасывает его наружу, чтобы потребитель видел,
+ * какая сборка движка ответила.
  */
-type Asked<T> = { data: T; error: null } | { data: null; error: string };
+type Asked<T> =
+    | { data: T; error: null; status: number; version: string | null }
+    | { data: null; error: { status: number | null; message: string }; version: string | null };
 
 const request = async <T>(
     path: string,
@@ -97,7 +105,9 @@ const request = async <T>(
     timeoutMs: number = ORDO_TIMEOUT_MS,
 ): Promise<Asked<T>> => {
     const root = base();
-    if (!root) return { data: null, error: "служба устава не настроена (ORDO_SERVICE_URL)" };
+    if (!root) {
+        return { data: null, error: { status: null, message: "служба устава не настроена (ORDO_SERVICE_URL)" }, version: null };
+    }
 
     const url = new URL(path, root);
     for (const [k, v] of Object.entries(params ?? {})) {
@@ -122,13 +132,14 @@ const request = async <T>(
                 // столько, что кэш всё равно не прогреется.
                 cache: "no-store",
             });
+            const version = response.headers.get("x-ordo-version");
             if (!response.ok) {
                 const said = await response.json().then(b => b?.error, () => null);
-                const error = `${response.status}${said ? `: ${said}` : ""}`;
-                console.error(`ordo service ${url.pathname}${url.search}: ${error}`);
-                return { data: null, error };
+                const message = `${response.status}${said ? `: ${said}` : ""}`;
+                console.error(`ordo service ${url.pathname}${url.search}: ${message}`);
+                return { data: null, error: { status: response.status, message }, version };
             }
-            return { data: await response.json() as T, error: null };
+            return { data: await response.json() as T, error: null, status: response.status, version };
         } catch (e) {
             const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
             if (attempt < 2 && !timedOut) continue;
@@ -136,8 +147,12 @@ const request = async <T>(
             const cause = e instanceof Error && e.cause instanceof Error ? ` (${e.cause.message})` : "";
             return {
                 data: null,
-                error: timedOut ? `не дождались ответа за ${timeoutMs / 1000} с`
-                    : `${e instanceof Error ? e.message : String(e)}${cause}`,
+                error: {
+                    status: null,
+                    message: timedOut ? `не дождались ответа за ${timeoutMs / 1000} с`
+                        : `${e instanceof Error ? e.message : String(e)}${cause}`,
+                },
+                version: null,
             };
         }
     }
@@ -562,21 +577,7 @@ const variant = (raw: any): OrdoVariant => ({
     })),
 });
 
-/**
- * Что за день и что положено служить. Возвращает null, когда служба не
- * поднята или дату не поняла, — отличать одно от другого обязан вызывающий.
- */
-export const ordoDay = async (
-    date: string,
-    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[] },
-): Promise<OrdoDay | null> => {
-    const params: Record<string, string> = { date, ustav: opts?.ustav ?? "" };
-    const raw = await ask<any>("/day", params, [
-        ...(opts?.prestoly ?? []).map(prestolParam),
-        ...(opts?.transfers ?? []).map(transferParam),
-    ]);
-    if (!raw || raw.error || !raw.day) return null;
-
+const dayFromRaw = (raw: any): OrdoDay => {
     const d = raw.day;
     return {
         date: d.date,
@@ -599,6 +600,52 @@ export const ordoDay = async (
         })),
     };
 };
+
+/**
+ * То, что знает служба о неудаче, — целиком, а не `null`. Публичные ручки
+ * /api/v2/ordo различают по status, что сказать клиенту: 404 — дата вне
+ * расчёта или устав незнаком (not_found), 5xx и обрыв — служба устава в беде
+ * (ordo_unavailable), и текст причины доезжает в обоих случаях.
+ */
+export interface OrdoDayDetailed {
+    day: OrdoDay | null;
+    /** Текст ошибки службы; null — день собран. */
+    error: string | null;
+    /** HTTP-статус службы; null — тайм-аут или обрыв. */
+    status: number | null;
+    /** X-Ordo-Version ответившей службы. */
+    version: string | null;
+}
+
+export const ordoDayDetailed = async (
+    date: string,
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[] },
+): Promise<OrdoDayDetailed> => {
+    const params: Record<string, string> = { date, ustav: opts?.ustav ?? "" };
+    const { data: raw, error, version } = await request<any>("/day", params, [
+        ...(opts?.prestoly ?? []).map(prestolParam),
+        ...(opts?.transfers ?? []).map(transferParam),
+    ]);
+    if (!raw || raw.error || !raw.day) {
+        return {
+            day: null,
+            error: raw?.error ?? error?.message ?? "пустой ответ",
+            status: error?.status ?? null,
+            version,
+        };
+    }
+    return { day: dayFromRaw(raw), error: null, status: 200, version };
+};
+
+/**
+ * Что за день и что положено служить. Возвращает null, когда служба не
+ * поднята или дату не поняла, — отличать одно от другого обязан вызывающий;
+ * кому различие нужно (публичный API), тот зовёт ordoDayDetailed.
+ */
+export const ordoDay = async (
+    date: string,
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[] },
+): Promise<OrdoDay | null> => (await ordoDayDetailed(date, opts)).day;
 
 // —— Месяц дат разом ————————————————————————————————————————————————
 //
@@ -730,6 +777,9 @@ export interface OrdoSutki {
     variant: string;
     services: OrdoSutkiService[];
     viewRules: OrdoViewRules;
+    /** X-Ordo-Version ответившей службы; публичный API пробрасывает её и в
+     *  заголовок ответа, чтобы потребитель видел сборку движка. */
+    version: string | null;
 }
 
 export interface OrdoSutkiQuery {
@@ -764,8 +814,8 @@ const viewRules = (raw: any): OrdoViewRules => ({
  */
 export const ordoSutki = async (
     query: OrdoSutkiQuery,
-): Promise<OrdoSutki | { error: string }> => {
-    const { data: raw, error } = await request<any>("/sutki", {
+): Promise<OrdoSutki | { error: string; status?: number | null }> => {
+    const { data: raw, error, version } = await request<any>("/sutki", {
         date: query.date,
         ustav: query.ustav ?? "",
         variant: query.variant ?? "",
@@ -779,11 +829,16 @@ export const ordoSutki = async (
         ...(query.transfers ?? []).map(transferParam),
         ...(query.services ?? []).map(s => ["service", s] as [string, string]),
     ], ORDO_SUTKI_TIMEOUT_MS);
-    if (!raw || raw.error) return { error: error ?? raw?.error ?? "пустой ответ" };
+    if (!raw || raw.error) {
+        // status — HTTP-статус службы, фасад /api/v2/ordo по нему различает
+        // «не собралась» (503 ordo_unavailable) от «такого дня/устава нет».
+        return { error: error?.message ?? raw?.error ?? "пустой ответ", status: error?.status ?? null };
+    }
     return {
         ustav: raw.ustav ?? null,
         date: raw.date,
         variant: raw.variant,
+        version,
         services: (raw.services ?? []).map((s: any): OrdoSutkiService => ({
             key: s.key,
             label: s.label,

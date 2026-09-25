@@ -126,6 +126,18 @@ test("без ключа поиск не выдаётся", () => {
     assert.ok(ANONYMOUS_ALLOWANCE.scopes.includes("news"));
 });
 
+test("раздел «ordo» только по ключу", () => {
+    // Сборка службы — самая дорогая операция из публичных: день без текстов
+    // в свободном наборе был бы лазейкой до неё. Ключ free выдаётся самостоятельно
+    // в профиле, так что честному клиенту порог — формальность, а для скрипта,
+    // гоняющего даты подряд, — нет.
+    assert.ok(!ANONYMOUS_ALLOWANCE.scopes.includes("ordo"));
+    // Тарифные ключи раздел получают через ALL_SCOPES — отдельный тариф не заводили.
+    assert.ok(TIERS.free.scopes.includes("ordo"));
+    assert.ok(TIERS.app.scopes.includes("ordo"));
+    assert.ok(TIERS.partner.scopes.includes("ordo"));
+});
+
 test("свой запрос узнаётся по заголовку браузера", () => {
     assert.equal(isSiteRequest(headers({ "sec-fetch-site": "same-origin" }), ORIGINS), true);
     assert.equal(isSiteRequest(headers({ "sec-fetch-site": "cross-site" }), ORIGINS), false);

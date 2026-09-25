@@ -19,8 +19,16 @@ import { SITE_URL, SITE_URL_NAKED } from "@/utils/site";
 export const TOKENS_DB = "typikon-users";
 export const TOKENS_COLLECTION = "apiTokens";
 
-/** Разделы API, которые можно выдавать по отдельности. */
-export const SCOPES = ["texts", "calendar", "pericopes", "news", "search", "accents", "pomyannik"] as const;
+/**
+ * Разделы API, которые можно выдавать по отдельности.
+ *
+ * «ordo» — последование из службы устава (typikon-rules). В свободном наборе
+ * его нет намеренно: сборка службы в сотни раз дороже выборки дня, и анонимной
+ * порции «попробовать» на неё не положишь. Ключ free выдаётся самостоятельно
+ * в профиле, так что порог для честного потребителя — формальность, а для
+ * скрипта, гоняющего даты подряд, — нет.
+ */
+export const SCOPES = ["texts", "calendar", "pericopes", "news", "search", "accents", "pomyannik", "ordo"] as const;
 export type Scope = (typeof SCOPES)[number];
 
 /**

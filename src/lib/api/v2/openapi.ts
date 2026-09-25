@@ -104,6 +104,12 @@ export const openapi = () => ({
     security: [{ apiKey: [] }, {}],
     tags: [
         { name: "Календарь", description: "Что читается в конкретный день" },
+        {
+            name: "Последование",
+            description:
+                "Суточный круг по дате и уставу: день, службы, тексты. Только по ключу: "
+                + "сборка служки дороже выборки, и анонимной порции на неё не положишь.",
+        },
         { name: "Тексты", description: "Корпус текстов и книги" },
         { name: "Справочники", description: "Зачала, знаки, месяцы, седмицы, святые" },
         { name: "Песнопения", description: "Стихиры, тропари и каноны книг по местам службы" },
@@ -1309,6 +1315,67 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/ordo/day": {
+            get: {
+                tags: ["Последование"],
+                summary: "День по уставу",
+                description:
+                    "Что за день и что положено служить: памяти, знак, варианты дня со " +
+                    "стояниями и службами БЕЗ текстов. Тексты — в ручку служб. Ответ " +
+                    "несёт заголовок X-Ordo-Version — версию сборки движка, которой день собран.",
+                security: [{ apiKey: [] }],
+                parameters: [
+                    { name: "date", in: "query", required: true, schema: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" }, example: "2026-09-26" },
+                    {
+                        name: "ustav", in: "query", required: false, schema: { type: "string" },
+                        description:
+                            "Устав: «jerusalem/rus-synodal» (умолчание) или «pre-nikonian/old-rite». " +
+                            "Незнакомый устав — 404, движок не подменяет молча.",
+                    },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/OrdoDay"),
+                    "400": errorResponse("Дата записана не как ГГГГ-ММ-ДД"),
+                    "401": errorResponse("Нет ключа, ключ не признан, отозван или просрочен"),
+                    "404": errorResponse("Дата вне расчёта или устав незнаком"),
+                    "429": errorResponse("Слишком часто или исчерпана суточная квота"),
+                    "503": errorResponse("Служба устава недоступна (код ordo_unavailable)"),
+                },
+            },
+        },
+        "/api/v2/ordo/services": {
+            get: {
+                tags: ["Последование"],
+                summary: "Службы суток собранные",
+                description:
+                    "Шаги с ролями и текстами, применившиеся правила и таблицы подач " +
+                    "(viewRules). Подача на шаги НЕ наложена: пять степеней от loud до hidden " +
+                    "накладывает клиент по viewRules, сам выбирая читателю тетрадь. " +
+                    "Персональных параметров (престолы прихода, переносы памятей, чин без " +
+                    "диакона) здесь нет. Ответ несёт заголовок X-Ordo-Version.",
+                security: [{ apiKey: [] }],
+                parameters: [
+                    { name: "date", in: "query", required: true, schema: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" }, example: "2026-09-26" },
+                    {
+                        name: "service", in: "query", required: false, schema: { type: "string" },
+                        description:
+                            "Служба по ключу; параметр повторяемый, не больше 16 за запрос. " +
+                            "Не названы — все службы дня, кроме вошедших во всенощное.",
+                    },
+                    { name: "variant", in: "query", required: false, schema: { type: "string" }, description: "Вариант дня из ответа ручки дня" },
+                    { name: "ustav", in: "query", required: false, schema: { type: "string" }, description: "Тот же устав, что и в ручке дня" },
+                    { name: "lang", in: "query", required: false, schema: { type: "string" }, description: "Язык строк службы" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/OrdoSutki"),
+                    "400": errorResponse("Дата записана не как ГГГГ-ММ-ДД или слишком много служб"),
+                    "401": errorResponse("Нет ключа, ключ не признан, отозван или просрочен"),
+                    "404": errorResponse("Дата вне расчёта или устав незнаком"),
+                    "429": errorResponse("Слишком часто или исчерпана суточная квота"),
+                    "503": errorResponse("Служба устава недоступна или служба не собралась (код ordo_unavailable)"),
+                },
+            },
+        },
     },
     components: {
         securitySchemes: {
@@ -1342,6 +1409,227 @@ export const openapi = () => ({
                 },
             },
             Service: { type: "object", description: "Описание сервиса, счётчики и условия использования" },
+
+            // --- Последование -------------------------------------------
+            // Поля названы как в ответах: camelCase, прочерк — null. Шаг
+            // службы намеренно свободной формы: состав полей зависит от kind,
+            // и перечислить их всех значило бы держать здесь вторую копию схемы.
+            OrdoUstav: {
+                type: "object",
+                description: "Устав, по которому собрано, — применившийся, а не спрошенный",
+                properties: {
+                    ustav: { type: "string", example: "jerusalem/rus-synodal" },
+                    rite: { type: "string" },
+                    tradition: { type: "string" },
+                    label: { type: "string" },
+                    known: { type: "boolean", description: "Знаком ли движку этот устав" },
+                },
+            },
+            OrdoMemory: {
+                type: "object",
+                properties: {
+                    memoryId: { type: "string" },
+                    label: { type: "string" },
+                    book: { type: ["string", "null"], description: "Книга памяти, если память из книги" },
+                },
+            },
+            OrdoDayService: {
+                type: "object",
+                description: "Служба дня в списке: без текстов, за ними — в ручку служб",
+                properties: {
+                    key: { type: "string", example: "liturgy" },
+                    label: { type: "string" },
+                    ordoId: { type: "string", description: "Канва, назначенная этой службе" },
+                    namedBy: { type: ["string", "null"], description: "Слой устава, назвавший канву" },
+                    mark: { type: "string" },
+                    markLabel: { type: "string" },
+                    replacedBy: { type: ["string", "null"], description: "Вошла в эту службу (всенощное вбирает вечерню и утреню)" },
+                    placementWhy: { type: ["string", "null"], description: "Почему место службы в сутках поправлено" },
+                },
+            },
+            OrdoStoyanie: {
+                type: "object",
+                description: "Стояние — службы одной половины гражданских суток, один приход в храм",
+                properties: {
+                    key: { type: "string", example: "2026-09-26:vecher" },
+                    civil: { type: "string", format: "date", description: "Гражданская дата стояния — она же может не совпадать с датой дня" },
+                    part: { type: "string", enum: ["vecher", "noch", "utro", "den"] },
+                    partLabel: { type: "string" },
+                    services: { type: "array", items: { $ref: "#/components/schemas/OrdoDayService" } },
+                    why: { type: "array", items: { type: "string" }, description: "Пояснения, почему стояние составлено так" },
+                },
+            },
+            OrdoFastingRule: {
+                type: "object",
+                description:
+                    "Правило поста, выбранное движком. Адресные поля (period, weekday, " +
+                    "triod, feastMonth, feastDay, sign, postWeek, prestol) — чем правило " +
+                    "назвало этот день; знак — нижняя граница, а не равенство (наше чтение, не книжное).",
+                properties: {
+                    ruleId: { type: "integer" },
+                    chapter: { type: "integer", description: "Глава Типикона" },
+                    label: { type: "string" },
+                    who: { type: ["string", "null"], enum: ["monah", "mirianin", null], description: "Кому сказан ответ; null — всем" },
+                    allow: { type: "string" },
+                    allowLabel: { type: "string" },
+                    meals: { type: ["integer", "null"] },
+                    dishes: { type: ["integer", "null"] },
+                    until: { type: ["string", "null"], enum: ["devyatyi-chas", "vecher", null] },
+                    period: { type: ["string", "null"] },
+                    periodLabel: { type: ["string", "null"] },
+                    postWeek: { type: ["integer", "null"] },
+                    weekday: { type: ["string", "null"] },
+                    triod: { type: ["string", "null"] },
+                    feastMonth: { type: ["integer", "null"] },
+                    feastDay: { type: ["integer", "null"] },
+                    sign: { type: ["string", "null"] },
+                    prestol: { type: "boolean" },
+                    citation: { type: "string", description: "Цитата Типикона" },
+                    citationVerified: { type: "boolean" },
+                    note: { type: ["string", "null"], description: "Оговорка записи, показывается дословно" },
+                    ourReading: { type: "boolean", description: "Наш вывод, а не слова книги" },
+                    inherited: { type: "boolean", description: "Общее правило, взятое сословию, о котором книга молчит" },
+                    score: { type: "integer", description: "Сколько признаков дня правило назвало — этим оно и выбрано" },
+                    markLabel: { type: "string" },
+                    disputed: { type: "boolean", description: "Главы книги расходятся об этом дне: правило не одно" },
+                },
+            },
+            OrdoVariant: {
+                type: "object",
+                description: "Вариант дня — как устав читает этот день при выбранных слоях",
+                properties: {
+                    key: { type: "string" },
+                    label: { type: "string" },
+                    sign: { type: "string" },
+                    dayVariant: { type: "string" },
+                    feast: { type: ["string", "null"] },
+                    why: { type: "string" },
+                    mark: { type: "string" },
+                    markLabel: { type: "string" },
+                    citationVerified: { type: "boolean" },
+                    fastingLabel: { type: ["string", "null"], description: "Правило поста одной строкой, для подписи в расписании" },
+                    fasting: { type: "array", items: { $ref: "#/components/schemas/OrdoFastingRule" } },
+                    hram: { type: ["object", "null"], description: "Храмовая глава, если сегодня престольный праздник" },
+                    services: { type: "array", items: { $ref: "#/components/schemas/OrdoDayService" } },
+                    stoyaniya: { type: "array", items: { $ref: "#/components/schemas/OrdoStoyanie" } },
+                },
+            },
+            OrdoDay: {
+                type: "object",
+                description: "Что за день и что положено служить",
+                properties: {
+                    date: { type: "string", format: "date" },
+                    churchDate: { type: "object", properties: { month: { type: "integer" }, day: { type: "integer" } } },
+                    weekday: { type: "string" },
+                    weekdayLabel: { type: "string" },
+                    dayVariant: { type: "string" },
+                    pascha: { type: "string", format: "date", description: "Пасха того года, от которой считается подвижный круг" },
+                    paschaOffset: { type: "integer" },
+                    tone: { type: ["integer", "null"], description: "Глас седмицы" },
+                    triod: { type: ["string", "null"] },
+                    triodLabel: { type: ["string", "null"] },
+                    postWeek: { type: ["integer", "null"], description: "Седмица поста, если день в посте" },
+                    memories: { type: "array", items: { $ref: "#/components/schemas/OrdoMemory" } },
+                    variants: { type: "array", items: { $ref: "#/components/schemas/OrdoVariant" } },
+                    transfers: {
+                        type: "array",
+                        description: "Перенесённые памяти, как их поняла служба",
+                        items: {
+                            type: "object",
+                            properties: {
+                                memoryId: { type: "string" },
+                                primary: { type: "boolean", description: "true — ради самого святого, иначе чтобы память не пропала" },
+                                label: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            OrdoStep: {
+                type: "object",
+                description:
+                    "Шаг службы. Свободной формы: поля зависят от kind; обычно " +
+                    "kind, role, label, text, cue, items, display. Подача (display) " +
+                    "НЕ наложена — её накладывает клиент по viewRules.",
+            },
+            OrdoSutkiService: {
+                type: "object",
+                description: "Одна служба суток собранная; error — служба не собралась и почему",
+                properties: {
+                    key: { type: "string" },
+                    label: { type: "string" },
+                    stoyanie: { type: "string", description: "Ключ стояния: «2026-09-26:vecher»" },
+                    civil: { type: "string", format: "date" },
+                    part: { type: "string", enum: ["vecher", "noch", "utro", "den"] },
+                    partLabel: { type: "string" },
+                    replacedBy: { type: ["string", "null"] },
+                    placementWhy: { type: ["string", "null"] },
+                    error: { type: ["string", "null"] },
+                    ordo: { type: ["string", "null"], description: "Канва, по которой собрана" },
+                    feastLabel: { type: ["string", "null"] },
+                    layers: { type: "array", items: { type: "string" }, description: "Лестница слоёв устава, применённых при сборке" },
+                    rules: {
+                        type: "array",
+                        description: "Правила, применившиеся при сборке (путь в rules/typikon)",
+                        items: {
+                            type: "object",
+                            properties: {
+                                kind: { type: "string" },
+                                label: { type: "string" },
+                                path: { type: "string" },
+                                note: { type: ["string", "null"] },
+                            },
+                        },
+                    },
+                    steps: { type: "array", items: { $ref: "#/components/schemas/OrdoStep" } },
+                    ukazaniya: {
+                        type: "array",
+                        description: "Абзацы «Богослужебных указаний» — данными, а не HTML",
+                        items: { type: "object" },
+                    },
+                },
+            },
+            OrdoViewRules: {
+                type: "object",
+                description:
+                    "Таблицы подач (spec/registry/views.yaml в typikon-rules): по ним клиент " +
+                    "накладывает степень на шаги и собирает тетради ролей. Шаг без роли в " +
+                    "roleViews зовётся пустой строкой.",
+                properties: {
+                    views: { type: "object", additionalProperties: { type: "string" }, description: "Виды подачи: full, positions, schema" },
+                    roleAliases: { type: "object", additionalProperties: { type: "string" }, description: "Синонимы ролей: слаг чина и имя лица → роль подачи" },
+                    roleViews: {
+                        type: "object",
+                        description: "Тетрадь роли: кому какая степень достаётся",
+                        additionalProperties: {
+                            type: "object",
+                            additionalProperties: { type: "string", enum: ["loud", "full", "quiet", "cue", "hidden"] },
+                        },
+                    },
+                    readPositions: { type: "array", items: { type: "string" }, description: "Читаемые места (Апостол, Евангелие...)" },
+                    defaultRole: { type: "object", additionalProperties: { type: "string" }, description: "Роль по умолчанию у вида шага" },
+                    notebooks: {
+                        type: "array",
+                        description: "Какие тетради печатаем; порядок значим: первый — полная канва",
+                        items: {
+                            type: "object",
+                            properties: { role: { type: "string" }, label: { type: "string" } },
+                        },
+                    },
+                },
+            },
+            OrdoSutki: {
+                type: "object",
+                description: "Службы суток собранные; version — X-Ordo-Version движка",
+                properties: {
+                    ustav: { oneOf: [{ $ref: "#/components/schemas/OrdoUstav" }, { type: "null" }] },
+                    date: { type: "string", format: "date" },
+                    variant: { type: "string" },
+                    version: { type: ["string", "null"] },
+                    services: { type: "array", items: { $ref: "#/components/schemas/OrdoSutkiService" } },
+                    viewRules: { $ref: "#/components/schemas/OrdoViewRules" },
+                },
+            },
 
             // --- Помянник -------------------------------------------------
             RankInfo: {
