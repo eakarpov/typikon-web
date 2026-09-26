@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseOrdoDay, parseOrdoServices } from "@/lib/api/v2/ordoParams";
+import { parseOrdoDay, parseOrdoPackage, parseOrdoServices } from "@/lib/api/v2/ordoParams";
 
 // Разбор параметров ручек /api/v2/ordo/*. Ошибка здесь — либо отказ честному
 // клиенту, либо пропуск мусора в службу устава, которая читает файлы правил
@@ -53,5 +53,22 @@ test("службы: вариант и язык — короткие слова",
     if (parsed.ok) {
         assert.equal(parsed.value.variant, "polyeleos");
         assert.equal(parsed.value.lang, "cs");
+    }
+});
+
+test("пакет: служба обязательна — формат однослужбный", () => {
+    assert.equal(parseOrdoPackage(url("/api/v2/ordo/package")).ok, false);
+    assert.equal(parseOrdoPackage(url("/api/v2/ordo/package?date=2026-09-26")).ok, false);
+    assert.equal(parseOrdoPackage(url("/api/v2/ordo/package?date=2026-09-26&service=")).ok, false);
+    assert.equal(parseOrdoPackage(url("/api/v2/ordo/package?date=2026-02-30&service=liturgy")).ok, false);
+
+    const parsed = parseOrdoPackage(
+        url("/api/v2/ordo/package?date=2026-09-26&service=liturgy&variant=ustavny&ustav=pre-nikonian/old-rite"),
+    );
+    assert.ok(parsed.ok);
+    if (parsed.ok) {
+        assert.equal(parsed.value.service, "liturgy");
+        assert.equal(parsed.value.variant, "ustavny");
+        assert.equal(parsed.value.ustav, "pre-nikonian/old-rite");
     }
 });

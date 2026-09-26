@@ -1,17 +1,26 @@
 'use client';
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import type { OrdoSutkiService, OrdoViewRules } from "@/lib/ordo";
+import type { OrdoRule, OrdoStep, OrdoUkazParagraph, OrdoViewRules } from "@/lib/ordo";
 import { applyView, UKAZANIYA } from "@/lib/ordoView";
 import Ladder from "@/app/components/ordo/Ladder";
 import Steps from "@/app/components/ordo/Steps";
 import Ukazaniya from "./Ukazaniya";
 import { VIEW_PARAM } from "./params";
 
-// Служба в выбранной подаче. Подача читается из адреса и меняется без запроса
-// к серверу (Controls пишет её через history.replaceState): шаги уже здесь,
-// нейтральные, и накладывать на них подачу — дело клиента.
-const ServiceView = ({ service, rules }: { service: OrdoSutkiService; rules: OrdoViewRules }) => {
+// Служба в выбранной подаче: что показывать, решает ServiceLoader (пакет .ordo
+// плюс таблицы подач), здесь — только выбор подачи. Подача читается из адреса
+// и меняется без запроса к серверу: шаги уже здесь, нейтральные.
+export interface Served {
+    label: string;
+    feastLabel: string | null;
+    placementWhy: string | null;
+    steps: OrdoStep[];
+    ukazaniya: OrdoUkazParagraph[];
+    rules: OrdoRule[];
+}
+
+const ServiceView = ({ service, rules }: { service: Served; rules: OrdoViewRules }) => {
     const view = useSearchParams()?.get(VIEW_PARAM) || UKAZANIYA;
     const steps = useMemo(
         () => view === UKAZANIYA ? [] : applyView(service.steps, view, rules),

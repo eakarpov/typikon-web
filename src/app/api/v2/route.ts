@@ -107,6 +107,9 @@ export async function GET(request: Request) {
                 // без текстов, за текстами — в ручку служб.
                 ordoDay: "/api/v2/ordo/day?date= (по ключу)",
                 ordoServices: "/api/v2/ordo/services?date=&service= (по ключу)",
+                // Пакет .ordo одной службы: zip по спеке spec/package.md
+                // (typikon-rules), тела через ворота прав.
+                ordoPackage: "/api/v2/ordo/package?date=&service= (по ключу)",
                 // Помянник личный: ключ отмеряет частоту, а чей список открывать,
                 // говорит сессия. Оттого он и назван здесь в перечне отдельно —
                 // одним ключом эти три адреса не открываются.

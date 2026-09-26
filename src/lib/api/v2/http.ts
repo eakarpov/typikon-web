@@ -197,3 +197,23 @@ export const fail = (
 
 /** Предполётный запрос браузера. */
 export const preflight = () => new NextResponse(null, { status: 204, headers: baseHeaders(86400) });
+
+/**
+ * Файл, а не JSON: пакет `.ordo` (application/vnd.ordo+zip). Лицензионные и
+ * квотные заголовки тем же слоем, что у respond — бинарь без Link: rel=license
+ * смотрел бы как «вне корпуса и лицензий», а пакет их несёт не меньше текста.
+ */
+export const respondFile = (
+    body: BodyInit,
+    contentType: string,
+    { headers = {}, access }: RespondOptions = {},
+) =>
+    new NextResponse(body, {
+        headers: {
+            ...baseHeaders(0),
+            "Cache-Control": "no-store",
+            "Content-Type": contentType,
+            ...accessHeaders(access),
+            ...headers,
+        },
+    });

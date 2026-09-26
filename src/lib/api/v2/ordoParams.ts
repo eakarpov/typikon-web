@@ -79,3 +79,37 @@ export const parseOrdoServices = (url: URL): OrdoParams<OrdoServicesParams> => {
         },
     };
 };
+
+/**
+ * Пакет одной службы: service обязателен — формат однослужбный (spec/package.md),
+ * суточный кругом пакет не собирается. Тела не спрашиваем: публично отдаётся
+ * всегда gated-вариант (free), клиенту выбора не даём.
+ */
+export interface OrdoPackageParams {
+    date: string;
+    service: string;
+    ustav: string | null;
+    variant: string | null;
+    lang: string | null;
+}
+
+export const parseOrdoPackage = (url: URL): OrdoParams<OrdoPackageParams> => {
+    const date = url.searchParams.get("date");
+    if (!date || !strictDate(date)) {
+        return { ok: false, error: "Дата указывается в виде ГГГГ-ММ-ДД" };
+    }
+    const service = word(url.searchParams.get("service"));
+    if (!service) {
+        return { ok: false, error: "Пакет собирается на одну службу: назовите её параметром service" };
+    }
+    return {
+        ok: true,
+        value: {
+            date,
+            service,
+            ustav: word(url.searchParams.get("ustav")),
+            variant: word(url.searchParams.get("variant")),
+            lang: word(url.searchParams.get("lang")),
+        },
+    };
+};

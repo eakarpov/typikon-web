@@ -153,7 +153,8 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                                         </div>
                                     }>
                                         <ServiceLoader query={{ ...common, services: [s.key] }}
-                                                       label={s.label} />
+                                                       label={s.label}
+                                                       placementWhy={s.placementWhy} />
                                     </Suspense>
                                 ))}
                             </div>

@@ -1376,6 +1376,37 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/ordo/package": {
+            get: {
+                tags: ["Последование"],
+                summary: "Пакет службы (.ordo)",
+                description:
+                    "Пакет обмена последованием (spec/package.md в typikon-rules): zip " +
+                    "с канвой, адресами и телами. Подача на шаги не наложена — её " +
+                    "накладывает читатель по таблицам из ручки служб. Тела отдаются " +
+                    "через ворота прав: издания с неразобранной лицензией молчат, и " +
+                    "манифест говорит об этом счётчиками. Ответ — бинарный zip.",
+                security: [{ apiKey: [] }],
+                parameters: [
+                    { name: "date", in: "query", required: true, schema: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" }, example: "2026-09-26" },
+                    { name: "service", in: "query", required: true, schema: { type: "string" }, description: "Служба по ключу; пакет собирается на одну службу" },
+                    { name: "variant", in: "query", required: false, schema: { type: "string" }, description: "Вариант дня из ответа ручки дня" },
+                    { name: "ustav", in: "query", required: false, schema: { type: "string" }, description: "Тот же устав, что и в ручке дня" },
+                    { name: "lang", in: "query", required: false, schema: { type: "string" }, description: "Язык строк службы" },
+                ],
+                responses: {
+                    "200": {
+                        description: "Пакет .ordo (zip)",
+                        content: { "application/vnd.ordo+zip": { schema: { type: "string", format: "binary" } } },
+                    },
+                    "400": errorResponse("Дата записана не как ГГГГ-ММ-ДД или не названа служба"),
+                    "401": errorResponse("Нет ключа, ключ не признан, отозван или просрочен"),
+                    "404": errorResponse("Дата вне расчёта, устав незнаком или службы нет"),
+                    "429": errorResponse("Слишком часто или исчерпана суточная квота"),
+                    "503": errorResponse("Служба устава недоступна (код ordo_unavailable)"),
+                },
+            },
+        },
     },
     components: {
         securitySchemes: {
