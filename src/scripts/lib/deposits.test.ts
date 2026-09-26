@@ -47,6 +47,18 @@ describe("разбор выгрузки по записям архива", () =>
         assert.notEqual(temples!.id, recordOfLayer("corpus")!.id);
     });
 
+    it("слой отцов собран только производными файлами", () => {
+        // Отцы — срез корпуса: те же строки есть и в corpus/texts. Слой не должен
+        // претендовать на Mongo-коллекции напрямую — иначе две записи разошлись
+        // бы в составе мимо заявленного устройства «срез поверх корпуса».
+        const fathers = LAYERS.find((layer) => layer.id === "fathers")!;
+        assert.ok(fathers.collections.length >= 4, "срез выродился бы в пустышку");
+        for (const collection of fathers.collections) {
+            assert.equal(collection.source, null,
+                `${collection.file}: прямая коллекция в слое-срезе`);
+        }
+    });
+
     it("у каждой записи есть чем её назвать и по чему найти", () => {
         for (const record of DEPOSITS) {
             assert.ok(record.title.length > 20, `${record.id}: заголовок слишком короток`);

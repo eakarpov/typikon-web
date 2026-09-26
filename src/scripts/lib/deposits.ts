@@ -75,6 +75,36 @@ export const DEPOSITS: DepositRecord[] = [
         },
     },
     {
+        id: "fathers",
+        layers: ["fathers"],
+        title:
+            "Святоотеческие тексты на церковнославянском: уставные чтения, "
+            + "толкования и жития с разметкой и привязкой к богослужебному году",
+        titleEn:
+            "Church Slavonic patristic readings, biblical commentaries and saint "
+            + "lives with lectionary linkage",
+        license: layerOf("fathers").license,
+        keywords: [
+            "Church Slavonic", "patristics", "Fathers of the Church", "John Chrysostom",
+            "Theophylact of Ohrid", "hagiography", "lectionary", "biblical exegesis",
+            "ascetic literature",
+            "церковнославянский язык", "святоотеческие тексты", "патристика",
+            "жития святых", "уставные чтения", "библейская экзегетика",
+        ],
+        summary:
+            "Наборный текст святоотеческих памятников (Златоуст, Феофилакт, Шестоднев, "
+            + "Толковый апостол, Лествица, Паренесис, Маргарит, торжественники, "
+            + "синаксари) и житий святых (Прологи) с расстановкой ударений, ссылками "
+            + "на сканы-источники и привязкой чтений к дням церковного года. Срез "
+            + "корпуса: те же текста есть и в записи «Корпус „Уставные чтения“», "
+            + "условия у обеих CC BY 4.0. Часть текстов — заглушки со ссылками на "
+            + "сканы; сводка готовности по книгам прилагается (readiness).",
+        doi: {
+            concept: "10.5281/zenodo.22982514",
+            version: "10.5281/zenodo.22982515"
+        }
+    },
+    {
         id: "temples",
         layers: ["temples"],
         title: "Каталог православных храмов с разобранными престолами",

@@ -30,9 +30,11 @@ import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import { join } from "node:path";
 import clientPromise from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import { addContent, createDraft, finalize } from "@/lib/accents/core";
 import { BIBLE_CANON } from "@/utils/bibleCanon";
 import { readChurchSlavonicCorpus } from "@/scripts/lib/corpus";
+import { fathersBookIds } from "@/scripts/lib/fathers";
 import {
     CITATION,
     DumpCollection,
@@ -41,6 +43,7 @@ import {
     EXCLUDED,
     LAYERS,
     prepare,
+    TEXTS_DROP,
     unclassified,
 } from "@/scripts/lib/dumpLayers";
 import { SITE_URL } from "@/utils/site";
@@ -422,10 +425,143 @@ const run = async () => {
         }
     };
 
+    /**
+     * Святоотеческие тексты как отдельная запись архива. Все пять файлов —
+     * производные (source: null): отбор книг по списку из lib/fathers.ts, чтобы
+     * опубликованная корпусная запись не меняла состава, а отеческая отдавала
+     * свой срез поверх неё. Условия те же, что у слоя corpus, поэтому двойное
+     * существование строк в двух записях лицензионного противоречия не творит.
+     */
+    const fatherBookIds = await fathersBookIds(db);
+    const fatherBookObjectIds = [...fatherBookIds].map((id) => new ObjectId(id));
+    const fatherTextIds = new Set(
+        (await db.collection("texts")
+            .find({ bookId: { $in: fatherBookObjectIds } }, { projection: { _id: 1 } })
+            .toArray())
+            .map((doc) => String(doc._id)),
+    );
+    const fatherBookNames = new Map(
+        (await db.collection("books")
+            .find({ _id: { $in: fatherBookObjectIds } }, { projection: { _id: 1, name: 1 } })
+            .toArray())
+            .map((book) => [String(book._id), book.name as string]),
+    );
+
+    const fathersBooks = async function* () {
+        const cursor = db.collection("books")
+            .find({ _id: { $in: fatherBookObjectIds } })
+            .sort({ _id: 1 });
+        for await (const doc of cursor) yield prepare(doc);
+    };
+
+    const fathersTexts = async function* () {
+        const cursor = db.collection("texts")
+            .find({ bookId: { $in: fatherBookObjectIds } })
+            .sort({ _id: 1 });
+        for await (const doc of cursor) yield prepare(doc, TEXTS_DROP);
+    };
+
+    /**
+     * Рукописи, по которым набираются отеческие текста: источник входит в
+     * выгрузку, если его url — префикс ссылки (link) хотя бы одного текста.
+     * Ссылки на сканы ведут внутрь источника (…/f-228-52/#image-21), поэтому
+     * совпадение целиком не ждётся.
+     */
+    const fathersSources = async function* () {
+        const links = (await db.collection("texts")
+            .find({ bookId: { $in: fatherBookObjectIds } }, { projection: { _id: 0, link: 1 } })
+            .toArray())
+            .map((doc) => doc.link)
+            .filter((link): link is string => typeof link === "string" && link.length > 0);
+
+        const cursor = db.collection("sources").find({}).sort({ _id: 1 });
+        for await (const source of cursor) {
+            const url = source.url as string | undefined;
+            if (!url) continue;
+            if (links.some((link) => link.startsWith(url))) yield prepare(source);
+        }
+    };
+
+    // Поля-слоты схемы дня, где стоят чтения. Список зашит: схема дня не
+    // типизирована снаружи, и вывести его из первого попавшегося дня значило бы
+    // молча пропустить слот, который в тот день пуст.
+    const SLOT_FIELDS = [
+        "before1h", "h1", "h3", "h6", "h9",
+        "kathisma1", "kathisma2", "kathisma3",
+        "song3", "song6", "ipakoi", "polyeleos", "vigil",
+        "apolutikaTroparia", "panagia", "vespersProkimenon",
+        "gospelLiturgy", "apostleLiturgy",
+    ] as const;
+
+    /**
+     * Привязка чтений к богослужению: у какого дня, в каком слоте службы стоит
+     * этот текст. Дни целиком остаются в слое corpus — здесь только связка,
+     * чтобы читатель записи «отцы» видел, где текст звучит, не забирая весь
+     * уставный каркас.
+     */
+    const fathersReadings = async function* () {
+        const cursor = db.collection("days").find({}).sort({ _id: 1 });
+        for await (const day of cursor) {
+            for (const slot of SLOT_FIELDS) {
+                const value = day[slot];
+                if (!value?.items?.length) continue;
+                for (const item of value.items) {
+                    const textId = item?.textId ? String(item.textId) : null;
+                    if (!textId || !fatherTextIds.has(textId)) continue;
+                    yield prepare({
+                        dayId: String(day._id),
+                        dayName: day.name,
+                        slot,
+                        cite: item.cite ?? null,
+                        paschal: item.paschal ?? null,
+                        textId,
+                    });
+                }
+            }
+        }
+    };
+
+    /**
+     * Сколько текстов каждой книги в каком статусе готовности. Статусы не
+     * перечисляются жёстко: у части текстов стоят correcting, пусто или ещё
+     * что-то — сводка обязана сходиться с числом текстов, а не молча терять
+     * незнакомые статусы.
+     */
+    const fathersReadiness = async function* () {
+        const counts = new Map<string, Map<string, number>>();
+        const cursor = db.collection("texts")
+            .find({ bookId: { $in: fatherBookObjectIds } }, { projection: { _id: 0, bookId: 1, readiness: 1 } });
+        for await (const doc of cursor) {
+            const bookId = String(doc.bookId);
+            const readiness = doc.readiness ? String(doc.readiness) : "unknown";
+            const byStatus = counts.get(bookId) ?? new Map<string, number>();
+            byStatus.set(readiness, (byStatus.get(readiness) ?? 0) + 1);
+            counts.set(bookId, byStatus);
+        }
+
+        for (const bookId of [...counts.keys()].sort()) {
+            const byStatus = counts.get(bookId)!;
+            const statuses = Object.fromEntries(
+                [...byStatus.entries()].sort(([a], [b]) => a.localeCompare(b, "ru")),
+            );
+            yield prepare({
+                bookId,
+                book: fatherBookNames.get(bookId) ?? null,
+                total: [...byStatus.values()].reduce((sum, n) => sum + n, 0),
+                byStatus: statuses,
+            });
+        }
+    };
+
     const derived: Record<string, () => AsyncGenerator<any>> = {
         "bible-concordance": concordance,
         "saint-external-ids": saintExternalIds,
         accents,
+        books: fathersBooks,
+        texts: fathersTexts,
+        sources: fathersSources,
+        readings: fathersReadings,
+        readiness: fathersReadiness,
     };
 
     const built: { layer: DumpLayer; files: FileReport[] }[] = [];
