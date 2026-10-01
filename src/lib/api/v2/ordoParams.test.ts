@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseOrdoDay, parseOrdoPackage, parseOrdoServices } from "@/lib/api/v2/ordoParams";
+import { parseOrdoDay, parseOrdoDownload, parseOrdoPackage, parseOrdoServices } from "@/lib/api/v2/ordoParams";
 
 // Разбор параметров ручек /api/v2/ordo/*. Ошибка здесь — либо отказ честному
 // клиенту, либо пропуск мусора в службу устава, которая читает файлы правил
@@ -71,4 +71,30 @@ test("пакет: служба обязательна — формат одно�
         assert.equal(parsed.value.variant, "ustavny");
         assert.equal(parsed.value.ustav, "pre-nikonian/old-rite");
     }
+});
+
+test("скачивание: служба опциональна, дата строга, bdenie читается", () => {
+    assert.equal(parseOrdoDownload(url("/api/ordo/package")).ok, false);
+    assert.equal(parseOrdoDownload(url("/api/ordo/package?date=2026-02-30")).ok, false);
+
+    const day = parseOrdoDownload(url("/api/ordo/package?date=2026-09-26"));
+    assert.ok(day.ok);
+    if (day.ok) {
+        assert.equal(day.value.service, null);
+        assert.equal(day.value.razdelno, false);
+    }
+
+    const razdelno = parseOrdoDownload(
+        url("/api/ordo/package?date=2026-09-26&service=liturgy&bdenie=0&ustav=pre-nikonian/old-rite"),
+    );
+    assert.ok(razdelno.ok);
+    if (razdelno.ok) {
+        assert.equal(razdelno.value.service, "liturgy");
+        assert.equal(razdelno.value.razdelno, true);
+        assert.equal(razdelno.value.ustav, "pre-nikonian/old-rite");
+    }
+
+    // служебный мусор в service не проходит
+    const junk = parseOrdoDownload(url(`/api/ordo/package?date=2026-09-26&service=${"x".repeat(200)}`));
+    assert.ok(junk.ok && junk.value.service === null);
 });

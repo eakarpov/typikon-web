@@ -20,8 +20,16 @@ export interface Served {
     rules: OrdoRule[];
 }
 
-const ServiceView = ({ service, rules }: { service: Served; rules: OrdoViewRules }) => {
-    const view = useSearchParams()?.get(VIEW_PARAM) || UKAZANIYA;
+const ServiceView = ({ service, rules, view: viewProp, defaultView }: {
+    service: Served;
+    rules: OrdoViewRules;
+    /** Вид снаружи (режим загруженного пакета): адрес не трогаем. */
+    view?: string;
+    /** Вид по умолчанию, когда адрес молчит (у пакета указаний нет). */
+    defaultView?: string;
+}) => {
+    const urlView = useSearchParams()?.get(VIEW_PARAM);
+    const view = viewProp ?? urlView ?? defaultView ?? UKAZANIYA;
     const steps = useMemo(
         () => view === UKAZANIYA ? [] : applyView(service.steps, view, rules),
         [service.steps, view, rules],
@@ -40,9 +48,11 @@ const ServiceView = ({ service, rules }: { service: Served; rules: OrdoViewRules
                 <p className="font-serif text-xs text-slate-500 mb-1">{service.placementWhy}</p>
             )}
             <div className="pl-3 border-l border-slate-100">
-                {view === UKAZANIYA
-                    ? <Ukazaniya paragraphs={service.ukazaniya} />
-                    : <Steps steps={steps} />}
+                {view === UKAZANIYA && service.ukazaniya.length === 0
+                    ? <p className="font-serif text-xs text-slate-500">«Богослужебных указаний» в пакете нет — они не часть формата (spec/package.md).</p>
+                    : view === UKAZANIYA
+                        ? <Ukazaniya paragraphs={service.ukazaniya} />
+                        : <Steps steps={steps} />}
                 <details className="mt-3 mb-2">
                     <summary className="cursor-pointer text-xs text-slate-500 font-serif">
                         Правила, сложившие эту службу

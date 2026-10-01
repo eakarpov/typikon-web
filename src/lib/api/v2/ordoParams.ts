@@ -113,3 +113,33 @@ export const parseOrdoPackage = (url: URL): OrdoParams<OrdoPackageParams> => {
         },
     };
 };
+
+/**
+ * Скачивание с сайта: служба или день целиком. Внутренняя ручка, потому
+ * service опционален, а тела всегда gated (скачивает третье лицо).
+ */
+export interface OrdoDownloadParams {
+    date: string;
+    service: string | null;
+    ustav: string | null;
+    variant: string | null;
+    /** «1» — вечерня и утреня раздельно: архив дня без всенощного. */
+    razdelno: boolean;
+}
+
+export const parseOrdoDownload = (url: URL): OrdoParams<OrdoDownloadParams> => {
+    const date = url.searchParams.get("date");
+    if (!date || !strictDate(date)) {
+        return { ok: false, error: "Дата указывается в виде ГГГГ-ММ-ДД" };
+    }
+    return {
+        ok: true,
+        value: {
+            date,
+            service: word(url.searchParams.get("service")),
+            ustav: word(url.searchParams.get("ustav")),
+            variant: word(url.searchParams.get("variant")),
+            razdelno: url.searchParams.get("bdenie") === "0",
+        },
+    };
+};

@@ -1,44 +1,18 @@
-// Чтение пакета `.ordo` — формата обмена последованием (typikon-rules,
-// spec/package.md). Просмотрщик /posledovanie читает службу отсюда, а не из
-// JSON-ручки /sutki: пакет и есть внешний формат, и читая его, сайт ест свой
-// же контракт, а не параллельный путь к той же службе.
+// Серверное чтение пакета `.ordo` — формата обмена последованием
+// (typikon-rules, spec/package.md). Просмотрщик /posledovanie читает службу
+// отсюда, а не из JSON-ручки /sutki: пакет и есть внешний формат, и читая
+// его, сайт ест свой же контракт, а не параллельный путь к той же службе.
 //
-// Что здесь и зачем, в терминах спеки:
-//   ordo.json      порядок службы: шаги с единицами БЕЗ тел и без подачи
-//                  (display накладывает читатель, см. lib/ordoView.ts);
-//   addresses.json где лежит тело каждой строки — сшиваем по МЕСТУ (шаг,
-//                  единица), а не по адресу: один адрес бывает положен дважды;
-//   texts/*.jsonl  тела, файл на издание, строка на адрес.
-// Молчания (rights, not-collected, external, omitted, unset) различаются —
-// свести их в одно «нет текста» значит соврать складно. Порт posledovanie()
-// из typikon-rules/src/package.py: поведение совпадает с эталонным читателем,
-// и расхождения ловит scripts/check-ordo-parity.ts.
-import { unzipSync } from "fflate";
+// Сам разбор — в lib/ordoPackageReader.ts: он без серверных зависимостей,
+// и тем же кодом пакет читается в браузере (загрузка файла в /posledovanie).
+// Здесь — сеть к службе устава, кэш таблиц подач и журналирование.
 import { cached, CacheTag } from "@/lib/cache";
 import { reportError } from "@/lib/reportError";
 import type { OrdoRule, OrdoStep, OrdoUkazParagraph, OrdoViewRules } from "@/lib/ordo";
 import type { OrdoTransfer } from "@/lib/ordo";
+import { parsePackage } from "@/lib/ordoPackageReader";
 
-// Три (пять) РАЗНЫХ молчания — те же слова, что и в typikon-rules/src/package.py:
-// читатель пакета обязан говорить о них одинаково на всяком языке программ.
-const ABSENT_WORDS: Record<string, string> = {
-    "rights": "‹текста нет: отдать не вправе›",
-    "not-collected": "‹текста нет: не собран›",
-    "external": "‹текст снаружи: Писание›",
-    "omitted": "‹текста нет: не просили›",
-    "unset": "‹текста нет: не задано настройкой›",
-};
-const NET_V_UKAZATELE = "‹текста нет: пакет о нём не говорит›";
-
-interface JsonlRow { address?: string; language?: string | null; text?: string }
-
-interface PackageFiles {
-    "manifest.json"?: any;
-    "ordo.json"?: any;
-    "addresses.json"?: any;
-    "rights.json"?: any;
-    [name: string]: any;
-}
+export { parsePackage };
 
 export interface OrdoPackageQuery {
     date: string;
@@ -95,119 +69,6 @@ const fetchOk = async (url: URL, timeoutMs: number): Promise<Response> => {
 const transferParam = (t: OrdoTransfer): [string, string] =>
     ["add_memory", t.primary ? `${t.memoryId}:primary` : t.memoryId];
 
-/** Распаковать и разобрать zip пакета в словарь частей. */
-const unpack = (bytes: Uint8Array): PackageFiles => {
-    const raw = unzipSync(bytes);
-    const out: PackageFiles = {};
-    for (const [name, data] of Object.entries(raw)) {
-        const text = new TextDecoder("utf-8").decode(data);
-        if (name.endsWith(".jsonl")) {
-            out[name] = text.split("\n").filter(Boolean).map(line => {
-                try {
-                    return JSON.parse(line);
-                } catch {
-                    return { text: line }; // битая строка не роняет чтение
-                }
-            });
-        } else if (name.endsWith(".json")) {
-            out[name] = JSON.parse(text);
-        }
-    }
-    return out;
-};
-
-/** Тело строки: сам текст либо честное слово о том, почему его нет. */
-const bodyText = (pkg: PackageFiles, body: any): { text: string | null; why: string | null } => {
-    if (body?.in) {
-        const rows = (pkg[body.in] ?? []) as JsonlRow[];
-        const line = body.line;
-        if (Number.isInteger(line) && line >= 0 && line < rows.length) {
-            return { text: rows[line]?.text ?? null, why: null };
-        }
-        return { text: null, why: `${body.in}: строки ${line} нет` };
-    }
-    const absent = body?.absent;
-    return { text: ABSENT_WORDS[absent] ?? `‹текста нет: ${absent}›`, why: null };
-};
-
-/**
- * Сшить шаги службы с телами — чтение пакета (package.posledovanie в Python).
- * Возвращает шаги в той же форме, в какой их отдаёт сборка: дальше их ждёт
- * тот же показ, что и прежде для /sutki.
- */
-const stitch = (pkg: PackageFiles): { steps: OrdoStep[]; beda: string[] } => {
-    const beda: string[] = [];
-    const ordo = pkg["ordo.json"];
-    if (!ordo || typeof ordo !== "object") {
-        return { steps: [], beda: ["нет ordo.json — канвы в пакете нет"] };
-    }
-    const steps: OrdoStep[] = JSON.parse(JSON.stringify(ordo.steps ?? []));
-
-    // Формула, снятая воротами, говорит о себе сама
-    for (const step of steps) {
-        const absent = (step as any).body_absent;
-        if (absent && !(step as any).text) {
-            (step as any).text = ABSENT_WORDS[absent] ?? `‹текста нет: ${absent}›`;
-        }
-    }
-
-    const addresses = pkg["addresses.json"];
-    if (!addresses || typeof addresses !== "object") {
-        bezTel(steps);
-        return { steps, beda: [...beda, "нет addresses.json — канва показана без тел"] };
-    }
-
-    for (const entry of (addresses.lines ?? []) as any[]) {
-        const i = entry.step, j = entry.item;
-        if (!Number.isInteger(i) || i < 0 || i >= steps.length) {
-            beda.push(`строка указывает на шаг ${i}, а шагов ${steps.length}`);
-            continue;
-        }
-        const items = (steps[i].items ?? []) as any[];
-        if (!Number.isInteger(j) || j < 0 || j >= items.length) {
-            beda.push(`шаг ${i}: строка указывает на единицу ${j}, а их ${items.length}`);
-            continue;
-        }
-        const item = items[j];
-        const absent = entry.body?.absent ?? null;
-        if (absent === "unset" && item.text) {
-            // Заглушку не заменяем словом о молчании — она часть канвы и
-            // едет в ordo.json; помету ставим, текст бережём (как в
-            // package.posledovanie, typikon-rules).
-            item.absent = absent;
-        } else {
-            const { text, why } = bodyText(pkg, entry.body ?? {});
-            if (why) beda.push(`шаг ${i}, единица ${j}: ${why}`);
-            item.text = text;
-        }
-        for (const key of ["address", "edition", "language", "cite", "source_url", "part", "zachalo"]) {
-            if (entry[key] != null && item[key] == null) item[key] = entry[key];
-        }
-        if (absent && item.absent == null) item.absent = absent;
-        const brothers: any[] = [];
-        for (const alt of entry.alternates ?? []) {
-            const bro = bodyText(pkg, alt.body ?? {});
-            if (bro.why) beda.push(`шаг ${i}, единица ${j}: ${bro.why}`);
-            brothers.push({
-                language: alt.language, edition: alt.edition, basis: alt.basis,
-                absent: alt.body?.absent ?? null, text: bro.text,
-            });
-        }
-        if (brothers.length) item.parallel = brothers;
-    }
-    bezTel(steps);
-    return { steps, beda };
-};
-
-/** Каждой строке — ключ `text`, даже если о ней пакет не говорит вовсе. */
-const bezTel = (steps: OrdoStep[]) => {
-    for (const step of steps) {
-        for (const item of (step.items ?? []) as any[]) {
-            if (!("text" in item)) item.text = NET_V_UKAZATELE;
-        }
-    }
-};
-
 const request = async (query: OrdoPackageQuery): Promise<Asked<OrdoPackageService>> => {
     const root = base();
     if (!root) return { data: null, error: "служба устава не настроена (ORDO_SERVICE_URL)", version: null };
@@ -228,21 +89,19 @@ const request = async (query: OrdoPackageQuery): Promise<Asked<OrdoPackageServic
 
     try {
         const response = await fetchOk(url, 25_000);
-        const pkg = unpack(new Uint8Array(await response.arrayBuffer()));
-        const { steps, beda } = stitch(pkg);
-        if (beda.length) {
+        const parsed = parsePackage(new Uint8Array(await response.arrayBuffer()));
+        if (parsed.beda.length) {
             reportError(new Error("пакет последования сшит с расхождениями"), {
                 where: "lib/ordoPackage: расхождения пакета",
-                extra: { date: query.date, service: query.service, beda },
+                extra: { date: query.date, service: query.service, beda: parsed.beda },
             });
         }
-        const ordo = pkg["ordo.json"] ?? {};
         return {
             data: {
                 key: query.service,
-                steps,
-                rules: ordo.rules ?? [],
-                feastLabel: ordo.feast_label ?? null,
+                steps: parsed.steps,
+                rules: parsed.ordo?.rules ?? [],
+                feastLabel: parsed.ordo?.feast_label ?? null,
                 version: response.headers.get("x-ordo-version"),
             },
             error: null,
@@ -254,11 +113,6 @@ const request = async (query: OrdoPackageQuery): Promise<Asked<OrdoPackageServic
         return { data: null, error: message, version: null };
     }
 };
-
-/** Разобрать байты пакета в шаги службы. Чистая функция — ей же пользуется
- *  scripts/check-ordo-parity.ts, сверяя пакет с JSON-выдачей /sutki. */
-export const parsePackage = (bytes: Uint8Array): { steps: OrdoStep[]; beda: string[] } =>
-    stitch(unpack(bytes));
 
 /** Служба суток из пакета: шаги с привязанными телами, без подачи. */
 export const ordoPackage = (query: OrdoPackageQuery): Promise<Asked<OrdoPackageService>> =>

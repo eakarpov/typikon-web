@@ -7,6 +7,7 @@ import { myFont } from "@/utils/font";
 import Calendar from "./Calendar";
 import Controls from "./Controls";
 import MemoryChoice from "./MemoryChoice";
+import PackageMode from "./PackageMode";
 import ServiceLoader from "./ServiceLoader";
 import { all, dateOf, first, type SearchParams } from "./params";
 
@@ -102,6 +103,16 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
         parallel: first(searchParams.parallel),
         psalms: first(searchParams.psalms),
     };
+    // Адрес выгрузки: скачивается всегда gated-вариант (free), состав пакет
+    // называет сам, манифестом. Архив дня собирает та же внутренняя ручка.
+    const downloadUrl = (service?: string) => {
+        const q = new URLSearchParams({ date });
+        if (service) q.set("service", service);
+        if (variant) q.set("variant", variant.key);
+        if (ustav) q.set("ustav", ustav);
+        if (razdelno) q.set("bdenie", "0");
+        return `/api/ordo/package?${q.toString()}`;
+    };
     const choices = viewChoices(options);
     // КЛЮЧ ВСЕГО ВОПРОСА — на границах Suspense. С прежними ключами React при
     // переходе не прячет уже показанное и ждёт, пока соберутся ВСЕ службы
@@ -122,7 +133,17 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
             </aside>
 
             <div className="flex-1 min-w-0">
+                <PackageMode>
                 <DayHead day={day} />
+                <div className="flex items-baseline gap-3 mt-1 flex-wrap">
+                    <a download href={downloadUrl()}
+                       className="text-xs font-serif text-slate-600 border border-slate-200 rounded px-2 py-1 hover:bg-slate-50">
+                        Скачать день (.ordo)
+                    </a>
+                    <span className="text-[11px] text-slate-400 font-serif">
+                        тексты свободных изданий; что молчит и почему, пакет скажет манифестом
+                    </span>
+                </div>
                 <Suspense>
                     <MemoryChoice day={day} variantKey={variant?.key ?? null} />
                 </Suspense>
@@ -147,21 +168,28 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                             ))}
                             <div className="flex flex-col gap-2 mt-2">
                                 {services.map(s => (
-                                    <Suspense key={s.key} fallback={
-                                        <div className="font-serif text-slate-400 py-2">
-                                            {s.label} — собирается…
-                                        </div>
-                                    }>
-                                        <ServiceLoader query={{ ...common, services: [s.key] }}
-                                                       label={s.label}
-                                                       placementWhy={s.placementWhy} />
-                                    </Suspense>
+                                    <div key={s.key}>
+                                        <Suspense fallback={
+                                            <div className="font-serif text-slate-400 py-2">
+                                                {s.label} — собирается…
+                                            </div>
+                                        }>
+                                            <ServiceLoader query={{ ...common, services: [s.key] }}
+                                                           label={s.label}
+                                                           placementWhy={s.placementWhy} />
+                                        </Suspense>
+                                        <a download href={downloadUrl(s.key)}
+                                           className="text-[11px] font-serif text-slate-400 underline underline-offset-2">
+                                            скачать .ordo
+                                        </a>
+                                    </div>
                                 ))}
                             </div>
                         </section>
                     );
                 })}
                 </div>
+                </PackageMode>
             </div>
         </div>
     );
