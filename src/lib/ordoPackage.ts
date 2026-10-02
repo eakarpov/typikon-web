@@ -8,9 +8,9 @@
 // Здесь — сеть к службе устава, кэш таблиц подач и журналирование.
 import { cached, CacheTag } from "@/lib/cache";
 import { reportError } from "@/lib/reportError";
-import type { OrdoUkazParagraph, OrdoViewRules } from "@/lib/ordo";
+import type { OrdoSutki, OrdoSutkiService, OrdoUkazParagraph, OrdoViewRules } from "@/lib/ordo";
 import type { OrdoTransfer } from "@/lib/ordo";
-import { parsePackage, type ParsedService } from "@/lib/ordoPackageReader";
+import { parsePackage, type ParsedPackage, type ParsedService } from "@/lib/ordoPackageReader";
 
 export { parsePackage };
 
@@ -25,6 +25,7 @@ export interface OrdoDayPackageQuery {
 }
 
 export interface OrdoDayPackage {
+    manifest: any;
     day: any;
     services: ParsedService[];
     beda: string[];
@@ -86,26 +87,7 @@ const request = async (query: OrdoDayPackageQuery): Promise<Asked<OrdoDayPackage
 
     try {
         const response = await fetchOk(url, 30_000);
-        const parsed = parsePackage(new Uint8Array(await response.arrayBuffer()));
-        if (parsed.beda.length) {
-            reportError(new Error("пакет последования сшит с расхождениями"), {
-                where: "lib/ordoPackage: расхождения пакета",
-                extra: { date: query.date, beda: parsed.beda },
-            });
-        }
-        if (!parsed.services.length) {
-            return { data: null, error: parsed.beda.join("; ") || "пустой пакет", version: null };
-        }
-        return {
-            data: {
-                day: parsed.day,
-                services: parsed.services,
-                beda: parsed.beda,
-                version: response.headers.get("x-ordo-version"),
-            },
-            error: null,
-            version: response.headers.get("x-ordo-version"),
-        };
+        return finish(parsePackage(new Uint8Array(await response.arrayBuffer())), response);
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         reportError(e, { where: "lib/ordoPackage: служба устава недоступна", extra: { path: url.pathname } });
@@ -113,9 +95,113 @@ const request = async (query: OrdoDayPackageQuery): Promise<Asked<OrdoDayPackage
     }
 };
 
+const finish = (parsed: ParsedPackage, response: Response): Asked<OrdoDayPackage> => {
+    if (parsed.beda.length) {
+        reportError(new Error("пакет последования сшит с расхождениями"), {
+            where: "lib/ordoPackage: расхождения пакета",
+            extra: { beda: parsed.beda },
+        });
+    }
+    if (!parsed.services.length) {
+        return { data: null, error: parsed.beda.join("; ") || "пустой пакет", version: null };
+    }
+    return {
+        data: {
+            manifest: parsed.manifest,
+            day: parsed.day,
+            services: parsed.services,
+            beda: parsed.beda,
+            version: response.headers.get("x-ordo-version"),
+        },
+        error: null,
+        version: response.headers.get("x-ordo-version"),
+    };
+};
+
+/** Параметры ручной сборки (конструктор /ustav) — те же имена, что у страницы. */
+export interface OrdoManualQuery {
+    ordo?: string;
+    month?: string;
+    day?: string;
+    sign?: string;
+    dayVariant?: string;
+    feast?: string;
+    oktoih?: string;
+    ustav?: string;
+    lang?: string;
+    psalms?: string;
+    bezDiakona?: string;
+    predstoyatel?: string;
+    prihod?: string;
+    prestol?: string;
+    service?: string;
+    date?: string;
+}
+
+/** Служба по координатам запроса — ручной пакет (internal: все тексты). */
+export const ordoManualPackage = async (query: OrdoManualQuery): Promise<Asked<OrdoDayPackage>> => {
+    const root = base();
+    if (!root) return { data: null, error: "служба устава не настроена (ORDO_SERVICE_URL)", version: null };
+
+    const url = new URL("/package", root);
+    url.searchParams.set("bodies", "internal");
+    for (const [k, v] of Object.entries({
+        ordo: query.ordo, month: query.month, day: query.day, sign: query.sign,
+        day_variant: query.dayVariant, feast: query.feast, oktoih: query.oktoih,
+        ustav: query.ustav, lang: query.lang, psalms: query.psalms,
+        bez_diakona: query.bezDiakona, predstoyatel: query.predstoyatel,
+        prihod: query.prihod, prestol: query.prestol, service: query.service,
+        date: query.date,
+    })) {
+        if (v) url.searchParams.set(k, v);
+    }
+
+    try {
+        const response = await fetchOk(url, 30_000);
+        return finish(parsePackage(new Uint8Array(await response.arrayBuffer())), response);
+    } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        reportError(e, { where: "lib/ordoPackage: ручная сборка недоступна", extra: { path: url.pathname } });
+        return { data: null, error: message, version: null };
+    }
+};
+
 /** Суточный круг дня одним пакетом: службы с телами и указаниями, без подачи. */
 export const ordoDayPackage = (query: OrdoDayPackageQuery): Promise<Asked<OrdoDayPackage>> =>
     request(query);
+
+/** Публичный контракт /api/v2/ordo/services — из разобранного пакета.
+ *  Форма ответа прежняя (OrdoSutki), источник теперь один с просмотрщиком:
+ *  пакет. Части службы в пакете — тот же вывод, что JSON-выдача /sutki,
+ *  потому маппер почти тождественный. */
+export const ordoSutkiFromPackage = (
+    parsed: ParsedPackage,
+    viewRules: OrdoViewRules,
+    version: string | null,
+): OrdoSutki => ({
+    ustav: parsed.manifest?.use ?? null,
+    date: parsed.manifest?.scope?.date ?? "",
+    variant: parsed.manifest?.scope?.variant ?? "",
+    version,
+    services: parsed.services.map((s): OrdoSutkiService => ({
+        key: s.key,
+        label: s.label ?? s.key,
+        stoyanie: s.stoyanie ?? "",
+        civil: s.civil ?? "",
+        part: (s.part ?? "utro") as OrdoSutkiService["part"],
+        partLabel: s.partLabel ?? "",
+        replacedBy: s.replacedBy,
+        placementWhy: s.placementWhy,
+        error: s.error,
+        ordo: s.ordo,
+        feastLabel: s.feastLabel,
+        layers: s.layers,
+        rules: s.rules,
+        steps: s.steps,
+        ukazaniya: s.ukazaniya ?? [],
+    })),
+    viewRules,
+});
 
 const viewRulesRequest = async (): Promise<OrdoViewRules> => {
     const root = base();

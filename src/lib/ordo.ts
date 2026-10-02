@@ -14,14 +14,6 @@ import {reportError} from "@/lib/reportError";
 
 export const ORDO_TIMEOUT_MS = 8000;
 
-/**
- * Служба суток ждёт дольше: холодная сборка всенощного ходит в сеть за
- * зачалами (typikon-rules/src/readings.py, свой тайм-аут 20 с), и оборвать
- * её раньше значит показать «не собралась» там, где она просто небыстрая.
- * Ждёт каждая служба в своём Suspense — остальным это не мешает.
- */
-export const ORDO_SUTKI_TIMEOUT_MS = 25000;
-
 export type OrdoDisplay = "loud" | "full" | "quiet" | "cue" | "hidden";
 
 export interface OrdoStep {
@@ -45,23 +37,6 @@ export interface OrdoRule {
     label: string;
     path: string;
     note?: string | null;
-}
-
-export interface OrdoResult {
-    /** Устав, по которому собрано, — применившийся, а не спрошенный. */
-    ustav: OrdoUstav | null;
-    ordo: string;
-    requestedOrdo: string;
-    switchedFrom: string | null;
-    /** Что назначил бы устав, если бы канву не выбрали руками. */
-    typikonWould: string | null;
-    feast: string | null;
-    feastLabel: string | null;
-    memories: { memoryId: string; label: string }[];
-    layers: string[];
-    rules: OrdoRule[];
-    steps: OrdoStep[];
-    context: Record<string, any>;
 }
 
 export interface OrdoService {
@@ -176,74 +151,6 @@ export const ordoServices = () => ask<OrdoService[]>("/services").then(list =>
         ordoId: s.ordo_id, label: s.label,
         service: s.service ?? null, variant: s.variant ?? null,
     })));
-
-export interface OrdoQuery {
-    ordo?: string;
-    /** Устав: «pre-nikonian/old-rite». Не назвали — движок берёт никоновский. */
-    ustav?: string;
-    month?: string;
-    day?: string;
-    sign?: string;
-    dayVariant?: string;
-    feast?: string;
-    oktoih?: string;
-    predstoyatel?: string;
-    lang?: string;
-    view?: string;
-    psalms?: string;
-    bezDiakona?: string;
-    date?: string;
-    prihod?: string;
-    prestol?: string;
-    /** Служба суток: её слушает сборка по дате (см. OrdoService.service). */
-    service?: string;
-    /**
-     * Языки, на которых показать ту же строку: список, `all` или пусто.
-     *
-     * Состав службы они НЕ меняют — устав решил его до них; это братья по
-     * адресу, приложенные к готовым строкам.
-     */
-    parallel?: string;
-}
-
-export const buildOrdo = async (query: OrdoQuery): Promise<OrdoResult | null> => {
-    const raw = await ask<any>("/ordo", {
-        ordo: query.ordo ?? "",
-        ustav: query.ustav ?? "",
-        month: query.month ?? "",
-        day: query.day ?? "",
-        sign: query.sign ?? "",
-        day_variant: query.dayVariant ?? "",
-        feast: query.feast ?? "",
-        oktoih: query.oktoih ?? "",
-        predstoyatel: query.predstoyatel ?? "",
-        lang: query.lang ?? "",
-        view: query.view ?? "",
-        psalms: query.psalms ?? "",
-        bez_diakona: query.bezDiakona ?? "",
-        date: query.date ?? "",
-        prihod: query.prihod ?? "",
-        prestol: query.prestol ?? "",
-        service: query.service ?? "",
-        parallel: query.parallel ?? "",
-    });
-    if (!raw || raw.error) return null;
-
-    return {
-        ustav: raw.ustav ?? null,
-        ordo: raw.ordo,
-        requestedOrdo: raw.requested_ordo,
-        switchedFrom: raw.switched_from ?? null,
-        typikonWould: raw.typikon_would ?? null,
-        feast: raw.feast ?? null,
-        feastLabel: raw.feast_label ?? null,
-        memories: (raw.memories ?? []).map((m: any) => ({ memoryId: m.memory_id, label: m.label })),
-        layers: raw.layers ?? [],
-        rules: raw.rules ?? [],
-        steps: raw.steps ?? [],
-        context: raw.context ?? {},
-    };
-};
 
 export interface OrdoOption { key: string; label: string }
 
@@ -781,84 +688,6 @@ export interface OrdoSutki {
      *  заголовок ответа, чтобы потребитель видел сборку движка. */
     version: string | null;
 }
-
-export interface OrdoSutkiQuery {
-    date: string;
-    ustav?: string;
-    variant?: string;
-    transfers?: OrdoTransfer[];
-    /** Службы по ключу; не названы — все, кроме вошедших во всенощное. */
-    services?: string[];
-    /** Стояние: ключ или половина суток. */
-    part?: string;
-    lang?: string;
-    parallel?: string;
-    psalms?: string;
-    bezDiakona?: string;
-    predstoyatel?: string;
-}
-
-const viewRules = (raw: any): OrdoViewRules => ({
-    views: raw?.views ?? {},
-    roleAliases: raw?.role_aliases ?? {},
-    roleViews: raw?.role_views ?? {},
-    readPositions: raw?.read_positions ?? [],
-    defaultRole: raw?.default_role ?? {},
-    notebooks: raw?.notebooks ?? [],
-});
-
-/**
- * Службы суток — все или названные. Сайт спрашивает их ПО ОДНОЙ, чтобы
- * первая пришла, не дожидаясь литургии; день движок считает один раз и
- * держит в кэше, так что лишнего это не стоит.
- */
-export const ordoSutki = async (
-    query: OrdoSutkiQuery,
-): Promise<OrdoSutki | { error: string; status?: number | null }> => {
-    const { data: raw, error, version } = await request<any>("/sutki", {
-        date: query.date,
-        ustav: query.ustav ?? "",
-        variant: query.variant ?? "",
-        part: query.part ?? "",
-        lang: query.lang ?? "",
-        parallel: query.parallel ?? "",
-        psalms: query.psalms ?? "",
-        bez_diakona: query.bezDiakona ?? "",
-        predstoyatel: query.predstoyatel ?? "",
-    }, [
-        ...(query.transfers ?? []).map(transferParam),
-        ...(query.services ?? []).map(s => ["service", s] as [string, string]),
-    ], ORDO_SUTKI_TIMEOUT_MS);
-    if (!raw || raw.error) {
-        // status — HTTP-статус службы, фасад /api/v2/ordo по нему различает
-        // «не собралась» (503 ordo_unavailable) от «такого дня/устава нет».
-        return { error: error?.message ?? raw?.error ?? "пустой ответ", status: error?.status ?? null };
-    }
-    return {
-        ustav: raw.ustav ?? null,
-        date: raw.date,
-        variant: raw.variant,
-        version,
-        services: (raw.services ?? []).map((s: any): OrdoSutkiService => ({
-            key: s.key,
-            label: s.label,
-            stoyanie: s.stoyanie,
-            civil: s.civil,
-            part: s.part,
-            partLabel: s.part_label,
-            replacedBy: s.replaced_by ?? null,
-            placementWhy: s.placement_why ?? null,
-            error: s.error ?? null,
-            ordo: s.ordo ?? null,
-            feastLabel: s.feast_label ?? null,
-            layers: s.layers ?? [],
-            rules: s.rules ?? [],
-            steps: s.steps ?? [],
-            ukazaniya: s.ukazaniya ?? [],
-        })),
-        viewRules: viewRules(raw.view_rules),
-    };
-};
 
 export interface OrdoMemoryFound {
     memoryId: string;

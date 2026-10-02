@@ -1,11 +1,12 @@
 import "@/scripts/lib/env";
 import { parsePackage } from "@/lib/ordoPackageReader";
 
-// Паритет двух путей к одной службе: JSON-выдача /sutki и день-пакет .ordo
-// (GET /package без service, bodies=internal, формат 1.1). Переезд просмотрщика
-// на пакет честен, только когда оба пути дают одну службу: этот скрипт и есть
-// та сверка. Сравниваются шаги (порядок, поля, тексты), «Богослужебные
-// указания» из пакета против ручки /ukazaniya и таблицы подач.
+// Паритет двух путей к одной службе: JSON-выдачи движка (/sutki, /ordo) и
+// пакет .ordo (GET /package, формат 1.1). Переезд сайта на пакет честен,
+// только когда оба пути дают одну службу: этот скрипт и есть та сверка.
+// Сравниваются шаги (порядок, поля, тексты), «Богослужебные указания» из
+// пакета против ручки /ukazaniya, таблицы подач и полный устав (manifest.use
+// против поля ustav); ручная сборка (конструктор) сверяется с ручкой /ordo.
 //
 // Прогон (служба устава должна быть поднята, ORDO_SERVICE_URL — в окружении):
 //   npx tsx src/scripts/check-ordo-parity.ts
@@ -99,6 +100,9 @@ const run = async () => {
 
             const parsed = parsePackage(await getBytes(`/package?date=${date}&bodies=internal${u}`));
             if (parsed.beda.length) failures.push(`${tag}: сшивка: ${parsed.beda.join("; ")}`);
+            if (canon(parsed.manifest?.use ?? null) !== canon(sutki.ustav ?? null)) {
+                failures.push(`${tag}: manifest.use ≠ ustav ответа /sutki`);
+            }
             const byKey = new Map(parsed.services.map(s => [s.key, s]));
             if (parsed.services.length !== (sutki.services ?? []).length) {
                 failures.push(`${tag}: служб в пакете ${parsed.services.length}, в /sutki ${(sutki.services ?? []).length}`);
@@ -126,6 +130,33 @@ const run = async () => {
                 process.stdout.write(`\rпроверено служб: ${checked}`);
             }
         }
+    }
+    process.stdout.write("\n");
+
+    // РУЧНАЯ СБОРКА (конструктор): пакет по координатам ≡ JSON-ручка /ordo.
+    // Пометы читателя (display/absent) не сравниваются — пакет нейтрален.
+    const MANUAL = [
+        "ordo=jerusalem-rus-synodal-vespers-daily&month=9&day=13",
+        "ordo=jerusalem-rus-synodal-liturgy-chrysostom&month=4&day=12&sign=slavoslovie",
+    ];
+    for (const coords of MANUAL) {
+        const o = await get(`/ordo?${coords}`);
+        const parsed = parsePackage(await getBytes(`/package?${coords}&bodies=internal`));
+        const stag = `ручная: ${coords.slice(0, 60)}`;
+        if (parsed.beda.length) failures.push(`${stag}: сшивка: ${parsed.beda.join("; ")}`);
+        const built = parsed.services[0];
+        if (!built) {
+            failures.push(`${stag}: службы нет в пакете`);
+            continue;
+        }
+        const d = firstDiff(
+            stripReaderMarks(built.steps), stripReaderMarks(o.steps), "steps");
+        if (d) failures.push(`${stag}: шаги: ${d}`);
+        if (canon(parsed.manifest?.scope?.coordinates ?? null) == null) {
+            failures.push(`${stag}: нет scope.coordinates`);
+        }
+        checked++;
+        process.stdout.write(`\rпроверено служб: ${checked}`);
     }
     process.stdout.write("\n");
 

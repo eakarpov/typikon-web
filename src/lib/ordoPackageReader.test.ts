@@ -180,3 +180,41 @@ test("братья по адресу поднимаются к строке", ()
     assert.equal(item.parallel[0].text, "Μακάριος");
     assert.equal(item.parallel[1].absent, "not-collected");
 });
+
+const MANUAL = {
+    "mimetype": "application/vnd.ordo+zip",
+    "manifest.json": JSON.stringify({
+        format: "posledovanie", spec_version: "1.1",
+        scope: { date: null, service: "vespers-daily",
+                 coordinates: { month: 9, day: 13, sign: null,
+                                day_variant: "sedmichny", feast: null, oktoih: null } },
+        use: { ustav: "jerusalem/rus-synodal", rite: "jerusalem",
+               tradition: "rus-synodal", label: "Иерусалимский",
+               style: "julian", paschalia: "julian", known: true },
+        gates: "none", bodies_requested: "internal",
+    }),
+    "ordo.json": JSON.stringify({ date: null, manual: true }),
+    "services/vespers-daily.json": JSON.stringify({
+        key: "vespers-daily", ordo: "vespers-daily",
+        requested_ordo: "vespers-daily", switched_from: null, typikon_would: null,
+        context: { month: 9, day: 13, day_variant: "sedmichny" },
+        memories: [{ memory_id: "mineya-09-13-1", label: "Память" }],
+        rules: [], steps: [{ kind: "text", label: "Молитва", text: "Святый Боже" }],
+        ukazaniya: [],
+    }),
+    "addresses.json": JSON.stringify({ spec: "1.1", lines: [], memories: {} }),
+};
+
+test("ручной пакет: координаты в scope, контекст и памяти у службы", () => {
+    const parsed = parsePackage(pkg(MANUAL));
+    assert.equal(parsed.day?.manual, true);
+    assert.equal(parsed.manifest?.scope?.date, null);
+    assert.deepEqual(parsed.manifest?.scope?.coordinates, {
+        month: 9, day: 13, sign: null, day_variant: "sedmichny", feast: null, oktoih: null,
+    });
+    assert.equal(parsed.manifest?.use?.label, "Иерусалимский");
+    const s = parsed.services[0];
+    assert.equal(s.context?.month, 9);
+    assert.deepEqual(s.memories, [{ memoryId: "mineya-09-13-1", label: "Память" }]);
+    assert.equal(s.requestedOrdo, "vespers-daily");
+});

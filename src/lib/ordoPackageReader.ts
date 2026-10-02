@@ -49,6 +49,18 @@ export interface ParsedService {
     ukazaniya: OrdoUkazParagraph[] | null;
     placementWhy: string | null;
     replacedBy: string | null;
+    /** Место службы в сутках — у ручного пакета null. */
+    stoyanie: string | null;
+    civil: string | null;
+    part: string | null;
+    partLabel: string | null;
+    layers: string[];
+    // Ручная сборка (конструктор): у дневных служб — null/пусто.
+    context: Record<string, any> | null;
+    memories: { memoryId: string; label: string }[];
+    requestedOrdo: string | null;
+    switchedFrom: string | null;
+    typikonWould: string | null;
     /** Не собралась — и почему; шаги тогда пусты. */
     error: string | null;
     ordo: string | null;
@@ -180,6 +192,16 @@ const toService = (part: any, steps: OrdoStep[]): ParsedService => ({
     ukazaniya: part?.ukazaniya ?? null,
     placementWhy: part?.placement_why ?? null,
     replacedBy: part?.replaced_by ?? null,
+    stoyanie: part?.stoyanie ?? null,
+    civil: part?.civil ?? null,
+    part: part?.part ?? null,
+    partLabel: part?.part_label ?? null,
+    layers: part?.layers ?? [],
+    context: part?.context ?? null,
+    memories: (part?.memories ?? []).map((m: any) => ({ memoryId: m.memory_id, label: m.label })),
+    requestedOrdo: part?.requested_ordo ?? null,
+    switchedFrom: part?.switched_from ?? null,
+    typikonWould: part?.typikon_would ?? null,
     error: part?.error ?? null,
     ordo: part?.ordo ?? null,
 });
