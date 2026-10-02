@@ -8,7 +8,7 @@ import Calendar from "./Calendar";
 import Controls from "./Controls";
 import MemoryChoice from "./MemoryChoice";
 import PackageMode from "./PackageMode";
-import ServiceLoader from "./ServiceLoader";
+import ServicesBlock, { type ServicesCommon } from "./ServicesBlock";
 import { all, dateOf, first, type SearchParams } from "./params";
 
 // ПОСЛЕДОВАНИЕ НА ДЕНЬ — суточный круг по дате.
@@ -18,11 +18,10 @@ import { all, dateOf, first, type SearchParams } from "./params";
 // даты не вывести, — устав, язык, вариант, переносы, — а службы суток,
 // их порядок и место в сутках называет устав.
 //
-// Как устроено ожидание. Шапка дня (/day) лёгкая и приходит сразу. Каждая
-// служба — свой Suspense и свой запрос: первая показывается, не дожидаясь
-// литургии, а день движок считает однажды и держит в кэше. Подача («указания»,
-// полное, тетрадь чтеца) переключается на клиенте, без нового запроса: шаги
-// приходят нейтральными, как в пакете .ordo.
+// Как устроено ожидание. Шапка дня (/day) лёгкая и приходит сразу. Суточный
+// круг — один запрос: день-пакет .ordo (spec/package.md) со всеми службами,
+// телами и указаниями; подача («указания», полное, тетрадь чтеца)
+// переключается на клиенте, без нового запроса: шаги уже здесь, нейтральные.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -31,14 +30,6 @@ export const metadata: Metadata = {
         "Суточный круг по Типикону на выбранный день: от вечерни накануне до литургии, " +
         "богослужебными указаниями, полным текстом или тетрадью действующего лица.",
 };
-
-// ПОРЯДОК СТОЯНИЙ — по часам, а не по уставному «день начинается вечером».
-// Вечер накануне и так стоит первым: у него своя, прежняя дата. А вечер того
-// же числа — повечерие Пасхи, вечерня, приделанная к литургии, — наступает
-// после ночи и дня, а не до них (движок ставит вечер первым в пределах даты).
-const PART_CLOCK: Record<string, number> = { noch: 0, utro: 1, den: 2, vecher: 3 };
-const byClock = <T extends { civil: string; part: string }>(a: T, b: T) =>
-    a.civil.localeCompare(b.civil) || (PART_CLOCK[a.part] ?? 9) - (PART_CLOCK[b.part] ?? 9);
 
 const civilLabel = (iso: string) => {
     const [y, m, d] = iso.split("-").map(Number);
@@ -59,6 +50,12 @@ const DayHead = ({ day }: { day: OrdoDay }) => {
         </div>
     );
 };
+
+// ВСЕНОЩНОЕ ИЛИ РАЗДЕЛЬНО. Устав назначил бдение — и вечерня с утреней в
+// него вошли; но «идеже всенощных не бывает» книга допускает прямо (гл. 7),
+// и выбор этот не наш. По умолчанию — бдение.
+const razdelnoOf = (params: SearchParams, hasVigil: boolean) =>
+    hasVigil && first(params.bdenie) === "0";
 
 const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) => {
     const date = dateOf(searchParams);
@@ -88,14 +85,9 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
 
     const variant = day.variants.find(v => v.key === first(searchParams.variant))
         ?? day.variants[0];
-    // ВСЕНОЩНОЕ ИЛИ РАЗДЕЛЬНО. Устав назначил бдение — и вечерня с утреней в
-    // него вошли; но «идеже всенощных не бывает» книга допускает прямо (гл. 7),
-    // и выбор этот не наш. По умолчанию — бдение.
-    const razdelno = first(searchParams.bdenie) === "0";
-    const hasVigil = variant?.services.some(s => s.key === "vsenoshchnoe") ?? false;
+    const razdelno = razdelnoOf(searchParams, variant?.services.some(s => s.key === "vsenoshchnoe") ?? false);
 
-    const common = {
-        date,
+    const common: ServicesCommon = {
         ustav,
         variant: variant?.key,
         transfers,
@@ -103,17 +95,14 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
         parallel: first(searchParams.parallel),
         psalms: first(searchParams.psalms),
     };
-    // Адрес выгрузки: скачивается всегда gated-вариант (free), состав пакет
-    // называет сам, манифестом. Архив дня собирает та же внутренняя ручка.
-    const downloadUrl = (service?: string) => {
+    const choices = viewChoices(options);
+    const downloadDay = (() => {
         const q = new URLSearchParams({ date });
-        if (service) q.set("service", service);
         if (variant) q.set("variant", variant.key);
         if (ustav) q.set("ustav", ustav);
         if (razdelno) q.set("bdenie", "0");
         return `/api/ordo/package?${q.toString()}`;
-    };
-    const choices = viewChoices(options);
+    })();
     // КЛЮЧ ВСЕГО ВОПРОСА — на границах Suspense. С прежними ключами React при
     // переходе не прячет уже показанное и ждёт, пока соберутся ВСЕ службы
     // нового дня, — адрес не менялся по десятку секунд. С новым ключом
@@ -128,7 +117,8 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                     <Controls options={options} choices={choices}
                               ustav={ustav || options.ustavy[0]?.ustav || ""}
                               lang={common.lang || options.languages[0]?.key || ""}
-                              hasVigil={hasVigil} razdelno={razdelno} />
+                              hasVigil={variant?.services.some(s => s.key === "vsenoshchnoe") ?? false}
+                              razdelno={razdelno} />
                 </Suspense>
             </aside>
 
@@ -136,12 +126,13 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                 <PackageMode>
                 <DayHead day={day} />
                 <div className="flex items-baseline gap-3 mt-1 flex-wrap">
-                    <a download href={downloadUrl()}
+                    <a download href={downloadDay}
                        className="text-xs font-serif text-slate-600 border border-slate-200 rounded px-2 py-1 hover:bg-slate-50">
                         Скачать день (.ordo)
                     </a>
                     <span className="text-[11px] text-slate-400 font-serif">
-                        тексты свободных изданий; что молчит и почему, пакет скажет манифестом
+                        день одним пакетом: тексты свободных изданий, Писание — адресами;
+                        что молчит и почему, скажет манифест
                     </span>
                 </div>
                 <Suspense>
@@ -153,41 +144,11 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                 )}
 
                 <div key={queryKey}>
-                {[...(variant?.stoyaniya ?? [])].sort(byClock).map(st => {
-                    const services = st.services.filter(s => razdelno
-                        ? s.key !== "vsenoshchnoe" && s.key !== "vespers-small"
-                        : !s.replacedBy);
-                    if (!services.length) return null;
-                    return (
-                        <section key={st.key} className="mt-6">
-                            <h2 className="font-serif text-lg text-red-900 border-b border-slate-200 pb-1">
-                                {civilLabel(st.civil)}, {st.partLabel}
-                            </h2>
-                            {st.why.map(w => (
-                                <p key={w} className="font-serif text-xs text-slate-500 mt-1">{w}</p>
-                            ))}
-                            <div className="flex flex-col gap-2 mt-2">
-                                {services.map(s => (
-                                    <div key={s.key}>
-                                        <Suspense fallback={
-                                            <div className="font-serif text-slate-400 py-2">
-                                                {s.label} — собирается…
-                                            </div>
-                                        }>
-                                            <ServiceLoader query={{ ...common, services: [s.key] }}
-                                                           label={s.label}
-                                                           placementWhy={s.placementWhy} />
-                                        </Suspense>
-                                        <a download href={downloadUrl(s.key)}
-                                           className="text-[11px] font-serif text-slate-400 underline underline-offset-2">
-                                            скачать .ordo
-                                        </a>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    );
-                })}
+                    <Suspense fallback={
+                        <div className="font-serif text-slate-400 py-2">Последование собирается…</div>
+                    }>
+                        <ServicesBlock day={day} common={common} razdelno={razdelno} />
+                    </Suspense>
                 </div>
                 </PackageMode>
             </div>

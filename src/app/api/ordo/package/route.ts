@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
-import { zipSync } from "fflate";
-import { ordoDay } from "@/lib/ordo";
 import { parseOrdoDownload } from "@/lib/api/v2/ordoParams";
 
 // Скачивание последования файлом .ordo — посетителю, без ключа: публичный
 // /api/v2/ordo/package с ключом остаётся для внешних потребителей, а здесь
 // внутренний пропуск, как у /api/ordo/rule. Тела всегда gated (free):
 // скачивает третье лицо, и манифест честно считает, что право не выяснило.
-// Писание едет адресами (external) — читатель дорезолвит; это осознанный
-// пропуск (ROADMAP §5: разбор пяти изданий, резолвер Писания).
+// Писание едет адресами (external) — читатель дорезолвит по публичному
+// контракту из spec/package.md; это осознанный пропуск (ROADMAP §5).
 //
-// Служба названа — один .ordo; не названа — архив дня: все службы выбранного
-// варианта, с учётом «вечерня и утреня раздельно», одним zip.
+// Служба названа — пакет одной службы; не названа — ДЕНЬ одним пакетом
+// (формат 1.1, manifest.scope.services). Обёртка-архив из первой редакции
+// ушла: формат сам стал дневным.
 export const dynamic = "force-dynamic";
 
 const base = () => process.env.ORDO_SERVICE_URL || "";
@@ -40,7 +39,7 @@ const fetchBytes = async (url: URL, timeoutMs = 25_000): Promise<Uint8Array> => 
 const fail = (status: number, error: string) =>
     NextResponse.json({ error }, { status });
 
-const serviceUrl = (p: { date: string; service: string | null; ustav: string | null; variant: string | null }) => {
+const packageUrl = (p: { date: string; service: string | null; ustav: string | null; variant: string | null }) => {
     const url = new URL("/package", base());
     url.searchParams.set("date", p.date);
     if (p.service) url.searchParams.set("service", p.service);
@@ -50,12 +49,6 @@ const serviceUrl = (p: { date: string; service: string | null; ustav: string | n
     return url;
 };
 
-const zipHeaders = (filename: string, type: string) => ({
-    "Content-Type": type,
-    "Content-Disposition": `attachment; filename="${filename}"`,
-    "Cache-Control": "private, max-age=300",
-});
-
 export async function GET(request: Request) {
     const parsed = parseOrdoDownload(new URL(request.url));
     if (!parsed.ok) return fail(400, parsed.error);
@@ -63,50 +56,18 @@ export async function GET(request: Request) {
 
     if (!base()) return fail(503, "Служба устава не настроена (ORDO_SERVICE_URL)");
 
-    if (p.service) {
-        try {
-            const bytes = await fetchBytes(serviceUrl(p));
-            return new NextResponse(bytes as unknown as BodyInit, {
-                headers: zipHeaders(`${p.date}-${p.service}.ordo`, "application/vnd.ordo+zip"),
-            });
-        } catch (e) {
-            const status = (e as any)?.status;
-            if (status === 404) return fail(404, "Служба не найдена");
-            return fail(503, "Служба устава не отвечает");
-        }
-    }
-
-    // АРХИВ ДНЯ: службы выбранного варианта, как их показывает страница —
-    // без вошедших во всенощное; раздельное бдение выкидывает всенощное
-    // и малую вечерню.
-    const day = await ordoDay(p.date, { ustav: p.ustav ?? undefined });
-    if (!day) return fail(503, "Служба устава не отвечает");
-    const variant = day.variants.find(v => v.key === (p.variant ?? undefined)) ?? day.variants[0];
-    if (!variant) return fail(404, "Уставу нечего предложить на этот день");
-
-    const services = variant.services.filter(s => p.razdelno
-        ? s.key !== "vsenoshchnoe" && s.key !== "vespers-small"
-        : !s.replacedBy);
-    if (!services.length) return fail(404, "В выбранном варианте нет служб для выгрузки");
-
     try {
-        const entries: Record<string, Uint8Array> = {};
-        const got = await Promise.all(services.map(async s => {
-            try {
-                return [s.key, await fetchBytes(serviceUrl({ ...p, service: s.key }))] as const;
-            } catch {
-                return null;
-            }
-        }));
-        for (const item of got) {
-            if (item) entries[`${p.date}-${item[0]}.ordo`] = item[1];
-        }
-        if (!Object.keys(entries).length) return fail(503, "Не удалось собрать ни одной службы");
-        const archive = zipSync(entries);
-        return new NextResponse(archive as unknown as BodyInit, {
-            headers: zipHeaders(`${p.date}.zip`, "application/zip"),
+        const bytes = await fetchBytes(packageUrl(p));
+        const filename = p.service ? `${p.date}-${p.service}.ordo` : `${p.date}.ordo`;
+        return new NextResponse(bytes as unknown as BodyInit, {
+            headers: {
+                "Content-Type": "application/vnd.ordo+zip",
+                "Content-Disposition": `attachment; filename="${filename}"`,
+                "Cache-Control": "private, max-age=300",
+            },
         });
-    } catch {
+    } catch (e) {
+        if ((e as any)?.status === 404) return fail(404, "Служба или день не найдены");
         return fail(503, "Служба устава не отвечает");
     }
 }

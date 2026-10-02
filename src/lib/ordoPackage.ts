@@ -8,29 +8,27 @@
 // Здесь — сеть к службе устава, кэш таблиц подач и журналирование.
 import { cached, CacheTag } from "@/lib/cache";
 import { reportError } from "@/lib/reportError";
-import type { OrdoRule, OrdoStep, OrdoUkazParagraph, OrdoViewRules } from "@/lib/ordo";
+import type { OrdoUkazParagraph, OrdoViewRules } from "@/lib/ordo";
 import type { OrdoTransfer } from "@/lib/ordo";
-import { parsePackage } from "@/lib/ordoPackageReader";
+import { parsePackage, type ParsedService } from "@/lib/ordoPackageReader";
 
 export { parsePackage };
 
-export interface OrdoPackageQuery {
+export interface OrdoDayPackageQuery {
     date: string;
     ustav?: string;
     variant?: string;
-    service: string;
     lang?: string;
     parallel?: string;
     psalms?: string;
     transfers?: OrdoTransfer[];
 }
 
-export interface OrdoPackageService {
-    key: string;
-    steps: OrdoStep[];
-    rules: OrdoRule[];
-    feastLabel: string | null;
-    /** Версия движка (X-Ordo-Version ответа) — для диагностики и панели. */
+export interface OrdoDayPackage {
+    day: any;
+    services: ParsedService[];
+    beda: string[];
+    /** Версия движка (X-Ordo-Version ответа) — для диагностики. */
     version: string | null;
 }
 
@@ -69,13 +67,12 @@ const fetchOk = async (url: URL, timeoutMs: number): Promise<Response> => {
 const transferParam = (t: OrdoTransfer): [string, string] =>
     ["add_memory", t.primary ? `${t.memoryId}:primary` : t.memoryId];
 
-const request = async (query: OrdoPackageQuery): Promise<Asked<OrdoPackageService>> => {
+const request = async (query: OrdoDayPackageQuery): Promise<Asked<OrdoDayPackage>> => {
     const root = base();
     if (!root) return { data: null, error: "служба устава не настроена (ORDO_SERVICE_URL)", version: null };
 
     const url = new URL("/package", root);
     url.searchParams.set("date", query.date);
-    url.searchParams.set("service", query.service);
     url.searchParams.set("bodies", "internal");
     for (const [k, v] of Object.entries({
         ustav: query.ustav, variant: query.variant, lang: query.lang,
@@ -88,20 +85,22 @@ const request = async (query: OrdoPackageQuery): Promise<Asked<OrdoPackageServic
     }
 
     try {
-        const response = await fetchOk(url, 25_000);
+        const response = await fetchOk(url, 30_000);
         const parsed = parsePackage(new Uint8Array(await response.arrayBuffer()));
         if (parsed.beda.length) {
             reportError(new Error("пакет последования сшит с расхождениями"), {
                 where: "lib/ordoPackage: расхождения пакета",
-                extra: { date: query.date, service: query.service, beda: parsed.beda },
+                extra: { date: query.date, beda: parsed.beda },
             });
+        }
+        if (!parsed.services.length) {
+            return { data: null, error: parsed.beda.join("; ") || "пустой пакет", version: null };
         }
         return {
             data: {
-                key: query.service,
-                steps: parsed.steps,
-                rules: parsed.ordo?.rules ?? [],
-                feastLabel: parsed.ordo?.feast_label ?? null,
+                day: parsed.day,
+                services: parsed.services,
+                beda: parsed.beda,
                 version: response.headers.get("x-ordo-version"),
             },
             error: null,
@@ -114,8 +113,8 @@ const request = async (query: OrdoPackageQuery): Promise<Asked<OrdoPackageServic
     }
 };
 
-/** Служба суток из пакета: шаги с привязанными телами, без подачи. */
-export const ordoPackage = (query: OrdoPackageQuery): Promise<Asked<OrdoPackageService>> =>
+/** Суточный круг дня одним пакетом: службы с телами и указаниями, без подачи. */
+export const ordoDayPackage = (query: OrdoDayPackageQuery): Promise<Asked<OrdoDayPackage>> =>
     request(query);
 
 const viewRulesRequest = async (): Promise<OrdoViewRules> => {

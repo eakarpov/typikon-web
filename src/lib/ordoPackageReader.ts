@@ -1,20 +1,22 @@
-// Чистый читатель пакета `.ordo` — без серверных зависимостей, чтобы тот же
-// код работал и в Node (серверный просмотрщик, lib/ordoPackage.ts), и в
-// браузере (загрузка файла в /posledovanie). Чтение пакета в терминах спеки
-// (typikon-rules/spec/package.md):
+// Чистый читатель пакета `.ordo` — без серверных зависимостей: тот же код
+// работает в Node (серверный просмотрщик, lib/ordoPackage.ts) и в браузере
+// (загрузка файла в /posledovanie). Чтение в терминах спеки (typikon-rules,
+// spec/package.md), формат 1.1 — день целиком:
 //
-//   ordo.json      порядок службы: шаги с единицами БЕЗ тел и без подачи
-//                  (display накладывает читатель, см. lib/ordoView.ts);
-//   addresses.json где лежит тело каждой строки — сшиваем по МЕСТУ (шаг,
-//                  единица), а не по адресу: один адрес бывает положен дважды;
-//   texts/*.jsonl  тела, файл на издание, строка на адрес.
+//   manifest.json      scope.services — ключи служб пакета
+//   ordo.json          ДЕНЬ без шагов (варианты, памяти, контекст)
+//   services/<ключ>.json   служба: шаги БЕЗ тел и подачи, rules, ukazaniya
+//   addresses.json     строки тел {service, step, item, …}: тела сшиваются
+//                      по МЕСТУ, а не по адресу — адрес бывает положен дважды
+//   texts/*.jsonl      тела, общий пул
 //
-// Молчания (rights, not-collected, external, omitted, unset) различаются —
-// свести их в одно «нет текста» значит соврать складно. Поведение совпадает
-// с эталонным читателем package.posledovanie() и держится паритетом
-// scripts/check-ordo-parity.ts.
+// Читаем и прежнюю одиночную форму (ordo.json.steps, строки без service) —
+// старые скачанные файлы должны открываться. Молчания (rights, not-collected,
+// external, omitted, unset) различаются — свести их в одно «нет текста»
+// значит соврать складно. Поведение держится паритетом
+// scripts/check-ordo-parity.ts против JSON-выдачи /sutki.
 import { unzipSync } from "fflate";
-import type { OrdoStep } from "@/lib/ordo";
+import type { OrdoRule, OrdoStep, OrdoUkazParagraph } from "@/lib/ordo";
 
 // Те же слова, что и в typikon-rules/src/package.py: читатель пакета говорит
 // о молчаниях одинаково на всяком языке программ.
@@ -37,13 +39,28 @@ interface PackageFiles {
     [name: string]: any;
 }
 
-export interface ParsedPackage {
+export interface ParsedService {
+    key: string;
+    label: string | null;
     steps: OrdoStep[];
-    /** Расхождения сшивки: битые ссылки, строки мимо шагов. Пусто — сшито чисто. */
-    beda: string[];
-    /** ordo.json целиком: rules (лестница), feast_label, day, context. */
-    ordo: any;
+    rules: OrdoRule[];
+    feastLabel: string | null;
+    /** Абзацы «Богослужебных указаний»; null — legacy-пакет, где их нет. */
+    ukazaniya: OrdoUkazParagraph[] | null;
+    placementWhy: string | null;
+    replacedBy: string | null;
+    /** Не собралась — и почему; шаги тогда пусты. */
+    error: string | null;
+    ordo: string | null;
+}
+
+export interface ParsedPackage {
     manifest: any;
+    /** ordo.json: день без шагов (варианты, памяти, контекст). */
+    day: any;
+    services: ParsedService[];
+    /** Расхождения сшивки: битые ссылки, строки мимо шагов. */
+    beda: string[];
 }
 
 /** Распаковать и разобрать zip пакета в словарь частей. */
@@ -94,19 +111,15 @@ const bezTel = (steps: OrdoStep[]) => {
     }
 };
 
-/**
- * Чтение пакета: ordo.json даёт порядок службы, addresses.json — где лежит
- * тело каждой строки. Шаги возвращаются в той же форме, в какой их отдаёт
- * сборка: дальше их ждёт тот же показ, что и прежде для /sutki.
- */
-export const parsePackage = (bytes: Uint8Array): ParsedPackage => {
-    const pkg = unpack(bytes);
-    const beda: string[] = [];
-    const ordo = pkg["ordo.json"];
-    if (!ordo || typeof ordo !== "object") {
-        return { steps: [], beda: ["нет ordo.json — это не пакет последования"], ordo: null, manifest: pkg["manifest.json"] ?? null };
-    }
-    const steps: OrdoStep[] = JSON.parse(JSON.stringify(ordo.steps ?? []));
+/** Шаги службы с привязанными телами: ordo.json даёт порядок, addresses —
+ *  где лежит тело каждой строки. Шаги возвращаются в форме сборки. */
+const stitchService = (
+    pkg: PackageFiles,
+    part: any,
+    lines: any[],
+    beda: string[],
+): OrdoStep[] => {
+    const steps: OrdoStep[] = JSON.parse(JSON.stringify(part?.steps ?? []));
 
     // Формула, снятая воротами, говорит о себе сама
     for (const step of steps) {
@@ -116,13 +129,7 @@ export const parsePackage = (bytes: Uint8Array): ParsedPackage => {
         }
     }
 
-    const addresses = pkg["addresses.json"];
-    if (!addresses || typeof addresses !== "object") {
-        bezTel(steps);
-        return { steps, beda: [...beda, "нет addresses.json — канва показана без тел"], ordo, manifest: pkg["manifest.json"] ?? null };
-    }
-
-    for (const entry of (addresses.lines ?? []) as any[]) {
+    for (const entry of lines) {
         const i = entry.step, j = entry.item;
         if (!Number.isInteger(i) || i < 0 || i >= steps.length) {
             beda.push(`строка указывает на шаг ${i}, а шагов ${steps.length}`);
@@ -133,13 +140,11 @@ export const parsePackage = (bytes: Uint8Array): ParsedPackage => {
             beda.push(`шаг ${i}: строка указывает на единицу ${j}, а их ${items.length}`);
             continue;
         }
-        // ОДИН АДРЕС МОЖЕТ ВСТРЕТИТЬСЯ НЕ РАЗ: песнопение бывает положено петь
-        // дважды, и склеивать повторы нельзя — сшиваем по МЕСТУ.
         const item = items[j];
         const absent = entry.body?.absent ?? null;
         if (absent === "unset" && item.text) {
             // Заглушку не заменяем словом о молчании — она часть канвы и
-            // едет в ordo.json; помету ставим, текст бережём.
+            // едет в services/<ключ>.json; помету ставим, текст бережём.
             item.absent = absent;
         } else {
             const { text, why } = bodyText(pkg, entry.body ?? {});
@@ -163,5 +168,78 @@ export const parsePackage = (bytes: Uint8Array): ParsedPackage => {
         if (brothers.length) item.parallel = brothers;
     }
     bezTel(steps);
-    return { steps, beda, ordo, manifest: pkg["manifest.json"] ?? null };
+    return steps;
+};
+
+const toService = (part: any, steps: OrdoStep[]): ParsedService => ({
+    key: part?.key ?? "service",
+    label: part?.label ?? null,
+    steps,
+    rules: part?.rules ?? [],
+    feastLabel: part?.feast_label ?? null,
+    ukazaniya: part?.ukazaniya ?? null,
+    placementWhy: part?.placement_why ?? null,
+    replacedBy: part?.replaced_by ?? null,
+    error: part?.error ?? null,
+    ordo: part?.ordo ?? null,
+});
+
+/** Чтение пакета: формат 1.1 (день, services/<ключ>.json) или прежний
+ *  одиночный (ordo.json.steps). Не пакет — day: null и честная beda. */
+export const parsePackage = (bytes: Uint8Array): ParsedPackage => {
+    const pkg = unpack(bytes);
+    const beda: string[] = [];
+    const manifest = pkg["manifest.json"] ?? null;
+    const addresses = pkg["addresses.json"];
+    const lines: any[] = (addresses && typeof addresses === "object") ? (addresses.lines ?? []) : [];
+    const dayPart = (pkg["ordo.json"] && typeof pkg["ordo.json"] === "object") ? pkg["ordo.json"] : null;
+
+    const dayKeys = Object.keys(pkg).filter(n => n.startsWith("services/") && n.endsWith(".json"));
+    if (dayKeys.length > 0) {
+        // Формат 1.1: день без шагов + службы частями; порядок — manifest
+        const order: string[] = (manifest?.scope?.services ?? dayKeys.map(k => k.slice("services/".length, -5)));
+        const services = order.map(key => {
+            const part = pkg[`services/${key}.json`];
+            if (!part || typeof part !== "object") {
+                beda.push(`services/${key}.json нет в пакете`);
+                return toService({ key }, []);
+            }
+            const own = lines.filter(l => l.service === key);
+            return toService(part, stitchService(pkg, part, own, beda));
+        });
+        return { manifest, day: dayPart, services, beda };
+    }
+
+    if (!dayPart) {
+        return { manifest, day: null, services: [], beda: ["нет ordo.json — это не пакет последования"] };
+    }
+    if (!Array.isArray((dayPart as any).steps)) {
+        return { manifest, day: dayPart, services: [], beda: ["ordo.json без steps, а служб в пакете нет"] };
+    }
+    // Прежняя одиночная форма: ordo.json — весь payload со steps
+    const steps = stitchService(pkg, dayPart, lines, beda);
+    return {
+        manifest,
+        day: dayPart,
+        services: [toService({ ...dayPart, key: manifest?.scope?.service ?? "service" }, steps)],
+        beda,
+    };
+};
+
+/** Ссылки на Писание, которые читатель может дорезолвить: строки с
+ *  молчанием external и адресом bible:. Пакет умышленно везёт их адресами. */
+export const scriptureRefs = (services: ParsedService[]): string[] => {
+    const out = new Set<string>();
+    const walk = (steps: OrdoStep[]) => {
+        for (const step of steps) {
+            for (const item of (step.items ?? []) as any[]) {
+                if (item.absent === "external" && typeof item.address === "string"
+                    && item.address.startsWith("bible:")) {
+                    out.add(item.address);
+                }
+            }
+        }
+    };
+    for (const s of services) walk(s.steps);
+    return [...out];
 };
