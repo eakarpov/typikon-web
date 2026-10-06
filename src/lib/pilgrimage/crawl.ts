@@ -134,6 +134,20 @@ export const isPrivateAddress = (ip: string): boolean => {
 /** Тот же сайт: хост совпадает с точностью до «www.». */
 export const sameSite = (a: URL, b: URL) => a.hostname.replace(/^www\./, "") === b.hostname.replace(/^www\./, "");
 
+/**
+ * Свои ли страницы. У храма, чей сайт лежит глубоко на общей площадке
+ * («sunblag.ru/church/georgievskiy-hram-pos-goluboe»), соседние подкаталоги —
+ * это ЧУЖИЕ храмы, и брать оттуда престолы нельзя. Своим считаем сам адрес и
+ * его поддерево; сайт целиком — когда адрес не глубже одного каталога
+ * (корень, «/about», «/index.php»): там глубина признака не даёт.
+ */
+export const inSiteScope = (home: URL, target: URL): boolean => {
+    const base = home.pathname.replace(/\/+$/, "");
+    if (base.split("/").filter(Boolean).length <= 1) return true;
+    const path = target.pathname.replace(/\/+$/, "");
+    return path === base || path.startsWith(base + "/");
+};
+
 const ASSET = /\.(jpe?g|png|gif|webp|svg|ico|pdf|docx?|xlsx?|pptx?|zip|rar|7z|mp3|mp4|avi|mov|css|js|xml|rss|txt)(\?|$)/i;
 
 /** Слова, по которым ссылка ведёт в новости: адрес или подпись. */

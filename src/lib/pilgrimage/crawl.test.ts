@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-    aboutSections, articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, matchSaints, mentionsOf, nameStems, newsSections,
+    aboutSections, articlesOf, CRAWLER_UA, inSiteScope, isPrivateAddress, isWorthReview, linksOf, matchSaints, mentionsOf, nameStems, newsSections,
     parseRobots, plain, publishedOf, robotsAllows, saintRow, siteOf, sitemapLocs, textOf, visitOf,
 } from "./crawl";
 
@@ -171,4 +171,17 @@ test("страницы о храме: рассказ о себе, а не нов
         aboutSections(links, base).map((u) => new URL(u).pathname),
         ["/o-hrame/", "/istoriya", "/hram"],
     );
+});
+
+test("свои страницы: чужие подкаталоги общей площадки не читаем", () => {
+    const u = (s: string) => new URL(s);
+    // Храм живёт глубоко на общей площадке: соседний приход — чужой.
+    assert.equal(inSiteScope(u("http://sunblag.ru/church/georgievskiy-hram-pos-goluboe"),
+        u("http://sunblag.ru/church/nikolskiy-khram-g-solnechnogorska/")), false);
+    // Своя подстраница — читаем.
+    assert.equal(inSiteScope(u("http://sunblag.ru/church/georgievskiy-hram-pos-goluboe"),
+        u("http://sunblag.ru/church/georgievskiy-hram-pos-goluboe/istoriya")), true);
+    // Сайт целиком: корень и неглубокий адрес — читаем всё.
+    assert.equal(inSiteScope(u("https://hram.ru/"), u("https://hram.ru/istoriya")), true);
+    assert.equal(inSiteScope(u("https://hram.ru/xram-nikolaya"), u("https://hram.ru/istoriya")), true);
 });

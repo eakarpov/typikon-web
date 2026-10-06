@@ -3,7 +3,7 @@ import { writeFileSync } from "node:fs";
 import clientPromise from "@/lib/mongodb";
 import { filterOf } from "@/lib/temples";
 import {
-    aboutSections, linksOf, newsSections, parseRobots, robotsAllows, sameSite, siteOf, textOf, type RobotsRules,
+    aboutSections, inSiteScope, linksOf, newsSections, parseRobots, robotsAllows, sameSite, siteOf, textOf, type RobotsRules,
 } from "@/lib/pilgrimage/crawl";
 import { TEMPLE_SOURCES } from "@/utils/templeSources";
 import { createFetcher, Refused, type Fetched } from "@/lib/pilgrimage/net";
@@ -54,11 +54,6 @@ const JSON_OUT = arg("json");
 const ALLOW_LOCAL = flag("allow-local");
 
 const MAX_CRAWL_DELAY_S = 30;
-
-// Сколько храмов может делить один сайт, чтобы находки шли каждому. Сайт
-// обители или епархиального списка рассказывает обо всех своих храмах разом, и
-// престол одного достался бы всем. Такие сайты разбирает человек по страницам.
-const MAX_SHARED_TEMPLE_SITES = 2;
 
 // Своды с условием «только ссылка» (sobory.ru, temples.ru, days.pravoslavie.ru)
 // обходить нельзя: там чужой труд, и мы даём на них ссылку, а не берём данные.
@@ -143,7 +138,9 @@ const crawlSite = async (site: Site): Promise<SiteResult> => {
     }
 
     const links = linksOf(home.body, home.url);
-    const aboutLinks = aboutSections(links, home.url);
+    // Только свои страницы: у храма на общей площадке соседний подкаталог —
+    // это чужой храм, и его престол нам не принадлежит.
+    const aboutLinks = aboutSections(links, home.url).filter((href) => inSiteScope(home.url, new URL(href)));
     const newsLinks = newsSections(links, home.url);
 
     // У сайтов на дешёвых CMS главная — лента новостей, и престолы в ней
@@ -211,12 +208,7 @@ const main = async () => {
     const recent = FORCE || ONLY_SITE ? new Set<string>()
         : new Set((await journal.find({ lastCrawledAt: { $gte: since } }, { projection: { site: 1 } }).toArray()).map((r) => r.site as string));
 
-    const all = [...sites.values()];
-    // Сайты-списки (обитель, епархия): престолы их страниц нельзя отдать всем
-    // храмам сразу. Пропускаем и считаем отдельно.
-    const shared = all.filter((s) => s.templeSlugs.length > MAX_SHARED_TEMPLE_SITES);
-    const todo = all
-        .filter((s) => s.templeSlugs.length <= MAX_SHARED_TEMPLE_SITES)
+    const todo = [...sites.values()]
         .filter((s) => !recent.has(s.key))
         .sort((a, b) => a.gap - b.gap || a.key.localeCompare(b.key))
         .slice(0, LIMIT);
@@ -224,7 +216,7 @@ const main = async () => {
     const dedBySlug = new Map((await db.collection("dedications").find({}).toArray()).map((d: any) => [d.slug, d]));
 
     console.log(`храмов с сайтом: ${rows.length}; сайтов: ${sites.size}; соцсети и прочее пропущено: ${skippedSocial}`
-        + `; своды-ссылки пропущены: ${skippedLink}; сайты-списки пропущены: ${shared.length}`);
+        + `; своды-ссылки пропущены: ${skippedLink}`);
     console.log(`обойдено недавно (${RECRAWL_DAYS} дн.): ${recent.size}; к обходу: ${todo.length}`
         + `; ${WRITE ? "найденное ЗАПИСЫВАЕТСЯ" : "холостой прогон — ничего не пишется"}`);
 
