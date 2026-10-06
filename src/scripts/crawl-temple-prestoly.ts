@@ -3,8 +3,9 @@ import { writeFileSync } from "node:fs";
 import clientPromise from "@/lib/mongodb";
 import { filterOf } from "@/lib/temples";
 import {
-    aboutSections, linksOf, newsSections, parseRobots, robotsAllows, siteOf, textOf, type RobotsRules,
+    aboutSections, linksOf, newsSections, parseRobots, robotsAllows, sameSite, siteOf, textOf, type RobotsRules,
 } from "@/lib/pilgrimage/crawl";
+import { TEMPLE_SOURCES } from "@/utils/templeSources";
 import { createFetcher, Refused, type Fetched } from "@/lib/pilgrimage/net";
 import { thronesOfText, type PrestolGuess } from "@/lib/pilgrimage/prestoly";
 
@@ -53,6 +54,19 @@ const JSON_OUT = arg("json");
 const ALLOW_LOCAL = flag("allow-local");
 
 const MAX_CRAWL_DELAY_S = 30;
+
+// Сколько храмов может делить один сайт, чтобы находки шли каждому. Сайт
+// обители или епархиального списка рассказывает обо всех своих храмах разом, и
+// престол одного достался бы всем. Такие сайты разбирает человек по страницам.
+const MAX_SHARED_TEMPLE_SITES = 2;
+
+// Своды с условием «только ссылка» (sobory.ru, temples.ru, days.pravoslavie.ru)
+// обходить нельзя: там чужой труд, и мы даём на них ссылку, а не берём данные.
+const LINK_ONLY_HOSTS = new Set(
+    TEMPLE_SOURCES.filter((s) => s.policy === "link" && s.url).map((s) => {
+        try { return new URL(s.url).hostname.replace(/^www\./, ""); } catch { return ""; }
+    }).filter(Boolean),
+);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -122,6 +136,11 @@ const crawlSite = async (site: Site): Promise<SiteResult> => {
 
     const home = await fetchPage(site.home.href);
     if (!home) return { ...result, outcome: "error", note: "главная не открылась" };
+    // Заглушки на дешёвых платформах уводят на чужой хост (общую страницу
+    // платформы, карту храмов). Это уже не сайт храма: разбирать там нечего.
+    if (!sameSite(home.url, site.home)) {
+        return { ...result, outcome: "refused", note: `перенаправление на чужой хост: ${home.url.hostname}` };
+    }
 
     const links = linksOf(home.body, home.url);
     const aboutLinks = aboutSections(links, home.url);
@@ -162,9 +181,11 @@ const main = async () => {
     // Обходим его один раз: престолы сайта — всем его храмам.
     const sites = new Map<string, Site>();
     let skippedSocial = 0;
+    let skippedLink = 0;
     for (const t of rows as any[]) {
         const home = siteOf(t.website);
         if (!home) { skippedSocial++; continue; }
+        if (LINK_ONLY_HOSTS.has(home.hostname.replace(/^www\./, ""))) { skippedLink++; continue; }
         if (ONLY_SITE && siteOf(ONLY_SITE)?.hostname.replace(/^www\./, "") !== home.hostname.replace(/^www\./, "")) continue;
         const key = home.hostname.replace(/^www\./, "") + home.pathname.replace(/\/+$/, "");
         const site: Site = sites.get(key) ?? { key, home, templeSlugs: [], country: t.country ?? null, gap: 99 };
@@ -177,6 +198,9 @@ const main = async () => {
     if (ONLY_SITE && !sites.size) {
         const home = siteOf(ONLY_SITE);
         if (!home) throw new Error(`не сайт: ${ONLY_SITE}`);
+        if (LINK_ONLY_HOSTS.has(home.hostname.replace(/^www\./, ""))) {
+            throw new Error(`свод с условием «только ссылка»: ${home.hostname}`);
+        }
         sites.set(home.host, { key: home.host, home, templeSlugs: [], country: null, gap: 99 });
     }
 
@@ -187,14 +211,20 @@ const main = async () => {
     const recent = FORCE || ONLY_SITE ? new Set<string>()
         : new Set((await journal.find({ lastCrawledAt: { $gte: since } }, { projection: { site: 1 } }).toArray()).map((r) => r.site as string));
 
-    const todo = [...sites.values()]
+    const all = [...sites.values()];
+    // Сайты-списки (обитель, епархия): престолы их страниц нельзя отдать всем
+    // храмам сразу. Пропускаем и считаем отдельно.
+    const shared = all.filter((s) => s.templeSlugs.length > MAX_SHARED_TEMPLE_SITES);
+    const todo = all
+        .filter((s) => s.templeSlugs.length <= MAX_SHARED_TEMPLE_SITES)
         .filter((s) => !recent.has(s.key))
         .sort((a, b) => a.gap - b.gap || a.key.localeCompare(b.key))
         .slice(0, LIMIT);
 
     const dedBySlug = new Map((await db.collection("dedications").find({}).toArray()).map((d: any) => [d.slug, d]));
 
-    console.log(`храмов с сайтом: ${rows.length}; сайтов: ${sites.size}; соцсети и прочее пропущено: ${skippedSocial}`);
+    console.log(`храмов с сайтом: ${rows.length}; сайтов: ${sites.size}; соцсети и прочее пропущено: ${skippedSocial}`
+        + `; своды-ссылки пропущены: ${skippedLink}; сайты-списки пропущены: ${shared.length}`);
     console.log(`обойдено недавно (${RECRAWL_DAYS} дн.): ${recent.size}; к обходу: ${todo.length}`
         + `; ${WRITE ? "найденное ЗАПИСЫВАЕТСЯ" : "холостой прогон — ничего не пишется"}`);
 
@@ -218,9 +248,14 @@ const main = async () => {
             }
             if (WRITE) {
                 for (const slug of site.templeSlugs) await applyThrones(temples, slug, r.thrones, dedBySlug);
-                await journal.updateOne({ site: r.site }, {
-                    $set: { site: r.site, outcome: r.outcome, note: r.note ?? null, pages: r.pages, found: r.thrones.length, lastCrawledAt: new Date() },
-                }, { upsert: true });
+                // Ошибку сети в журнал не пишем: она временная, и повторный
+                // прогон должен сходить на сайт снова, а не пропустить его на
+                // 90 дней. Запрет robots и частный адрес — другое дело.
+                if (r.outcome !== "error") {
+                    await journal.updateOne({ site: r.site }, {
+                        $set: { site: r.site, outcome: r.outcome, note: r.note ?? null, pages: r.pages, found: r.thrones.length, lastCrawledAt: new Date() },
+                    }, { upsert: true });
+                }
             }
         }
     };
