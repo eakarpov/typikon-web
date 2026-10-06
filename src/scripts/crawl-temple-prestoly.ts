@@ -3,7 +3,7 @@ import { writeFileSync } from "node:fs";
 import clientPromise from "@/lib/mongodb";
 import { filterOf } from "@/lib/temples";
 import {
-    aboutSections, linksOf, parseRobots, robotsAllows, siteOf, textOf, type RobotsRules,
+    aboutSections, linksOf, newsSections, parseRobots, robotsAllows, siteOf, textOf, type RobotsRules,
 } from "@/lib/pilgrimage/crawl";
 import { createFetcher, Refused, type Fetched } from "@/lib/pilgrimage/net";
 import { thronesOfText, type PrestolGuess } from "@/lib/pilgrimage/prestoly";
@@ -122,17 +122,26 @@ const crawlSite = async (site: Site): Promise<SiteResult> => {
 
     const home = await fetchPage(site.home.href);
     if (!home) return { ...result, outcome: "error", note: "главная не открылась" };
-    examine(home);
 
-    // Рассказ о храме: разделы о себе, а не новости. Идём по ним по порядку.
-    const aboutLinks = aboutSections(linksOf(home.body, home.url), home.url);
+    const links = linksOf(home.body, home.url);
+    const aboutLinks = aboutSections(links, home.url);
+    const newsLinks = newsSections(links, home.url);
+
+    // У сайтов на дешёвых CMS главная — лента новостей, и престолы в ней
+    // тонут среди чужих храмов и «престолов Божиих». Поэтому читаем рассказ
+    // о храме, а главную — лишь когда сайт не новостной: у малой приходской
+    // страницы рассказ и есть главная.
     for (const href of aboutLinks) {
         if (result.pages >= PAGES) break;
         const page = await fetchPage(href);
         if (page) examine(page);
     }
+    if (!found.size && !newsLinks.length) examine(home);
 
     result.thrones = [...found.values()];
+    if (!aboutLinks.length && newsLinks.length) {
+        return { ...result, note: "страницы о храме нет — только новости" };
+    }
     return result;
 };
 

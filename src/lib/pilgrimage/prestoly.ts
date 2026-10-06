@@ -41,11 +41,23 @@ export interface PrestolGuess {
     confidence: number;
 }
 
-/** Слова, после которых идёт перечень престолов. */
-const TRIGGER = /(придел|престол|освящ)/gi;
+/**
+ * Зачины перечня. Не «любое слово с этими буквами», а имена престола и
+ * придела — и только они: «священник», «освящение», «освящённый праздник»
+ * престолов не называют, а «освящ» в них куда чаще, чем «освящён во имя».
+ * Причастия («освящённым», «освящённую») отсекает запрет следующей буквы:
+ * краткая форма глагола оканчивается на «освящён/освящена/освящено/освящены».
+ */
+const LABEL = /(придел[а-яё]*|престол[а-яё]*|освящ(?:ён|ена|ено|ены)(?![а-яёa-z]))/gi;
 
 /** «Престольный праздник» — не перечень престолов, а календарь: его пропускаем. */
 const NOT_A_LIST = /^престольн/;
+
+/** Как назван престол: «во имя» и «в честь». */
+const HONOR = /(в\s+(?:честь|память|славу|похвалу)|во\s+имя)/i;
+
+/** Двоеточие или тире после слова-зачина — начало перечня. */
+const LIST_SEP = /[:—–]/;
 
 /** «Главный», «центральный» — престол, названный так, и есть главный. */
 const MAIN_WORD = /(главн[а-яё]*|центральн[а-яё]*)/gi;
@@ -102,21 +114,49 @@ interface Claim {
     baseMain: boolean;
 }
 
+/** Смещение первой пустой строки от этой точки — там кончается перечень. */
+const blankEnd = (text: string, from: number): number => {
+    const at = text.slice(from).search(/\n[ \t]*\n/);
+    return at < 0 ? -1 : from + at;
+};
+
 /** Утверждения о престолах: где сказано «престол», «придел» или «освящён». */
 const claimsOf = (text: string): Claim[] => {
-    const marks: { at: number; end: number; kind: Claim["kind"] }[] = [];
-    for (const m of text.matchAll(TRIGGER)) {
+    const marks: { at: number; end: number; kind: Claim["kind"]; style: "list" | "honor" }[] = [];
+    for (const m of text.matchAll(LABEL)) {
         const at = m.index ?? 0;
-        const tail = text.slice(at, at + 12).toLowerCase();
+        const tail = text.slice(at, at + 16).toLowerCase();
         if (NOT_A_LIST.test(tail)) continue;
         const kind = tail.startsWith("придел") ? "pridel" : tail.startsWith("освящ") ? "osvyash" : "prestol";
-        marks.push({ at, end: at + m[0].length, kind });
+        const end = at + m[0].length;
+        // Слово-зачин стало зачином перечня, только если за ним идёт или
+        // двоеточие с тире, или «во имя/в честь». Иначе это «престол Божий»,
+        // «патриарший престол», «освящена в 1903 году» — не о престоле храма.
+        const after = text.slice(end, end + 50);
+        const honor = HONOR.test(after);
+        const sep = LIST_SEP.test(text.slice(end, end + 24));
+        // Перечень с зачином столбиком: «Престолы» строкой, а под ним список.
+        const heading = /^\s*\n/.test(after);
+        if (kind === "osvyash" ? !honor : !(honor || sep || heading)) continue;
+        // «в честь — X» — не перечень с тире, а названный престол: узкое окно.
+        marks.push({ at, end, kind, style: honor ? "honor" : "list" });
     }
 
     return marks.map((mark, i) => {
         const next = marks[i + 1]?.at ?? Infinity;
-        const end = Math.min(next, sentenceEnd(text, mark.end), mark.end + 300);
-        const phrase = text.slice(mark.end, end).replace(/\s+/g, " ").trim();
+        // У перечня окно шире: за ним идёт список столбиком и в строку.
+        // У «во имя/в честь» — узкое: там назван один престол, а дальше в
+        // прозе начинается чужое (святыни, клирики, соседний храм).
+        const bounds = [next];
+        if (mark.style === "honor") {
+            bounds.push(sentenceEnd(text, mark.end), mark.end + 140);
+            const nl = text.indexOf("\n", mark.end);
+            if (nl >= 0) bounds.push(nl);
+        } else {
+            const blank = blankEnd(text, mark.end);
+            bounds.push(blank >= 0 ? blank : mark.end + 240);
+        }
+        const phrase = text.slice(mark.end, Math.min(...bounds)).replace(/\s+/g, " ").trim();
         // Помета может стоять до слова-зачина: «левый придел освящён…». Берём
         // ближайшую к зачину, а не любую в окне: «главный престол, придельный —
         // …» говорит о придельном.
