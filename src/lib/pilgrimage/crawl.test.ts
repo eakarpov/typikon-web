@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
     articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, matchSaints, mentionsOf, nameStems, newsSections,
-    parseRobots, plain, publishedOf, robotsAllows, siteOf, sitemapLocs, textOf, visitOf,
+    parseRobots, plain, publishedOf, robotsAllows, saintRow, siteOf, sitemapLocs, textOf, visitOf,
 } from "./crawl";
 
 test("robots.txt: своя группа заменяет общую", () => {
@@ -124,6 +124,8 @@ test("основы имён для поиска в каталоге", () => {
     assert.deepEqual(nameStems("святителя Николая Чудотворца"), ["никол", "чудотвор"]);
     assert.deepEqual(nameStems("преподобного Сергия Радонежского"), ["серг", "радонежск"]);
     assert.equal(plain("Серги́й Ра́донежский"), "сергий радонежский");
+    // Двойное прозвание: дефис не должен оставаться на конце основы.
+    assert.deepEqual(nameStems("свт. Луки Войно-Ясенецкого"), ["лук", "войно", "ясенецк"]);
 });
 
 test("имя обходчика годится в заголовок HTTP", () => {
@@ -137,6 +139,18 @@ test("заголовок документа в текст не идёт", () => 
 test("святой берётся до конца строки, а не обрывается", () => {
     const [, m] = mentionsOf("Принесение ковчега\nВ храм будет принесён ковчег с частицей мощей святого благоверного великого князя Александра Невского и святителя Николая Чудотворца.", null);
     assert.equal(m.saintGuess, "святого благоверного великого князя Александра Невского");
+});
+
+test("строка святого: заголовок святцев расширяет сличение", () => {
+    // Имя в каталоге и имя в заголовке написаны по-разному — сличение берёт оба.
+    const panteleimon = saintRow({ id: "1", name: "Пантелеймо́н Цели́тель", title: "целитель Пантелеимон" });
+    assert.deepEqual(matchSaints("вмч. Пантелеимона", [panteleimon]).map((s) => s.id), ["1"]);
+    // Прозвание из заголовка подхватывается, но первым словом остаётся имя.
+    const luka = saintRow({ id: "2", name: "Лука́ Стирони́т", title: "Лука Елладский" });
+    assert.deepEqual(matchSaints("прп. Луки Елладского", [luka]).map((s) => s.id), ["2"]);
+    // Слова заголовка не делают первым словом чужое имя: «Александра» — не «Кирилл».
+    const kirill = saintRow({ id: "3", name: "Кири́лл Александри́йский", title: "Кирилл, архиепископ Александрийский" });
+    assert.deepEqual(matchSaints("прп. Александра", [kirill]), []);
 });
 
 test("святой по догадке: имя с начала, прозвание — по месту", () => {

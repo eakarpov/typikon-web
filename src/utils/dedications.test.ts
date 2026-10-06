@@ -159,3 +159,28 @@ test("грузинское и греческое имя тоже разбира�
     assert.equal(slugOf("Ευαγγελίστρια"), "blagoveshenie");
     assert.equal(slugOf("Καθεδρικός Ναός Αγίου Θεοδώρου"), "feodor-stratilat");
 });
+
+test("Тихон Патриарх и Иннокентий Вениаминов — отдельно от тёзок", () => {
+    // Тихон Патриарх: «Московский» без слова «патриарх» — тоже он, а Задонский
+    // и Амафунтский — нет.
+    assert.equal(slugOf("Храм Святителя Тихона Московского"), "tihon-patriarh");
+    assert.equal(slugOf("Церковь Тихона, Патриарха Всероссийского"), "tihon-patriarh");
+    assert.equal(slugOf("Церковь патриарха Тихона"), "tihon-patriarh");
+    assert.equal(slugOf("Церковь Тихона Задонского"), "tihon-zadonsky");
+    assert.equal(slugOf("Церковь Тихона Амафунтского"), null);
+
+    // Вениаминов и Иркутский — разные лица; прежнее общее «иннокенти» их
+    // сводило, и храм митрополита Московского подписывался Иркутским.
+    assert.equal(slugOf("Церковь Иннокентия, митрополита Московского"), "innokentiy-veniaminov");
+    assert.equal(slugOf("Храм святителя Иннокентия Московского"), "innokentiy-veniaminov");
+    assert.equal(slugOf("Храм святителя Иннокентия Иркутского"), "innokentiy-irkutsky");
+    assert.equal(slugOf("Часовня Иннокентия, епископа Иркутского"), "innokentiy-irkutsky");
+    assert.equal(slugOf("Храм во имя первого Святителя Иркутского Иннокентия"), "innokentiy-irkutsky");
+    // Голое «Иннокентия» не приписывается ни одному: имя лиц не различает.
+    assert.equal(slugOf("Церковь Иннокентия"), null);
+    assert.equal(slugOf("Церковь Иннокентия Комельского"), null);
+    // И у Вениаминова престол один, а не в паре с Иркутским.
+    assert.deepEqual(
+        matchDedications("Церковь Иннокентия, митрополита Московского").map((m) => m.dedication.slug),
+        ["innokentiy-veniaminov"]);
+});

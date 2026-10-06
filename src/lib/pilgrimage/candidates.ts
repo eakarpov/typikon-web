@@ -9,7 +9,7 @@
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { RELIC_CANDIDATES } from "./relics";
-import { plain, type GuessKind, type GuessState, type Mention, type SaintRow } from "./crawl";
+import { saintRow, type GuessKind, type GuessState, type Mention, type SaintRow } from "./crawl";
 
 export const RELIC_CRAWL = "relicCrawl";
 
@@ -94,13 +94,7 @@ export const setCandidateStatus = async (id: string, status: CandidateStatus): P
 /** Святые каталога для сличения догадок обходчика и импорта. */
 export const loadSaintIndex = async (): Promise<SaintRow[]> =>
     (await (await clientPromise).db("typikon").collection("saints")
-        .find({ name: { $type: "string" } }, { projection: { name: 1, altNames: 1, slug: 1 } }).toArray())
-        .map((s: any) => {
-            const names = [s.name, ...(s.altNames ?? [])].filter(Boolean).map((n: string) => plain(n));
-            return {
-                id: String(s._id),
-                name: s.name, slug: s.slug ?? null,
-                hay: names.join(" "),
-                firsts: names.map((n: string) => n.split(/\s+/)[0]),
-            };
-        });
+        .find({ name: { $type: "string" } }, { projection: { name: 1, altNames: 1, slug: 1, title: 1 } }).toArray())
+        .map((s: any) => saintRow({
+            id: String(s._id), name: s.name, altNames: s.altNames, slug: s.slug, title: s.title,
+        }));

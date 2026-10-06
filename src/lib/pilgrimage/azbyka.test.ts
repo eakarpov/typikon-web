@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { locationOf, pageUrl, placeKindOf, relicsOf, shrinesSection, unwiki, whereStems } from "./azbyka";
+import { locationOf, pageUrl, placeKindOf, relicsOf, shrinesSection, templeCategories, unwiki, whereStems } from "./azbyka";
 
 const LAVRA = `{{Местоположение святыни|локация=56.310, 38.130|вид=Монастырь}}
 '''Свято-Троицкая Сергиева лавра'''
@@ -53,6 +53,24 @@ test("основы храма из уточнения", () => {
     assert.deepEqual(whereStems("в Троицком соборе"), ["троицк"]);
     assert.deepEqual(whereStems("в Серапионовой палате"), ["серапионов"]);
     assert.deepEqual(whereStems(null), []);
+});
+
+test("храмовые категории выводятся из всех категорий вики", () => {
+    // Храмы и обители — по каждой стране; источники, иконы и кладбища — не наши.
+    const cats = [
+        "Россия (Монастыри)", "Россия (Приходские храмы)", "Греция (Монастыри)",
+        "Беларусь (Приходские храмы)", "Россия (Святые источники)", "Россия (Иконы)",
+        "Россия", "Категория:Списки храмов (Россия)",
+    ];
+    assert.deepEqual(templeCategories(cats), [
+        "Категория:Беларусь (Приходские храмы)",
+        "Категория:Греция (Монастыри)",
+        "Категория:Россия (Монастыри)",
+        "Категория:Россия (Приходские храмы)",
+    ]);
+    // Принимаем и заголовок с «Категория:», повторов не заводим.
+    assert.deepEqual(templeCategories(["Категория:Россия (Монастыри)", "Россия (Монастыри)"]),
+        ["Категория:Россия (Монастыри)"]);
 });
 
 test("адрес страницы", () => {

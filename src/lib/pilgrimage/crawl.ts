@@ -11,6 +11,8 @@
 // Разбор регулярными выражениями, а не деревом документа: нужны текст, ссылки
 // и пара метатегов, и ради этого не стоит тащить в зависимости разборщик HTML.
 
+import { namesOf } from "@/lib/imeniny/core";
+
 /**
  * Имя, под которым обходчик представляется, и страница, где сказано, кто он.
  * Только латиницей: заголовок HTTP кириллицы не допускает, и запрос с ней
@@ -349,7 +351,10 @@ export const isWorthReview = (m: Mention) => m.state !== null || m.saintGuess !=
 /** Основы имён из догадки — для поиска святого в каталоге: «Сергия Радонежского» → «серги», «радонежск». */
 export const nameStems = (guess: string): string[] =>
     (guess.match(/[А-ЯЁ][а-яё-]+/g) ?? [])
-        .map((w) => w.toLowerCase().replace(/ё/g, "е").replace(/(ого|его|ая|яя|ия|ея|ой|ей|ца|ы|а|я|и)$/, ""))
+        // Дефис в конце основы — от двойного прозвания: «Войно-Ясенецкий» рвётся
+        // на «Войно-» и «Ясенецкого», и основа с хвостовым дефисом уже ни с чем не
+        // сличается: сличаемые слова делятся по дефису и его в себе не несут.
+        .map((w) => w.toLowerCase().replace(/ё/g, "е").replace(/-+$/, "").replace(/(ого|его|ая|яя|ия|ея|ой|ей|ца|ы|а|я|и)$/, ""))
         .filter((w) => w.length >= 3)
         .slice(0, 3);
 
@@ -370,6 +375,30 @@ export const plain = (s: string) => s.normalize("NFC")
 export type SaintRow = { id: string; name: string; slug: string | null; hay: string; firsts?: string[] };
 
 const firstWords = (s: SaintRow) => s.firsts ?? s.hay.split(/\s+/).slice(0, 1);
+
+/**
+ * Запись каталога святых в строку сличения. Кроме имени и прочих имён в сличение
+ * идёт ЗАГОЛОВОК святцев (`title`) — та же память, названная иначе: у «Пантелеймона
+ * Целителя» заголовок «целитель Пантелеимон», у «Луки Стиронита» — «Лука Елладский».
+ *
+ * Слова заголовка идут в `hay` целиком, но первыми словами становятся только
+ * имена, выведенные из него нашим разбором (@/lib/imeniny/core): в заголовке
+ * бывает и чин, и «перенесение мощей», и чужое имя, а первым словом святого
+ * должно остаться его собственное имя — иначе «Александра» находила бы «Кирилла
+ * Александрийского».
+ */
+export const saintRow = (s: {
+    id: string; name: string; altNames?: string[] | null; slug?: string | null; title?: string | null;
+}): SaintRow => {
+    const names = [s.name, ...(s.altNames ?? [])].filter(Boolean).map(plain);
+    const heading = s.title ? plain(s.title) : "";
+    const fromTitle = s.title ? namesOf(s.title).names.map(plain) : [];
+    return {
+        id: s.id, name: s.name, slug: s.slug ?? null,
+        hay: [...names, heading, ...fromTitle].filter(Boolean).join(" "),
+        firsts: [...names, ...fromTitle].map((n) => n.split(/\s+/)[0]),
+    };
+};
 
 /**
  * Святые каталога по догадке «прп. Сергия Радонежского».

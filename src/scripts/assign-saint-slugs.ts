@@ -28,20 +28,13 @@
 //   ... --show 40   сколько примеров печатать
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
-import { slugify, uniqueAlias } from "@/lib/news/format";
-import { normalizeChurchSlavonic } from "@/utils/churchSlavonic";
+import { uniqueAlias } from "@/lib/news/format";
 import { SAINT_SOURCES } from "@/lib/saintSources";
+import { saintSlug } from "@/lib/saintSlug";
 
 const argv = process.argv;
 const WRITE = argv.includes("--write");
 const SHOW = Number(argv.includes("--show") ? argv[argv.indexOf("--show") + 1] : 20) || 20;
-
-/**
- * Адрес из имени. Ударения и церковнославянские надстрочные снимаются до
- * транслитерации: иначе «Феофа́но» распадается на «feofa-no» — комбинирующее
- * ударение не буква, и slugify честно заменяет его дефисом.
- */
-export const saintSlug = (name: string): string => slugify(normalizeChurchSlavonic(name));
 
 const main = async () => {
     const db = (await clientPromise).db("typikon");

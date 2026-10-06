@@ -5,7 +5,7 @@ import clientPromise from "@/lib/mongodb";
 import { filterOf } from "@/lib/temples";
 import { CRAWLER_UA, matchSaints, plain } from "@/lib/pilgrimage/crawl";
 import {
-    AZBYKA_API, AZBYKA_CATEGORIES, locationOf, pageUrl, placeKindOf, relicsOf, whereStems,
+    AZBYKA_API, AZBYKA_CATEGORIES, locationOf, pageUrl, placeKindOf, relicsOf, templeCategories, whereStems,
 } from "@/lib/pilgrimage/azbyka";
 import { loadSaintIndex, upsertCandidate, type CandidateInput } from "@/lib/pilgrimage/candidates";
 
@@ -16,11 +16,19 @@ import { loadSaintIndex, upsertCandidate, type CandidateInput } from "@/lib/pilg
 // Страницы берутся API вики пачками по пятьдесят вместе с текстом — это около
 // двухсот запросов на всю Россию, с паузой между ними; обходить вёрстку не нужно.
 //
+// КАТЕГОРИЙ НЕ ДВЕ, А ВСЯ ВИКИ. Прежде брали только Россию — обители и
+// приходские храмы; у «Азбуки» такие категории есть по каждой стране, и их
+// больше сотни. Перечисляем все категории вики и оставляем храмовые
+// (templeCategories): святой, чьи мощи лежат в Греции или Грузии, нам так же
+// нужен, как подмосковный.
+//
 // Запуск:
-//   npm run relics:azbyka                         # показать, ничего не писать
+//   npm run relics:azbyka                         # все страны, показать, не писать
 //   npm run relics:azbyka -- --limit 200          # первые двести страниц
+//   npm run relics:azbyka -- --category "Греция (Монастыри)"  # одна категория
 //   npm run relics:azbyka -- --write              # записать находки
-// Ключи: --delay 2 (секунды между запросами), --json файл.json
+// Ключи: --category через запятую, --delay 2 (секунды между запросами),
+//        --json файл.json
 
 const arg = (name: string, fallback?: string) => {
     const i = process.argv.indexOf(`--${name}`);
@@ -30,6 +38,8 @@ const WRITE = process.argv.includes("--write");
 const LIMIT = Number(arg("limit", "0")) || Infinity;
 const DELAY_MS = 1000 * Math.max(1, Number(arg("delay", "2")) || 2);
 const JSON_OUT = arg("json");
+/** Обойти только названные категории (через запятую) вместо всех стран. */
+const ONLY_CATEGORIES = arg("category");
 
 /** Храм каталога ищем не дальше этого от точки страницы: у обители храмы разбросаны по стенам. */
 const NEAR_M = 1500;
@@ -88,6 +98,45 @@ async function* pagesOf(category: string): AsyncGenerator<WikiPage> {
     }
 }
 
+/** Все названия категорий вики, страницами по пятьсот: из них отбираем храмовые. */
+async function* allCategoryTitles(): AsyncGenerator<string> {
+    let cont: Record<string, string> = {};
+    for (;;) {
+        const params = new URLSearchParams({
+            action: "query", format: "json", formatversion: "2",
+            list: "allcategories", aclimit: "500", ...cont,
+        });
+        const json = await askWiki(params);
+        // formatversion=2 зовёт поле «category», прежний формат — «*».
+        for (const c of json.query?.allcategories ?? []) yield (c.category ?? c["*"]) as string;
+        if (!json.continue) return;
+        cont = json.continue;
+        await sleep(DELAY_MS);
+    }
+}
+
+/**
+ * Категории к обходу. Заданные ключом — как есть; иначе все храмовые страны из
+ * списка категорий вики, а при неудаче — запасная Россия. Список стран у
+ * «Азбуки» меняется, и перечислять его на месте надёжнее, чем запоминать.
+ */
+const collectCategories = async (): Promise<string[]> => {
+    if (ONLY_CATEGORIES) {
+        return ONLY_CATEGORIES.split(",").map((c) => c.trim()).filter(Boolean)
+            .map((c) => (c.startsWith("Категория:") ? c : `Категория:${c}`));
+    }
+    try {
+        const titles: string[] = [];
+        for await (const t of allCategoryTitles()) titles.push(t);
+        const found = templeCategories(titles);
+        if (found.length) return found;
+        console.log(`  храмовых категорий не нашлось среди ${titles.length} — беру запасной список`);
+    } catch (e) {
+        console.log(`  категории не перечислились (${String((e as Error).message ?? e)}) — беру запасной список`);
+    }
+    return AZBYKA_CATEGORIES;
+};
+
 /** Слова имени без служебных — для сличения названия страницы и храма каталога. */
 const words = (s: string) => new Set(plain(s).split(/[^а-я]+/)
     .filter((w) => w.length >= 4 && !/^(храм|церк|собор|монаст|обител|свято|святы|мужск|женск|приходск)/.test(w))
@@ -123,6 +172,9 @@ const main = async () => {
         return rows.sort((a, b) => score(b) - score(a)).slice(0, 3).map((t) => t.slug as string);
     };
 
+    const categories = await collectCategories();
+    console.log(`категорий к обходу: ${categories.length}${ONLY_CATEGORIES ? " (заданы ключом --category)" : ""}`);
+
     const found: CandidateInput[] = [];
     let pages = 0, withSection = 0, noPoint = 0, former = 0, nameless = 0;
 
@@ -131,7 +183,7 @@ const main = async () => {
     let stoppedAt: string | null = null;
     try {
     outer:
-    for (const category of AZBYKA_CATEGORIES) {
+    for (const category of categories) {
         for await (const page of pagesOf(category)) {
             if (pages >= LIMIT) break outer;
             pages++;

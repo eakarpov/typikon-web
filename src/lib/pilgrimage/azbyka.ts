@@ -20,8 +20,36 @@ import { mentionsOf, saintsInLine, type GuessKind } from "./crawl";
 export const AZBYKA_BASE = "https://azbyka.ru/palomnik/";
 export const AZBYKA_API = `${AZBYKA_BASE}api.php`;
 
-/** Категории, из которых берём страницы: храмы и обители — у них есть раздел «Святыни». */
+/**
+ * Категории страниц с разделом «Святыни» — храмы и обители. Их не две, а сто
+ * пятьдесят пять: по стране на каждый вид, и список стран у «Азбуки» растёт.
+ * Поэтому не перечисляем их руками, а ВЫВОДИМ: берём все категории вики и
+ * оставляем те, что кончаются на «(Монастыри)» или «(Приходские храмы)».
+ * Отбор — чистая часть (templeCategories); перечисление категорий по сети —
+ * в src/scripts/import-azbyka-relics.ts.
+ */
+export const AZBYKA_CATEGORY_SUFFIXES = [" (Монастыри)", " (Приходские храмы)"];
+
+/**
+ * Запасной список, если перечислить категории не удалось: Россия — самая
+ * большая часть, и без неё прогон терял бы больше всего.
+ */
 export const AZBYKA_CATEGORIES = ["Категория:Россия (Монастыри)", "Категория:Россия (Приходские храмы)"];
+
+/**
+ * Категории храмов и обителей из полного списка категорий вики. Заголовки
+ * приходят как «Россия (Монастыри)» или «Категория:Россия (Монастыри)» —
+ * принимаем оба вида и выдаём с «Категория:», как их ждёт `gcmtitle`.
+ * Порядок — по алфавиту: прогон повторяем, и он должен идти тем же путём.
+ */
+export const templeCategories = (titles: string[]): string[] => {
+    const out = new Set<string>();
+    for (const raw of titles) {
+        const title = raw.replace(/^Категория:/, "").trim();
+        if (AZBYKA_CATEGORY_SUFFIXES.some((s) => title.endsWith(s))) out.add(`Категория:${title}`);
+    }
+    return [...out].sort((a, b) => a.localeCompare(b, "ru"));
+};
 
 export const pageUrl = (title: string) => AZBYKA_BASE + encodeURIComponent(title.replace(/ /g, "_"))
     .replace(/%2F/g, "/").replace(/%3A/g, ":").replace(/%28/g, "(").replace(/%29/g, ")");

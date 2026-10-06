@@ -51,6 +51,7 @@
     "dneslov:sync": "tsx src/scripts/sync-dneslov.ts",
     "parish:move": "tsx src/scripts/move-parish-to-users.ts",
     "channel-posts:move": "tsx src/scripts/move-channel-posts.ts",
+    "saints:new": "tsx src/scripts/new-saint.ts",
     "saints:slugs": "tsx src/scripts/assign-saint-slugs.ts",
     "saints:name": "tsx src/scripts/set-saint-name.ts",
     "saints:slug": "tsx src/scripts/set-saint-slug.ts",
@@ -104,9 +105,11 @@
     "push:reading": "tsx src/scripts/send-day-reading-push.ts",
     "relics:crawl": "tsx src/scripts/crawl-temple-sites.ts",
     "relics:azbyka": "tsx src/scripts/import-azbyka-relics.ts",
+    "relics:reconcile": "tsx src/scripts/reconcile-relics-prestoly.ts",
     "saints:memories": "tsx src/scripts/import-memory-saints.ts",
     "texts:saints": "tsx src/scripts/sync-text-saints.ts",
-    "saints:merge": "tsx src/scripts/merge-saints.ts"
+    "saints:merge": "tsx src/scripts/merge-saints.ts",
+    "saints:link-memory": "tsx src/scripts/link-memory-saint.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",
