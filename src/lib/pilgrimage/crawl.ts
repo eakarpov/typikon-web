@@ -171,6 +171,22 @@ export const newsSections = (links: Link[], base: URL): string[] =>
         return path !== "/" && path !== base.pathname && (NEWSY.test(path) || NEWSY.test(l.text));
     }).map((l) => l.url).slice(0, 4);
 
+/** Слова, по которым ссылка ведёт к рассказу о храме: его истории и престолах. */
+const ABOUTY = /(о\s*храме|о\s*нас|о\s*приходе|о\s*соборе|житие|истори|храм|святын|придел|престол|строител|архитектур|about|history|temple|hram|khram|cerkov|church)/i;
+
+/**
+ * Страницы, где у храма рассказана его история и перечислены престолы. Новости
+ * и разделы новостей сюда не идут: там о святыне говорят один раз и по поводу,
+ * а престолы приход выписывает в рассказе о себе. Порядок ссылок сохраняем.
+ */
+export const aboutSections = (links: Link[], base: URL): string[] =>
+    links.filter((l) => {
+        const path = new URL(l.url).pathname;
+        if (path === "/" || path === base.pathname) return false;
+        if (NEWSY.test(path) || NEWSY.test(l.text)) return false;
+        return ABOUTY.test(path) || ABOUTY.test(l.text);
+    }).map((l) => l.url).slice(0, 6);
+
 /**
  * Статьи раздела: ссылки глубже самого раздела — «/news/123», «/news/2026/…» под
  * «/news/». Порядок сохраняется: разделы почти везде начинаются с новых.

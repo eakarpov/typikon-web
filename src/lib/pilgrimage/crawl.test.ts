@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-    articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, matchSaints, mentionsOf, nameStems, newsSections,
+    aboutSections, articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, matchSaints, mentionsOf, nameStems, newsSections,
     parseRobots, plain, publishedOf, robotsAllows, saintRow, siteOf, sitemapLocs, textOf, visitOf,
 } from "./crawl";
 
@@ -160,4 +160,15 @@ test("святой по догадке: имя с начала, прозвани
     assert.deepEqual(matchSaints("прп. Александра", saints).map((s) => s.id), ["2", "3"]);
     assert.deepEqual(matchSaints("прп. Александра", saints, "Александро-Свирский мужской монастырь").map((s) => s.id), ["2"]);
     assert.deepEqual(matchSaints(null, saints), []);
+});
+
+test("страницы о храме: рассказ о себе, а не новости", () => {
+    const html = `<a href="/o-hrame/">О храме</a><a href="/istoriya">История прихода</a>
+      <a href="/novosti/">Новости</a><a href="/novosti/2026/1">Ковчег принесён</a>
+      <a href="/raspisanie">Расписание</a><a href="/hram">Храм</a>`;
+    const links = linksOf(html, base);
+    assert.deepEqual(
+        aboutSections(links, base).map((u) => new URL(u).pathname),
+        ["/o-hrame/", "/istoriya", "/hram"],
+    );
 });

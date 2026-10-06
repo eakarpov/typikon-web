@@ -104,6 +104,7 @@
     "push:pomyannik": "tsx src/scripts/send-pomyannik-push.ts",
     "push:reading": "tsx src/scripts/send-day-reading-push.ts",
     "relics:crawl": "tsx src/scripts/crawl-temple-sites.ts",
+    "temples:crawl-prestoly": "tsx src/scripts/crawl-temple-prestoly.ts",
     "relics:azbyka": "tsx src/scripts/import-azbyka-relics.ts",
     "relics:reconcile": "tsx src/scripts/reconcile-relics-prestoly.ts",
     "saints:memories": "tsx src/scripts/import-memory-saints.ts",

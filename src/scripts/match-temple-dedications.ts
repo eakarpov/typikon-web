@@ -105,7 +105,7 @@ const main = async () => {
         if (!write) continue;
 
         const now = new Date();
-        const prestoly = found.map((hit, i) => {
+        const nameDerived = found.map((hit, i) => {
             const d = dedBySlug.get(hit.dedication.slug)!;
             const confidence = confidenceOf(hit, found.length - 1) - (i ? SIDE_ALTAR_PENALTY : 0);
             return {
@@ -125,6 +125,22 @@ const main = async () => {
                 status: "pending",
                 matchedAt: now,
             };
+        });
+
+        // Из имени разбор переписывается целиком — он и пересчитан. А находки
+        // из других источников (сайт прихода, рука человека) именем не
+        // отменяются: их сохраняем, и общий престол берёт один — первый.
+        const bySlug = new Map(nameDerived.map((p: any) => [p.dedication, p]));
+        for (const p of (t.prestoly ?? []) as any[]) {
+            if (p.source === "name" || p.source === "name-secondary") continue;
+            if (!bySlug.has(p.dedication)) bySlug.set(p.dedication, p);
+        }
+        let mainSeen = false;
+        const prestoly = [...bySlug.values()].map((p: any) => {
+            if (!p.isMain) return p;
+            if (mainSeen) return { ...p, isMain: false };
+            mainSeen = true;
+            return p;
         });
 
         await temples.updateOne({ _id: t._id }, {

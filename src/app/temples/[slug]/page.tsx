@@ -99,12 +99,24 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
                         )}
                     </h2>
 
-                    {/* Догадка названа догадкой. Иначе приход не узнает, что
-                        поправлять, — а поправить может только он. */}
+                    {/* Догадка названа догадкой и названа по имени — откуда
+                        она взята. Иначе приход не узнает, что поправлять, а
+                        поправить может только он. */}
                     {prestol.status !== "approved" && (
                         <p className="font-serif text-sm text-slate-500">
-                            Престол выведен из названия храма и не выверен
-                            {prestol.confidence !== undefined && prestol.confidence < 0.6 && ", и уверенности в нём мало"}.
+                            {prestol.evidence ? (
+                                <>
+                                    Престол найден на сайте прихода и не выверен —{" "}
+                                    <a href={prestol.evidence.url} className="underline" target="_blank" rel="nofollow noopener">
+                                        источник
+                                    </a>.
+                                </>
+                            ) : (
+                                <>
+                                    Престол выведен из названия храма и не выверен
+                                    {prestol.confidence !== undefined && prestol.confidence < 0.6 && ", и уверенности в нём мало"}.
+                                </>
+                            )}
                         </p>
                     )}
 

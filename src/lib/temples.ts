@@ -38,6 +38,12 @@ export interface TemplePrestol {
     tier?: string;
     confidence?: number;
     status: string;
+    /**
+     * Отрывок сайта прихода, из которого престол выведен обходчиком
+     * (@/scripts/crawl-temple-prestoly): без него найденное проверять нечем.
+     * Есть только у находок, у престолов из имени его нет.
+     */
+    evidence?: { url: string; phrase: string };
 }
 
 export interface Temple {

@@ -1,0 +1,211 @@
+// Разбор престолов со страниц приходских сайтов: чистая часть. Сеть и запись —
+// в src/scripts/crawl-temple-prestoly.ts.
+//
+// ЗАЧЕМ ЭТО. Имя храма называет один престол, а приделов у него бывает два и
+// три, и знает о них только приход: в открытых данных престола полем нет вовсе
+// (у Wikidata «назван в честь» заполнено у 979 храмов из 11 763, у OSM тег
+// dedication — у четырёх), частные своды авторские и целиком не берутся
+// (@/utils/templeSources). Сайт прихода говорит о себе сам, и его разбор ничьей
+// собственности не задевает: отдельный факт «у этого храма придел такой-то»
+// ничей, в отличие от свода.
+//
+// РАЗБОР ПРОЗЫ — ДОГАДКА БОЛЬШАЯ, ЧЕМ РАЗБОР ИМЕНИ. Словарь посвящений
+// (@/utils/dedications) писан по названиям храмов и в живой речи ошибается
+// чаще: «в честь победы» рядом со словом «престол» престолом быть не должно.
+// Поэтому разбор точен ровно настолько, насколько короток и явен отрывок
+// вокруг слова «престол», «придел» или «освящён», и каждую догадку
+// сопровождает ОТРЫВОК, из которого она взята: без него разбирающему нечего
+// проверять. Найденное идёт престолом со статусом `pending` и никогда — сразу
+// за факт.
+//
+// ЧТО СЧИТАЕТСЯ ГЛАВНЫМ. Главным называем престол, про который сказано
+// «главный» или «центральный», иначе первый по тексту; приделы главными не
+// бывают. Помета ищется ближайшая к слову престола — и до него, и после, —
+// потому что «главный престол, придельный — …» и «придельный престол, главный
+// — …» говорят разное, а стоят почти одинаково. Престол с пометой «главный»
+// один: даже если их названо два, это сводится к одному здесь же.
+
+import { matchDedications, type DedicationKind } from "@/utils/dedications";
+
+export interface PrestolGuess {
+    /** Ключ посвящения в словаре — им престол и записывается. */
+    dedication: string;
+    label: string;
+    kind: DedicationKind;
+    isMain: boolean;
+    /** Отрывок страницы, откуда взят престол: его видит разбирающий. */
+    phrase: string;
+    /** Каким ярусом словаря нашлось: точный образец надёжнее короткой основы. */
+    tier: "pattern" | "stem";
+    pattern: string;
+    confidence: number;
+}
+
+/** Слова, после которых идёт перечень престолов. */
+const TRIGGER = /(придел|престол|освящ)/gi;
+
+/** «Престольный праздник» — не перечень престолов, а календарь: его пропускаем. */
+const NOT_A_LIST = /^престольн/;
+
+/** «Главный», «центральный» — престол, названный так, и есть главный. */
+const MAIN_WORD = /(главн[а-яё]*|центральн[а-яё]*)/gi;
+/**
+ * «Придельный», сторона, порядковый номер — престол не главный. Образцы
+ * нарочно узкие: «прав(ый)» — сторона, а «православный» и «праведный» — нет;
+ * «лев(ый)» — сторона, а «лев» (зверь) сюда не попадает.
+ */
+const SIDE_WORD = /(придел[а-яё]*|боков[а-яё]*|лев(ый|ая|ое|ого|ому|ым|ой|ом|ую|ою|ых|ые|ыми|ей)|прав(ый|ая|ое|ого|ому|ым|ой|ом|ую|ою|ых|ые|ыми|ей)|втор(ой|ая|ое|ого|ому|ым|ом)|трет(ий|ья|ье|ьего|ьему|ьим|ьем)|северн[а-яё]*|южн[а-яё]*|средн[а-яё]*|нижн[а-яё]*|верхн[а-яё]*)/gi;
+
+/**
+ * Сокращения, после которых точка — не конец предложения. Их приходится
+ * знать поимённо: «придел во имя св. Николая» обрывать на «св.» нельзя —
+ * вместе с точкой ушло бы и имя престола.
+ */
+const ABBR = /(^|\s)(св|свт|прп|прмч|прмц|вмч|вмц|мч|мц|сщмч|сщмц|блж|блаж|прав|праведн|ап|арх|архиеп|еп|митр|патр|прот|протопр|иером|игум|мон|диак|кн|цар|цариц|пресв|божией|богородиц|им|см|г|гг|вв|т\.?\s?е|др)\.$/i;
+
+const hasAny = (rx: RegExp, s: string): boolean => { rx.lastIndex = 0; return rx.test(s); };
+
+/** Помета главного или придельного, ближайшая к концу строки: null — помет нет. */
+const lastFacet = (before: string): boolean | null => {
+    let facet: boolean | null = null;
+    let at = -1;
+    for (const rx of [MAIN_WORD, SIDE_WORD]) {
+        rx.lastIndex = 0;
+        for (let m = rx.exec(before); m; m = rx.exec(before)) {
+            if ((m.index ?? 0) >= at) { at = m.index ?? 0; facet = rx === MAIN_WORD; }
+        }
+    }
+    return facet;
+};
+
+/**
+ * Конец предложения от этой точки: первая точка, вопросительный или
+ * восклицательный знак, после которого пробел или конец, и притом не
+ * сокращение. Возвращает смещение или конец текста.
+ */
+const sentenceEnd = (text: string, from: number): number => {
+    const TAIL = /[.!?]+(?=\s|$)/g;
+    TAIL.lastIndex = from;
+    for (let m = TAIL.exec(text); m; m = TAIL.exec(text)) {
+        const at = m.index;
+        if (m[0].startsWith(".") && ABBR.test(text.slice(Math.max(0, at - 14), at + 1))) continue;
+        return at;
+    }
+    return text.length;
+};
+
+interface Claim {
+    kind: "prestol" | "pridel" | "osvyash";
+    /** Отрывок после слова-зачина, по которому ищем посвящение. */
+    phrase: string;
+    /** Главный ли престол, если пометы в самом отрывке нет. */
+    baseMain: boolean;
+}
+
+/** Утверждения о престолах: где сказано «престол», «придел» или «освящён». */
+const claimsOf = (text: string): Claim[] => {
+    const marks: { at: number; end: number; kind: Claim["kind"] }[] = [];
+    for (const m of text.matchAll(TRIGGER)) {
+        const at = m.index ?? 0;
+        const tail = text.slice(at, at + 12).toLowerCase();
+        if (NOT_A_LIST.test(tail)) continue;
+        const kind = tail.startsWith("придел") ? "pridel" : tail.startsWith("освящ") ? "osvyash" : "prestol";
+        marks.push({ at, end: at + m[0].length, kind });
+    }
+
+    return marks.map((mark, i) => {
+        const next = marks[i + 1]?.at ?? Infinity;
+        const end = Math.min(next, sentenceEnd(text, mark.end), mark.end + 300);
+        const phrase = text.slice(mark.end, end).replace(/\s+/g, " ").trim();
+        // Помета может стоять до слова-зачина: «левый придел освящён…». Берём
+        // ближайшую к зачину, а не любую в окне: «главный престол, придельный —
+        // …» говорит о придельном.
+        const before = text.slice(Math.max(0, mark.at - 40), mark.at);
+        const near = lastFacet(before);
+        const baseMain = mark.kind !== "pridel" && near !== false;
+        return { kind: mark.kind, phrase, baseMain };
+    });
+};
+
+/**
+ * Отрывок, разделённый пометами: каждая часть со своим «главный/придельный».
+ * Так «придельный — Николая, главный — Успения» даёт верное и тому и другому,
+ * а не одну помету на весь отрывок.
+ */
+const segmentsOf = (phrase: string, baseMain: boolean): { text: string; isMain: boolean; facet: boolean }[] => {
+    const facets: { at: number; isMain: boolean }[] = [];
+    for (const rx of [MAIN_WORD, SIDE_WORD]) {
+        rx.lastIndex = 0;
+        for (let m = rx.exec(phrase); m; m = rx.exec(phrase)) facets.push({ at: m.index ?? 0, isMain: rx === MAIN_WORD });
+    }
+    if (!facets.length) return [{ text: phrase, isMain: baseMain, facet: false }];
+    facets.sort((a, b) => a.at - b.at);
+
+    const out: { text: string; isMain: boolean; facet: boolean }[] = [];
+    if (facets[0].at > 0) out.push({ text: phrase.slice(0, facets[0].at), isMain: baseMain, facet: false });
+    facets.forEach((f, i) => {
+        const end = facets[i + 1]?.at ?? phrase.length;
+        const text = phrase.slice(f.at, end).trim();
+        if (text) out.push({ text, isMain: f.isMain, facet: true });
+    });
+    return out;
+};
+
+/**
+ * Насколько догадке можно верить. Точный образец называет посвящение, короткая
+ * основа лишь совпадает буквами; главный престол назван прямее придельного, а
+ * «освящён» — описательнее обоих.
+ */
+const confidenceOf = (tier: "pattern" | "stem", isMain: boolean, kind: Claim["kind"]): number => {
+    let c = tier === "pattern" ? 0.8 : 0.5;
+    if (isMain) c += 0.05;
+    if (kind === "osvyash") c -= 0.05;
+    return Math.round(c * 100) / 100;
+};
+
+/**
+ * Престолы, названные на странице. Одинаковые посвящения сводятся, порядок —
+ * по первому упоминанию; главный остаётся один: названный таковым, а не то
+ * первый по тексту.
+ */
+export const thronesOfText = (text: string): PrestolGuess[] => {
+    const bySlug = new Map<string, PrestolGuess & { order: number }>();
+    let order = 0;
+    // Придельная помета без главной — не повод гадать: приход назвал только
+    // придел, а главный престол и так стоит в имени храма. Тогда ни одного
+    // главного здесь не ставим.
+    let sawSide = false;
+
+    for (const claim of claimsOf(text)) {
+        if (!claim.phrase) continue;
+        if (!claim.baseMain) sawSide = true;
+        for (const segment of segmentsOf(claim.phrase, claim.baseMain)) {
+            if (segment.facet && !segment.isMain) sawSide = true;
+            for (const hit of matchDedications(segment.text)) {
+                const d = hit.dedication;
+                const confidence = confidenceOf(hit.tier, segment.isMain, claim.kind);
+                const prev = bySlug.get(d.slug);
+                if (!prev) {
+                    bySlug.set(d.slug, {
+                        dedication: d.slug, label: d.label, kind: d.kind, isMain: segment.isMain,
+                        phrase: claim.phrase, tier: hit.tier, pattern: hit.pattern, confidence, order: order++,
+                    });
+                    continue;
+                }
+                // Повтор того же престола уточняет, а не размножает: главный он,
+                // если хоть где-то назван главным, а уверенность берём наибольшую.
+                prev.isMain = prev.isMain || segment.isMain;
+                if (hit.tier === "pattern") { prev.tier = "pattern"; prev.pattern = hit.pattern; }
+                prev.confidence = Math.max(prev.confidence, confidence);
+            }
+        }
+    }
+
+    const list = [...bySlug.values()].sort((a, b) => a.order - b.order);
+    const mainAt = list.findIndex((g) => g.isMain);
+    const main = mainAt >= 0 ? mainAt : sawSide ? -1 : 0;
+    return list.map((g, i) => {
+        const { order: _order, ...rest } = g;
+        return { ...rest, isMain: i === main };
+    });
+};

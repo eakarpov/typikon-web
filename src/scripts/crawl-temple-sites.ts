@@ -1,12 +1,12 @@
 import "@/scripts/lib/env";
-import { lookup } from "node:dns/promises";
 import { writeFileSync } from "node:fs";
 import clientPromise from "@/lib/mongodb";
 import { filterOf } from "@/lib/temples";
 import {
-    articlesOf, CRAWLER_UA, isPrivateAddress, isWorthReview, linksOf, mentionsOf, newsSections,
+    articlesOf, isWorthReview, linksOf, mentionsOf, newsSections,
     matchSaints, parseRobots, publishedOf, robotsAllows, siteOf, sitemapLocs, textOf, titleOf, type RobotsRules, type SaintRow,
 } from "@/lib/pilgrimage/crawl";
+import { createFetcher, Refused, type Fetched } from "@/lib/pilgrimage/net";
 import { loadSaintIndex, recentlyCrawled, recordCrawl, upsertCandidate, type CandidateInput } from "@/lib/pilgrimage/candidates";
 
 // Обходчик сайтов храмов: ищет новости о святынях и кладёт их кандидатами на
@@ -57,82 +57,13 @@ const JSON_OUT = arg("json");
 /** Только для проверки на своей машине: пускает к localhost и ни к каким иным частным адресам. */
 const ALLOW_LOCAL = flag("allow-local");
 
-const MAX_BYTES = 1_500_000;
-const TIMEOUT_MS = 15_000;
 const MAX_CRAWL_DELAY_S = 30;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// ── Сеть ─────────────────────────────────────────────────────────────────────
-
-class Refused extends Error {}
-
-const checkedHosts = new Map<string, boolean>();
-
-/** Хост разрешается и проверяется один раз: ни один из его адресов не должен быть частным. */
-const hostIsPublic = async (hostname: string): Promise<boolean> => {
-    if (ALLOW_LOCAL && (hostname === "localhost" || hostname === "127.0.0.1")) return true;
-    if (checkedHosts.has(hostname)) return checkedHosts.get(hostname)!;
-    let ok = false;
-    try {
-        const addrs = await lookup(hostname, { all: true });
-        ok = addrs.length > 0 && addrs.every((a) => !isPrivateAddress(a.address));
-    } catch { ok = false; }
-    checkedHosts.set(hostname, ok);
-    return ok;
-};
-
-/** Кодировка ответа: из заголовка, из <meta> в начале документа, иначе UTF-8. */
-const charsetOf = (contentType: string | null, head: Buffer): string => {
-    const fromHeader = /charset=([\w-]+)/i.exec(contentType ?? "")?.[1];
-    const fromMeta = /<meta[^>]+charset=["']?([\w-]+)/i.exec(head.toString("latin1"))?.[1];
-    const label = (fromHeader ?? fromMeta ?? "utf-8").toLowerCase();
-    try { new TextDecoder(label); return label; } catch { return "utf-8"; }
-};
-
-interface Fetched { url: URL; status: number; body: string; contentType: string }
-
-/**
- * Запрос с ручными перенаправлениями: каждый шаг проверяется так же, как
- * первый. Тело читается не больше MAX_BYTES — остальное обрывается.
- */
-const get = async (start: URL, accept = "text/html,application/xhtml+xml"): Promise<Fetched> => {
-    let url = start;
-    for (let hop = 0; hop < 5; hop++) {
-        if (url.protocol !== "http:" && url.protocol !== "https:") throw new Refused(`схема ${url.protocol}`);
-        if (url.port && !["80", "443", "8080"].includes(url.port) && !ALLOW_LOCAL) throw new Refused(`порт ${url.port}`);
-        if (!(await hostIsPublic(url.hostname))) throw new Refused(`частный или неразрешимый адрес: ${url.hostname}`);
-
-        const res = await fetch(url, {
-            redirect: "manual",
-            signal: AbortSignal.timeout(TIMEOUT_MS),
-            headers: { "User-Agent": CRAWLER_UA, Accept: accept, "Accept-Language": "ru,en;q=0.5" },
-        });
-        if (res.status >= 300 && res.status < 400 && res.headers.get("location")) {
-            url = new URL(res.headers.get("location")!, url);
-            await res.body?.cancel();
-            continue;
-        }
-
-        const chunks: Buffer[] = [];
-        let size = 0;
-        if (res.body) {
-            const reader = res.body.getReader();
-            for (;;) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                chunks.push(Buffer.from(value));
-                size += value.length;
-                if (size >= MAX_BYTES) { await reader.cancel(); break; }
-            }
-        }
-        const raw = Buffer.concat(chunks);
-        const contentType = res.headers.get("content-type") ?? "";
-        const body = new TextDecoder(charsetOf(contentType, raw.subarray(0, 2048))).decode(raw);
-        return { url, status: res.status, body, contentType };
-    }
-    throw new Refused("слишком много перенаправлений");
-};
+// Сеть, вежливость и безопасность — в @/lib/pilgrimage/net: ими пользуется и
+// обходчик престолов, а двум похожим копиям однажды разойтись.
+const { get } = createFetcher({ allowLocal: ALLOW_LOCAL });
 
 // ── Сайт ─────────────────────────────────────────────────────────────────────
 
