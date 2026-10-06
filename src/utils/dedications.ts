@@ -1397,7 +1397,7 @@ export const DEDICATION_STEMS: [RegExp, string][] = [
     [/знамени[яе]/, "ikona-znamenie"],
     [/михаил/, "arhangel-mihail"],
     [/георги/, "georgiy-pobedonosec"],
-    [/(?:димитри|дмитри)(?!я ростовск)/, "dimitriy-solunsky"],
+    [/(?:димитри|дмитри)(?!я[^.\n]{0,30}ростовск)/, "dimitriy-solunsky"],
     [/серги/, "sergiy-radonezhsky"],
     [/серафим/, "serafim-sarovsky"],
     [/илии|ильи/, "ilia-prorok"],
