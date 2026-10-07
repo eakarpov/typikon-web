@@ -106,6 +106,7 @@
     "relics:crawl": "tsx src/scripts/crawl-temple-sites.ts",
     "temples:crawl-prestoly": "tsx src/scripts/crawl-temple-prestoly.ts",
     "temples:import-sobory": "tsx src/scripts/import-temples-sobory.ts",
+    "temples:approve": "tsx src/scripts/approve-temple-prestoly.ts",
     "relics:azbyka": "tsx src/scripts/import-azbyka-relics.ts",
     "relics:reconcile": "tsx src/scripts/reconcile-relics-prestoly.ts",
     "saints:memories": "tsx src/scripts/import-memory-saints.ts",
