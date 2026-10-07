@@ -22,8 +22,9 @@
 //   npm run temples:approve                                  # показать
 //   npm run temples:approve -- --write
 //   npm run temples:approve -- --min-confidence 0.85 --source sobory
+//   npm run temples:approve -- --revert --write        # вернуть принятое машиной
 // Ключи: --min-confidence 0.7, --source sobory,site,name,name-secondary,
-//        --json файл.json
+//        --revert, --json файл.json
 import "@/scripts/lib/env";
 import { writeFileSync } from "node:fs";
 import clientPromise from "@/lib/mongodb";
@@ -38,7 +39,10 @@ const MIN = Number(arg("min-confidence", "0.7"));
 const SOURCES = arg("source", "").split(",").map((s) => s.trim()).filter(Boolean);
 const JSON_OUT = arg("json", "");
 const WRITE = flag("write");
+const REVERT = flag("revert");
 const TAG = `auto:${MIN}`;
+
+const sourceIn = SOURCES.length ? { $in: SOURCES } : undefined;
 
 const main = async () => {
     if (!Number.isFinite(MIN)) {
@@ -48,6 +52,47 @@ const main = async () => {
 
     const client = await clientPromise;
     const temples = client.db("typikon").collection("temples");
+
+    // Откат машинного принятия: вернуть на разбор то, что принято этой меткой.
+    if (REVERT) {
+        const rows = await temples.aggregate([
+            { $unwind: "$prestoly" },
+            {
+                $match: {
+                    "prestoly.status": "approved",
+                    "prestoly.approvedBy": TAG,
+                    ...(SOURCES.length ? { "prestoly.source": { $in: SOURCES } } : {}),
+                },
+            },
+            { $group: { _id: "$prestoly.source", n: { $sum: 1 } } },
+            { $sort: { n: -1 } },
+        ], { allowDiskUse: true }).toArray();
+        const total = rows.reduce((n, r) => n + r.n, 0);
+        console.log(`откат метки «${TAG}»${SOURCES.length ? `; источники: ${SOURCES.join(", ")}` : ""}:`);
+        for (const r of rows as any[]) console.log(`  ${String(r.n).padStart(6)}  ${r._id ?? "—"}`);
+        console.log(`итого престолов к возврату: ${total}`);
+
+        if (!WRITE) {
+            console.log("\nхолостой прогон — ничего не пишется (--write чтобы откатить)");
+            await client.close();
+            return;
+        }
+        const elem: any = { status: "approved", approvedBy: TAG };
+        if (sourceIn) elem.source = sourceIn;
+        const res = await temples.updateMany(
+            { prestoly: { $elemMatch: elem } },
+            {
+                $set: { "prestoly.$[p].status": "pending" },
+                $unset: {
+                    "prestoly.$[p].approvedBy": "", "prestoly.$[p].approvedAt": "", "prestoly.$[p].reviewedAt": "",
+                },
+            },
+            { arrayFilters: [{ "p.status": "approved", "p.approvedBy": TAG, ...(sourceIn ? { "p.source": sourceIn } : {}) }] },
+        );
+        console.log(`\nвозвращено на разбор: ${total} (храмов затронуто: ${res.modifiedCount})`);
+        await client.close();
+        return;
+    }
 
     // Что будет взято: считаем по самим престолам, а не по храмам.
     const rows = await temples.aggregate([
