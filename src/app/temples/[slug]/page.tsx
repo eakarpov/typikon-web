@@ -106,7 +106,9 @@ const TemplePage = async ({ params }: { params: { slug: string } }) => {
                         <p className="font-serif text-sm text-slate-500">
                             {prestol.evidence ? (
                                 <>
-                                    Престол найден на сайте прихода и не выверен —{" "}
+                                    {prestol.source === "sobory"
+                                        ? "Престол взят из «Соборов.ру» и не выверен — "
+                                        : "Престол найден на сайте прихода и не выверен — "}
                                     <a href={prestol.evidence.url} className="underline" target="_blank" rel="nofollow noopener">
                                         источник
                                     </a>.
