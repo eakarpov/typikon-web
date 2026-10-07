@@ -1,11 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { thronesOfText } from "./prestoly";
+import { thronesOfSobory, thronesOfText } from "./prestoly";
 import { textOf } from "./crawl";
 
 /** Ключи престолов; звёздочкой помечен главный. */
 const slugs = (text: string) =>
     thronesOfText(text).map((g) => `${g.dedication}${g.isMain ? "*" : ""}`);
+
+/** То же для разбора поля Соборов.ру. */
+const soborySlugs = (html: string) =>
+    thronesOfSobory(html).map((g) => `${g.dedication}${g.isMain ? "*" : ""}`);
 
 test("перечень престолов: главный первый, придел за ним", () => {
     assert.deepEqual(
@@ -90,4 +94,32 @@ test("проза о вере престолов не выдумывает", () =
     assert.deepEqual(slugs("Священник читает три молитвы; совершается освящение артоса."), []);
     assert.deepEqual(slugs("Он обратился к собравшимся со словом, посвящённым святому Николаю."), []);
     assert.deepEqual(slugs("Священники окропили крестоходцев святой водой."), []);
+});
+
+test("Соборы.ру: престолы берутся из явного поля, а не из прозы", () => {
+    const html = `<dl class="hero_attribs">`
+        + `<dt>Престолы:</dt><dd><strong><a href="/mapsearch/?altar=208">Петра и Павла</a></strong></dd>`
+        + `<dt>Епархия:</dt><dd>Пермская митрополия</dd></dl>`;
+    assert.deepEqual(soborySlugs(html), ["petr-i-pavel*"]);
+});
+
+test("Соборы.ру: «Борисоглебская епархия» рядом престолом не становится", () => {
+    // Разбор прозы на такой странице дал бы ложного Бориса и Глеба: поля
+    // «Епархия» и «Адрес» лежат вплотную к престолам.
+    const html = `<dt>Престолы:</dt><dd><strong><a href="/mapsearch/?altar=1">Николая Чудотворца</a></strong></dd>`
+        + `<dt>Епархия:</dt><dd>Борисоглебская епархия</dd>`;
+    assert.deepEqual(soborySlugs(html), ["nikolay-chudotvorec*"]);
+});
+
+test("Соборы.ру: несколько престолов, главный — первый выписанный", () => {
+    const html = `<dt>Престолы:</dt><dd>`
+        + `<strong><a href="/mapsearch/?altar=1">Михаила Архангела</a></strong>, `
+        + `<strong><a href="/mapsearch/?altar=2">Николая Чудотворца</a></strong>, `
+        + `<strong><a href="/mapsearch/?altar=3">Параскевы Иконийской</a></strong>`
+        + `</dd>`;
+    assert.deepEqual(soborySlugs(html), ["arhangel-mihail*", "nikolay-chudotvorec", "paraskeva-pyatnica"]);
+});
+
+test("Соборы.ру: без поля «Престолы» ничего не выдумывается", () => {
+    assert.deepEqual(soborySlugs(`<dt>Адрес:</dt><dd>Пермь, Егошихинский завод</dd>`), []);
 });

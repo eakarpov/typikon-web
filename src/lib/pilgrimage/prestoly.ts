@@ -249,3 +249,61 @@ export const thronesOfText = (text: string): PrestolGuess[] => {
         return { ...rest, isMain: i === main };
     });
 };
+
+/** Текст узла без тегов: только слова — для полей Соборов.ру. */
+const stripTags = (html: string): string => html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&mdash;|&#8212;/gi, "—")
+    .replace(/&laquo;/gi, "«")
+    .replace(/&raquo;/gi, "»")
+    .replace(/&quot;/gi, '"')
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * Престолы со страницы объекта Соборов.ру. Здесь они выписаны ЯВНЫМ ПОЛЕМ
+ * («Престолы:» в списке свойств), а не в прозе, и каждое имя стоит ссылкой на
+ * свою метку. Разбор прозы тут не только не нужен, но и вреден: рядом лежат
+ * «Епархия» и «Адрес», и «Борисоглебская епархия» дала бы ложного Бориса и
+ * Глеба. Условия «Соборов.ру» касаются снимков и требуют ссылки, отдельный же
+ * факт-престол ничей (@/utils/templeSources, правило «facts»).
+ *
+ * Главным считается первый выписанный престол: Соборы.ру держат этот порядок.
+ */
+export const thronesOfSobory = (html: string): PrestolGuess[] => {
+    const field = /<dt>\s*Престолы:?\s*<\/dt>\s*<dd>([\s\S]*?)<\/dd>/i.exec(html)?.[1];
+    if (!field) return [];
+
+    // Имена престолов — ссылки на метки (/mapsearch/?altar=NNN). Если ссылок
+    // нет, берём текст поля: он перечисляет те же имена через запятую.
+    const items: string[] = [];
+    for (const m of field.matchAll(/<a\b[^>]*href=["'][^"']*altar=[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+        items.push(m[1]);
+    }
+    if (!items.length) items.push(...field.split(/[,;]/));
+
+    const out: PrestolGuess[] = [];
+    let mainTaken = false;
+    for (const raw of items) {
+        const text = stripTags(raw);
+        if (!text) continue;
+        for (const hit of matchDedications(text)) {
+            if (out.some((g) => g.dedication === hit.dedication.slug)) continue;
+            const isMain = !mainTaken;
+            if (isMain) mainTaken = true;
+            out.push({
+                dedication: hit.dedication.slug,
+                label: hit.dedication.label,
+                kind: hit.dedication.kind,
+                isMain,
+                phrase: text,
+                tier: hit.tier,
+                pattern: hit.pattern,
+                confidence: confidenceOf(hit.tier, isMain, "prestol"),
+            });
+        }
+    }
+    return out;
+};

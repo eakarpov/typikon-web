@@ -7,7 +7,7 @@ import {
 } from "@/lib/pilgrimage/crawl";
 import { TEMPLE_SOURCES } from "@/utils/templeSources";
 import { createFetcher, Refused, type Fetched } from "@/lib/pilgrimage/net";
-import { thronesOfText, type PrestolGuess } from "@/lib/pilgrimage/prestoly";
+import { thronesOfSobory, thronesOfText, type PrestolGuess } from "@/lib/pilgrimage/prestoly";
 
 // Обходчик сайтов храмов: читает рассказ прихода о себе и выписывает ПРЕСТОЛЫ,
 // которых не назвало имя храма. Найденное ложится престолом со статусом
@@ -55,13 +55,19 @@ const ALLOW_LOCAL = flag("allow-local");
 
 const MAX_CRAWL_DELAY_S = 30;
 
-// Своды с условием «только ссылка» (sobory.ru, temples.ru, days.pravoslavie.ru)
-// обходить нельзя: там чужой труд, и мы даём на них ссылку, а не берём данные.
+// Своды с условием «только ссылка» (temples.ru, days.pravoslavie.ru) обходить
+// нельзя: там чужой труд, и мы даём на них ссылку, а не берём данные. «Соборы.ру»
+// идут по правилу «facts»: их престолы читаем, но со ссылкой и без текстов статей.
 const LINK_ONLY_HOSTS = new Set(
     TEMPLE_SOURCES.filter((s) => s.policy === "link" && s.url).map((s) => {
         try { return new URL(s.url).hostname.replace(/^www\./, ""); } catch { return ""; }
     }).filter(Boolean),
 );
+
+// У Соборов.ру престолы выписаны явным полем, а не в прозе: рядом лежат
+// «Епархия» и «Адрес», и «Борисоглебская епархия» дала бы ложного Бориса и
+// Глеба. Поэтому их страницы разбирает свой разбор (правило «facts»).
+const STRUCTURED_HOSTS = new Set(["sobory.ru"]);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -127,7 +133,13 @@ const crawlSite = async (site: Site): Promise<SiteResult> => {
         }
     };
 
-    const examine = (page: Fetched) => mergeFound(found, thronesOfText(textOf(page.body)), page.url.href);
+    const examine = (page: Fetched) => {
+        const host = page.url.hostname.replace(/^www\./, "");
+        const guesses = STRUCTURED_HOSTS.has(host)
+            ? thronesOfSobory(page.body)
+            : thronesOfText(textOf(page.body));
+        mergeFound(found, guesses, page.url.href);
+    };
 
     const home = await fetchPage(site.home.href);
     if (!home) return { ...result, outcome: "error", note: "главная не открылась" };
@@ -135,6 +147,15 @@ const crawlSite = async (site: Site): Promise<SiteResult> => {
     // платформы, карту храмов). Это уже не сайт храма: разбирать там нечего.
     if (!sameSite(home.url, site.home)) {
         return { ...result, outcome: "refused", note: `перенаправление на чужой хост: ${home.url.hostname}` };
+    }
+
+    // Свод с явным полем престолов (Соборы.ру) читаем одной страницей: у него в
+    // /article/ стоят тысячи чужих храмов, и переходы по ссылкам увели бы туда.
+    // Престолы выписаны здесь же, полем — и разбираются без прозы.
+    if (STRUCTURED_HOSTS.has(home.url.hostname.replace(/^www\./, ""))) {
+        examine(home);
+        result.thrones = [...found.values()];
+        return result;
     }
 
     const links = linksOf(home.body, home.url);
@@ -184,7 +205,7 @@ const main = async () => {
         if (!home) { skippedSocial++; continue; }
         if (LINK_ONLY_HOSTS.has(home.hostname.replace(/^www\./, ""))) { skippedLink++; continue; }
         if (ONLY_SITE && siteOf(ONLY_SITE)?.hostname.replace(/^www\./, "") !== home.hostname.replace(/^www\./, "")) continue;
-        const key = home.hostname.replace(/^www\./, "") + home.pathname.replace(/\/+$/, "");
+        const key = home.hostname.replace(/^www\./, "") + home.pathname.replace(/\/+$/, "") + home.search;
         const site: Site = sites.get(key) ?? { key, home, templeSlugs: [], country: t.country ?? null, gap: 99 };
         site.templeSlugs.push(t.slug);
         // Чего у храма меньше всего — то и обходим первым: у храма без престола
