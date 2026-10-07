@@ -21,7 +21,8 @@
 // не знает, пропускаются — заводить их надо в словаре, а не здесь.
 //
 // НАЙДЕННОЕ — НЕ ФАКТ. Всё ложится престолом со статусом `pending`, источником
-// `sobory` и ссылкой на объект. Выверенное человеком (`approved`) не трогается.
+// `sobory` и ссылкой на объект. Уже стоящие престолы (в том числе выверенные и
+// отклонённые человеком) не переписываются: дописываются только недостающие.
 //
 // Запуск:
 //   npm run temples:import-sobory                 # только показать
@@ -164,7 +165,6 @@ const main = async () => {
     const gains: Gain[] = [];
     for (const d of docs as any[]) {
         const existing = d.prestoly ?? [];
-        if (existing.some((p: any) => p.status === "approved")) continue;
         const own = new Set<string>(existing.map((p: any) => p.dedication));
         const parsed = matchDedication(d.name)?.dedication.slug;
         if (parsed) own.add(parsed);
@@ -200,7 +200,8 @@ const main = async () => {
         const t = await temples.findOne({ slug: g.slug }, { projection: { prestoly: 1 } });
         if (!t) continue;
         const existing = t.prestoly ?? [];
-        if (existing.some((p: any) => p.status === "approved")) continue;
+        // Уже стоящие престолы (в том числе выверенные и отклонённые) хранит
+        // `have`: дописываем только недостающие, ничего не переписывая.
         const have = new Set(existing.map((p: any) => p.dedication));
         let hasMain = existing.some((p: any) => p.isMain);
         const now = new Date();

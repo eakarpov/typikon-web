@@ -80,19 +80,20 @@ const main = async () => {
     const all = await temples.find({}, { projection: { slug: 1, name: 1, kind: 1, prestoly: 1 } }).toArray();
     console.log(`храмов в каталоге: ${all.length}`);
 
-    let matched = 0, foreign = 0, silent = 0, kept = 0, notTemple = 0, ambiguous = 0;
+    let matched = 0, foreign = 0, silent = 0, notTemple = 0, ambiguous = 0;
     const counts = new Map<string, number>();
     const unmatched: string[] = [];
 
     for (const t of all as any[]) {
-        // Уже разобранное человеком не трогаем: правка руками старше догадки.
-        if ((t.prestoly ?? []).some((p: any) => p.status === "approved")) { kept++; continue; }
         if (t.kind === "not-temple") { notTemple++; continue; }
 
         const text = normalizeTempleName(t.name ?? "");
         if (NOT_ORTHODOX.test(text) || NOT_ORTHODOX_DEDICATION.test(text)) {
             foreign++;
-            if (write) await temples.updateOne({ _id: t._id }, { $set: { orthodox: false, prestoly: [] } });
+            // Инославность имени не отменяет слова человека: если престол им всё
+            // же выверен или отклонён, запись храним, а не стираем вслед за именем.
+            const reviewed = (t.prestoly ?? []).some((p: any) => p.status === "approved" || p.status === "rejected");
+            if (write) await temples.updateOne({ _id: t._id }, { $set: { orthodox: false, ...(reviewed ? {} : { prestoly: [] }) } });
             continue;
         }
 
@@ -127,16 +128,25 @@ const main = async () => {
             };
         });
 
-        // Из имени разбор переписывается целиком — он и пересчитан. А находки
-        // из других источников (сайт прихода, рука человека) именем не
-        // отменяются: их сохраняем, и общий престол берёт один — первый.
-        const bySlug = new Map(nameDerived.map((p: any) => [p.dedication, p]));
+        // Сводим три рода записей, и человек в них старше машины. Выверенное и
+        // отклонённое им остаётся как есть — чем бы оно ни было найдено: это его
+        // слово, и повторный разбор его не отменяет. Имя разбирается заново, но
+        // там, где человек уже сказал своё, его слово перевешивает. Наконец,
+        // не тронутые находки обхода (сайт прихода, собор) переживают переразбор
+        // имени: имя их не называло и отменять не вправе.
+        const merged = new Map<string, any>();
+        for (const p of (t.prestoly ?? []) as any[]) {
+            if (p.status === "approved" || p.status === "rejected") merged.set(p.dedication, p);
+        }
+        for (const p of nameDerived) {
+            if (!merged.has(p.dedication)) merged.set(p.dedication, p);
+        }
         for (const p of (t.prestoly ?? []) as any[]) {
             if (p.source === "name" || p.source === "name-secondary") continue;
-            if (!bySlug.has(p.dedication)) bySlug.set(p.dedication, p);
+            if (!merged.has(p.dedication)) merged.set(p.dedication, p);
         }
         let mainSeen = false;
-        const prestoly = [...bySlug.values()].map((p: any) => {
+        const prestoly = [...merged.values()].map((p: any) => {
             if (!p.isMain) return p;
             if (mainSeen) return { ...p, isMain: false };
             mainSeen = true;
@@ -152,7 +162,7 @@ const main = async () => {
     }
 
     console.log(`  разобрано: ${matched}; молчит словарь: ${silent}; инославных: ${foreign}` +
-        `; не храмы: ${notTemple}; оставлено как выверено руками: ${kept}`);
+        `; не храмы: ${notTemple}`);
     const base = matched + silent;
     if (base) console.log(`  доля разобранных среди православных: ${Math.round(matched * 100 / base)}%`);
     console.log(`  имя называет больше одного престола: ${ambiguous}`);
