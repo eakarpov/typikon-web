@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DEDICATIONS, DEDICATION_STEMS, matchDedication, matchDedications, normalizeTempleName } from "@/utils/dedications";
+import { DEDICATIONS, DEDICATION_STEMS, matchAllDedications, matchDedication, matchDedications, normalizeTempleName } from "@/utils/dedications";
 
 const slugOf = (name: string) => matchDedication(name)?.dedication.slug ?? null;
 
@@ -183,4 +183,38 @@ test("Тихон Патриарх и Иннокентий Вениаминов �
     assert.deepEqual(
         matchDedications("Церковь Иннокентия, митрополита Московского").map((m) => m.dedication.slug),
         ["innokentiy-veniaminov"]);
+});
+
+test("частые метки Соборы.ру разбираются", () => {
+    // Порядок слов в метке обратный привычному: «Духа Святого Сошествия» —
+    // тот же Духов день, что и «Сошествия Святого Духа».
+    assert.equal(slugOf("Духа Святого Сошествия"), "duh-svyatoy");
+    assert.equal(slugOf("Церковь Анны Праведной"), "anna-pravednaya");
+    assert.equal(slugOf("Церковь Нины равноапостольной"), "nina-ravnoapostolnaya");
+    assert.equal(slugOf("Церковь Василия Московского (Блаженного)"), "vasiliy-blazhenny");
+    assert.equal(slugOf("Церковь Константина равноапостольного"), "konstantin-i-elena");
+    assert.equal(slugOf("Церковь Феодосия Печерского"), "antoniy-i-feodosiy-pecherskie");
+    // «Луки (Войно-Ясенецкого)»: в скобках стоит прозвание, а не место, и
+    // одиночный выбор скобки не читает — видит его лишь полный разбор.
+    assert.deepEqual(
+        matchAllDedications("Храм Луки (Войно-Ясенецкого)").map((m) => m.dedication.slug),
+        ["luka-krymsky"]);
+});
+
+test("новые посвящения словаря читаются", () => {
+    assert.equal(slugOf("Церковь Харалампия"), "haralampiy");
+    assert.equal(slugOf("Церковь Гавриила Архангела"), "arhangel-gavriil");
+    assert.equal(slugOf("Церковь Адриана и Наталии"), "adrian-i-natalya");
+    assert.equal(slugOf("Церковь Луки Евангелиста"), "luka-evangelist");
+    assert.equal(slugOf("Часовня Антипы Пергамского"), "antipa-pergamsky");
+    assert.equal(slugOf("Церковь Тамары Грузинской"), "tamara-gruzinskaya");
+    // «Похвалы Пресвятой Богородицы»: одиночный выбор уступает общей
+    // Богородице, а множественный (им и живёт привоз свода) отбрасывает
+    // общее в пользу частного.
+    assert.deepEqual(
+        matchDedications("Церковь Похвалы Пресвятой Богородицы").map((m) => m.dedication.slug),
+        ["pohvala-bogorodicy"]);
+    // Великая княгиня и преподобная Елисавета-чудотворица — разные лица.
+    assert.equal(slugOf("Церковь Елисаветы Феодоровны"), "elisaveta-feodorovna");
+    assert.equal(slugOf("Церковь Преподобной Елисаветы"), "elisaveta-prepodobnaya");
 });
