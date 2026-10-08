@@ -1112,7 +1112,7 @@ export const DEDICATIONS: Dedication[] = [
         short: "Иоанн Кронштадтский",
         kind: "svyatogo",
         patterns: [/кронштадтск/],
-        feasts: [{ month: 12, day: 20, note: "преставление" }, { month: 10, day: 19, note: "прославление" }],
+        feasts: [{ month: 12, day: 20, note: "преставление" }],
         canonized: 1990,
         expect: "кронштадт",
     },
@@ -1529,7 +1529,7 @@ export const DEDICATIONS: Dedication[] = [
         short: "Курская Коренная",
         kind: "bogorodichen",
         patterns: [/курск(ой|ая) коренн/, /коренн(ой|ая) пустын/],
-        feasts: [{ month: 11, day: 27 }],
+        feasts: [{ month: 9, day: 8 }, { month: 3, day: 8 }],
         expect: "коренн",
     },
     {
@@ -1584,7 +1584,7 @@ export const DEDICATIONS: Dedication[] = [
         kind: "svyatogo",
         patterns: [/кирика и иулитты/, /кирика/],
         feasts: [{ month: 7, day: 15 }],
-        expect: "кирика",
+        expect: "кирик",
     },
     {
         slug: "iakov-apostol",
