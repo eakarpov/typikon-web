@@ -62,7 +62,10 @@ rm -f ordo.zip
 # сборка на ходу (src/address.py, formula.py, memory_address.py), и без них
 # службы с памятями падали на сервере FileNotFoundError. Остальной spec/ —
 # текст спецификации, службе он не нужен.
-(cd "$RULES_SRC" && zip -rX - src rules spec/registry "${PSALTER[@]}" \
+# VERSION — номер версии: служба читает его один раз на старте и отдаёт
+# в /health и заголовке X-Ordo-Version. Без файла она смиренно называется
+# 0.0.0, и контроль не отличит свежую выкладку от прежней.
+(cd "$RULES_SRC" && zip -rX - src rules spec/registry VERSION "${PSALTER[@]}" \
     --exclude 'src/__pycache__/*' 'src/data.db' 'src/viewer/*') > ordo.zip
 echo "поехало: $(du -h ordo.zip | cut -f1)"
 
