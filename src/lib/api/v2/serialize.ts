@@ -183,7 +183,7 @@ export const incipitDetail = (found: any) => ({
 });
 
 /** Текст в списке — без тела: именно оно раздувало ответы v1 до сотни килобайт. */
-export const textSummary = (doc: any) => ({
+export const textSummary = (doc: any, roundelUrl: string | null = null) => ({
     id: id(doc._id ?? doc.id),
     alias: doc.alias || null,
     name: doc.name ?? "",
@@ -196,6 +196,11 @@ export const textSummary = (doc: any) => ({
     bookId: id(doc.bookId),
     bookIndex: doc.bookIndex ?? null,
     dneslovId: doc.dneslovId || null,
+    /**
+     * Кругляш связанного святого. Чужой файл с CDN святцев; опускается, если
+     * текст не привязан к святому или у записи кругляш не заведён.
+     */
+    ...(roundelUrl ? { roundelUrl } : {}),
     updatedAt: iso(doc.updatedAt),
 });
 
@@ -209,8 +214,8 @@ export const textSummary = (doc: any) => ({
  * переключателя быть не должно вовсе. Спросив об этом отдельной ручкой, клиент
  * узнавал бы ответ уже после того, как нарисовал кнопку.
  */
-export const textDetail = (doc: any, coverage: { need: number; has: number } | null = null) => ({
-    ...textSummary(doc),
+export const textDetail = (doc: any, coverage: { need: number; has: number } | null = null, roundelUrl: string | null = null) => ({
+    ...textSummary(doc, roundelUrl),
     accents: coverage ? { need: coverage.need, has: coverage.has } : null,
     content: doc.content ?? "",
     start: doc.start || null,
@@ -379,6 +384,18 @@ export const memory = (item: any) => ({
     name: item.name ?? "",
     sign: item.sign ?? null,
     signConditional: Boolean(item.signConditional),
+});
+
+/** Святой в списке дня: адрес, имя и — если заведён — кругляш. */
+export const daySaint = (saint: any) => ({
+    slug: saint.slug ?? null,
+    name: saint.name ?? null,
+    /**
+     * Чужой файл с CDN святцев. Опускается, если у записи кругляш не заведён:
+     * отличие «нет картинки» от «поля не существует» клиенту здесь ни к чему,
+     * рисуют по наличию.
+     */
+    ...(saint.roundelUrl ? { roundelUrl: saint.roundelUrl } : {}),
 });
 
 /**
@@ -683,8 +700,8 @@ export const saintDossier = (saint: any, parts: any) => ({
     externals: (saint.externals ?? []).map((e: any) => ({ source: e.source, id: String(e.id) })),
 
     memories: (parts.memories ?? []).map(saintMemoryRow),
-    texts: (parts.texts ?? []).map(textSummary),
-    mentions: (parts.mentions ?? []).map(textSummary),
+    texts: (parts.texts ?? []).map((doc: any) => textSummary(doc)),
+    mentions: (parts.mentions ?? []).map((doc: any) => textSummary(doc)),
     /**
      * `null` — корпус певческих текстов на этом сервере не выложен, и акафисты
      * мы не смотрели вовсе. `[]` — смотрели и не нашли. Разница та же, что между
@@ -703,6 +720,48 @@ export const saintDossier = (saint: any, parts: any) => ({
     caveat: "Пустой раздел чаще значит, что связь ещё не проставлена, чем что её нет: "
         + "памяти, посвящения и акафисты сверяются вручную, и выверена пока меньшая часть.",
 });
+
+// --- Житие святого -----------------------------------------------------------
+//
+// Со святцев dneslov.org — снимком из нашей базы или, если снимка нет, живым
+// запросом. Житие у них одно на память, и идёт оно под первым номером записи.
+
+const saintLifeMemo = (memo: any) => ({
+    title: memo.title ?? null,
+    /** Когда случилось событие, как пишут сами святцы («ок. 300», «27.11.1731»). */
+    happenedAt: memo.happened_at ?? null,
+    /** Текст жития в markdown — именно то, что клиент показывает как чтение. */
+    description: typeof memo.description === "string" ? memo.description : "",
+});
+
+const saintLifeLink = (link: any) => ({
+    id: link.id ?? null,
+    url: link.url ?? null,
+});
+
+/**
+ * Житие из подробностей памяти святцев (их `{slug}.json`, снятый или живой).
+ *
+ * Мемуары без описания опускаются: заголовок без текста жития не несёт, а первый
+ * мемуар клиент печатает как чтение — пустым он быть не должен. Если описания
+ * нет ни у одного, жития в каталоге нет, и это null, а не пустой ответ: ручка
+ * честно ответит 404.
+ */
+export const saintLife = (details: any) => {
+    const memoes = ((details?.memoes ?? []) as any[])
+        .map(saintLifeMemo)
+        .filter((memo) => memo.description.trim().length > 0);
+    if (!memoes.length) return null;
+
+    return {
+        slug: details?.slug ?? null,
+        source: "dneslov",
+        memoes,
+        links: (details?.links ?? [])
+            .filter((link: any) => link?.url)
+            .map(saintLifeLink),
+    };
+};
 
 // --- Помянник ----------------------------------------------------------------
 //

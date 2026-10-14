@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { textDetail } from "@/lib/api/v2/serialize";
+import { saintRoundels } from "@/lib/saints";
 import { cached, CacheTag } from "@/lib/cache";
 import { coverageFor } from "@/lib/accents/store";
 import {reportError} from "@/lib/reportError";
@@ -65,7 +66,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
         // Покрытие ударениями — чтобы клиент знал заранее, предлагать ли показ
         // с ними. Ошибка здесь не повод не отдать текст: `coverageFor` глушит
         // свои сами и возвращает null.
-        return respond(textDetail(doc, await coverageFor(doc.alias)), { access });
+        // Кругляш связанного святого — чужой файл с CDN святцев; у текста без
+        // dneslovId или у святого без кругляша поля в ответе нет.
+        const [coverage, roundels] = await Promise.all([
+            coverageFor(doc.alias),
+            saintRoundels(doc.dneslovId ? [String(doc.dneslovId)] : []),
+        ]);
+
+        return respond(
+            textDetail(doc, coverage, doc.dneslovId ? roundels[String(doc.dneslovId)] ?? null : null),
+            { access },
+        );
     } catch (e) {
         reportError(e, { where: "app/api/v2/texts/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось получить текст");

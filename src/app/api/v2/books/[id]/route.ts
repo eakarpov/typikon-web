@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
         return respond({
             ...book(doc),
-            texts: { items: texts.map(textSummary), total, limit, offset },
+            texts: { items: texts.map((doc: any) => textSummary(doc)), total, limit, offset },
         }, { access });
     } catch (e) {
         reportError(e, { where: "app/api/v2/books/[id]/route#GET", source: "api" });

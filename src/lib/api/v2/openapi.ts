@@ -163,6 +163,27 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/CalendarDay") },
             },
         },
+        "/api/v2/calendar/{date}/saints": {
+            get: {
+                tags: ["Календарь"],
+                summary: "Святые дня",
+                description:
+                    "Святые нашего каталога, привязанные к памятям Минеи на этот день. "
+                    + "Дата гражданская (YYYY-MM-DD), выборка идёт по церковной паре "
+                    + "месяц+число ст. ст.\n\n"
+                    + "Список строится по связкам «память → святой», выверенным человеком, "
+                    + "а выверена меньшая часть: пустой список чаще значит «связь ещё не "
+                    + "проставлена», чем «святых нет». Иконы, святыни, места и храмы в список "
+                    + "не входят — это список лиц.",
+                parameters: [
+                    { name: "date", in: "path", required: true, schema: { type: "string", format: "date" }, example: "2026-04-12" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/CalendarSaints"),
+                    "400": errorResponse("Дата указана неверно"),
+                },
+            },
+        },
         "/api/v2/texts": {
             get: {
                 tags: ["Тексты"],
@@ -1045,6 +1066,30 @@ export const openapi = () => ({
                     "200": ok("#/components/schemas/SaintDossier"),
                     "400": errorResponse("Адрес не указан или закодирован неверно"),
                     "404": errorResponse("Такого святого в каталоге нет"),
+                },
+            },
+        },
+        "/api/v2/saints/dossier/{address}/life": {
+            get: {
+                tags: ["Справочники"],
+                summary: "Житие святого",
+                description:
+                    "Житие и внешние ссылки со святцев dneslov.org — ручкой рядом с досье, "
+                    + "а не полем его: сведения сторонние, и когда dneslov.org молчит, имя, "
+                    + "дни памяти и тексты досье должны остаться целыми.\n\n"
+                    + "Сначала смотрится наш снимок святцев — он отвечает из нашей базы, даже "
+                    + "когда dneslov.org лежит; сеть — догрузка для памятей, которых снимок ещё "
+                    + "не застал. Текст жития — markdown в description; slug — их собственный, "
+                    + "им открывается карточка на dneslov.org.\n\n"
+                    + "404 бывает трёх родов: святого в каталоге нет, у записи нет номера "
+                    + "святцев (жить ей не от чего) или жития в каталоге святцев нет.",
+                parameters: [
+                    { name: "address", in: "path", required: true, schema: { type: "string" }, example: "zahariya-i-elisaveta" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/SaintLife"),
+                    "400": errorResponse("Адрес не указан или закодирован неверно"),
+                    "404": errorResponse("Святого нет, у записи нет номера святцев или житие в каталоге отсутствует"),
                 },
             },
         },
@@ -2136,10 +2181,12 @@ export const openapi = () => ({
                     author: { type: ["string", "null"] },
                     translator: { type: ["string", "null"] },
                     type: { type: ["string", "null"] },
+                    contentType: { type: ["string", "null"], description: "Набранный вид: text, poems" },
                     readiness: { type: ["string", "null"], description: "ready — вычитан; presence — есть только скан" },
                     bookId: { type: ["string", "null"] },
                     bookIndex: { type: ["integer", "null"] },
                     dneslovId: { type: ["string", "null"] },
+                    roundelUrl: { type: "string", description: "Кругляш связанного святого — чужой файл с CDN святцев; опущен, если не заведён" },
                     updatedAt: { type: ["string", "null"], format: "date-time" },
                 },
             },
@@ -2150,12 +2197,21 @@ export const openapi = () => ({
                         type: "object",
                         properties: {
                             content: { type: "string", description: "Тело текста. Абзацы разделены двумя переводами строки" },
+                            start: { type: ["string", "null"], description: "Строка-затравка, как напечатана книгой" },
+                            startPhrase: { type: ["string", "null"] },
+                            initialPriestExclamation: { type: ["string", "null"], description: "Первоначальное возглашение священника, если книга его печатает" },
                             poems: { type: ["string", "null"] },
                             footnotes: { type: "array", items: { type: "object" } },
+                            quotes: { type: "array", items: { type: "object" } },
                             scanUrl: { type: ["string", "null"], description: "Ссылка на скан оригинала — чужой материал" },
                             russianUrl: { type: ["string", "null"], description: "Ссылка на русский перевод — чужой материал" },
-                            note: { type: ["string", "null"] },
+                            images: { type: "array", items: { type: "object" } },
+                            note: { type: ["string", "null"], description: "Заметка редактуры (info)" },
+                            dneslovType: { type: ["string", "null"] },
+                            dneslovEventId: { type: ["string", "null"] },
                             mentionIds: { type: "array", items: { type: "string" } },
+                            csSource: { type: "boolean", description: "Набран ли текст церковнославянской графикой" },
+                            createdAt: { type: ["string", "null"], format: "date-time" },
                             accents: {
                                 type: ["object", "null"],
                                 description:
@@ -2224,6 +2280,31 @@ export const openapi = () => ({
                     dedications: { type: "array", items: { type: "object" } },
                     noble: { description: "Ссылка на родословную; правления не отдаются" },
                     caveat: { type: "string" },
+                },
+            },
+            SaintLife: {
+                type: "object",
+                description: "Житие со святцев dneslov.org",
+                properties: {
+                    slug: { type: ["string", "null"], description: "Их слуг — им открывается карточка на dneslov.org" },
+                    source: { type: "string", enum: ["dneslov"] },
+                    memoes: { type: "array", items: { $ref: "#/components/schemas/SaintLifeMemo" }, description: "Описанные памяти; пустых мемуаров в ответе нет" },
+                    links: { type: "array", items: { $ref: "#/components/schemas/SaintLifeLink" }, description: "Внешние ссылки, как их дают святцы" },
+                },
+            },
+            SaintLifeMemo: {
+                type: "object",
+                properties: {
+                    title: { type: ["string", "null"] },
+                    happenedAt: { type: ["string", "null"], description: "Когда случилось событие, как пишут сами святцы («ок. 300»)" },
+                    description: { type: "string", description: "Текст жития в markdown" },
+                },
+            },
+            SaintLifeLink: {
+                type: "object",
+                properties: {
+                    id: { type: ["integer", "null"] },
+                    url: { type: ["string", "null"] },
                 },
             },
             Name: {
@@ -2504,6 +2585,21 @@ export const openapi = () => ({
                     id: { type: ["string", "null"] },
                     name: { type: "string" },
                     sign: { type: ["string", "null"], description: "Знак Типикона" },
+                },
+            },
+            CalendarSaints: {
+                type: "object",
+                properties: {
+                    date: { type: "string", format: "date", description: "Гражданская дата запроса" },
+                    saints: { type: "array", items: { $ref: "#/components/schemas/DaySaint" } },
+                },
+            },
+            DaySaint: {
+                type: "object",
+                properties: {
+                    slug: { type: ["string", "null"], description: "Адрес святого в каталоге — за ним досье" },
+                    name: { type: ["string", "null"] },
+                    roundelUrl: { type: "string", description: "Кругляш — чужой файл с CDN святцев; опущен, если не заведён" },
                 },
             },
             PericopeVerses: {

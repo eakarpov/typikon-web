@@ -3,6 +3,7 @@ import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { readDate, readEnum, readPage } from "@/lib/api/v2/params";
 import { textSummary } from "@/lib/api/v2/serialize";
+import { saintRoundels } from "@/lib/saints";
 import { TextReadiness } from "@/utils/texts";
 import { ObjectId } from "mongodb";
 import {reportError} from "@/lib/reportError";
@@ -94,7 +95,17 @@ export async function GET(request: Request) {
             texts.countDocuments(filter),
         ]);
 
-        return respondCollection(items.map(textSummary), { total, limit, offset }, { access });
+        // Кругляши связанных святых: одним запросом по всем номерам страницы,
+        // а не по запросу на строку. У кого кругляша нет, поле просто опустится.
+        const roundels = await saintRoundels(
+            items.map((doc: any) => String(doc.dneslovId)).filter(Boolean),
+        );
+
+        return respondCollection(
+            items.map((doc: any) => textSummary(doc, doc.dneslovId ? roundels[String(doc.dneslovId)] ?? null : null)),
+            { total, limit, offset },
+            { access },
+        );
     } catch (e) {
         reportError(e, { where: "app/api/v2/texts/route#GET", source: "api" });
         return fail("internal", "Не удалось получить список текстов");

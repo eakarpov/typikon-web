@@ -56,8 +56,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
         return respond({
             dneslovId: params.id,
             dneslovUrl: `https://dneslov.org/api/v0/memories/${params.id}.json`,
-            texts: about.map(textSummary),
-            mentions: mentions.map(textSummary),
+            texts: about.map((doc: any) => textSummary(doc)),
+            mentions: mentions.map((doc: any) => textSummary(doc)),
         }, { access });
     } catch (e) {
         reportError(e, { where: "app/api/v2/saints/[id]/route#GET", source: "api" });

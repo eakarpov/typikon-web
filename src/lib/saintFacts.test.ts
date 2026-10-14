@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { memoryDayOf, memoryDaysOf, orderLabel, baseYearLabel, kindLabel } from "@/lib/saintFacts";
+import { memoryDayOf, memoryDaysOf, orderLabel, baseYearLabel, kindLabel, isPersonSaint } from "@/lib/saintFacts";
 
 // Даты сверены не с кодом перевода, а с самими числами: Пасха 2026 года —
 // 12 апреля, 2027-го — 2 мая (александрийская пасхалия); разница стилей в
@@ -103,4 +103,19 @@ test("вид записи подписывается только там, где
     assert.equal(kindLabel("Council"), "собор святых");
     assert.equal(kindLabel("Identity"), null);
     assert.equal(kindLabel(null), null);
+});
+
+test("лицо: человек и собор — да; икона, вещь, место, храм — нет", () => {
+    assert.equal(isPersonSaint({ type: "Identity" }), true);
+    assert.equal(isPersonSaint({ type: "Council" }), true);
+    // Записи, заведённые до заведения типа, идут с пустым type — это лица.
+    assert.equal(isPersonSaint({ type: null }), true);
+    assert.equal(isPersonSaint({}), true);
+
+    assert.equal(isPersonSaint({ type: "Thing" }), false);
+    assert.equal(isPersonSaint({ type: "Place" }), false);
+    assert.equal(isPersonSaint({ type: "Building" }), false);
+
+    assert.equal(isPersonSaint(null), false);
+    assert.equal(isPersonSaint(undefined), false);
 });

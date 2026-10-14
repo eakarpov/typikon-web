@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
     akathistDetail, akathistSummary, canonDetail, canonSummary,
-    chantDetail, chantSummary, prayerDetail, prayerSummary,
+    chantDetail, chantSummary, daySaint, prayerDetail, prayerSummary, saintLife,
+    textDetail, textSummary,
     PLACE_SAINTS_CAVEAT, PLACES_ATTRIBUTION,
     placeChantRef, placeRelationRef, placeSaintRef, placeScriptureBook, placeSummary, placeVerse,
 } from "@/lib/api/v2/serialize";
@@ -41,6 +42,16 @@ const pairs: Array<[string, object]> = [
     ["AkathistDetail", akathistDetail({})],
     ["Prayer", prayerSummary({})],
     ["PrayerDetail", prayerDetail({})],
+    // Кругляш здесь передан, чтобы сличать схему с полным набором полей: без
+    // него сериализатор честно опускает поле, и схема сверялась бы с урезанным.
+    ["Text", textSummary({}, "https://cdn.dneslov.org/roundels/1.png")],
+    ["TextDetail", textDetail({}, null, "https://cdn.dneslov.org/roundels/1.png")],
+    ["DaySaint", daySaint({ slug: "serafim-sarovsky", name: "Серафим Саровский", roundelUrl: "https://cdn.dneslov.org/roundels/2.png" })],
+    ["SaintLife", saintLife({
+        slug: "1003",
+        memoes: [{ title: "1003 мученика", happened_at: "ок. 300", description: "Житие" }],
+        links: [{ id: 10601, url: "https://drevo-info.ru/articles/23493.html" }],
+    })!],
 ];
 
 for (const [name, serialized] of pairs) {
@@ -77,6 +88,74 @@ test("разрешённая ссылка остаётся текстом и о�
     assert.equal(line.text, "Гряди́те, лю́дие");
     assert.equal(line.borrowed, true);
     assert.equal(line.reference, null);
+});
+
+// --- Святые дня
+
+test("кругляш святого дня опускается, когда у записи он не заведён", () => {
+    // Пустое не выдаётся за отсутствующее: поля нет — клиент рисует заглушку,
+    // а не лезет по битому адресу.
+    assert.deepEqual(Object.keys(daySaint({ slug: "s", name: "n" })).sort(), ["name", "slug"]);
+    assert.equal(daySaint({ slug: "s", name: "n", roundelUrl: "" }).roundelUrl, undefined);
+    assert.equal(
+        daySaint({ slug: "s", name: "n", roundelUrl: "https://cdn.dneslov.org/roundels/1.png" }).roundelUrl,
+        "https://cdn.dneslov.org/roundels/1.png",
+    );
+});
+
+// --- Житие святого
+
+test("житие: подробности святцев разворачиваются в ответ", () => {
+    const life = saintLife({
+        slug: "1003",
+        title: "1003 мученика Никомидийские",
+        memoes: [
+            { id: 4980, url: "https://calendar.rop.ru/?svt=feb07-1003", title: "1003 мученика Никомидийского",
+              orders: { "мчч": null }, kind_code: "Repose", year_date: "07.02",
+              description: "**Святые мученики, в Никомидии пострадавшие**, были слугами…" },
+            { id: 4981, title: "Без текста жития", description: "" },
+        ],
+        links: [
+            { id: 10601, url: "https://drevo-info.ru/articles/23493.html", type: "WikiLink",
+              info_id: 3458, info_type: "Memory", created_at: "2017-12-30T21:21:37.94295" },
+            { id: 10602, url: null },
+        ],
+    });
+
+    // Служебные поля святцев (orders, info_id…) наружу не выходят: белый список.
+    assert.deepEqual(life, {
+        slug: "1003",
+        source: "dneslov",
+        memoes: [
+            { title: "1003 мученика Никомидийского", happenedAt: null,
+              description: "**Святые мученики, в Никомидии пострадавшие**, были слугами…" },
+        ],
+        links: [
+            { id: 10601, url: "https://drevo-info.ru/articles/23493.html" },
+        ],
+    });
+});
+
+test("житие без единого описания — null, а не пустой ответ", () => {
+    // 404 честнее заглушки: «такой памяти у святцев нет» и «житие не завезли» —
+    // разные состояния, и приложение умеет показать их словами.
+    assert.equal(saintLife({ slug: "x", memoes: [{ title: "t", description: "   " }], links: [] }), null);
+    assert.equal(saintLife({ slug: "x", memoes: [], links: [{ id: 1, url: "https://a.b/" }] }), null);
+    assert.equal(saintLife(null), null);
+});
+
+test("кругляш в перечне текстов опускается без связанного святого", () => {
+    assert.ok(!("roundelUrl" in textSummary({})));
+    assert.equal(textSummary({}, "").roundelUrl, undefined);
+    assert.equal(
+        textSummary({ dneslovId: "3030" }, "https://cdn.dneslov.org/roundels/30.png").roundelUrl,
+        "https://cdn.dneslov.org/roundels/30.png",
+    );
+    // Карточка текста несёт тот же кругляш, что и строка перечня.
+    assert.equal(
+        textDetail({ dneslovId: "3030" }, null, "https://cdn.dneslov.org/roundels/30.png").roundelUrl,
+        "https://cdn.dneslov.org/roundels/30.png",
+    );
 });
 
 // --- Места

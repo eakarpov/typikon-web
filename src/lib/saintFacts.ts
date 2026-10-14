@@ -99,6 +99,16 @@ export const KIND_LABELS: Record<string, string> = {
 export const kindLabel = (type: string | null | undefined): string | null =>
     (type && KIND_LABELS[type]) || null;
 
+/**
+ * Лицо ли это. Под памятью в святцах бывает не только человек: икона или
+ * вещь («обретение мощей» у ковчега — не лицо), место, храм, событие.
+ * Такие записи в списках ЛЮДЕЙ не место: святейший храм — не святой.
+ * Собор (Council) оставляем: это перечень лиц, а не не-лицо; записи, заведённые
+ * до заведения типа, идут с пустым `type` и тоже считаются лицами.
+ */
+export const isPersonSaint = (saint: { type?: string | null } | null | undefined): boolean =>
+    !!saint && (!saint.type || saint.type === "Identity" || saint.type === "Council");
+
 // ── Опорный год ──────────────────────────────────────────────────────────────
 
 /**
