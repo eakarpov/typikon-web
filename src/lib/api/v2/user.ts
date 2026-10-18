@@ -38,9 +38,8 @@ export const authorizeUser = async (
     const access = await authorize(request, scope);
     if (access.denied) return userAccess(access, null);
 
-    // `getSession` делает `new ObjectId(session.sessionId)` и на подписанном токене
-    // с мусором в теле бросает. Это отказ во входе, а не поломка сервера: пятисотый
-    // тут увёл бы отладку в сторону от подделанной куки.
+    // Проверка сессии может не завершиться из-за сбоя хранилища. Личный
+    // доступ в таком случае закрыт: одной подписи JWT для него недостаточно.
     let session: unknown = null;
     try {
         session = await readSession();

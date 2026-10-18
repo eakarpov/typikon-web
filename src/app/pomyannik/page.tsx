@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont } from "@/utils/font";
 import { allNames } from "@/lib/imeniny/store";
 import { listPersons } from "@/lib/pomyannik/service";
@@ -30,7 +30,7 @@ const DAYS = 45;
 
 const PomyannikPage = async () => {
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     const userId = session?.userId as string | undefined;
 
     if (!userId) {

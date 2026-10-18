@@ -1,6 +1,6 @@
 import {getAcceptedTextingCount, getItem} from "@/app/profile/api";
 import {cookies} from "next/headers";
-import {decrypt} from "@/lib/authorize/sessions";
+import {readSessionPayload} from "@/lib/authorize/sessions";
 import Link from "next/link";
 import Content from "@/app/profile/Content";
 import Logins from "@/app/profile/Logins";
@@ -16,7 +16,7 @@ import { countUnread } from "@/lib/pomyannik/zapiski";
 
 const ProfilePage = async () => {
     const cookie = (await cookies()).get('session')?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
 
     if (!session) {
         return (

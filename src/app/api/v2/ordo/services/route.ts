@@ -31,6 +31,7 @@ export async function GET(request: Request) {
                 ustav: parsed.value.ustav ?? undefined,
                 variant: parsed.value.variant ?? undefined,
                 lang: parsed.value.lang ?? undefined,
+                psalms: parsed.value.psalms ?? undefined,
             }),
             ordoViewRules(),
         ]);

@@ -53,6 +53,8 @@ export interface OrdoServicesParams {
     ustav: string | null;
     variant: string | null;
     lang: string | null;
+    /** «1» — стихословия Псалтири в шагах; «0»/не назван — без них. */
+    psalms: string | null;
     /** Не названы — все службы дня, кроме вошедших во всенощное. */
     services: string[];
 }
@@ -68,6 +70,14 @@ export const parseOrdoServices = (url: URL): OrdoParams<OrdoServicesParams> => {
         return { ok: false, error: `Не больше ${MAX_SERVICES} служб за запрос` };
     }
 
+    // psalms — флаг, и движок читает его как флаг (_flag: «1», «true», «yes»).
+    // Пропускаем дальше только 0/1: вольная трактовка здесь дала бы движку
+    // строку, которую он читает своим усмотрением.
+    const psalms = url.searchParams.get("psalms");
+    if (psalms !== null && psalms !== "0" && psalms !== "1") {
+        return { ok: false, error: "psalms читается как флаг: 0 или 1" };
+    }
+
     return {
         ok: true,
         value: {
@@ -75,6 +85,7 @@ export const parseOrdoServices = (url: URL): OrdoParams<OrdoServicesParams> => {
             ustav: word(url.searchParams.get("ustav")),
             variant: word(url.searchParams.get("variant")),
             lang: word(url.searchParams.get("lang")),
+            psalms,
             services,
         },
     };

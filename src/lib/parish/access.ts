@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import clientPromise from "@/lib/mongodb";
 import { parishDb } from "./db";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { getItem } from "@/app/profile/api";
 import { userCan } from "@/lib/rights";
 
@@ -51,7 +51,7 @@ const idOf = (templeSlug: string, userId: string) => `${templeSlug}:${userId}`;
 /** Кто сейчас смотрит. null — не вошёл. */
 export const currentUserId = async (): Promise<string | null> => {
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     return (session?.userId as string | undefined) ?? null;
 };
 

@@ -47,6 +47,7 @@ export async function GET(request: Request) {
             tone: Number.isFinite(tone) && tone ? tone : null,
             service: url.searchParams.get("service"),
             role: url.searchParams.get("role"),
+            kind: url.searchParams.get("kind"),
         }, limit, offset);
 
         return respond({

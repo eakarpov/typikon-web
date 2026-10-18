@@ -28,11 +28,8 @@
 // Запуск:
 //   npm run bible:fix-swete              # показать, что изменится
 //   npm run bible:fix-swete -- --apply   # исправить
-import "@/scripts/lib/env";
-import clientPromise from "@/lib/mongodb";
 import { BIBLE_EDITIONS, BIBLE_VERSES } from "@/lib/bible/schema";
 
-const APPLY = process.argv.includes("--apply");
 const EDITION = "grc-lxx-pat";
 
 interface Correction {
@@ -83,6 +80,11 @@ const found = (content: string, needle: string) =>
     content.normalize("NFC").includes(needle.normalize("NFC"));
 
 const main = async () => {
+    // Окружение должно загрузиться раньше Mongo, который подключается уже при
+    // импорте. При использовании чистых функций ни то ни другое не требуется.
+    await import("@/scripts/lib/env");
+    const { default: clientPromise } = await import("@/lib/mongodb");
+    const APPLY = process.argv.includes("--apply");
     const client = await clientPromise;
     const db = client.db("typikon");
     const edition = await db.collection(BIBLE_EDITIONS).findOne({ code: EDITION });
@@ -149,7 +151,10 @@ const main = async () => {
     await client.close();
 };
 
-main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-});
+// Как и другие импортируемые скрипты проекта, запускаем CLI только напрямую.
+if (process.argv[1]?.endsWith("fix-swete-typos.ts")) {
+    main().catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
+}

@@ -554,6 +554,57 @@ export const ordoDay = async (
     opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[] },
 ): Promise<OrdoDay | null> => (await ordoDayDetailed(date, opts)).day;
 
+// —— Кафизмы дня —————————————————————————————————————————————————
+//
+// ПУТЬ ВЫБРАН ПО ФАКТУ КОДА, и оба соседних пути отпали сами:
+//
+//   * собрать из шагов psalmody при сборке services (поле kafisma) — значит
+//     тянуть день за всеми службами суток, а задача этого поля — экран
+//     «Псалтирь сегодня» БЕЗ сборки служб;
+//   * посчитать по kafisma_* прямо из rulesDb — значит переписать на TS
+//     kafizmy_for и выбор варианта дня, то есть завести второй конструктор,
+//     который разойдётся с движком на первой же правке устава (см. шапку
+//     этого файла).
+//
+// Ручка движка /ordo?date=… (сборка по дате) возвращает context сборки, и
+// engine.py кладёт в него kafizmy СРАЗУ по всем четырём службам — кафизмы
+// назначает день года (Типикон, гл. 17), а не канва конкретной службы.
+// Просим службу по умолчанию (вечерню): значения context от неё не зависят.
+// Знак и вариант дня выбирает движок тем же выбором, что и суточный круг.
+
+export interface OrdoKafizmy {
+    matins: number[];
+    vespers: number[];
+    hours: number[];
+    midnight: number[];
+}
+
+const KAFIZMY_SERVICES = ["matins", "vespers", "hours", "midnight"] as const;
+
+/**
+ * Кафизмы дня по службам суток. null — движок не ответил или день без
+ * кафизм (памяти вне расчёта): ручка дня при этом живёт своей жизнью,
+ * кафизмы ей не роняют.
+ */
+export const ordoDayKafizmy = async (date: string, ustav?: string): Promise<OrdoKafizmy | null> => {
+    const raw = await ask<any>("/ordo", { date, ustav: ustav ?? "", service: "vespers" });
+    const kafizmy = raw?.context?.kafizmy;
+    if (!kafizmy || typeof kafizmy !== "object") return null;
+    const numbers = (service: string): number[] => {
+        const rows = kafizmy[service];
+        if (!Array.isArray(rows)) return [];
+        return rows
+            .map((row: any) => row?.kafisma)
+            .filter((n: any) => Number.isInteger(n));
+    };
+    return {
+        matins: numbers(KAFIZMY_SERVICES[0]),
+        vespers: numbers(KAFIZMY_SERVICES[1]),
+        hours: numbers(KAFIZMY_SERVICES[2]),
+        midnight: numbers(KAFIZMY_SERVICES[3]),
+    };
+};
+
 // —— Месяц дат разом ————————————————————————————————————————————————
 //
 // Живёт здесь, а не у прихода, откуда переехало: месячная сетка нужна и

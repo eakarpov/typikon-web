@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont, csFont } from "@/utils/font";
 import { getPerson } from "@/lib/pomyannik/service";
 import { memorialDays, sorokoustSpan, upcoming } from "@/lib/pomyannik/reckoning";
@@ -28,7 +28,7 @@ const SOURCE_NOTE: Record<string, string> = {
 const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
     const { id } = await props.params;
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     if (!session?.userId) {
         return (
             <div className={`${myFont.variable} pt-2 max-w-2xl`}>

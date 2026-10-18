@@ -1,7 +1,7 @@
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { parseOrdoDay } from "@/lib/api/v2/ordoParams";
-import { ordoDayDetailed } from "@/lib/ordo";
+import { ordoDayDetailed, ordoDayKafizmy } from "@/lib/ordo";
 import { reportError } from "@/lib/reportError";
 
 // Что за день по уставу: памяти, знак, варианты дня, стояния и службы без
@@ -24,14 +24,20 @@ export async function GET(request: Request) {
     if (!parsed.ok) return fail("bad_request", parsed.error);
 
     try {
-        const asked = await ordoDayDetailed(parsed.value.date, { ustav: parsed.value.ustav ?? undefined });
+        const [asked, kafizmy] = await Promise.all([
+            ordoDayDetailed(parsed.value.date, { ustav: parsed.value.ustav ?? undefined }),
+            // Кафизмы — из контекста сборки того же движка (см. lib/ordo):
+            // сбой этого запроса не роняет день, экран «Псалтирь сегодня»
+            // приедет с kafizmy: null.
+            ordoDayKafizmy(parsed.value.date, parsed.value.ustav ?? undefined).catch(() => null),
+        ]);
         if (!asked.day) {
             // 404 от движка — дата вне расчёта или устав ему незнаком; иначе
             // служба устава в беде, и текст её ответа доезжает до клиента.
             if (asked.status === 404) return fail("not_found", asked.error ?? "День не найден");
             return fail("ordo_unavailable", asked.error ?? "Служба устава не ответила");
         }
-        return respond(asked.day, {
+        return respond({ ...asked.day, kafizmy }, {
             access,
             headers: asked.version ? { "X-Ordo-Version": asked.version } : {},
         });

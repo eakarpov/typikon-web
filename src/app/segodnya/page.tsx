@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont } from "@/utils/font";
 import { getTodayDate } from "@/utils/dates";
 import { todayCivil } from "@/lib/trapeza/core";
@@ -50,7 +50,7 @@ const more = "text-red-900 hover:underline";
 
 const SegodnyaPage = async () => {
     const jar = await cookies();
-    const session = await decrypt(jar.get("session")?.value);
+    const session = await readSessionPayload(jar.get("session")?.value);
     const userId = session?.userId as string | undefined;
 
     if (!userId) {

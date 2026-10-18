@@ -1,9 +1,28 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
+import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
 import { CORRECTIONS, replaceNormalized } from "./fix-swete-typos";
 
 // Правки меняют текст Писания поштучно и вручную. Проверяется, что каждая
 // описана полно и что поиск не спотыкается о запись греческого разными знаками.
+
+it("импорт без настроек Mongo не запускает CLI и не загружает подключение", () => {
+    // Отдельный процесс: повторный import в этом процессе взял бы модуль из
+    // кэша и не поймал возвращение побочных эффектов на этапе загрузки.
+    const result = spawnSync(process.execPath, [
+        "--import", "tsx", "--eval",
+        `require(${JSON.stringify(resolve(__dirname, "fix-swete-typos.ts"))})`,
+    ], {
+        env: { ...process.env, MONGODB_URI: "" },
+        encoding: "utf8",
+        timeout: 15_000,
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, "", "импорт не должен печатать отчёт CLI");
+    assert.equal(result.stderr, "", "импорт не должен запускать подключение к Mongo");
+});
 
 describe("список правок", () => {
     it("каждая правка что-то меняет и говорит почему", () => {

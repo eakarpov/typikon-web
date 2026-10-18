@@ -56,6 +56,20 @@ test("службы: вариант и язык — короткие слова",
     }
 });
 
+test("службы: psalms — флаг 0/1, прочий мусор отказ", () => {
+    const absent = parseOrdoServices(url("/api/v2/ordo/services?date=2026-09-26"));
+    assert.ok(absent.ok && absent.value.psalms === null);
+
+    const on = parseOrdoServices(url("/api/v2/ordo/services?date=2026-09-26&psalms=1"));
+    assert.ok(on.ok && on.value.psalms === "1");
+
+    const off = parseOrdoServices(url("/api/v2/ordo/services?date=2026-09-26&psalms=0"));
+    assert.ok(off.ok && off.value.psalms === "0");
+
+    assert.equal(parseOrdoServices(url("/api/v2/ordo/services?date=2026-09-26&psalms=yes")).ok, false);
+    assert.equal(parseOrdoServices(url("/api/v2/ordo/services?date=2026-09-26&psalms=")).ok, false);
+});
+
 test("пакет: служба обязательна — формат однослужбный", () => {
     assert.equal(parseOrdoPackage(url("/api/v2/ordo/package")).ok, false);
     assert.equal(parseOrdoPackage(url("/api/v2/ordo/package?date=2026-09-26")).ok, false);

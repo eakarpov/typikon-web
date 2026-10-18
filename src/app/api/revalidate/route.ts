@@ -1,8 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
 import {revalidateTag} from "next/cache";
-import {cookies} from "next/headers";
-import {decrypt} from "@/lib/authorize/sessions";
-import {getItem} from "@/app/profile/api";
 import {CacheTag} from "@/lib/cache";
 import {can} from "@/lib/rights-server";
 

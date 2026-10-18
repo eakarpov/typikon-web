@@ -141,7 +141,7 @@ SITE_URL=${SITE_URL:-https://www.typikon.info}
 
 export REMOTE_ROOT ORDO_REMOTE DUMP_REMOTE APP_REMOTE ENV_FILE SITE_URL
 
-if [ ! -f "$ENV_FILE" ]; then
+if [ "${REQUIRE_ENV_FILE:-1}" = 1 ] && [ ! -f "$ENV_FILE" ]; then
     echo "нет $ENV_FILE — его везут на сервер все release-скрипты" >&2
     exit 1
 fi

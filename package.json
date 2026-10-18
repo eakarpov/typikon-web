@@ -10,6 +10,8 @@
     "test": "find src -name '*.test.ts' -print0 | xargs -0 node --import tsx --test",
     "typecheck": "tsc --noEmit",
     "release": "bash scripts/release.sh",
+    "release:setup": "bash scripts/release.sh --setup",
+    "release:rollback": "bash scripts/release.sh --rollback",
     "release:db": "bash scripts/release-db.sh",
     "release:common": "npm run release && npm run release:db",
     "release-app": "bash scripts/release-app.sh",

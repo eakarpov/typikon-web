@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont, csFont } from "@/utils/font";
 import { commemoratorOf } from "@/lib/pomyannik/commemorators";
 import { notesFor } from "@/lib/pomyannik/zapiski";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 const PrinyatyePage = async () => {
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     const userId = session?.userId as string | undefined;
     if (!userId) {
         return (

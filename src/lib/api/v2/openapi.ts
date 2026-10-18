@@ -354,7 +354,10 @@ export const openapi = () => ({
                 tags: ["Песнопения"],
                 summary: "Каноны книг",
                 description:
-                    "Каноны Октоиха, Миней, Триодей и Минеи общей. Пустой запрос — не ошибка, а "
+                    "Каноны Октоиха, Миней, Триодей и Минеи общей — и молебные каноны "
+                    + "молитвослова (kind=molebny: покаянный, молебный Богородице, Ангелу "
+                    + "Хранителю, ко Причащению), у которых ни памяти, ни места в службе нет. "
+                    + "Пустой запрос — не ошибка, а "
                     + "начало просмотра: перечень канонов сам по себе и есть содержимое раздела, "
                     + "а поиск его сужает.\n\nИщется по тому, кому канон и чьё он творение. "
                     + "Имена — как их пишет книга, в родительном падеже: «Никола́я», а не "
@@ -365,6 +368,7 @@ export const openapi = () => ({
                     { name: "tone", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 8 } },
                     { name: "service", in: "query", required: false, schema: { type: "string" } },
                     { name: "role", in: "query", required: false, schema: { type: "string" }, description: "Роль канона: воскресный, крестовоскресный, богородичен" },
+                    { name: "kind", in: "query", required: false, schema: { type: "string", enum: ["sluzhebny", "molebny"] }, description: "Служебный (при памяти) или молебный (молитвослова)" },
                     ...pageParams,
                 ],
                 responses: {
@@ -1360,6 +1364,69 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/posledovanie": {
+            get: {
+                tags: ["Календарь"],
+                summary: "Келейное последование молитвослова",
+                description:
+                    "Молитвы утренние, на сон грядущим, ко Причащению и прочие келейные " +
+                    "последования — строками в порядке печати книги. Рубрики книги идут полем " +
+                    "`note` указаний, а не текстом. Поле `lang` ответа говорит, какой слой " +
+                    "приехал на самом деле: просили уставное начертание, а книга издана в " +
+                    "корпусе только гражданским — отдаётся гражданский. Английский слой " +
+                    "молитвослова в выгрузку не входил и не отдаётся.",
+                parameters: [
+                    {
+                        name: "key", in: "query", required: true, schema: { type: "string" },
+                        description: "Последование: " + [
+                            "utrennie", "na-son", "ko-prichashcheniyu", "blagodarstvennye",
+                            "tri-kanona-pokajannyj", "kanon-molebnyj-bogorodice",
+                            "kanon-angelu-xranitelyu", "pravilo-serafima",
+                            "chin-kelejnogo-chteniya",
+                        ].join(", "),
+                    },
+                    { name: "lang", in: "query", required: false, schema: { type: "string", enum: ["cu_gr", "cu"], default: "cu_gr" }, description: "Начертание текста" },
+                    { name: "gender", in: "query", required: false, schema: { type: "string", enum: ["m", "f"], default: "m" }, description: "f — женские формы текста, где издание их печатает" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/Posledovanie"),
+                    "400": errorResponse("Ключ не назван или неизвестен"),
+                    "404": errorResponse("Последования нет в корпусе"),
+                    "503": errorResponse("Корпус богослужебных книг недоступен (код corpus_unavailable)"),
+                },
+            },
+        },
+        "/api/v2/prayer-text": {
+            get: {
+                tags: ["Помянник"],
+                summary: "Поимённые молитвы",
+                description:
+                    "Нужен вход. Шаблоны поимённых молитв (о живых и усопших) с именами из " +
+                    "собственного помянника: до 20 имён, в родительном падеже, с чинами. Помянник " +
+                    "пуст — текст общей формулы книги. Женский вариант (`gender=f`) берёт женские " +
+                    "формы текста, где издание их печатает. Как и всё помянное, со страницы этой " +
+                    "документации не выполнится: сессия ездит в куке.",
+                security: personal,
+                parameters: [
+                    { name: "for", in: "query", required: true, schema: { type: "string", enum: ["living", "departed"] }, description: "О здравии или о упокоении" },
+                    {
+                        name: "style", in: "query", required: true, schema: { type: "string" },
+                        description: "Молитва: molitvoslov-short (краткие), molitvoslov-pomyanik " +
+                            "(помянник утренних), litiya (зaупокойная), proskomidia, " +
+                            "liturgy-ektinia (заупокойная). Не всякий стиль бывает для обоих for.",
+                    },
+                    { name: "lang", in: "query", required: false, schema: { type: "string", enum: ["cu_gr", "cu"], default: "cu_gr" }, description: "Начертание текста" },
+                    { name: "gender", in: "query", required: false, schema: { type: "string", enum: ["m", "f"], default: "m" }, description: "Пол молящегося" },
+                ],
+                responses: {
+                    "200": ok("#/components/schemas/PrayerText"),
+                    "400": errorResponse("Параметры for/style не названы или сочетание не бывает"),
+                    "401": needsSession,
+                    "404": errorResponse("Тексты стиля в корпусе не нашлись"),
+                    "503": errorResponse("Корпус богослужебных книг недоступен (код corpus_unavailable)"),
+                },
+            },
+        },
         "/api/v2/ordo/day": {
             get: {
                 tags: ["Последование"],
@@ -1367,7 +1434,10 @@ export const openapi = () => ({
                 description:
                     "Что за день и что положено служить: памяти, знак, варианты дня со " +
                     "стояниями и службами БЕЗ текстов. Тексты — в ручку служб. Ответ " +
-                    "несёт заголовок X-Ordo-Version — версию сборки движка, которой день собран.",
+                    "несёт заголовок X-Ordo-Version — версию сборки движка, которой день собран. " +
+                    "Поле kafizmy — кафизмы дня по службам суток (задел экрана «Псалтирь " +
+                    "сегодня» без сборки служб): номера по контексту сборки движка, при его " +
+                    "недоступности — null.",
                 security: [{ apiKey: [] }],
                 parameters: [
                     { name: "date", in: "query", required: true, schema: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" }, example: "2026-09-26" },
@@ -1410,10 +1480,14 @@ export const openapi = () => ({
                     { name: "variant", in: "query", required: false, schema: { type: "string" }, description: "Вариант дня из ответа ручки дня" },
                     { name: "ustav", in: "query", required: false, schema: { type: "string" }, description: "Тот же устав, что и в ручке дня" },
                     { name: "lang", in: "query", required: false, schema: { type: "string" }, description: "Язык строк службы" },
+                    {
+                        name: "psalms", in: "query", required: false, schema: { type: "string", enum: ["0", "1"] },
+                        description: "«1» — со стихословиями Псалтири (полные тексты кафизм); без параметра — псалмовые тексты в шаги не кладутся",
+                    },
                 ],
                 responses: {
                     "200": ok("#/components/schemas/OrdoSutki"),
-                    "400": errorResponse("Дата записана не как ГГГГ-ММ-ДД или слишком много служб"),
+                    "400": errorResponse("Дата записана не как ГГГГ-ММ-ДД, слишком много служб или psalms не 0/1"),
                     "401": errorResponse("Нет ключа, ключ не признан, отозван или просрочен"),
                     "404": errorResponse("Дата вне расчёта или устав незнаком"),
                     "429": errorResponse("Слишком часто или исчерпана суточная квота"),
@@ -1617,6 +1691,16 @@ export const openapi = () => ({
                                 primary: { type: "boolean", description: "true — ради самого святого, иначе чтобы память не пропала" },
                                 label: { type: "string" },
                             },
+                        },
+                    },
+                    kafizmy: {
+                        type: ["object", "null"],
+                        description: "Кафизмы дня по службам суток; null — движок устава недоступен",
+                        properties: {
+                            matins: { type: "array", items: { type: "integer" }, description: "Кафизмы утрени, в порядке стихословия" },
+                            vespers: { type: "array", items: { type: "integer" }, description: "Кафизма вечерни этих суток" },
+                            hours: { type: "array", items: { type: "integer" }, description: "Кафизма (если положена) часов" },
+                            midnight: { type: "array", items: { type: "integer" }, description: "Кафизма полуночницы" },
                         },
                     },
                 },
@@ -2785,6 +2869,15 @@ export const openapi = () => ({
                     acrostic: { type: ["string", "null"], description: "Краегранесие" },
                     service: { type: ["string", "null"] },
                     role: { type: ["string", "null"] },
+                    kind: {
+                        type: ["string", "null"],
+                        enum: ["sluzhebny", "molebny", null],
+                        description: "Служебный канон стоит при памяти; молебный (молитвослова) поётся по потребе",
+                    },
+                    canonKey: {
+                        type: ["string", "null"],
+                        description: "Ключ молебного канона: kanon-pokayanny, kanon-bogorodice, kanon-angelu-hranitelyu…",
+                    },
                     language: {
                         type: ["string", "null"],
                         description:
@@ -3229,6 +3322,48 @@ export const openapi = () => ({
                         },
                     },
                 ],
+            },
+
+            // --- Молитвослов: поимённые молитвы и келейные последования -----
+            NamedPrayer: {
+                type: "object",
+                description: "Одна поимённая молитва: шаблон книги с именами помянника уже подставлены",
+                properties: {
+                    id: { type: ["string", "null"], description: "Адрес строки в корпусе (text_id)" },
+                    title: { type: ["string", "null"], description: "Подпись места; у строк помянника одна общая — не повторяется" },
+                    text: { type: "string" },
+                },
+            },
+            PrayerText: {
+                type: "object",
+                description: "Поимённые молитвы; lang — какой слой приехал на самом деле (см. ручку)",
+                properties: {
+                    for: { type: "string", enum: ["living", "departed"] },
+                    style: { type: "string", example: "molitvoslov-pomyanik" },
+                    lang: { type: "string", enum: ["cu_gr", "cu"] },
+                    gender: { type: "string", enum: ["m", "f"] },
+                    prayers: { type: "array", items: { $ref: "#/components/schemas/NamedPrayer" } },
+                },
+            },
+            PosledovanieRow: {
+                type: "object",
+                description: "Строка последования в порядке печати; указание книги идёт note, не text",
+                properties: {
+                    label: { type: ["string", "null"], description: "Заголовок места, как его назвала книга" },
+                    lead: { type: ["string", "null"], description: "Зачин, снятый с текста («Возглас», «Слава, и ныне»)" },
+                    repeatCount: { type: ["integer", "null"], description: "Сколько раз читается" },
+                    poklon: { type: ["string", "null"], description: "Поклон, как назван книгой" },
+                    note: { type: ["string", "null"], description: "Указание книги («Прочесть трижды»)" },
+                    text: { type: ["string", "null"] },
+                },
+            },
+            Posledovanie: {
+                type: "object",
+                properties: {
+                    key: { type: "string", example: "utrennie" },
+                    lang: { type: "string", enum: ["cu_gr", "cu"] },
+                    rows: { type: "array", items: { $ref: "#/components/schemas/PosledovanieRow" } },
+                },
             },
             ChantDetail: {
                 type: "object",

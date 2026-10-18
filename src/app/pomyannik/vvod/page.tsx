@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont } from "@/utils/font";
 import Import from "@/app/pomyannik/vvod/Import";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 const VvodPage = async () => {
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     if (!session?.userId) {
         return (
             <div className={`${myFont.variable} pt-2 max-w-2xl`}>

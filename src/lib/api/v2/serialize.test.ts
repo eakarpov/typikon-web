@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
     akathistDetail, akathistSummary, canonDetail, canonSummary,
-    chantDetail, chantSummary, daySaint, prayerDetail, prayerSummary, saintLife,
+    chantDetail, chantSummary, daySaint, namedPrayer, posledovanieRow, prayerDetail, prayerSummary, saintLife,
     textDetail, textSummary,
     PLACE_SAINTS_CAVEAT, PLACES_ATTRIBUTION,
     placeChantRef, placeRelationRef, placeSaintRef, placeScriptureBook, placeSummary, placeVerse,
@@ -42,6 +42,8 @@ const pairs: Array<[string, object]> = [
     ["AkathistDetail", akathistDetail({})],
     ["Prayer", prayerSummary({})],
     ["PrayerDetail", prayerDetail({})],
+    ["NamedPrayer", namedPrayer({ id: "molitvoslov-utrennie-0038", title: "Молитва о живых", text: "Спаси́, Го́споди…" })],
+    ["PosledovanieRow", posledovanieRow({ label: "Молитва мытаря", repeatCount: 3, poklon: "Поклон", text: "Бо́же, ми́лостив бу́ди мне гре́шному." })],
     // Кругляш здесь передан, чтобы сличать схему с полным набором полей: без
     // него сериализатор честно опускает поле, и схема сверялась бы с урезанным.
     ["Text", textSummary({}, "https://cdn.dneslov.org/roundels/1.png")],

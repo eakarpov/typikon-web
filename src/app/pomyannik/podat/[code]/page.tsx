@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont, csFont } from "@/utils/font";
 import { commemoratorByCode } from "@/lib/pomyannik/commemorators";
 import { listPersons } from "@/lib/pomyannik/service";
@@ -26,7 +26,7 @@ const PodatPage = async (props: { params: Promise<{ code: string }> }) => {
     if (!to) notFound();
 
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     const userId = session?.userId as string | undefined;
 
     if (!userId) {

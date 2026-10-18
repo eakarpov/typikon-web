@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRightsBack } from "@/lib/admin/back";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { TextingProposalStatus } from "@/utils/texting";
 import {reportError} from "@/lib/reportError";
 
@@ -33,8 +33,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return;
         }
 
-        const session = await decrypt(req.cookies.session);
-        const reviewedBy = session?.userId as string | undefined;
+        const session = await readSessionPayload(req.cookies.session);
+        if (!session) {
+            res.status(404).end();
+            return;
+        }
+        const reviewedBy = session.userId;
         const now = new Date();
 
         await usersDb

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont, csFont } from "@/utils/font";
 import { commemoratorBySlug } from "@/lib/pomyannik/commemorators";
 import { listPersons } from "@/lib/pomyannik/service";
@@ -29,7 +29,7 @@ const CommemoratorPage = async (props: { params: Promise<{ slug: string }> }) =>
     if (!person) notFound();
 
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     const userId = session?.userId as string | undefined;
 
     const persons = userId ? await listPersons(userId) : [];

@@ -29,14 +29,17 @@ export interface CanonFilters {
     tone?: number | null;
     service?: string | null;
     role?: string | null;
+    /** 'sluzhebny' | 'molebny' — службеный (при памяти) или молебный (по потребе). */
+    kind?: string | null;
 }
 
 export interface CanonRow {
     id: string;
-    /** Кому канон: метка памяти, под которой он напечатан. */
-    memory: string;
-    memoryId: string;
-    book: string;
+    /** Кому канон: метка памяти, под которой он напечатан. У молебного
+     *  канона памяти нет — он поётся «по потребе» — и здесь null. */
+    memory: string | null;
+    memoryId: string | null;
+    book: string | null;
     month: number | null;
     day: number | null;
     paschaOffset: number | null;
@@ -54,6 +57,15 @@ export interface CanonRow {
     acrostic: string | null;
     service: string;
     role: string | null;
+    /**
+     * 'sluzhebny' — служба памяти; 'molebny' — молебный канон молитвослова
+     * (покаянный, молебный Богородице, Ангелу Хранителю, ко Причащению).
+     * Молебный ни памяти, ни места в службе не имеет: адресуется canon_key
+     * и читается по потребе.
+     */
+    kind: string;
+    /** Ключ молебного канона ('kanon-pokayanny'); у служебного — null. */
+    canonKey: string | null;
     /**
      * Язык издания, из которого канон взят. Корпус шестиязычен, и без этого
      * поля английский канон в перечне неотличим от славянского: метка памяти,
@@ -98,20 +110,21 @@ const listSql = (withAuthors: boolean) => `
     SELECT c.canon_id, m.label AS memory, m.memory_id, m.book, m.month, m.day,
            m.pascha_offset, m.weekday, m.tone AS memory_tone,
            c.tone, c.creator, c.acrostic, c.service, c.role, c.language,
+           c.kind, c.canon_key,
            count(DISTINCT ci.ode) AS odes, count(ci.item_id) AS items
            ${withAuthors ? AUTHOR_COLUMNS : ""}
     FROM canons c
-    JOIN memories m ON m.memory_id = c.memory_id
+    LEFT JOIN memories m ON m.memory_id = c.memory_id
     LEFT JOIN content_items ci ON ci.canon_id = c.canon_id
     ${withAuthors ? AUTHOR_JOIN : ""}
     GROUP BY c.canon_id
-    ORDER BY m.book, m.month, m.day, m.pascha_offset, m.tone, c.rowid`;
+    ORDER BY (m.memory_id IS NULL), m.book, m.month, m.day, m.pascha_offset, m.tone, c.rowid`;
 
 const rowOf = (r: any): CanonRow => ({
     id: r.canon_id,
-    memory: r.memory ?? "",
-    memoryId: r.memory_id,
-    book: r.book,
+    memory: r.memory ?? null,
+    memoryId: r.memory_id ?? null,
+    book: r.book ?? null,
     month: r.month ?? null,
     day: r.day ?? null,
     paschaOffset: r.pascha_offset ?? null,
@@ -125,6 +138,8 @@ const rowOf = (r: any): CanonRow => ({
     acrostic: r.acrostic ?? null,
     service: r.service,
     role: r.role ?? null,
+    kind: r.kind ?? "sluzhebny",
+    canonKey: r.canon_key ?? null,
     language: r.language ?? "cu_gr",
     odes: r.odes ?? 0,
     items: r.items ?? 0,
@@ -151,6 +166,7 @@ export const listCanons = (
     if (filters.tone) rows = rows.filter(r => r.tone === filters.tone);
     if (filters.service) rows = rows.filter(r => r.service === filters.service);
     if (filters.role) rows = rows.filter(r => r.role === filters.role);
+    if (filters.kind) rows = rows.filter(r => r.kind === filters.kind);
 
     const q = normalizeQuery(filters.q || "");
     if (q) {
@@ -222,10 +238,11 @@ export const getCanon = (id: string): CanonDetail | null => {
         SELECT c.canon_id, m.label AS memory, m.memory_id, m.book, m.month, m.day,
                m.pascha_offset, m.weekday, m.tone AS memory_tone,
                c.tone, c.creator, c.acrostic, c.service, c.role, c.language,
+               c.kind, c.canon_key,
                (SELECT count(DISTINCT ode) FROM content_items WHERE canon_id = c.canon_id) AS odes,
                (SELECT count(*) FROM content_items WHERE canon_id = c.canon_id) AS items
                ${withAuthors ? AUTHOR_COLUMNS : ""}
-        FROM canons c JOIN memories m ON m.memory_id = c.memory_id
+        FROM canons c LEFT JOIN memories m ON m.memory_id = c.memory_id
         ${withAuthors ? AUTHOR_JOIN : ""}
         WHERE c.canon_id = ?`).get(id) as any;
     if (!head) return null;

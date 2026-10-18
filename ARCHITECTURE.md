@@ -97,6 +97,11 @@
 - Сессия — JWT (HS256, `SESSION_SECRET`) в httpOnly-cookie `session` и строка в
   `typikon-users.sessions`; обе проверки обязательны. Окно — 7 дней с продлением через
   `/api/prolong`, предел — 90 дней.
+  Все читатели используют общую проверку `sessionToken.ts` через `getSession()`,
+  `getSessionFromToken()` или `readSessionPayload()`: подпись и срок JWT, корректность
+  идентификаторов, совпадение владельца и неистёкший срок записи в базе. Результат не
+  кэшируется; удаление записи закрывает доступ на следующем запросе, включая личные
+  страницы и приходские права. Продление не создаёт удалённую сессию заново.
 - Права — возможности (`content`, `parish.claims`, `parish.grant`, `roles.grant`,
   `commemoration.claims`) и роли, заданные в коде (`src/lib/rights.ts`); выдаются командой
   `npm run roles`. Права на приход — отдельно, `src/lib/parish/access`.
@@ -148,6 +153,7 @@
 | Что изменилось | Команда |
 |---|---|
 | код сайта | `npm run release` |
+| откат к предыдущему релизу | `npm run release:rollback` |
 | код и база | `npm run release:common` |
 | база по частям | `npm run release:db -- texts rest` |
 | правила устава | `python3 src/build_db.py` в typikon-rules, затем `npm run release:ustav` |
@@ -155,6 +161,13 @@
 | только код службы устава | `npm run release:ordo` |
 | выгрузка корпуса | `npm run release:data` |
 | сборка приложения | `bash scripts/release-app.sh X.Y.Z путь.apk` |
+
+Сайт собирается в `${REMOTE_ROOT}-releases/releases/<версия>` из конкретного commit
+`origin/master`. Проверка `/api/health` сверяет BUILD_ID и доступность Mongo сначала
+на отдельном порту, потом после переключения `current` и перезапуска службы.
+При сбое выполняется автоматический возврат. `previous` хранит предыдущую сборку
+с её окружением и родословной; Mongo и внешний корпус откатом кода не меняются.
+Первичный переход — `npm run release:setup`; порядок и права описаны в scripts/README.md.
 
 Правило устава живёт в двух видах — таблицами внутри `data.db` и файлом, который показывает
 «лестница». Поэтому правка устава выкладывается одной командой `release:ustav`, и она

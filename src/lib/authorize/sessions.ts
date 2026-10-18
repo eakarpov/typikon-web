@@ -1,13 +1,14 @@
 'use server';
 import "server-only";
 import clientPromise from "@/lib/mongodb";
-import {SignJWT, jwtVerify} from 'jose';
+import {SignJWT} from 'jose';
 import {cookies} from "next/headers";
 import {ObjectId} from "mongodb";
 import {AUTH_KEY, type Provider} from "@/lib/authorize/providers";
+import {resolveSessionToken, type SessionPayload, type StoredSession} from "@/lib/authorize/sessionToken";
 
 const secretKey = process.env.SESSION_SECRET;
-const encodedKey = new TextEncoder().encode(secretKey);
+const encodedKey = new TextEncoder().encode(secretKey ?? "");
 
 /**
  * Сколько живёт вход.
@@ -29,6 +30,7 @@ const SESSION_WINDOW_SEC = 7 * 24 * 60 * 60;
 const SESSION_ABSOLUTE_SEC = 90 * 24 * 60 * 60;
 
 export async function encrypt(payload: any, expiresAt: Date) {
+    if (!encodedKey.length) throw new Error("SESSION_SECRET is required");
     // Срок подписи совпадает со сроком сессии, а не задан отдельной строкой:
     // разойдись они — cookie пережила бы запись в базе или наоборот, и вход
     // кончался бы не тогда, когда написано.
@@ -39,15 +41,22 @@ export async function encrypt(payload: any, expiresAt: Date) {
         .sign(encodedKey)
 }
 
-export async function decrypt(session: string | undefined = '') {
-    try {
-        const { payload } = await jwtVerify(session, encodedKey, {
-            algorithms: ['HS256'],
-        })
-        return payload
-    } catch (error) {
-        return null;
-    }
+async function readSessionToken(token: string | undefined) {
+    return resolveSessionToken(token, encodedKey, async (id) => {
+        const client = await clientPromise;
+        return client.db("typikon-users").collection<StoredSession>("sessions")
+            .findOne({ _id: new ObjectId(id) });
+    });
+}
+
+/** Только payload действующей сессии; одной подписи JWT недостаточно. */
+export async function readSessionPayload(token: string | undefined) {
+    return (await readSessionToken(token))?.payload ?? null;
+}
+
+/** Общая проверка для Pages Router, где cookie берётся из req.cookies. */
+export async function getSessionFromToken(token: string | undefined) {
+    return (await readSessionToken(token))?.session ?? null;
 }
 
 const COOKIE_OPTIONS = {
@@ -114,18 +123,15 @@ export const createNewSession = async (
  */
 export const prolongSession = async (): Promise<Date | null> => {
     const cookieStore = await cookies();
-    const payload = await decrypt(cookieStore.get('session')?.value);
-    if (!payload?.sessionId) return null;
+    const active = await readSessionToken(cookieStore.get('session')?.value);
+    if (!active) return null;
+    const { payload, session } = active;
 
     const client = await clientPromise;
     const db = client.db("typikon-users");
     const _id = new ObjectId(payload.sessionId as string);
 
-    const session = await db.collection("sessions").findOne({ _id });
-    if (!session) return null;
-
     const now = Date.now();
-    if (session.expiresAt instanceof Date && session.expiresAt.getTime() <= now) return null;
 
     // У сессий, заведённых до этой правки, `createdAt` нет. Считаем их
     // начавшимися сейчас: жить им оставалось меньше часа, и предел, отсчитанный
@@ -135,11 +141,15 @@ export const prolongSession = async (): Promise<Date | null> => {
     if (now >= limit) return null;
 
     const expiresAt = new Date(Math.min(now + SESSION_WINDOW_SEC * 1000, limit));
-    await db.collection("sessions").updateOne({ _id }, {
+    const updated = await db.collection("sessions").updateOne({
+        _id, id: session.id, expiresAt: { $gt: new Date(now) },
+    }, {
         $set: session.createdAt instanceof Date
             ? { expiresAt }
             : { expiresAt, createdAt: new Date(startedAt) },
     });
+    // Отозванную между чтением и записью сессию не продлеваем.
+    if (!updated.matchedCount) return null;
 
     const token = await encrypt({
         sessionId: payload.sessionId,
@@ -150,34 +160,18 @@ export const prolongSession = async (): Promise<Date | null> => {
     return expiresAt;
 };
 
-export async function deleteSession(session: any) {
+export async function deleteSession(session: SessionPayload | null) {
+    if (!session) return;
     const client = await clientPromise;
     const db = client.db("typikon-users");
 
-    if (session) {
-        await db
-            .collection("sessions")
-            .deleteOne({
-                _id: new ObjectId(session.sessionId as string),
-            });
-    }
+    await db.collection("sessions").deleteOne({
+        _id: new ObjectId(session.sessionId), id: session.userId,
+    });
 }
 
-export async function getSession(): Promise<any> {
+export async function getSession() {
     const cookieStore = await cookies()
     const cookie = cookieStore.get('session')?.value;
-    const session = await decrypt(cookie);
-
-    const client = await clientPromise;
-    const db = client.db("typikon-users");
-
-    if (session) {
-        const res = await db
-            .collection("sessions")
-            .findOne({
-                _id: new ObjectId(session.sessionId as string),
-            });
-        return res;
-    }
-    return null;
+    return getSessionFromToken(cookie);
 }

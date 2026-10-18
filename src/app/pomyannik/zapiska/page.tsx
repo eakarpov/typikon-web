@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/authorize/sessions";
+import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont, csFont } from "@/utils/font";
 import { listPersons } from "@/lib/pomyannik/service";
 import { slavonicNames } from "@/lib/pomyannik/slavonic";
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const ZapiskaPage = async () => {
     const cookie = (await cookies()).get("session")?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     if (!session?.userId) {
         return (
             <div className={`${myFont.variable} pt-2 max-w-2xl`}>

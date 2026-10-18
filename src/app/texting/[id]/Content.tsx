@@ -1,7 +1,7 @@
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 import {ReadinessButton} from "@/app/components/DayPart";
 import {cookies} from "next/headers";
-import {decrypt} from "@/lib/authorize/sessions";
+import {readSessionPayload} from "@/lib/authorize/sessions";
 import {getOwnPendingProposal} from "@/app/texting/[id]/api";
 import SubmitForm from "@/app/texting/[id]/SubmitForm";
 
@@ -26,7 +26,7 @@ const Content = async ({ itemPromise, id }: { itemPromise: Promise<[any, any]>, 
     }
 
     const cookie = (await cookies()).get('session')?.value;
-    const session = await decrypt(cookie);
+    const session = await readSessionPayload(cookie);
     const userId = session?.userId as string | undefined;
 
     let pendingProposal = null;
