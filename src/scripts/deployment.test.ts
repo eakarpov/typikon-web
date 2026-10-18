@@ -43,7 +43,25 @@ function fixture(t: { after: (fn: () => void) => void }) {
     write(join(root, "corpus/data.db"), "shared-corpus");
     write(join(input, ".env.production"), "SECRET=new\nSQLITE_DB=/old/nobles.db\nRULES_DB=../corpus/data.db\n");
     write(join(input, "nobles.db"), "new-db");
-    write(join(bin, "sudo"), '#!/bin/bash\n[ "$1" != -n ] || shift\nexec "$@"\n', true);
+    write(join(bin, "sudo"), `#!/bin/bash
+password_stdin=0
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -n) shift ;;
+        -S) password_stdin=1; shift ;;
+        -p) shift 2 ;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+done
+if [[ "\${TEST_REQUIRE_PASSWORD:-0}" == 1 ]]; then
+    [[ "$password_stdin" == 1 ]] || { echo 'sudo: a password is required' >&2; exit 1; }
+    IFS= read -r supplied
+    [[ "$supplied" == "$TEST_EXPECTED_PASSWORD" ]] || { echo 'sudo: incorrect password' >&2; exit 1; }
+fi
+[[ -z "\${SUDO_PASSWORD:-}" ]] || { echo 'password leaked into environment' >&2; exit 1; }
+exec "$@"
+`, true);
     write(join(bin, "flock"), '#!/bin/bash\n[ "${TEST_LOCKED:-0}" != 1 ]\n', true);
     write(join(bin, "sleep"), '#!/bin/bash\n/bin/sleep 0.03\n', true);
     write(join(bin, "npm"), `#!/bin/bash
@@ -103,7 +121,7 @@ console.log(JSON.stringify({status:'ready',buildId:id}));
             assert.throws(() => process.kill(pid, 0), "проверочный процесс должен быть остановлен");
         }
     };
-    return { root, source, deploy, old, input, git, run, current, commands, stopped };
+    return { root, source, deploy, old, input, git, run, current, commands, stopped, env };
 }
 
 test("сборка изолирована, проверена и переключена; откат одной командой возвращает прежнюю", t => {
@@ -218,9 +236,9 @@ test("клиент отката передаёт цель и работает б
         `REMOTE_ROOT=${f.source}`, `DEPLOY_ROOT=${f.deploy}`,
     ].join("\n"));
     const calls = join(f.root, "client-calls");
-    writeFileSync(join(f.root, "bin/sshpass"), '#!/bin/bash\nprintf "%s\\n" "$*" >> "$TEST_COMMANDS"\ncat > /dev/null\n', { mode: 0o755 });
+    writeFileSync(join(f.root, "bin/sshpass"), '#!/bin/bash\nprintf "%s\\n" "$*" >> "$TEST_COMMANDS"\ncat > \"$TEST_STDIN\"\n', { mode: 0o755 });
     const result = spawnSync("bash", [join(scripts, "release.sh"), "--rollback", "--target", "test"], {
-        env: { ...process.env, LC_ALL: "C", PATH: join(f.root, "bin") + ':' + process.env.PATH, TEST_COMMANDS: calls },
+        env: { ...process.env, LC_ALL: "C", PATH: join(f.root, "bin") + ':' + process.env.PATH, TEST_COMMANDS: calls, TEST_STDIN: join(f.root, "client-stdin") },
         encoding: "utf8", timeout: 10_000,
     });
     assert.equal(result.status, 0, result.stderr);
@@ -228,6 +246,10 @@ test("клиент отката передаёт цель и работает б
     assert.ok(sent.includes("DEPLOY_ACTION=rollback"));
     assert.ok(sent.includes(`REMOTE_ROOT=${f.source}`));
     assert.ok(!sent.includes("scp"));
+    assert.ok(!sent.includes("test-only"), "пароль не попадает в аргументы SSH");
+    const input = readFileSync(join(f.root, "client-stdin"), "utf8");
+    assert.equal(input.split("\n")[0], "test-only");
+    assert.ok(input.includes("sudo_run"));
 });
 
 test("потерянный общий корпус останавливает выкладку до переключения", t => {
@@ -248,4 +270,58 @@ test("первичная настройка не меняет службу, ес
     assert.match(result.stderr, /Существующий сайт недоступен/);
     assert.ok(!existsSync(join(f.root, "units/typikon-web.service.d/release.conf")));
     assert.ok(!f.commands().includes("daemon-reload"));
+});
+
+
+test("setup передаёт пароль sudo через stdin для всех привилегированных команд", t => {
+    const f = fixture(t);
+    const password = 'sudo test $with "quotes" and spaces';
+    const result = f.run("setup", {
+        SUDO_PASSWORD: password, TEST_REQUIRE_PASSWORD: "1", TEST_EXPECTED_PASSWORD: password,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(existsSync(join(f.root, "units/typikon-web.service.d/release.conf")));
+    assert.ok(f.commands().includes("daemon-reload"));
+    assert.ok(!result.stdout.includes(password));
+    assert.ok(!result.stderr.includes(password));
+});
+
+test("пароль sudo используется и для перезапуска при релизе и откате", t => {
+    const f = fixture(t);
+    const flags = { SUDO_PASSWORD: "sudo-test", TEST_REQUIRE_PASSWORD: "1", TEST_EXPECTED_PASSWORD: "sudo-test" };
+    const deployed = f.run("deploy", flags);
+    assert.equal(deployed.status, 0, deployed.stderr);
+    const rollback = f.run("rollback", flags);
+    assert.equal(rollback.status, 0, rollback.stderr);
+    assert.equal(f.current(), f.old);
+    f.stopped();
+});
+
+
+test("клиент setup доставляет отдельный пароль sudo по SSH stdin без аргументов и экспорта", t => {
+    const f = fixture(t);
+    mkdirSync(join(f.source, "scripts"));
+    for (const name of ["release.sh", "release-target.sh", "rebuild-remote.sh"]) {
+        writeFileSync(join(f.source, "scripts", name), readFileSync(resolve("scripts", name)));
+    }
+    writeFileSync(join(f.source, ".env.release.test"), [
+        "USERNAME=test", "HOST=server.invalid", "PASSWORD=ssh-only", "ENV_FILE=.env.missing",
+        `REMOTE_ROOT=${f.source}`, `DEPLOY_ROOT=${f.deploy}`, "APP_PORT=3100", "PROBE_PORT=3101",
+    ].join("\n"));
+    writeFileSync(join(f.root, "bin/sshpass"), `#!/bin/bash
+printf '%s\\n' "$*" > "$TEST_SSH_ARGS"
+unset PASSWORD SUDO_PASSWORD
+exec bash -c "\${@: -1}"
+`, { mode: 0o755 });
+    const password = 'sudo $password with "quotes"';
+    const args = join(f.root, "ssh-args");
+    const result = spawnSync("bash", [join(f.source, "scripts/release.sh"), "--setup", "--target", "test"], {
+        env: { ...f.env, SUDO_PASSWORD: password, TEST_REQUIRE_PASSWORD: "1", TEST_EXPECTED_PASSWORD: password, TEST_SSH_ARGS: args },
+        encoding: "utf8", timeout: 15_000,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(existsSync(join(f.root, "units/typikon-web.service.d/release.conf")));
+    assert.ok(!readFileSync(args, "utf8").includes(password));
+    assert.ok(!result.stdout.includes(password));
+    assert.ok(!result.stderr.includes(password));
 });

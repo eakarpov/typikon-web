@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 # Локальный клиент: файлы кандидата отдельно от работающего сайта.
+set +x
 set -euo pipefail
 REQUIRE_ENV_FILE=0
 . "$(dirname "$0")/release-target.sh"
+sudo_password_input=${SUDO_PASSWORD:-$PASSWORD}
+unset SUDO_PASSWORD
+export -n PASSWORD
+case "$sudo_password_input" in
+    *$'\n'*|*$'\r'*) echo 'Пароль sudo не должен содержать перевод строки' >&2; exit 1 ;;
+esac
 DEPLOY_ACTION=deploy
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -32,6 +39,14 @@ if [[ "$DEPLOY_ACTION" == deploy ]]; then
     scp_put "$ENV_FILE" "$DEPLOY_INPUT/.env.production"
     scp_put nobles.db "$DEPLOY_INPUT/nobles.db"
 fi
-printf -v remote 'REMOTE_ROOT=%q DEPLOY_ROOT=%q WEB_SERVICE=%q APP_PORT=%q PROBE_PORT=%q RELEASE_REF=%q DEPLOY_ACTION=%q DEPLOY_INPUT=%q bash -s' \
-    "$REMOTE_ROOT" "$DEPLOY_ROOT" "$WEB_SERVICE" "$APP_PORT" "$PROBE_PORT" "$RELEASE_REF" "$DEPLOY_ACTION" "$DEPLOY_INPUT"
-ssh_run "$remote" < "$RELEASE_DIR/rebuild-remote.sh"
+# Пароль идёт первой строкой шифрованного stdin SSH, не аргументом команды.
+# Bootstrap читает его до разбора скрипта и оставляет неэкспортированной переменной.
+bootstrap='set +x; IFS= read -r _deploy_sudo_password; source /dev/stdin'
+printf -v remote 'REMOTE_ROOT=%q DEPLOY_ROOT=%q WEB_SERVICE=%q APP_PORT=%q PROBE_PORT=%q RELEASE_REF=%q DEPLOY_ACTION=%q DEPLOY_INPUT=%q bash -c %q' \
+    "$REMOTE_ROOT" "$DEPLOY_ROOT" "$WEB_SERVICE" "$APP_PORT" "$PROBE_PORT" "$RELEASE_REF" "$DEPLOY_ACTION" "$DEPLOY_INPUT" "$bootstrap"
+# Не допускаем вывода секрета даже при запуске клиента с bash -x.
+set +x
+{
+    printf '%s\n' "$sudo_password_input"
+    cat "$RELEASE_DIR/rebuild-remote.sh"
+} | ssh_run "$remote"

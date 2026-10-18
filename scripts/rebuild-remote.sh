@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 # Получает параметры от release.sh; исполняется по ssh, не меняет исходный checkout.
+set +x
 set -Eeuo pipefail
+# При SSH-вызове bootstrap уже прочитал секрет из stdin. Для прямого запуска
+# поддерживается SUDO_PASSWORD; дальше пароль не наследуют npm, node и git.
+sudo_password=${_deploy_sudo_password:-${SUDO_PASSWORD:-}}
+unset _deploy_sudo_password SUDO_PASSWORD
+sudo_run() {
+    if [[ -n "$sudo_password" ]]; then
+        printf '%s\n' "$sudo_password" | sudo -S -p '' -- "$@"
+    else
+        sudo -n -- "$@"
+    fi
+}
 umask 077
 : "${REMOTE_ROOT:?REMOTE_ROOT is required}"
 DEPLOY_ROOT=${DEPLOY_ROOT:-${REMOTE_ROOT}-releases}
@@ -73,7 +85,7 @@ wait_ready() {
     done
     return 1
 }
-restart() { sudo -n systemctl restart "$WEB_SERVICE"; }
+restart() { sudo_run systemctl restart "$WEB_SERVICE"; }
 cleanup() {
     local status=$?
     trap - EXIT INT TERM HUP
@@ -112,9 +124,9 @@ WorkingDirectory=$DEPLOY_ROOT/current
 ExecStart=
 ExecStart=$NODE_BIN $DEPLOY_ROOT/current/node_modules/next/dist/bin/next start -H 127.0.0.1 -p $APP_PORT
 UNIT
-    sudo -n install -d -m 755 "$SYSTEMD_UNIT_DIR/$WEB_SERVICE.d"
-    sudo -n install -m 644 "$DEPLOY_ROOT/release.conf" "$SYSTEMD_UNIT_DIR/$WEB_SERVICE.d/release.conf"
-    sudo -n systemctl daemon-reload
+    sudo_run install -d -m 755 "$SYSTEMD_UNIT_DIR/$WEB_SERVICE.d"
+    sudo_run install -m 644 "$DEPLOY_ROOT/release.conf" "$SYSTEMD_UNIT_DIR/$WEB_SERVICE.d/release.conf"
+    sudo_run systemctl daemon-reload
     echo "Служба настроена на $DEPLOY_ROOT/current; работающий процесс сохранён"
     exit 0
 fi
