@@ -49,6 +49,12 @@ export function middleware(request: NextRequest) {
         return response;
     }
 
+    // Cache metadata is public API, not a page. Do not copy request headers
+    // into its response: Cache-Control: no-cache would overwrite no-store.
+    if (request.nextUrl.pathname === "/api/cache-version") {
+        return NextResponse.next();
+    }
+
     const headers = new Headers(request.headers);
     headers.set("x-current-path", request.nextUrl.pathname);
     return NextResponse.next({ headers });
