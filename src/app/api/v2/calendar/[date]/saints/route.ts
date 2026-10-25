@@ -4,15 +4,9 @@ import { daySaint } from "@/lib/api/v2/serialize";
 import { daySaintsCached } from "@/lib/daySaints/store";
 import { reportError } from "@/lib/reportError";
 
-// Святые дня из нашего каталога: кого из святых вспоминают в этот день по Минее.
-//
-// Дата гражданская (YYYY-MM-DD); выборка идёт по церковной паре месяц+число
-// ст. ст. — как у соседа /api/v2/calendar/{date}. Пасхалия не участвует:
-// неподвижный круг адресуется числом месяца.
-//
-// Список строится по ВЫВЕРЕННЫМ человеком связкам «память → святой», и выверена
-// меньшая часть (88 из 653): пустой список чаще значит «связь не проставлена»,
-// чем «святых нет». Иконы, святыни, места и храмы не входят — это список лиц.
+// Дневная выдача Днеслова из долговечного кэша + собственный каталог.
+// Связки памяти с лицом дополняют источник, а не ограничивают его покрытие.
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -35,8 +29,9 @@ export async function GET(
     }
 
     try {
-        const saints = await daySaintsCached(date);
-        return respond({ date, saints: saints.map(daySaint) }, { access });
+        const result = await daySaintsCached(date);
+        return respond({ date, ...result, saints: result.saints.map(daySaint) },
+            { access, maxAge: result.partial ? 0 : revalidate });
     } catch (e) {
         reportError(e, { where: "app/api/v2/calendar/[date]/saints/route#GET", source: "api" });
         return fail("internal", "Не удалось собрать святых дня");

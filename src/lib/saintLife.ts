@@ -32,13 +32,20 @@ const loadSaintLife = cached(async (address: string): Promise<SaintLifeResult> =
     // (пустые externals) — жить ей не от чего.
     if (!ids.length) return { status: "no_link" };
 
-    // Житие у святцев одно на память: если номеров несколько, берём первый —
-    // выбирать из двух нам нечем.
-    const details = (await snapshotOfMemory(ids[0])) ?? (await saintMemory(ids[0]));
-    if (!details) throw new LifeUnavailable();
-
+    // Объединённая нами запись может иметь несколько номеров: один пустой
+    // снимок не должен скрывать житие, доступное под другим номером.
+    const snapshots = await Promise.all(ids.map(async id =>
+        (await snapshotOfMemory(id)) ?? (await saintMemory(id))));
+    const available = snapshots.filter(Boolean);
+    if (!available.length) throw new LifeUnavailable();
+    const details = {
+        ...available[0],
+        memoes: available.flatMap(d => Array.isArray(d.memoes) ? d.memoes : []),
+        events: available.flatMap(d => Array.isArray(d.events) ? d.events : []),
+        links: available.flatMap(d => Array.isArray(d.links) ? d.links : []),
+    };
     return { status: "ok", details };
-}, ["saint-life"], [CacheTag.SAINTS], 86400);
+}, ["saint-life:v2"], [CacheTag.SAINTS], 86400);
 
 export const saintLifeOf = async (address: string): Promise<SaintLifeResult> => {
     try {

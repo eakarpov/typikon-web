@@ -36,6 +36,7 @@ const DEFAULT_LANG: PrayerLang = "cu_gr";
 export type NamedFor = "living" | "departed";
 
 export type NamedStyleKey =
+    | "psalter-departed"
     | "molitvoslov-short"
     | "molitvoslov-pomyanik"
     | "litiya"
@@ -49,6 +50,10 @@ interface NamedEntry {
 }
 
 export const NAMED_STYLES: Record<NamedStyleKey, Record<NamedFor, NamedEntry[]>> = {
+    "psalter-departed": {
+        living: [],
+        departed: [{ moment: "psaltir-pominovenie/ob-usopshih", titled: false }],
+    },
     "molitvoslov-short": {
         living: [{ moment: "utrennie/o-zhivyh", titled: true }],
         departed: [{ moment: "utrennie/ob-usopshih", titled: true }],
@@ -86,6 +91,10 @@ export const NAMED_FOR_KINDS: NamedFor[] = ["living", "departed"];
  *  разделы — слаги издания; сверены с parsed/molitvoslov и kelia-moments.yaml:
  *  у каждого из девяти раздела есть вхождения в базе. */
 export const POSLEDOVANIYA: Record<string, string> = {
+    ...Object.fromEntries(Array.from({ length: 20 }, (_, i) => {
+        const key = `psaltir-kafizma-${i + 1}`;
+        return [key, key];
+    })),
     "utrennie": "utrennie",
     "na-son": "na-son",
     "ko-prichashcheniyu": "ko-prichashcheniyu",

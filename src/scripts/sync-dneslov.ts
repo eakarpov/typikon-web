@@ -109,6 +109,12 @@ const collectIds = async (): Promise<Map<string, string[]>> => {
     (await db.collection("akathist_saint_links").distinct("dneslovId", { status: "approved" }))
         .forEach((v) => add(v, "akathist_saint_links"));
 
+    // Дневной кэш может встретить память, которой ещё нет в наших текстах и
+    // ручных связках. Такие записи тоже надо доснять, чтобы последующий
+    // build-saints.ts расширил каталог, а не оставил их только в оглавлении.
+    (await db.collection("dneslov_memories").distinct("_id", { status: "partial" }))
+        .forEach((v) => add(v, "calendar-cache"));
+
     // Родословная лежит отдельно, в SQLite (см. src/lib/sqlite.ts). Её может не быть
     // на машине, где гоняют синхронизацию, — это не повод не снимать остальное.
     try {

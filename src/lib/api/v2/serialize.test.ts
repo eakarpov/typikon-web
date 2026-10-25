@@ -259,3 +259,14 @@ test("ссылка на источники называет все три и и�
         assert.ok(PLACES_ATTRIBUTION.includes(required), required);
     }
 });
+
+
+test("житие из вложенных событий Днеслова не теряется", () => {
+    const life = saintLife({ slug: "external", events: [{
+        titles: [{ text: "Преставление" }], happened_at: "400", description: "Текст события",
+        memoes: [{ title: "Текст памяти", description: "Отдельное житие" }],
+    }] });
+    assert.deepEqual(life?.memoes.map(m => m.description), ["Отдельное житие", "Текст события"]);
+    assert.equal(life?.memoes[1].title, "Преставление");
+    assert.equal(life?.memoes[1].happenedAt, "400");
+});

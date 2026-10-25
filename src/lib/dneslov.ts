@@ -1,27 +1,12 @@
-// Имена святых для страниц сайта. Своей идентичности святых в проекте нет — она
-// целиком живёт в святцах dneslov.org, и по LICENSE-CORPUS.md эти сведения "приходят
-// по их API при показе страницы, в корпусе не хранятся". Поэтому здесь нет и не должно
-// появиться таблицы имён в Mongo: только HTTP-кэш с суточным сроком жизни, как у CDN.
-//
-// Модуль решает три задачи, которых не решал прямой fetch в src/app/saints/[id]/api.ts:
-//   1. кэш — раньше каждый заход на страницу святого стоил двух последовательных
-//      запросов наружу (~0.5 с каждый, а однажды при замере соединение висело 75 с);
-//   2. таймаут — внешний сервис больше не может подвесить рендер нашей страницы;
-//   3. деградация — если dneslov.org молчит, страница остаётся живой: тексты-то наши,
-//      вместо имени показываем "Память №3030", ссылка работает по-прежнему.
-//
-// Не путать с src/scripts/lib/dneslov.ts: тот — для скриптов (undici, обход TLS,
-// подробные логи в консоль), этот — для рендера страниц.
+// Имена и карточки Днеслова: долговечный снимок в Mongo + быстрый кэш Next.
+// Ошибка источника не удаляет полученные раньше данные и не кэшируется как пустота.
 import { cached, CacheTag } from "@/lib/cache";
+import { durableDneslovTitle } from "@/lib/dneslovDay";
 import {reportError} from "@/lib/reportError";
 
 // Сутки: имя святого в святцах не меняется годами, а мы платим за каждый промах
 // походом наружу. Тег SAINTS оставлен на случай, если понадобится сбросить руками.
 const TITLE_REVALIDATE = 86400;
-
-// Внешний сервис не должен держать наш рендер: лучше показать "Память №N",
-// чем заставить читателя ждать. Замер 2026-08-27: удачный ответ — 0.5 с.
-const TIMEOUT_MS = 3000;
 
 // Столько имён тянем одновременно. Страница чтения просит две-три штуки, индекс
 // святых — полсотни; без ограничения полсотни параллельных запросов к чужому
@@ -36,44 +21,15 @@ const CONCURRENCY = 8;
 // которую никто не дождётся.
 const BATCH_BUDGET_MS = 2500;
 
-// Пути без схемы: какая из них доедет — выясняем на месте. В src/scripts/lib/dneslov.ts
-// записано, что эти два эндпоинта отвечают только по http; замер 2026-08-27 показал
-// обратное — по http соединение не устанавливается вовсе, по https отвечает через раз.
-// Значит, дело не в схеме, а в нестабильности самого сервиса, и полагаться на одну
-// из двух нельзя: пробуем https, затем http.
-const MEMORY_PATH = (id: string) => `dneslov.org/api/v0/memories/${id}.json`;
-const DETAILS_PATH = (slug: string) => `dneslov.org/${slug}.json`;
-
-const SCHEMES = ["https", "http"];
-
 export const saintFallbackTitle = (id: string) => `Память №${id}`;
-
-// memories/{id}.json — самый дешёвый ответ у dneslov: title и short_name
-// без событий, ссылок и описаний.
-const fetchJson = async (path: string) => {
-    let last: unknown = null;
-
-    for (const scheme of SCHEMES) {
-        try {
-            const res = await fetch(`${scheme}://${path}`, { signal: AbortSignal.timeout(TIMEOUT_MS) });
-            if (!res.ok) throw new Error(`ответил ${res.status}`);
-            return await res.json();
-        } catch (e) {
-            last = e;
-        }
-    }
-
-    throw new Error(`dneslov: ${path} недоступен (${last instanceof Error ? last.message : last})`);
-};
 
 // Внутрь кэша уходит только успех: если бросить исключение, unstable_cache ничего
 // не запомнит. Иначе одна минута недоступности dneslov.org застряла бы на сутки.
 const loadTitle = cached(async (id: string) => {
-    const memory = await fetchJson(MEMORY_PATH(id));
-    const title = memory?.title || memory?.short_name;
+    const title = await durableDneslovTitle(id);
     if (!title) throw new Error(`dneslov: у памяти ${id} нет названия`);
-    return String(title);
-}, ["dneslov-saint-title"], [CacheTag.SAINTS], TITLE_REVALIDATE);
+    return title;
+}, ["dneslov-saint-title:v2"], [CacheTag.SAINTS], TITLE_REVALIDATE);
 
 // Имя одной памяти. null — "сейчас не знаем", а не "такой памяти нет":
 // решение, что показать вместо имени, принимает вызывающий.
@@ -156,23 +112,5 @@ const warmInBackground = (ids: string[]) => {
     })();
 };
 
-const loadMemory = cached(async (id: string) => {
-    const memory = await fetchJson(MEMORY_PATH(id));
-    if (!memory?.slug) throw new Error(`dneslov: у памяти ${id} нет slug`);
-
-    const details = await fetchJson(DETAILS_PATH(memory.slug));
-    // slug берём из первого ответа: во втором его может не быть.
-    return { ...details, slug: memory.slug };
-}, ["dneslov-saint-memory"], [CacheTag.SAINTS], TITLE_REVALIDATE);
-
-// Полная карточка памяти для /saints/[id]: житие, ссылки, чин. null означает,
-// что dneslov.org недоступен, — страницу это больше не отменяет.
-export const saintMemory = async (id: string): Promise<any | null> => {
-    if (!id) return null;
-    try {
-        return await loadMemory(id);
-    } catch (e) {
-        reportError(e, { where: "lib/dneslov: не удалось получить память", extra: { id } });
-        return null;
-    }
-};
+// Полные ответы сохраняются в Mongo, а не только в кэше процесса Next.
+export { durableDneslovMemory as saintMemory } from "@/lib/dneslovDay";

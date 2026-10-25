@@ -12,6 +12,8 @@ import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 import { SAINT_SOURCES, byExternal, type SaintExternal } from "@/lib/saintSources";
 
+import { durableDneslovMemory } from "@/lib/dneslovDay";
+
 const DNESLOV = SAINT_SOURCES.dneslov.code;
 
 export interface Saint {
@@ -110,8 +112,23 @@ export const getSaintByAddress = cached(async (address: string): Promise<Saint |
     // Номером ищем только то, что похоже на номер: слуг из одних цифр мы не выдаём,
     // а лишний запрос на каждую опечатку в адресе ни к чему.
     if (!/^\d+$/.test(address)) return null;
-    return (await saints.findOne(byExternal(DNESLOV, address))) as unknown as Saint | null;
-}, ["saint-by-address"], [CacheTag.SAINTS]);
+    const local = await saints.findOne(byExternal(DNESLOV, address));
+    if (local) return local as unknown as Saint;
+    // Календарь мог уже принести память, которой пока нет в выверенном каталоге.
+    // Это представление снимка, без записи поверх редакторских данных saints.
+    const db = (await clientPromise).db("typikon");
+    const snapshot: any = await db.collection("dneslov_memories").findOne({ _id: address as any });
+    const details = snapshot?.details ?? snapshot?.memory ?? await durableDneslovMemory(address);
+    if (!details) throw new Error("Святцы не ответили, сохранённой карточки пока нет");
+    return {
+        _id: `dneslov:${address}`, slug: null,
+        name: details.short_name ?? details.title ?? `Память №${address}`,
+        altNames: [], title: details.title ?? null, type: details.type ?? null,
+        orders: [], councils: [], baseYear: details.base_year ?? null,
+        memoryDates: [], imageUrl: null, roundelUrl: details.roundel_url ?? null,
+        images: [], externals: [{ source: DNESLOV, id: address, slug: snapshot?.slug ?? details.slug ?? null }],
+    } as Saint;
+}, ["saint-by-address:v2"], [CacheTag.SAINTS]);
 
 /**
  * Общий разбор выборки «пачка номеров святцев -> поле каталога». Ключей одного

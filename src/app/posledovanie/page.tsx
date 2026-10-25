@@ -124,6 +124,11 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
 
             <div className="flex-1 min-w-0">
                 <PackageMode>
+                <div className="mb-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-slate-700" role="note">
+                    <span className="mr-2 rounded bg-amber-100 px-2 py-0.5 font-semibold">Бета</span>
+                    Сборка последования ещё проверяется: возможны пропуски текстов и ошибки в порядке службы.
+                    Сверяйте последование с богослужебными книгами.
+                </div>
                 <DayHead day={day} />
                 <div className="flex items-baseline gap-3 mt-1 flex-wrap">
                     <a download href={downloadDay}

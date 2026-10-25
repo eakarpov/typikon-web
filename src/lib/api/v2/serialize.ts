@@ -748,9 +748,20 @@ const saintLifeLink = (link: any) => ({
  * честно ответит 404.
  */
 export const saintLife = (details: any) => {
-    const memoes = ((details?.memoes ?? []) as any[])
-        .map(saintLifeMemo)
-        .filter((memo) => memo.description.trim().length > 0);
+    const events = Array.isArray(details?.events) ? details.events : [];
+    const candidates = [
+        ...(Array.isArray(details?.memoes) ? details.memoes : []),
+        ...events.flatMap((event: any) => [
+            ...(Array.isArray(event.memoes) ? event.memoes : []),
+            { ...event, title: event.title ?? event.titles?.[0]?.text ?? details.short_name ?? null },
+        ]),
+    ];
+    const seen = new Set<string>();
+    const memoes = candidates.map(saintLifeMemo).filter(memo => {
+        const text = memo.description.trim();
+        if (!text || seen.has(text)) return false;
+        seen.add(text); return true;
+    });
     if (!memoes.length) return null;
 
     return {

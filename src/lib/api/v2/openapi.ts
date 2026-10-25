@@ -168,13 +168,11 @@ export const openapi = () => ({
                 tags: ["Календарь"],
                 summary: "Святые дня",
                 description:
-                    "Святые нашего каталога, привязанные к памятям Минеи на этот день. "
-                    + "Дата гражданская (YYYY-MM-DD), выборка идёт по церковной паре "
-                    + "месяц+число ст. ст.\n\n"
-                    + "Список строится по связкам «память → святой», выверенным человеком, "
-                    + "а выверена меньшая часть: пустой список чаще значит «связь ещё не "
-                    + "проставлена», чем «святых нет». Иконы, святыни, места и храмы в список "
-                    + "не входят — это список лиц.",
+                    "Полный календарь Днеслова (все доступные календари и страницы) "
+                    + "дополняется нашим каталогом. Выверенные имена и адреса имеют приоритет. "
+                    + "Отсутствие ручной связки не скрывает внешнюю память. Последний успешный "
+                    + "снимок хранится на сервере; сбой источника его не стирает. partial=true "
+                    + "означает, что источник не ответил и снимка пока нет; такой ответ не кэшируется.",
                 parameters: [
                     { name: "date", in: "path", required: true, schema: { type: "string", format: "date" }, example: "2026-04-12" },
                 ],
@@ -1382,7 +1380,7 @@ export const openapi = () => ({
                             "utrennie", "na-son", "ko-prichashcheniyu", "blagodarstvennye",
                             "tri-kanona-pokajannyj", "kanon-molebnyj-bogorodice",
                             "kanon-angelu-xranitelyu", "pravilo-serafima",
-                            "chin-kelejnogo-chteniya",
+                            "chin-kelejnogo-chteniya", "psaltir-kafizma-1 … psaltir-kafizma-20",
                         ].join(", "),
                     },
                     { name: "lang", in: "query", required: false, schema: { type: "string", enum: ["cu_gr", "cu"], default: "cu_gr" }, description: "Начертание текста" },
@@ -1413,7 +1411,7 @@ export const openapi = () => ({
                         name: "style", in: "query", required: true, schema: { type: "string" },
                         description: "Молитва: molitvoslov-short (краткие), molitvoslov-pomyanik " +
                             "(помянник утренних), litiya (зaупокойная), proskomidia, " +
-                            "liturgy-ektinia (заупокойная). Не всякий стиль бывает для обоих for.",
+                            "liturgy-ektinia, psalter-departed (без родственных категорий). Не всякий стиль бывает для обоих for.",
                     },
                     { name: "lang", in: "query", required: false, schema: { type: "string", enum: ["cu_gr", "cu"], default: "cu_gr" }, description: "Начертание текста" },
                     { name: "gender", in: "query", required: false, schema: { type: "string", enum: ["m", "f"], default: "m" }, description: "Пол молящегося" },
@@ -2676,12 +2674,14 @@ export const openapi = () => ({
                 properties: {
                     date: { type: "string", format: "date", description: "Гражданская дата запроса" },
                     saints: { type: "array", items: { $ref: "#/components/schemas/DaySaint" } },
+                    partial: { type: "boolean", description: "Нет ответа Днеслова и успешного снимка на дату" },
+                    sourceStale: { type: "boolean", description: "Показан сохранённый снимок, запущено обновление" },
                 },
             },
             DaySaint: {
                 type: "object",
                 properties: {
-                    slug: { type: ["string", "null"], description: "Адрес святого в каталоге — за ним досье" },
+                    slug: { type: ["string", "null"], description: "Слуг каталога или числовой номер памяти Днеслова — за ним досье" },
                     name: { type: ["string", "null"] },
                     roundelUrl: { type: "string", description: "Кругляш — чужой файл с CDN святцев; опущен, если не заведён" },
                 },
