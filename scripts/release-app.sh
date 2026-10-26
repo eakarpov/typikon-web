@@ -46,18 +46,8 @@ scp_put "$APK_PATH" "$REMOTE_DIR/$VERSIONED_NAME"
 echo "Обновляю текущую (app.apk -> $VERSIONED_NAME)"
 ssh_run "cp '$REMOTE_DIR/$VERSIONED_NAME' '$REMOTE_DIR/app.apk'"
 
-MAJOR="${VERSION%%.*}"
-REST="${VERSION#*.}"
-MINOR="${REST%%.*}"
-
-# Версию в исходниках двигает только выкладка на прод: испытательная сборка не
-# должна менять то, что /api/v1/app/version скажет настоящим приложениям.
-VERSION_FILE="src/pages/api/v1/app/version.ts"
-if [ "$TARGET" = prod ] && [ -f "$VERSION_FILE" ]; then
-    sed -i.bak -E "s/major: [0-9]+, minor: [0-9]+/major: $MAJOR, minor: $MINOR/" "$VERSION_FILE"
-    rm -f "${VERSION_FILE}.bak"
-    echo "Обновлён $VERSION_FILE -> major: $MAJOR, minor: $MINOR"
-    echo "Не забудьте закоммитить и задеплоить веб (release.sh), чтобы /api/v1/app/version отдавал новую версию"
-fi
+# API читает общий каталог APK через lib/appVersion; исходники обработчика v1
+# при загрузке файла не меняются. При смене каталога задайте APP_RELEASES_DIR сайту.
+echo "API определит версию по каталогу APK (обновление памяти занимает до минуты)"
 
 echo "Готово: $SITE_URL/app/app.apk (версия $VERSION)"
