@@ -1,5 +1,6 @@
 // Собственный каталог дополняет полный календарный снимок Днеслова.
 import clientPromise from '@/lib/mongodb';
+import { dneslovAddress } from '../dneslovIdentity';
 import { cached, CacheTag, CONTENT_REVALIDATE } from '@/lib/cache';
 import { getLinkedSaint } from '@/lib/memories';
 import { dneslovDay } from '@/lib/dneslovDay';
@@ -20,10 +21,10 @@ const linkedDaySaints = cached(async (dateStr: string) => {
 
 export async function daySaintsCached(date: string) {
     const [own, external] = await Promise.all([linkedDaySaints(date), dneslovDay(date)]);
-    const ids = [...new Set((external.data ?? []).filter((r: any) => r.id != null).map((r: any) => String(r.id)))];
+    const ids = [...new Set((external.data ?? []).map(dneslovAddress).filter((id): id is string => id != null))];
     const db = (await clientPromise).db('typikon');
     const catalogue = ids.length ? await db.collection('saints').find({
-        externals: { $elemMatch: { source: 'dneslov', id: { $in: ids } } },
+        externals: { $elemMatch: { source: 'dneslov', $or: [{ id: { $in: ids } }, { slug: { $in: ids } }] } },
     }).toArray() : [];
     return {
         saints: mergeDaySaints([...own, ...catalogue], external.data ?? []),

@@ -48,7 +48,8 @@ export async function GET(
             // Снимка в базе нет и святцы не ответили — «сейчас не знаем», а не
             // «жития нет». Такой исход не кэшируется (см. lib/saintLife) и
             // отдаётся no-store: при следующем запросе попробуем снова.
-            return fail("not_found", "Житие этой записи сейчас недоступно: святцы не ответили и снимка пока нет");
+            const response = fail("internal", "Источник жития временно недоступен. Повторите позже.");
+            return new Response(response.body, { status: 503, headers: response.headers });
         }
 
         const life = saintLife(result.details);

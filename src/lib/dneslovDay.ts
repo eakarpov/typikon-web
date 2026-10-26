@@ -1,4 +1,5 @@
 import clientPromise from '@/lib/mongodb';
+import { dneslovAddress, loadDneslovCard } from './dneslovIdentity';
 import { cachedDneslov, allDneslovPages, type SnapshotStore } from './dneslovCache';
 
 const DAY = 86400000;
@@ -32,7 +33,7 @@ export async function fetchDneslovJson(path: string): Promise<any> {
 /** Сохраняем новые внешние памяти отдельно от отредактированного нами каталога. */
 async function rememberDayMemories(rows: any[]) {
     const db = (await clientPromise).db('typikon');
-    const unique = new Map(rows.filter(r => r?.id != null).map(r => [String(r.id), r]));
+    const unique = new Map(rows.map(r => [dneslovAddress(r), r] as const).filter(([id]) => id != null));
     if (!unique.size) return;
     await db.collection('dneslov_memories').bulkWrite([...unique].map(([id, row]) => ({
         updateOne: {
@@ -68,17 +69,17 @@ export async function dneslovDay(date: string) {
 export async function durableDneslovMemory(id: string): Promise<any | null> {
     const db = (await clientPromise).db('typikon');
     const existing: any = await db.collection('dneslov_memories').findOne({ _id: id as any });
-    const result = await cachedDneslov(`memory:v1:${id}`, DAY, async () => {
-        const memory = await fetchDneslovJson(`/api/v0/memories/${encodeURIComponent(id)}.json`);
-        if (typeof memory?.slug !== 'string' || !memory.slug) throw new Error('Днеслов: нет slug');
-        const details = await fetchDneslovJson(`/${encodeURIComponent(memory.slug)}.json`);
-        if (!details || typeof details !== 'object' || Array.isArray(details) || details.error) throw new Error('Днеслов: неверная карточка');
-        const data = { ...details, slug: memory.slug };
-        await db.collection('dneslov_memories').updateOne({ _id: id as any },
-            { $set: { memory, details: data, slug: memory.slug, status: 'ok', fetchedAt: new Date() } }, { upsert: true });
-        return data;
+    const result = await cachedDneslov(`memory:v2:${id}`, DAY, async () => {
+        const hint = existing?.calendarMemory ?? existing?.memory;
+        const { memory, details, slug } = await loadDneslovCard(id, hint, fetchDneslovJson);
+        const update = { memory, details, slug, status: 'ok', fetchedAt: new Date() };
+        const keys = [...new Set([id, String(memory.id), slug])];
+        for (const key of keys) await db.collection('dneslov_memories').updateOne(
+            { _id: key as any }, { $set: update }, { upsert: true });
+        return details;
     }, dneslovSnapshots);
-    return result.data ?? (existing?.details ? { ...existing.details, slug: existing.slug } : null);
+    return result.data ? { ...result.data, _dneslovUnavailable: false }
+        : existing?.details ? { ...existing.details, slug: existing.slug, _dneslovUnavailable: true } : null;
 }
 
 export async function durableDneslovTitle(id: string): Promise<string | null> {

@@ -1,3 +1,4 @@
+import { dneslovAddress } from '../dneslovIdentity';
 // Святые дня: сборка списка по связкам «память → святой».
 //
 // Здесь только чистые функции — выборка из Mongo живёт в store.ts, а обработчик
@@ -53,7 +54,10 @@ export function mergeDaySaints(catalogue: any[], external: any[]): any[] {
     const byId = new Map<string, any>();
     for (const saint of catalogue) {
         for (const ref of saint.externals ?? []) {
-            if (ref.source === 'dneslov') byId.set(String(ref.id), saint);
+            if (ref.source === 'dneslov') {
+                byId.set(String(ref.id), saint);
+                if (ref.slug) byId.set(ref.slug, saint);
+            }
         }
     }
     const seen = new Set<string>();
@@ -66,8 +70,8 @@ export function mergeDaySaints(catalogue: any[], external: any[]): any[] {
         result.push(address ? { ...saint, slug: String(address) } : saint);
     };
     for (const row of external) {
-        if (row?.id == null) continue;
-        const id = String(row.id);
+        const id = dneslovAddress(row);
+        if (!id) continue;
         const local = byId.get(id);
         add(local ? { ...local,
             name: local.name || row.short_name || row.title || `Память №${id}`,

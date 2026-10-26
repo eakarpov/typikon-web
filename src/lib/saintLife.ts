@@ -9,6 +9,7 @@
 // и его молчание не должно уносить с собой имя, дни памяти и тексты.
 import { cached, CacheTag } from "@/lib/cache";
 import { getSaintByAddress, dneslovIdsOf, snapshotOfMemory } from "@/lib/saints";
+import { saintLife } from "@/lib/api/v2/serialize";
 import { saintMemory } from "@/lib/dneslov";
 
 export type SaintLifeResult =
@@ -34,10 +35,15 @@ const loadSaintLife = cached(async (address: string): Promise<SaintLifeResult> =
 
     // Объединённая нами запись может иметь несколько номеров: один пустой
     // снимок не должен скрывать житие, доступное под другим номером.
-    const snapshots = await Promise.all(ids.map(async id =>
-        (await snapshotOfMemory(id)) ?? (await saintMemory(id))));
+    const snapshots = await Promise.all(ids.map(async id => {
+        const snapshot = await snapshotOfMemory(id);
+        // A header-only snapshot must not prevent fetching the actual life.
+        return saintLife(snapshot) ? snapshot : (await saintMemory(id)) ?? snapshot;
+    }));
     const available = snapshots.filter(Boolean);
-    if (!available.length) throw new LifeUnavailable();
+    if (!available.length || (!available.some(d => saintLife(d)) && available.some(d => d._dneslovUnavailable))) {
+        throw new LifeUnavailable();
+    }
     const details = {
         ...available[0],
         memoes: available.flatMap(d => Array.isArray(d.memoes) ? d.memoes : []),
@@ -45,7 +51,7 @@ const loadSaintLife = cached(async (address: string): Promise<SaintLifeResult> =
         links: available.flatMap(d => Array.isArray(d.links) ? d.links : []),
     };
     return { status: "ok", details };
-}, ["saint-life:v2"], [CacheTag.SAINTS], 86400);
+}, ["saint-life:v3"], [CacheTag.SAINTS], 86400);
 
 export const saintLifeOf = async (address: string): Promise<SaintLifeResult> => {
     try {

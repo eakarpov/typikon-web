@@ -109,26 +109,27 @@ export const getSaintByAddress = cached(async (address: string): Promise<Saint |
     const byOldSlug = await saints.findOne({ previousSlugs: address });
     if (byOldSlug) return byOldSlug as unknown as Saint;
 
-    // Номером ищем только то, что похоже на номер: слуг из одних цифр мы не выдаём,
-    // а лишний запрос на каждую опечатку в адресе ни к чему.
-    if (!/^\d+$/.test(address)) return null;
-    const local = await saints.findOne(byExternal(DNESLOV, address));
+    const byExternalSlug = await saints.findOne({ externals: { $elemMatch: { source: DNESLOV, slug: address } } });
+    if (byExternalSlug) return byExternalSlug as unknown as Saint;
+    if (!/^[\p{L}\p{N}_-]+$/u.test(address)) return null;
+    const local = /^\d+$/.test(address) ? await saints.findOne(byExternal(DNESLOV, address)) : null;
     if (local) return local as unknown as Saint;
-    // Календарь мог уже принести память, которой пока нет в выверенном каталоге.
-    // Это представление снимка, без записи поверх редакторских данных saints.
     const db = (await clientPromise).db("typikon");
-    const snapshot: any = await db.collection("dneslov_memories").findOne({ _id: address as any });
-    const details = snapshot?.details ?? snapshot?.memory ?? await durableDneslovMemory(address);
+    const snapshot: any = await db.collection("dneslov_memories").findOne({ $or: [{ _id: address as any }, { slug: address }] });
+    const details = snapshot?.details ?? await durableDneslovMemory(address);
     if (!details) throw new Error("Святцы не ответили, сохранённой карточки пока нет");
+    const canonicalId = String(details.id ?? address);
+    const linked = await saints.findOne(byExternal(DNESLOV, canonicalId));
+    if (linked) return linked as unknown as Saint;
     return {
-        _id: `dneslov:${address}`, slug: null,
+        _id: `dneslov:${canonicalId}`, slug: null,
         name: details.short_name ?? details.title ?? `Память №${address}`,
         altNames: [], title: details.title ?? null, type: details.type ?? null,
         orders: [], councils: [], baseYear: details.base_year ?? null,
         memoryDates: [], imageUrl: null, roundelUrl: details.roundel_url ?? null,
-        images: [], externals: [{ source: DNESLOV, id: address, slug: snapshot?.slug ?? details.slug ?? null }],
+        images: snapshot?.images ?? [], externals: [{ source: DNESLOV, id: canonicalId, slug: snapshot?.slug ?? details.slug ?? null }],
     } as Saint;
-}, ["saint-by-address:v2"], [CacheTag.SAINTS]);
+}, ["saint-by-address:v3"], [CacheTag.SAINTS]);
 
 /**
  * Общий разбор выборки «пачка номеров святцев -> поле каталога». Ключей одного
