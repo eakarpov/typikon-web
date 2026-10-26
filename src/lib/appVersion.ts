@@ -20,8 +20,12 @@ import path from "node:path";
  * новее их ничего нет.
  */
 
-/** Куда сложены выпуски. Тот же каталог, из которого их и скачивают. */
-const RELEASES = path.join(process.cwd(), "public", "app");
+/** Выпуски общие для всех каталогов релизов сайта. public/app — старая раскладка. */
+const releaseDirectories = () => [
+    process.env.APP_RELEASES_DIR,
+    "/var/www/typikon-app-releases",
+    path.join(process.cwd(), "public", "app"),
+].filter((value): value is string => !!value);
 
 /**
  * Последнее известное — на случай, если каталога не видно (иная раскладка
@@ -30,7 +34,7 @@ const RELEASES = path.join(process.cwd(), "public", "app");
  * поломку. Число здесь — пол, а не истина; правится при выпуске, если каталог
  * почему-то читать перестали.
  */
-export const LAST_KNOWN: AppVersion = { major: 2, minor: 2, patch: 0 };
+export const LAST_KNOWN: AppVersion = { major: 2, minor: 3, patch: 4 };
 
 export interface AppVersion {
     major: number;
@@ -76,11 +80,17 @@ const TTL = 60_000;
 export const publishedVersion = (now: number = Date.now()): AppVersion => {
     if (cached && now - cached.at < TTL) return cached.version;
 
-    let version: AppVersion;
-    try {
-        version = latestOf(readdirSync(RELEASES)) ?? LAST_KNOWN;
-    } catch {
-        version = LAST_KNOWN;
+    let version: AppVersion = LAST_KNOWN;
+    for (const directory of releaseDirectories()) {
+        try {
+            const published = latestOf(readdirSync(directory));
+            if (published) {
+                version = published;
+                break;
+            }
+        } catch {
+            // Проверяем прежнюю раскладку, если общий каталог недоступен.
+        }
     }
 
     cached = { at: now, version };

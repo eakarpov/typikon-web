@@ -1,6 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { latestOf, versionLabel, LAST_KNOWN } from "@/lib/appVersion";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { latestOf, versionLabel, LAST_KNOWN, publishedVersion, forgetPublishedVersion } from "@/lib/appVersion";
 
 // Версия приложения. Число здесь стоит дороже прочих: по нему установленная копия
 // решает, есть ли новая, и ошибка в меньшую сторону не видна никому — все просто
@@ -55,4 +58,26 @@ test("пустой каталог — это «не знаю», а не нуле
     // месте и не о том (коммит «app 2.2.0»).
     assert.equal(versionLabel({ major: 2, minor: 0, patch: 0 }), "2.0.0");
     assert.equal(versionLabel(LAST_KNOWN), `${LAST_KNOWN.major}.${LAST_KNOWN.minor}.${LAST_KNOWN.patch}`);
+});
+
+
+test("API читает общий каталог выпусков вне каталога релиза сайта", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "typikon-app-version-"));
+    const previous = process.env.APP_RELEASES_DIR;
+    try {
+        process.env.APP_RELEASES_DIR = directory;
+        writeFileSync(path.join(directory, "app-2.3.4.apk"), "fixture");
+        writeFileSync(path.join(directory, "app-2.2.0.apk"), "fixture");
+        writeFileSync(path.join(directory, ".app-2.4.0.upload"), "partial");
+        forgetPublishedVersion();
+        assert.deepEqual(publishedVersion(1000), { major: 2, minor: 3, patch: 4 });
+        writeFileSync(path.join(directory, "app-2.3.5.apk"), "fixture");
+        assert.deepEqual(publishedVersion(2000), { major: 2, minor: 3, patch: 4 });
+        assert.deepEqual(publishedVersion(62000), { major: 2, minor: 3, patch: 5 });
+    } finally {
+        if (previous === undefined) delete process.env.APP_RELEASES_DIR;
+        else process.env.APP_RELEASES_DIR = previous;
+        forgetPublishedVersion();
+        rmSync(directory, { recursive: true });
+    }
 });
