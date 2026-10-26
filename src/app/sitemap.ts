@@ -80,6 +80,7 @@ const STATIC_ROUTES = [
     // знака, преобразование текста) в карту не идут: за ними стоит ответ
     // движка на введённое, а не содержание, которое стоило бы искать.
     { path: "/opyty", priority: 0.6 },
+    { path: "/opyty/kruczie", priority: 0.4 },
     { path: "/azbuki", priority: 0.6 },
     { path: "/azbuki/chinese", priority: 0.5 },
     { path: "/azbuki/polish", priority: 0.5 },

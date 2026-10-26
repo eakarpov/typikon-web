@@ -1,0 +1,27 @@
+@font-face {
+    font-family: "Kruczie Mezenets";
+    src: url("/fonts/MezenetsUnicode.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Kruczie Bravura";
+    src: url("/fonts/Bravura.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+.neumes {
+    font-family: "Kruczie Mezenets", serif;
+    font-size: 58px;
+    line-height: 1.7;
+    white-space: pre;
+    padding: 8px 2px;
+    min-height: 110px;
+}
+.music {
+    font-family: "Kruczie Bravura", serif;
+    font-weight: 400;
+    font-synthesis: none;
+}

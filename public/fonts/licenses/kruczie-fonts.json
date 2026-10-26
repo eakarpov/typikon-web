@@ -1,0 +1,14 @@
+[
+  {
+    "file": "Bravura.woff2",
+    "sha256": "e68df66446e3ffa6f474ce9eb2949e938102406f12d8f40ad8754398c50f55d4",
+    "source": "https://github.com/steinbergmedia/bravura/tree/master/redist",
+    "license": "licenses/Bravura-OFL.txt"
+  },
+  {
+    "file": "MezenetsUnicode.woff2",
+    "sha256": "944d56e5792264a4692eea14a142e60110ff1529f06cd6374da7cc93591af28a",
+    "source": "kruczie/src/res/fonts/MezenetsUnicode.woff2 (font version 1.100; https://github.com/slavonic/fonts-znam)",
+    "license": "licenses/MezenetsUnicode-OFL.txt"
+  }
+]

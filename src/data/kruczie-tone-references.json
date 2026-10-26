@@ -1,0 +1,386 @@
+{
+  "dependency": "0.2.0",
+  "datasetVersion": "2026.10.26",
+  "method": "most-frequent-ending-of-distinct-measured-formulas",
+  "profiles": [
+    {
+      "tradition": "znamenny",
+      "tone": 1,
+      "formulaCount": 386,
+      "sourceIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 76,
+          "count": 133
+        },
+        {
+          "midi": 74,
+          "count": 112
+        },
+        {
+          "midi": 79,
+          "count": 40
+        },
+        {
+          "midi": 69,
+          "count": 37
+        },
+        {
+          "midi": 67,
+          "count": 22
+        },
+        {
+          "midi": 72,
+          "count": 22
+        },
+        {
+          "midi": 77,
+          "count": 13
+        },
+        {
+          "midi": 81,
+          "count": 6
+        },
+        {
+          "midi": 71,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "tradition": "znamenny",
+      "tone": 2,
+      "formulaCount": 462,
+      "sourceIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 74,
+          "count": 218
+        },
+        {
+          "midi": 79,
+          "count": 123
+        },
+        {
+          "midi": 77,
+          "count": 56
+        },
+        {
+          "midi": 76,
+          "count": 26
+        },
+        {
+          "midi": 72,
+          "count": 19
+        },
+        {
+          "midi": 71,
+          "count": 14
+        },
+        {
+          "midi": 69,
+          "count": 3
+        },
+        {
+          "midi": 81,
+          "count": 2
+        },
+        {
+          "midi": 67,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "tradition": "znamenny",
+      "tone": 3,
+      "formulaCount": 230,
+      "sourceIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 76,
+          "count": 80
+        },
+        {
+          "midi": 79,
+          "count": 71
+        },
+        {
+          "midi": 74,
+          "count": 38
+        },
+        {
+          "midi": 77,
+          "count": 27
+        },
+        {
+          "midi": 81,
+          "count": 8
+        },
+        {
+          "midi": 72,
+          "count": 4
+        },
+        {
+          "midi": 82,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "tradition": "znamenny",
+      "tone": 4,
+      "formulaCount": 265,
+      "sourceIds": [
+        "1",
+        "2",
+        "4",
+        "8",
+        "9",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 74,
+          "count": 102
+        },
+        {
+          "midi": 76,
+          "count": 60
+        },
+        {
+          "midi": 77,
+          "count": 37
+        },
+        {
+          "midi": 79,
+          "count": 29
+        },
+        {
+          "midi": 72,
+          "count": 22
+        },
+        {
+          "midi": 81,
+          "count": 7
+        },
+        {
+          "midi": 67,
+          "count": 5
+        },
+        {
+          "midi": 69,
+          "count": 3
+        }
+      ]
+    },
+    {
+      "tradition": "znamenny",
+      "tone": 5,
+      "formulaCount": 380,
+      "sourceIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 79,
+          "count": 126
+        },
+        {
+          "midi": 74,
+          "count": 106
+        },
+        {
+          "midi": 72,
+          "count": 49
+        },
+        {
+          "midi": 77,
+          "count": 38
+        },
+        {
+          "midi": 76,
+          "count": 29
+        },
+        {
+          "midi": 81,
+          "count": 28
+        },
+        {
+          "midi": 69,
+          "count": 2
+        },
+        {
+          "midi": 67,
+          "count": 1
+        },
+        {
+          "midi": 71,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "tradition": "znamenny",
+      "tone": 6,
+      "formulaCount": 531,
+      "sourceIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 74,
+          "count": 335
+        },
+        {
+          "midi": 79,
+          "count": 51
+        },
+        {
+          "midi": 72,
+          "count": 36
+        },
+        {
+          "midi": 71,
+          "count": 34
+        },
+        {
+          "midi": 76,
+          "count": 32
+        },
+        {
+          "midi": 69,
+          "count": 24
+        },
+        {
+          "midi": 77,
+          "count": 16
+        },
+        {
+          "midi": 81,
+          "count": 2
+        },
+        {
+          "midi": 67,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "tradition": "znamenny",
+      "tone": 7,
+      "formulaCount": 71,
+      "sourceIds": [
+        "1",
+        "2",
+        "4",
+        "7",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 76,
+          "count": 41
+        },
+        {
+          "midi": 74,
+          "count": 12
+        },
+        {
+          "midi": 72,
+          "count": 8
+        },
+        {
+          "midi": 79,
+          "count": 7
+        },
+        {
+          "midi": 69,
+          "count": 3
+        }
+      ]
+    },
+    {
+      "tradition": "znamenny",
+      "tone": 8,
+      "formulaCount": 85,
+      "sourceIds": [
+        "1",
+        "2",
+        "4",
+        "8",
+        "10"
+      ],
+      "endings": [
+        {
+          "midi": 74,
+          "count": 41
+        },
+        {
+          "midi": 79,
+          "count": 22
+        },
+        {
+          "midi": 76,
+          "count": 10
+        },
+        {
+          "midi": 72,
+          "count": 7
+        },
+        {
+          "midi": 77,
+          "count": 2
+        },
+        {
+          "midi": 81,
+          "count": 2
+        },
+        {
+          "midi": 84,
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

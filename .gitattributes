@@ -1,0 +1,3 @@
+
+# Preserve source book bytes and extracted ZF line endings for checksums.
+data/chant-corpus/**/*.zf -text

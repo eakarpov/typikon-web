@@ -119,3 +119,8 @@ scratch/
 data-dump/
 deposit/
 data-dump.zip
+
+# Rebuildable HTTP cache; original source books and extracted witnesses are retained.
+data/chant-corpus/**/cache/
+
+__pycache__/
