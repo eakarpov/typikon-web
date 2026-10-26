@@ -1071,6 +1071,17 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/saints/service/{id}": {
+            get: {
+                tags: ["Справочники"], summary: "Песнопения службы памяти",
+                description: "Песнопения из книги по номеру памяти корпуса и языку, с переходами к канонам. Это собственные тексты памяти, не сборка дневного последования .ordo.",
+                parameters: [
+                    {name:"id",in:"path",required:true,schema:{type:"string"}},
+                    {name:"lang",in:"query",schema:{type:"string"}},
+                ],
+                responses: {"200":ok("#/components/schemas/SaintService"),"404":errorResponse("Память не найдена"),"503":errorResponse("Корпус недоступен")},
+            },
+        },
         "/api/v2/saints/dossier/{address}/life": {
             get: {
                 tags: ["Справочники"],
@@ -1090,6 +1101,7 @@ export const openapi = () => ({
                 ],
                 responses: {
                     "200": ok("#/components/schemas/SaintLife"),
+                    "503": errorResponse("Источник жития временно недоступен и пригодного снимка нет"),
                     "400": errorResponse("Адрес не указан или закодирован неверно"),
                     "404": errorResponse("Святого нет, у записи нет номера святцев или житие в каталоге отсутствует"),
                 },
@@ -2358,10 +2370,38 @@ export const openapi = () => ({
                     memories: { type: "array", items: { type: "object" }, description: "Памяти месяцеслова со знаком службы" },
                     texts: { type: "array", items: { $ref: "#/components/schemas/Text" } },
                     mentions: { type: "array", items: { $ref: "#/components/schemas/Text" } },
+                    works: {type:["array","null"],items:{$ref:"#/components/schemas/SaintWork"},description:"Песнопения, каноны и службы по проверенным связям; null — корпус недоступен"},
                     akathists: { description: "null — корпус не выложен; [] — не нашли" },
                     dedications: { type: "array", items: { type: "object" } },
                     noble: { description: "Ссылка на родословную; правления не отдаются" },
                     caveat: { type: "string" },
+                },
+            },
+            SaintWork: {
+                type:"object",required:["id","genre","reader","title"],properties:{
+                    id:{type:"string"},genre:{type:"string",enum:["troparion","kontakion","magnification","canon","service"]},
+                    reader:{type:"string",enum:["chant","canon","service"]},title:{type:"string"},
+                    subtitle:{type:["string","null"]},language:{type:["string","null"]},
+                },
+            },
+            SaintService: {
+                type: "object",
+                properties: {
+                    title: {type:"string"}, book:{type:"string"},
+                    rows: {
+                        type:"array",
+                        items: {
+                            type:"object",
+                            properties: {
+                                text:{type:"string"}, missing:{type:"boolean"},
+                                language:{type:"string"}, service:{type:"string"}, label:{type:["string","null"]},
+                            },
+                        },
+                    },
+                    canons: {
+                        type:"array",
+                        items: {type:"object",properties:{id:{type:"string"},language:{type:"string"},tone:{type:["integer","null"]}}},
+                    },
                 },
             },
             SaintLife: {

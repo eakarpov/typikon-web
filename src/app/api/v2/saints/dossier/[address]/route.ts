@@ -7,6 +7,7 @@ import { akathistsOfSaint } from "@/lib/akathists";
 import { getItems, getLinkedNoble, getMentions } from "@/app/saints/[id]/api";
 import { rulesDb } from "@/lib/rulesDb";
 import { saintDossier } from "@/lib/api/v2/serialize";
+import { saintWorks } from "@/lib/saintWorks";
 import { reportError } from "@/lib/reportError";
 
 // Досье святого: запись каталога и всё, что к ней привязано.
@@ -56,7 +57,7 @@ export async function GET(
         // быть. Пустой список тогда значил бы «акафистов нет», а это неправда —
         // мы просто не смотрели. Поэтому корпус проверяется отдельно, и его
         // отсутствие уходит наружу как null.
-        const corpus = rulesDb() !== null;
+        const corpus = rulesDb();
 
         const [texts, mentions, memories, dedications, noble] = await Promise.all([
             getItems(String(saint._id), ids).then(([rows]) => rows ?? []),
@@ -67,13 +68,15 @@ export async function GET(
         ]);
 
         // Акафист подписан одним номером, а не набором: связка ведётся по памяти.
-        const akathists = corpus ? akathistsOfSaint(ids, memoryIdsOf(saint)) : null;
+        const works = corpus ? saintWorks(corpus,
+            [...memoryIdsOf(saint), ...memories.map(m => m.memoryId)], ids) : null;
+        const akathists = corpus ? akathistsOfSaint(ids, works?.memoryIds ?? memoryIdsOf(saint)) : null;
 
         return respond(
             saintDossier(saint, {
-                memories, texts, mentions, akathists, dedications, noble,
+                memories, texts, mentions, akathists, dedications, noble, works: works?.items ?? null,
             }),
-            { access, maxAge: revalidate },
+            { access, maxAge: corpus ? revalidate : 0 },
         );
     } catch (e) {
         reportError(e, { where: "app/api/v2/saints/dossier/[address]/route#GET", source: "api" });

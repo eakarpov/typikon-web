@@ -702,6 +702,7 @@ export const saintDossier = (saint: any, parts: any) => ({
     memories: (parts.memories ?? []).map(saintMemoryRow),
     texts: (parts.texts ?? []).map((doc: any) => textSummary(doc)),
     mentions: (parts.mentions ?? []).map((doc: any) => textSummary(doc)),
+    works: parts.works ?? null,
     /**
      * `null` — корпус певческих текстов на этом сервере не выложен, и акафисты
      * мы не смотрели вовсе. `[]` — смотрели и не нашли. Разница та же, что между
