@@ -51,7 +51,7 @@ const loadSaintLife = cached(async (address: string): Promise<SaintLifeResult> =
         links: available.flatMap(d => Array.isArray(d.links) ? d.links : []),
     };
     return { status: "ok", details };
-}, ["saint-life:v3"], [CacheTag.SAINTS], 86400);
+}, ["saint-life:v4"], [CacheTag.SAINTS], 86400);
 
 export const saintLifeOf = async (address: string): Promise<SaintLifeResult> => {
     try {

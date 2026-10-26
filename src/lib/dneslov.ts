@@ -29,7 +29,7 @@ const loadTitle = cached(async (id: string) => {
     const title = await durableDneslovTitle(id);
     if (!title) throw new Error(`dneslov: у памяти ${id} нет названия`);
     return title;
-}, ["dneslov-saint-title:v2"], [CacheTag.SAINTS], TITLE_REVALIDATE);
+}, ["dneslov-saint-title:v3"], [CacheTag.SAINTS], TITLE_REVALIDATE);
 
 // Имя одной памяти. null — "сейчас не знаем", а не "такой памяти нет":
 // решение, что показать вместо имени, принимает вызывающий.

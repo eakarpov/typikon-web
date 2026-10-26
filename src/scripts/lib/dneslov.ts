@@ -188,7 +188,7 @@ export const fetchMemorySnapshot = async (
             // slug — единственное, ради чего нужен первый запрос: подробности лежат
             // по имени, а не по номеру. Нет slug (в том числе пустой ответ) — считаем
             // ответ негодным, а не пустым.
-            if (!memory?.slug) throw new Error(`memories/${id}.json без slug`);
+            if (!memory?.slug || memory.id == null) throw new Error(`memories/${id}.json без slug или id`);
 
             const details = await fetchJson(DETAILS_PATH(memory.slug), timeoutMs);
             return { status: "ok", slug: String(memory.slug), memory, details };

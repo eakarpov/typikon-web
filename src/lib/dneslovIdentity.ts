@@ -26,3 +26,12 @@ export async function loadDneslovCard(address: string, hint: any,
     }
     throw failure ?? new Error('Днеслов: карточка недоступна');
 }
+
+/** Only real memory IDs may enter the curated-catalogue snapshot pipeline. */
+export function isCanonicalDneslovSnapshot(doc: any): boolean {
+    if (!doc) return false;
+    const memory = doc.memory;
+    if (doc.details?.id == null && (memory?.event_id != null || memory?.calendary_id != null || memory?.calendary_slug != null)) return false;
+    const id = doc.details?.id ?? memory?.id;
+    return id == null || String(doc._id) === String(id);
+}

@@ -47,3 +47,13 @@ test('memory_id precedes slug; a failed lookup falls back but never requests sho
 test('unavailable upstream never yields an empty successful memory', async () => {
     await assert.rejects(loadDneslovCard('7974',null,async()=>{throw new Error('offline');}));
 });
+
+test('calendar rows and slug aliases cannot become independent saints in snapshot imports', async () => {
+    const { isCanonicalDneslovSnapshot } = await import('./dneslovIdentity');
+    assert.equal(isCanonicalDneslovSnapshot({_id:'7974',memory:{id:7974},details:{id:7974}}),true);
+    assert.equal(isCanonicalDneslovSnapshot({_id:'6352',memory:{id:7974},details:{id:7974}}),false);
+    assert.equal(isCanonicalDneslovSnapshot({_id:'цвслн',memory:{id:7974},details:{id:7974}}),false);
+    assert.equal(isCanonicalDneslovSnapshot({_id:'6352',memory:{id:6352,calendary_id:124}}),false);
+    assert.equal(isCanonicalDneslovSnapshot({_id:'6352',memory:{id:6352,calendary_id:124},details:{}}),false);
+    assert.equal(isCanonicalDneslovSnapshot({_id:'7974',memory:{id:7974}}),true);
+});

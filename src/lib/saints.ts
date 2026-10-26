@@ -12,6 +12,7 @@ import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 import { SAINT_SOURCES, byExternal, type SaintExternal } from "@/lib/saintSources";
 
+import { isCanonicalDneslovSnapshot } from "@/lib/dneslovIdentity";
 import { durableDneslovMemory } from "@/lib/dneslovDay";
 
 const DNESLOV = SAINT_SOURCES.dneslov.code;
@@ -116,7 +117,7 @@ export const getSaintByAddress = cached(async (address: string): Promise<Saint |
     if (local) return local as unknown as Saint;
     const db = (await clientPromise).db("typikon");
     const snapshot: any = await db.collection("dneslov_memories").findOne({ $or: [{ _id: address as any }, { slug: address }] });
-    const details = snapshot?.details ?? await durableDneslovMemory(address);
+    const details = (isCanonicalDneslovSnapshot(snapshot) ? snapshot?.details : null) ?? await durableDneslovMemory(address);
     if (!details) throw new Error("Святцы не ответили, сохранённой карточки пока нет");
     const canonicalId = String(details.id ?? address);
     const linked = await saints.findOne(byExternal(DNESLOV, canonicalId));
@@ -129,7 +130,7 @@ export const getSaintByAddress = cached(async (address: string): Promise<Saint |
         memoryDates: [], imageUrl: null, roundelUrl: details.roundel_url ?? null,
         images: snapshot?.images ?? [], externals: [{ source: DNESLOV, id: canonicalId, slug: snapshot?.slug ?? details.slug ?? null }],
     } as Saint;
-}, ["saint-by-address:v3"], [CacheTag.SAINTS]);
+}, ["saint-by-address:v4"], [CacheTag.SAINTS]);
 
 /**
  * Общий разбор выборки «пачка номеров святцев -> поле каталога». Ключей одного
@@ -205,7 +206,7 @@ export const snapshotOfMemory = cached(async (dneslovId: string): Promise<any | 
     if (!dneslovId) return null;
     const db = (await clientPromise).db("typikon");
     const doc: any = await db.collection("dneslov_memories").findOne({ _id: dneslovId as any });
-    if (!doc?.details) return null;
+    if (!doc?.details || !isCanonicalDneslovSnapshot(doc)) return null;
     // slug у них живёт в первом ответе, а не в подробностях — снимок хранит его наверху.
     return { ...doc.details, slug: doc.slug ?? doc.details?.slug ?? null };
-}, ["saint-memory-snapshot"], [CacheTag.SAINTS]);
+}, ["saint-memory-snapshot:v2"], [CacheTag.SAINTS]);

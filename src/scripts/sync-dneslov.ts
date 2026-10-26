@@ -42,6 +42,7 @@
 // Первый полный обход прогоняют НЕСКОЛЬКО РАЗ подряд: каждый проход берёт только то,
 // что ещё не снято, и с каждым разом остаётся всё меньше зависших.
 import "@/scripts/lib/env";
+import { dneslovAddress, isCanonicalDneslovSnapshot } from "@/lib/dneslovIdentity";
 import Database from "better-sqlite3";
 import clientPromise from "@/lib/mongodb";
 import { fetchMemoryImages, fetchMemorySnapshot } from "@/scripts/lib/dneslov";
@@ -112,8 +113,16 @@ const collectIds = async (): Promise<Map<string, string[]>> => {
     // Дневной кэш может встретить память, которой ещё нет в наших текстах и
     // ручных связках. Такие записи тоже надо доснять, чтобы последующий
     // build-saints.ts расширил каталог, а не оставил их только в оглавлении.
-    (await db.collection("dneslov_memories").distinct("_id", { status: "partial" }))
-        .forEach((v) => add(v, "calendar-cache"));
+    const partial = await db.collection("dneslov_memories").find({ status: "partial" },
+        { projection: { memory: 1, calendarMemory: 1 } }).toArray();
+    for (const row of partial) add(dneslovAddress(row.memory ?? row.calendarMemory), "calendar-cache");
+    const recentDays = await db.collection("dneslov_http_cache").find({
+        _id: { $regex: "^calendar:" } as any,
+        fetchedAt: { $gte: new Date(Date.now() - 30 * 86400000) },
+    }, { projection: { data: 1 } }).toArray();
+    for (const day of recentDays) {
+        for (const row of Array.isArray(day.data) ? day.data : []) add(dneslovAddress(row), "calendar-cache");
+    }
 
     // Родословная лежит отдельно, в SQLite (см. src/lib/sqlite.ts). Её может не быть
     // на машине, где гоняют синхронизацию, — это не повод не снимать остальное.
@@ -145,7 +154,8 @@ const syncImages = async (col: any) => {
             ? { status: "ok" }
             : { status: "ok", $or: [{ imagesAt: { $exists: false } }, { imagesAt: { $lt: stale } }] };
 
-    const ids = (await col.find(query, { projection: { _id: 1 } }).toArray()).map((d: any) => String(d._id));
+    const ids = (await col.find(query, { projection: { _id: 1, memory: 1, "details.id": 1 } }).toArray())
+        .filter(isCanonicalDneslovSnapshot).map((d: any) => String(d._id));
     const plan = LIMIT ? ids.slice(0, LIMIT) : ids;
 
     console.log(`снимков годных:      ${await col.countDocuments({ status: "ok" })}`);
@@ -186,10 +196,13 @@ const main = async () => {
     if (IMAGES) return syncImages(col);
 
     const found = await collectIds();
-    const known = new Map(
-        (await col.find({}, { projection: { fetchedAt: 1, status: 1 } }).toArray())
-            .map((d: any) => [String(d._id), d]),
-    );
+    const known = new Map<string, any>();
+    const snapshots = await col.find({}, { projection: { fetchedAt: 1, status: 1, slug: 1, memory: 1, "details.id": 1 } }).toArray();
+    for (const doc of snapshots) {
+        if (!isCanonicalDneslovSnapshot(doc)) continue;
+        known.set(String(doc._id), doc);
+        if (typeof doc.slug === "string") known.set(doc.slug, doc);
+    }
 
     const stale = Date.now() - MAX_AGE_DAYS * 86400_000;
     let ids = [...found.keys()].sort((a, b) => Number(a) - Number(b));
@@ -235,7 +248,7 @@ const main = async () => {
             if (result.status === "ok") {
                 counts.ok++;
                 await col.updateOne(
-                    { _id: id as any },
+                    { _id: String(result.memory.id) as any },
                     {
                         $set: {
                             slug: result.slug,
@@ -262,7 +275,8 @@ const main = async () => {
                 // слили её с другой, переименовали или удалили.
                 counts.gone++;
                 gone.push(id);
-                await col.updateOne(
+                // A missing slug is not a new numeric memory to import.
+                if (/^\d+$/.test(id)) await col.updateOne(
                     { _id: id as any },
                     { $set: { status: "gone", goneAt: now, checkedAt: now, sources }, $setOnInsert: { firstSeenAt: now } },
                     { upsert: true },

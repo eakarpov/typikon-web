@@ -1,3 +1,4 @@
+import { isCanonicalDneslovSnapshot } from "@/lib/dneslovIdentity";
 // Собственный каталог святых: коллекция `saints`.
 //
 // ЗАЧЕМ ОТДЕЛЬНАЯ СУЩНОСТЬ. До сих пор святой в проекте — это чужой номер, и больше
@@ -135,7 +136,8 @@ const main = async () => {
 
     // Пропавшие берём тоже: запись в каталоге остаётся, но её внешний ключ надо
     // пометить протухшим — иначе исчезновение у источника заметить будет нечем.
-    const docs = await snapshots.find({ status: { $in: ["ok", "gone"] } }).toArray();
+    const docs = (await snapshots.find({ status: { $in: ["ok", "gone"] } }).toArray())
+        .filter(doc => isCanonicalDneslovSnapshot(doc));
     const existing = await saints.find({ "externals.source": SOURCE }).toArray();
     const byExternal = new Map<string, any>();
     existing.forEach((s: any) => {
