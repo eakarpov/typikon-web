@@ -14,3 +14,5 @@ export function getCorpusRealizations(index: NgramIndex, neumes: string, context
 export function scoreCorpusSequence(index: NgramIndex, groups: readonly NgramGroup[], context: NgramContext) { return ready().scoreNgramSequence(index,groups,context); }
 export function rankCorpusSequences(index: NgramIndex, groups: readonly (readonly NgramGroup[])[], context: NgramContext) { return ready().rankNgramSequences(index,groups,context); }
 export function suggestCorpusSequences(index: NgramIndex, positions: readonly { neumes: string; options: readonly string[] }[], context: NgramContext, width=64) { return ready().suggestNgramSequences(index,positions,context,width); }
+
+export function getCorpusFallbacks(index: NgramIndex, neumes: string, context: NgramContext) { return ready().getNgramFallbacks(index, neumes, context); }

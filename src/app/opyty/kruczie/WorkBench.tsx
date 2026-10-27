@@ -12,6 +12,7 @@ import BlockEditor from "./BlockEditor";
 import CorpusControls from "./CorpusControls";
 import CorpusPreference from "./CorpusPreference";
 import CellNoteEditor from "./CellNoteEditor";
+import AutomaticWorkOutput from "./AutomaticWorkOutput";
 import { createNoteFill, resolvedWorkCells, exportCompletedWork, encodeWorkDraft, WORK_DRAFT_KEY, type WorkFills, type SavedWorkDraft } from "@/lib/kruczie/workDraft";
 
 import { diagnosticText } from "@/lib/kruczie/diagnostics";
@@ -172,14 +173,14 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
     let workNoteOffset = 0;
     return <div className="flex flex-col gap-4">
         <h2 className="font-bold">Произведение целиком</h2>
-        <p className="text-sm text-slate-600">Блоки и слоговые позиции сохраняются раздельно. Выберите вариант для каждого блока; в экспорт попадут только выбранные варианты и явно сохранённые правки.</p>
+        <p className="text-sm text-slate-600">После преобразования появится единый автоматический двоезнаменник из лучших вариантов. Ниже остаётся независимый ручной разбор: его варианты и правки можно сохранять отдельно.</p>
         <div className="flex flex-wrap gap-2">
             <button className={field} onClick={() => { cancel(); playback.stop(); onBack(); }}>Вернуться к отдельной строке</button>
-            <button className={field} disabled={loading || busy || !wholeNotes || editing !== null} onClick={exportFile}>Экспорт произведения в znamen.ru</button>
+            <button className={field} disabled={loading || busy || !wholeNotes || editing !== null} onClick={exportFile}>Экспорт ручного разбора в znamen.ru</button>
         </div>
         {exportedRaw !== null && <ZnamenDialog mode="export" source={null} layers={{}} documentRaw={exportedRaw} onClose={() => setExportedRaw(null)} onImport={() => {}} />}
         <p role="status" className="text-xs text-slate-600">{saveStatus}</p>
-        <p className="text-sm">Нотных позиций заполнено: {filledCount} из {allCells.length}. Ручных: {allCells.filter(cell => cell.fillOrigin === "manual").length}. Для прослушивания и экспорта заполните все пропуски и выберите неоднозначные разводы.</p>
+        <p className="text-sm">В ручном разборе заполнено нотных позиций: {filledCount} из {allCells.length}. Ручных: {allCells.filter(cell => cell.fillOrigin === "manual").length}. Для прослушивания и экспорта заполните все пропуски и выберите неоднозначные разводы.</p>
         {loading && <p role="status">Разбираем музыкальные блоки и слоги…</p>}
         {view && !loading && <>
             {view.header && <details open><summary className="font-bold">Шапка произведения</summary><pre className="text-sm whitespace-pre-wrap mt-2">{view.header}</pre></details>}
@@ -199,11 +200,18 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
             <div className="flex flex-wrap gap-3">
                 <label>Вид нот <select className={field} value={style} onChange={e => setStyle(e.target.value as NoteStyle)}><option value="round">Круглые</option><option value="kievan">Киевские квадратные</option></select></label>
                 <label>Темп <select className={field} value={bpm} onChange={e => { playback.stop(); setBpm(Number(e.target.value)); }}><option value={66}>66</option><option value={96}>96</option><option value={132}>132</option></select></label>
-                <button className={field} disabled={!wholeNotes || busy} onClick={() => { if (playback.active === -1) playback.stop(); else void playback.play(wholeNotes, -1); }}>{playback.active === -1 ? "Остановить произведение" : "Послушать произведение"}</button>
+                <button className={field} disabled={!wholeNotes || busy} onClick={() => { if (playback.active === -1) playback.stop(); else void playback.play(wholeNotes, -1); }}>{playback.active === -1 ? "Остановить произведение" : "Послушать ручной разбор"}</button>
             </div>
             <PitchReference tradition={tradition} tone={tone ? Number(tone) as Tone : undefined} value={pitchReference} onChange={value => { playback.stop(); setPitchReference(value); }} />
             {playback.error && <p role="alert" className="text-red-800">{playback.error}</p>}
             {view.file.diagnostics.length > 0 && <details><summary>Диагностика исходника ({view.file.diagnostics.length})</summary><ul className="text-sm list-disc pl-5">{view.file.diagnostics.map((d, i) => <li key={i}><code>{d.code}</code>: {diagnosticText(d)}</li>)}</ul></details>}
+            {!busy && editing === null && progress === view.blocks.length && Object.keys(results).length === view.blocks.length && <AutomaticWorkOutput
+                view={view} results={results} direction={direction} shift={shift} style={style}
+                active={playback.active === -2} activeNote={playback.noteIndex}
+                onPlay={notes => { if (playback.active === -2) playback.stop(); else void playback.play(notes, -2); }}
+                onExport={source => { playback.stop(); setExportedRaw(source); }}
+            />}
+            <h3 className="font-bold">Ручной разбор по блокам</h3>
             {view.blocks.map((row, index) => {
                 const block = view.file.blocks[index], result = results[index], cells = cellsOf(index);
                 const chosen = selected[index];

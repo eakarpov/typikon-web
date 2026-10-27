@@ -1,6 +1,6 @@
-import type { CorpusRanking } from "./corpus/types";
+import type { CorpusRanking, CorpusFallback } from "./corpus/types";
 import { builtinCorpusIndex } from "./corpus/builtin";
-import { getCorpusRealizations, rankCorpusSequences, scoreCorpusSequence, suggestCorpusSequences } from "./corpus";
+import { getCorpusRealizations, getCorpusFallbacks, rankCorpusSequences, scoreCorpusSequence, suggestCorpusSequences } from "./corpus";
 import type { Catalog, Diagnostic, Syllable, Tone, ChantTradition } from "@znamenica/kruczie";
 import type { ZnamenFile, ZnamenEdit } from "@znamenica/kruczie/formats/znamen";
 import type { Melody } from "@znamenica/kruczie/melody";
@@ -79,26 +79,37 @@ export async function translateWorkBlock(view: WorkView, blockIndex: number, opt
     candidates.sort((a,b) => (b.ranking?.score ?? 0) - (a.ranking?.score ?? 0));
     if (candidates[0]?.ranking?.score) candidates.forEach((c,i) => { c.preferred = i === 0 && c.ranking!.score > (candidates[1]?.ranking?.score ?? -1); });
     let recommendation: WorkResult["recommendation"];
-    if (!candidates.length && options.direction === "to-notes") {
+    if (options.direction === "to-notes") {
         let corpusLimited = false;
+        const fallbacks = new Map<number, CorpusFallback[]>();
         const choices = row.cells.map((cell, position) => {
             const variants = new Map<string | null,string>();
-            for (const notes of [...getCorpusRealizations(index, cell.syllable.notation!.raw, context), ...(positions.find(p=>p.index===position)?.notes ?? [])]) if (!variants.has(melodyKey(notes))) variants.set(melodyKey(notes),notes);
+            for (const notes of [...getCorpusRealizations(index, cell.syllable.notation!.raw, context), ...candidates.map(candidate => candidate.syllables[position]?.melody?.raw).filter((raw): raw is string => !!raw), ...(positions.find(p=>p.index===position)?.notes ?? [])]) if (!variants.has(melodyKey(notes))) variants.set(melodyKey(notes),notes);
+            if (!variants.size && !cell.syllable.melody && options.tone !== undefined) {
+                const found = getCorpusFallbacks(index, cell.syllable.notation!.raw, context);
+                fallbacks.set(position, found.map(item => ({ ...item, position, neumes: cell.syllable.notation!.raw })));
+                for (const item of found) if (!variants.has(melodyKey(item.notes))) variants.set(melodyKey(item.notes), item.notes);
+            }
             if (variants.size > 16) corpusLimited = true;
             return { neumes: cell.syllable.notation!.raw, options: cell.syllable.melody ? [cell.syllable.melody.raw] : [...variants.values()].slice(0,16) };
         });
         for (const cell of row.cells) if (getCorpusRealizations(index, cell.syllable.notation!.raw, context).length > 16) corpusLimited = true;
         const search = suggestCorpusSequences(index, choices, context);
-        const best = search.sequences[0];
-        if (best?.ranking.score) recommendation = { notes: best.groups.map(g => g.notes), ranking: best.ranking, truncated: search.truncated || corpusLimited, tied: search.sequences.filter(s => Math.abs(s.ranking.score-best.ranking.score)<1e-9).length };
-        for (const [position, choice] of choices.entries()) {
+        const fallbackFor = (position: number, notes: string | null) => (fallbacks.get(position) ?? []).find(f => notes !== null && melodyKey(f.notes) === melodyKey(notes));
+        const fallbackScore = (groups: readonly { notes: string | null }[]) => groups.reduce((sum, group, position) => sum + (fallbackFor(position, group.notes)?.ranking.score ?? 0), 0);
+        const sequences = [...search.sequences].sort((a, b) => b.ranking.score - a.ranking.score || fallbackScore(b.groups) - fallbackScore(a.groups));
+        const best = sequences[0];
+        const chosenFallbacks = best?.groups.flatMap((group, position) => { const f = fallbackFor(position, group.notes); return f ? [f] : []; }) ?? [];
+        if (best && (best.ranking.score || chosenFallbacks.length)) recommendation = { notes: best.groups.map(g => g.notes), ranking: { ...best.ranking, ...(chosenFallbacks.length ? { fallbacks: chosenFallbacks } : {}) }, truncated: search.truncated || corpusLimited, tied: sequences.filter(s => Math.abs(s.ranking.score-best.ranking.score)<1e-9 && Math.abs(fallbackScore(s.groups)-fallbackScore(best.groups))<1e-9).length };
+        for (const [position, choice] of (!candidates.length ? choices.entries() : [])) {
             const ordered = choice.options.map((notes, order) => {
-                const sequence = search.sequences.find(s => s.groups[position].notes === notes);
+                const sequence = sequences.find(s => s.groups[position].notes === notes);
                 const base = sequence?.ranking ?? scoreCorpusSequence(index, [{ neumes: choice.neumes, notes }], context);
                 const evidence = sequence ? base.evidence.filter(e => e.start <= position && e.end > position) : base.evidence.map(e => ({ ...e,start:e.start+position,end:e.end+position }));
-                const ranking = { ...base,evidence };
+                const fallback = fallbackFor(position, notes);
+                const ranking = { ...base,evidence, ...(fallback ? { fallbacks: [fallback] } : {}) };
                 return { notes, ranking, order };
-            }).sort((a,b) => b.ranking.score - a.ranking.score || a.order - b.order);
+            }).sort((a,b) => b.ranking.score - a.ranking.score || (fallbackFor(position,b.notes)?.ranking.score ?? 0) - (fallbackFor(position,a.notes)?.ranking.score ?? 0) || a.order - b.order);
             if (!ordered.length) continue;
             const value = { index: position, notes: ordered.map(v=>v.notes), melodies: ordered.map(v=>parseMelody(v.notes).value!), rankings: ordered.map(v=>v.ranking) };
             const old = positions.findIndex(p=>p.index===position);

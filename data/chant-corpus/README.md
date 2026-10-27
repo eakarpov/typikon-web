@@ -26,3 +26,7 @@ New local or imported collections should supply their own namespace/work IDs and
 `corpus:build` writes compact learned weights to the sibling `../kruczie-npm/src/ngrams/model.json`. That model stores N=1/2/3 mappings, empirical counts by tone/source and a small number of reference links. It contains **no complete chants or syllables**. The portal's client receives only the optional npm model and a tiny `src/data/kruczie-corpus-metadata.json`; archive and training collection are not browser assets.
 
 Source catalog: <http://znamen.ru/src.php>. Source terms: <http://znamen.ru/org.php#usl>. A standard dataset license is not declared; retain the original attribution and terms. Raw sources are retained locally and are not published by the collection scripts.
+
+## Recovery audit (v2)
+
+The current derived model/collection is `znamen-2026-10-27-v2`; the archive directory still names the original v1 byte snapshot, which is unchanged. `corpus:build` now keeps verified contiguous musical segments. Neume/note group counts must agree; differing text counts produce music-only observations with no invented syllables. Invalid positions split samples. `quality-report.json` distinguishes fully excluded blocks from recovered blocks; `rejected` lists all problematic blocks, including partially recovered ones. `corpus:audit` writes per-group raw evidence for both w20g1 fixtures to `neume-audit.json`; raw occurrence totals are not deduplicated training counts.

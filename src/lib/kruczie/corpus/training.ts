@@ -39,7 +39,7 @@ export async function createCorpusIndex(collection: ChantCollection): Promise<Co
                 for (const copy of copies) {
                     const referenceSample = copy.samples[blockOffset];
                     values.push({ notes, noteKey: JSON.stringify(notes.map(melodyKey)), cluster, occurrence: JSON.stringify([cluster, blockOffset, start]), tradition: copy.witness.tradition, tone: copy.witness.tone,
-                        refs: [{ witnessId: copy.witness.id, workId: copy.witness.workId, sourceId: copy.witness.sourceId, url: copy.witness.url, block: referenceSample.block, position: referenceSample.positions[start].position }] });
+                        refs: [{ witnessId: copy.witness.id, workId: copy.witness.workId, sourceId: copy.witness.sourceId, url: copy.witness.url, block: referenceSample.block, position: referenceSample.positions[start].position, ...(referenceSample.recovery ? { recovery: referenceSample.recovery } : {}) }] });
                 }
                 windows.set(key, values);
                 // A source end/bar terminates a phrase; do not count across it.

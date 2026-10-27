@@ -21,6 +21,7 @@ export interface ConversionView {
     result: TranslationResult;
     candidates: CandidateView[];
     datasetVersion: string;
+    corpusCoverage?: { covered: number; total: number; outsideTone: number; version: string; truncated: boolean };
 }
 export const MAX_INPUT_LENGTH = 1000;
 export const EXAMPLES: Record<ChantTradition, Record<Direction, string>> = {

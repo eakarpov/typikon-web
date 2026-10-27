@@ -124,3 +124,6 @@ data-dump.zip
 data/chant-corpus/**/cache/
 
 __pycache__/
+
+# Local npm configuration; credentials must stay outside Git.
+.npmrc

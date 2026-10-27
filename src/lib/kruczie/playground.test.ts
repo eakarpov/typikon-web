@@ -25,9 +25,11 @@ test("неизвестные ноты сохраняют диагностику 
     assert.equal(result.candidates.length, 0);
     assert.ok(result.result.diagnostics.some(d => d.code === "UNKNOWN_NOTE" && d.range));
 });
-test("глас и ограничения поиска передаются библиотеке", async () => {
+test("основной поиск ограничен гласом, запасные находки помечены отдельно", async () => {
     const result = await runConversion({ direction: "to-notes", tradition: "demestvenny", tone: 1, input: EXAMPLES.demestvenny["to-notes"] });
-    assert.equal(result.candidates.length, 0);
+    assert.equal(result.result.candidates.length, 0);
+    assert.ok(result.candidates.length);
+    assert.ok(result.candidates.every(c => !!c.ranking?.fallbacks?.length && c.ranking.fallbacks.every(f => f.requestedTone === 1)));
     const bounded = await runConversion({ direction: "to-neumes", tradition: "znamenny", input: EXAMPLES.znamenny["to-neumes"] });
     assert.ok(bounded.candidates.length <= 8);
 });

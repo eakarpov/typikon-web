@@ -140,7 +140,7 @@ export default function Playground() {
                             </select>
                         </label>
                     </div>
-                    <p className="text-sm text-slate-600">Глас ограничивает поиск записями с явным указанием этого гласа. Демественный каталог пока не содержит формул с гласами.</p>
+                    <p className="text-sm text-slate-600">Основной поиск ограничен указанным гласом; при отсутствии вариантов запасные находки вне гласа помечаются отдельно. Демественный каталог пока не содержит формул с гласами.</p>
                     <label htmlFor="kruczie-input" className="font-bold">{direction === "to-notes" ? "Крюковая запись" : "Нотная запись"}</label>
                     <textarea id="kruczie-input" rows={4} className={`${fieldClass} font-mono w-full`} value={input} maxLength={MAX_INPUT_LENGTH}
                         spellCheck={false} autoCapitalize="off" autoCorrect="off" aria-describedby="kruczie-input-help"
@@ -164,8 +164,9 @@ export default function Playground() {
             {view && <section aria-label="Результат перевода" className="flex flex-col gap-4">
                 <h2 className="font-bold">Варианты перевода: {view.candidates.length}</h2>
                 <p className="text-sm text-slate-600">База: {view.datasetVersion}. Покрыто {view.result.coverage.covered} из {view.result.coverage.total} {view.result.coverage.unit === "notes" ? "нот" : "крюковых групп"}.</p>
-                {view.result.truncated && <p className="text-amber-800">Поиск ограничен. Показаны найденные варианты; другие соответствия также возможны.</p>}
-                {view.result.coverage.uncovered.length > 0 && <p className="text-amber-800">Не покрыты позиции: {view.result.coverage.uncovered.map(r => `${r.start + 1}–${r.end}`).join(", ")}.</p>}
+                {view.corpusCoverage && <p className="text-sm text-amber-900">Корпус {view.corpusCoverage.version}: найдено соответствий для {view.corpusCoverage.covered} из {view.corpusCoverage.total} групп; вне выбранного гласа: {view.corpusCoverage.outsideTone}. Диагностика каталога ниже сохраняется отдельно от корпусных находок.</p>}
+                {(view.result.truncated || view.corpusCoverage?.truncated) && <p className="text-amber-800">Поиск ограничен. Показаны найденные варианты; другие соответствия также возможны.</p>}
+                {view.result.coverage.uncovered.length > 0 && <p className="text-amber-800">Не покрыты каталогом позиции: {view.result.coverage.uncovered.map(r => `${r.start + 1}–${r.end}`).join(", ")}.</p>}
                 {!view.candidates.length && <p>Полных соответствий не найдено. Проверьте запись или попробуйте изменить глас и распев.</p>}
                 <label className="flex flex-wrap items-center gap-2">Вид нот
                     <select className={fieldClass} value={noteStyle} onChange={e => setNoteStyle(e.target.value as NoteStyle)}>
