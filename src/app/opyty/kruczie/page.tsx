@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { myFont } from "@/utils/font";
 import Playground from "./Playground";
+import { NoteDisplayProvider } from "./NoteDisplay";
 
 export const metadata: Metadata = {
     title: "Крюки и ноты — Опыты — Уставные чтения",
@@ -17,7 +18,7 @@ export default function KrucziePage() {
                 Перевод строковой записи знаменного и демественного распевов по базе известных соответствий.
                 Одной мелодии могут отвечать несколько крюковых записей: варианты показаны с источниками.
             </p>
-            <Playground />
+            <NoteDisplayProvider><Playground /></NoteDisplayProvider>
         </div>
     );
 }

@@ -35,14 +35,14 @@ async function main() {
         rejectedPositions += extracted.rejectedPositions;
         recoveredBlocks += extracted.recoveredBlocks; recoveredPositions += extracted.recoveredPositions;
     }
-    const corpus: ChantCollection = { schemaVersion:1, version:"znamen-2026-10-27-v2", works:[...works.values()], witnesses, sources:[...new Set(witnesses.map(w=>w.sourceId))].sort().map(id=>({id,title:manifest.sourceTitles?.[id] ?? id})), samples,
+    const corpus: ChantCollection = { schemaVersion:1, version:"znamen-2026-10-29-v3", works:[...works.values()], witnesses, sources:[...new Set(witnesses.map(w=>w.sourceId))].sort().map(id=>({id,title:manifest.sourceTitles?.[id] ?? id})), samples,
         audit: { rejectedBlocks:rejected.length - recoveredBlocks, rejectedPositions, doubleWitnesses:witnesses.length, discoveryErrors:manifest.errors.length, scope:manifest.scope } };
     await writeFile(join(process.cwd(),"data/chant-corpus/znamen-v1/collection.json"),JSON.stringify(corpus)+"\n");
-    await writeFile(join(process.cwd(),"src/data/kruczie-corpus-metadata.json"),JSON.stringify({ version:corpus.version,sources:corpus.sources,witnessCount:corpus.witnesses.length,workCount:corpus.works.length,rejectedBlocks:corpus.audit.rejectedBlocks,toneUnknownCount:witnesses.filter(w=>w.tone===undefined).length,recoveredBlocks,recoveredPositions })+"\n");
+    await writeFile(join(process.cwd(),"src/data/kruczie-corpus-metadata.json"),JSON.stringify({ version:corpus.version,sources:corpus.sources,witnessCount:corpus.witnesses.length,workCount:corpus.works.length,rejectedBlocks:corpus.audit.rejectedBlocks,toneUnknownCount:witnesses.filter(w=>w.tone===undefined).length,recoveredBlocks,recoveredPositions,opaquePositions:samples.reduce((n,s)=>n+s.positions.filter(p=>p.opaque).length,0) })+"\n");
     const model = await trainNgramModel(corpus);
     const { createNgramIndex } = await import("@znamenica/kruczie/ngrams"); createNgramIndex(model);
     await writeFile(join(process.cwd(),"../kruczie-npm/src/ngrams/model.json"),JSON.stringify(model)+"\n");
-    await writeFile(join(root,"quality-report.json"),JSON.stringify({ ...corpus.audit, problemBlocks: rejected.length, recoveredBlocks, recoveredPositions, toneConflicts, samples:samples.length, positions:samples.reduce((n,s)=>n+s.positions.length,0), rejected },null,2)+"\n");
+    await writeFile(join(root,"quality-report.json"),JSON.stringify({ ...corpus.audit, problemBlocks: rejected.length, recoveredBlocks, recoveredPositions, opaquePositions:samples.reduce((n,s)=>n+s.positions.filter(p=>p.opaque).length,0), toneConflicts, samples:samples.length, positions:samples.reduce((n,s)=>n+s.positions.length,0), rejected },null,2)+"\n");
     console.log(JSON.stringify({ witnesses:witnesses.length, works:works.size, sources:corpus.sources.length, samples:samples.length, rejected:rejected.length }));
 }
 main().catch(error=>{ console.error(error);process.exitCode=1; });

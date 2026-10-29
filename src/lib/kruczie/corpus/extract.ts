@@ -1,3 +1,4 @@
+import { isCorpusNeume } from "./notation";
 import type { CorpusPosition, CorpusSample } from "./types";
 import type { ZnamenFile } from "@znamenica/kruczie/formats/znamen";
 
@@ -19,8 +20,8 @@ export async function extractTrainingSegments(file: ZnamenFile, witnessId: strin
         }
         const positions: (CorpusPosition | null)[] = neumes.map((raw, position) => {
             const measured = getMeasuredNotes(notes[position]);
-            if (!measured.value?.length || measured.diagnostics.some(d => d.severity === "error") || raw.split(/~~/u).some(group => !parseNeumeGroup(group).value?.recognized)) return null;
-            return { position, neumes: raw, notes: measured.value.map(n => n.raw).join(""), phraseEnd: /[\\/]/u.test(notes[position]), text: text.length === neumes.length ? text[position].raw : "" };
+            if (!measured.value?.length || measured.diagnostics.some(d => d.severity === "error") || !isCorpusNeume(raw)) return null;
+            return { position, ...(!raw.split(/~~/u).every(group => parseNeumeGroup(group).value?.recognized) ? { opaque: true as const } : {}), neumes: raw, notes: measured.value.map(n => n.raw).join(""), phraseEnd: /[\\/]/u.test(notes[position]), text: text.length === neumes.length ? text[position].raw : "" };
         });
         const missing = positions.filter(p => p === null).length;
         const recovery = text.length !== neumes.length ? "music-only" as const : missing ? "aligned-segment" as const : undefined;

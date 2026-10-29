@@ -37,14 +37,14 @@ test("известный глас не расширяется запасными
         assert.equal(!!output.raw, covered);
     }
 });
-test("новые разводы З: и Щ подтверждены вторым гласом в восстановленных блоках", async () => {
+test("разводы З: и Щ подтверждены вторым гласом и ссылками на источник", async () => {
     const index = await builtinCorpusIndex();
     for (const neumes of ["З:", "Щ"]) {
         const options = getCorpusRealizations(index, neumes, context);
         assert.ok(options.length, neumes);
         assert.deepEqual(getCorpusFallbacks(index, neumes, context), []);
         const ranking = scoreCorpusSequence(index, [{ neumes, notes: options[0] }], context);
-        assert.ok(ranking.evidence.some(e => e.examples.some(r => r.tone === 2 && r.recovery)), neumes);
+        assert.ok(ranking.evidence.some(e => e.examples.some(r => r.tone === 2 && r.url && r.sourceId)), neumes);
     }
 });
 test("отдельная строка тоже получает корпусный вариант с явной пометкой чужого гласа", async () => {

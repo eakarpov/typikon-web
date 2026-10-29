@@ -1,6 +1,7 @@
+import { musicalDiagnostics } from "./diagnostics";
 import type { CorpusRanking, CorpusFallback } from "./corpus/types";
 import { builtinCorpusIndex } from "./corpus/builtin";
-import { getCorpusRealizations, getCorpusFallbacks, rankCorpusSequences, scoreCorpusSequence, suggestCorpusSequences } from "./corpus";
+import { getCorpusRealizations, getCorpusSupplement, rankCorpusSequences, scoreCorpusSequence, suggestCorpusSequences } from "./corpus";
 import type { Catalog, Diagnostic, Syllable, Tone, ChantTradition } from "@znamenica/kruczie";
 import type { ZnamenFile, ZnamenEdit } from "@znamenica/kruczie/formats/znamen";
 import type { Melody } from "@znamenica/kruczie/melody";
@@ -85,8 +86,8 @@ export async function translateWorkBlock(view: WorkView, blockIndex: number, opt
         const choices = row.cells.map((cell, position) => {
             const variants = new Map<string | null,string>();
             for (const notes of [...getCorpusRealizations(index, cell.syllable.notation!.raw, context), ...candidates.map(candidate => candidate.syllables[position]?.melody?.raw).filter((raw): raw is string => !!raw), ...(positions.find(p=>p.index===position)?.notes ?? [])]) if (!variants.has(melodyKey(notes))) variants.set(melodyKey(notes),notes);
-            if (!variants.size && !cell.syllable.melody && options.tone !== undefined) {
-                const found = getCorpusFallbacks(index, cell.syllable.notation!.raw, context);
+            if (!variants.size && !cell.syllable.melody) {
+                const found = getCorpusSupplement(index, cell.syllable.notation!.raw, context);
                 fallbacks.set(position, found.map(item => ({ ...item, position, neumes: cell.syllable.notation!.raw })));
                 for (const item of found) if (!variants.has(melodyKey(item.notes))) variants.set(melodyKey(item.notes), item.notes);
             }
@@ -117,7 +118,9 @@ export async function translateWorkBlock(view: WorkView, blockIndex: number, opt
         }
         positions.sort((a,b)=>a.index-b.index);
     }
-    return { blockIndex, candidates, positions, recommendation, diagnostics: [...row.diagnostics, ...translated.diagnostics], truncated: translated.truncated, status: candidates.length ? "translated" : "untranslated" };
+    const gaps = row.cells.flatMap((cell, position) => cell.syllable.melody || candidates.some(c => c.syllables[position]?.melody) || positions.some(p => p.index === position && p.notes.length) ? [] : [position]);
+    const diagnostics = [...row.diagnostics, ...translated.diagnostics];
+    return { blockIndex, candidates, positions, recommendation, diagnostics: options.direction === "to-notes" ? musicalDiagnostics(diagnostics, gaps) : diagnostics, truncated: translated.truncated, status: candidates.length ? "translated" : "untranslated" };
 }
 
 export function draftsOf(cells: readonly WorkCell[]): CellDraft[] {

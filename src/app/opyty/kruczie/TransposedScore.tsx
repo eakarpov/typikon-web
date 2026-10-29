@@ -23,7 +23,7 @@ export default function TransposedScore({ notation, unicode, melody, shift, styl
     }, [key, notation, melody?.raw, semitones, tradition, tone]);
     const current = shift.semitones ? result?.key === key ? result : null : { layers: { notation, melody: melody?.raw }, unicode, error: undefined };
     return <>
-        {notation !== undefined && <>{current?.unicode ? <Neumes unicode={current.unicode} compact={compact} /> : !shift.semitones ? <Neumes unicode={unicode} compact={compact} /> : null}
+        {notation !== undefined && <>{current?.unicode ? <Neumes unicode={current.unicode} notation={current.layers?.notation} compact={compact} /> : !shift.semitones ? <Neumes unicode={unicode} notation={notation} compact={compact} /> : null}
         <pre className="font-mono text-xs whitespace-pre-wrap">{current?.layers?.notation ?? (shift.semitones ? "Перенос крюковых помет не подтверждён" : notation)}</pre></>}
         {melody && <><Notes melody={shiftedMelody(melody, shift.semitones)} style={style} activeNote={activeNote} compact={compact} />
         <pre className="font-mono text-xs whitespace-pre-wrap">{current?.layers?.melody ?? (shift.semitones ? "Ноты показаны в выбранной высоте; текстовый экспорт требует проверки" : melody.raw)}</pre></>}

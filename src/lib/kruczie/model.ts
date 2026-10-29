@@ -19,6 +19,8 @@ export interface CandidateView {
 }
 export interface ConversionView {
     result: TranslationResult;
+    displayDiagnostics: readonly import("@znamenica/kruczie").Diagnostic[];
+    musicalGaps?: readonly number[];
     candidates: CandidateView[];
     datasetVersion: string;
     corpusCoverage?: { covered: number; total: number; outsideTone: number; version: string; truncated: boolean };

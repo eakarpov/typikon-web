@@ -4,7 +4,10 @@ export type { NgramIndex as CorpusIndex } from "@znamenica/kruczie/ngrams";
 import type { ChantCollection } from "./types";
 import type { NgramIndex, NgramContext, NgramGroup } from "@znamenica/kruczie/ngrams";
 let api: typeof import("@znamenica/kruczie/ngrams") | undefined;
-export async function loadNgramApi() { return api ??= await import("@znamenica/kruczie/ngrams"); }
+let notation: typeof import("@znamenica/kruczie") | undefined;
+export function notationApi() { if (!notation) throw new Error("Сначала загрузите модель N-грамм."); return notation; }
+export async function loadNgramApi() { notation ??= await import("@znamenica/kruczie"); return api ??= await import("@znamenica/kruczie/ngrams"); }
+export { getCorpusSupplement, getCorpusUnpitchedVariants } from "./unpitched";
 function ready() { if (!api) throw new Error("Сначала загрузите модель N-грамм."); return api; }
 export async function createCorpusIndex(collection: ChantCollection) {
     const [{ trainNgramModel }, runtime] = await Promise.all([import("./train"),loadNgramApi()]);

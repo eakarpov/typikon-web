@@ -38,5 +38,5 @@ export async function trainNgramModel(collection: ChantCollection): Promise<Ngra
         entries.push([groups.map(group=>id(group,neumes,nids)),realizations]);
     }
     return { schemaVersion:1,version:collection.version,neumes,notes,contexts,sources,documents,entries,
-        training:{witnessCount:index.witnessCount,workCount:collection.works.length,acceptedPositions:collection.samples.reduce((n,s)=>n+s.positions.length,0),excludedBlocks:collection.audit.rejectedBlocks,rightsUrl:"http://znamen.ru/org.php#usl",method:"N=1,2,3; exact aligned double notation; full-copy deduplication; source/tone strata; rhythm retained; no inferred syllable splitting; verified contiguous segments from problematic blocks; music-only alignment when text differs; gaps never bridged"} };
+        training:{witnessCount:index.witnessCount,workCount:collection.works.length,acceptedPositions:collection.samples.reduce((n,s)=>n+s.positions.length,0),excludedBlocks:collection.audit.rejectedBlocks,rightsUrl:"http://znamen.ru/org.php#usl",method:"N=1,2,3; exact aligned double notation; full-copy deduplication; source/tone strata; rhythm retained; no inferred syllable splitting; verified contiguous segments from problematic blocks; music-only alignment when text differs; gaps never bridged; opaque neume keys retained when musical layers align; placeholders excluded"} };
 }

@@ -4,6 +4,7 @@ import type { ChantTradition, Tone } from "@znamenica/kruczie";
 import { EXAMPLES, MAX_INPUT_LENGTH, type ConversionView, type Direction } from "@/lib/kruczie/model";
 
 import TransposedScore from "./TransposedScore";
+import { NoteDisplayControl } from "./NoteDisplay";
 import type { NoteStyle } from "@/lib/kruczie/notation";
 
 import ZnamenDialog from "./ZnamenDialog";
@@ -24,7 +25,7 @@ const DIAGNOSTICS: Record<string, string> = {
     UNCOVERED_INPUT: "Не удалось перевести всю запись. Непокрытый участок указан ниже.",
     UNPARSED_INPUT: "Не удалось прочитать музыкальную запись.",
     UNKNOWN_NOTE: "Есть неизвестное нотное обозначение.",
-    UNKNOWN_NEUME: "Есть неизвестное крюковое обозначение.",
+    UNKNOWN_NEUME: "Начертание крюка пока не разобрано; музыкальное соответствие может быть найдено в корпусе.",
     UNMEASURED_DURATION: "Для речитации не задана измеренная длительность.",
     UNMAPPED_NEUME_CUE: "Подобен в скобках сохранён; его отображение пока не задано.",
     UNMAPPED_NEUME: "Обозначение распознано и сохранено; его отображение пока не задано.",
@@ -163,10 +164,10 @@ export default function Playground() {
             {error && <p role="alert" className="text-red-800">{error}</p>}
             {view && <section aria-label="Результат перевода" className="flex flex-col gap-4">
                 <h2 className="font-bold">Варианты перевода: {view.candidates.length}</h2>
-                <p className="text-sm text-slate-600">База: {view.datasetVersion}. Покрыто {view.result.coverage.covered} из {view.result.coverage.total} {view.result.coverage.unit === "notes" ? "нот" : "крюковых групп"}.</p>
-                {view.corpusCoverage && <p className="text-sm text-amber-900">Корпус {view.corpusCoverage.version}: найдено соответствий для {view.corpusCoverage.covered} из {view.corpusCoverage.total} групп; вне выбранного гласа: {view.corpusCoverage.outsideTone}. Диагностика каталога ниже сохраняется отдельно от корпусных находок.</p>}
+                <p className="text-sm text-slate-600">База: {view.datasetVersion}. Покрыто {view.corpusCoverage?.covered ?? view.result.coverage.covered} из {view.corpusCoverage?.total ?? view.result.coverage.total} {view.result.coverage.unit === "notes" ? "нот" : "крюковых групп"}.</p>
+                {view.corpusCoverage && <p className="text-sm text-amber-900">Корпус {view.corpusCoverage.version}: найдено соответствий для {view.corpusCoverage.covered} из {view.corpusCoverage.total} групп; вне выбранного гласа: {view.corpusCoverage.outsideTone}. Учитываются каталог и корпус; предложения по помеченным вариантам отмечены у результата.</p>}
                 {(view.result.truncated || view.corpusCoverage?.truncated) && <p className="text-amber-800">Поиск ограничен. Показаны найденные варианты; другие соответствия также возможны.</p>}
-                {view.result.coverage.uncovered.length > 0 && <p className="text-amber-800">Не покрыты каталогом позиции: {view.result.coverage.uncovered.map(r => `${r.start + 1}–${r.end}`).join(", ")}.</p>}
+                {view.musicalGaps !== undefined ? view.musicalGaps.length > 0 && <p className="text-amber-800">Нет нот для позиций: {view.musicalGaps.map(p => p + 1).join(", ")}.</p> : view.result.coverage.uncovered.length > 0 && <p className="text-amber-800">Нет соответствий для позиций: {view.result.coverage.uncovered.map(r => `${r.start + 1}–${r.end}`).join(", ")}.</p>}
                 {!view.candidates.length && <p>Полных соответствий не найдено. Проверьте запись или попробуйте изменить глас и распев.</p>}
                 <label className="flex flex-wrap items-center gap-2">Вид нот
                     <select className={fieldClass} value={noteStyle} onChange={e => setNoteStyle(e.target.value as NoteStyle)}>
@@ -174,6 +175,7 @@ export default function Playground() {
                         <option value="kievan">Киевские квадратные</option>
                     </select>
                 </label>
+                <NoteDisplayControl />
                 <p className="text-xs text-slate-500">Оба варианта показаны в скрипичном ключе с одинаковыми высотами и длительностями. Знаки альтерации повторяются у каждой ноты.</p>
                 {view.candidates.length > 0 && <div className="flex flex-col gap-2">
                     <label className="flex flex-wrap items-center gap-2">Темп, четвертей в минуту
@@ -208,9 +210,9 @@ export default function Playground() {
                         {candidate.origins.length > 30 && <p className="mt-2">Показаны первые 30 оснований из {candidate.origins.length}.</p>}
                     </details>
                 </article>)}
-                {view.result.diagnostics.length > 0 && <details open className="text-sm">
-                    <summary className="font-bold cursor-pointer">Диагностика ({view.result.diagnostics.length})</summary>
-                    <ul className="list-disc pl-5 mt-2">{view.result.diagnostics.map((d, i) => <li key={i} className={d.severity === "error" ? "text-red-800" : "text-amber-800"}>
+                {view.displayDiagnostics.length > 0 && <details open className="text-sm">
+                    <summary className="font-bold cursor-pointer">Диагностика ({view.displayDiagnostics.length})</summary>
+                    <ul className="list-disc pl-5 mt-2">{view.displayDiagnostics.map((d, i) => <li key={i} className={d.severity === "error" ? "text-red-800" : "text-amber-800"}>
                         {DIAGNOSTICS[d.code] ?? d.message} <code className="text-xs">{d.code}</code>
                         {d.range && <span> · знаки {d.range.start + 1}–{d.range.end}</span>}
                     </li>)}</ul>

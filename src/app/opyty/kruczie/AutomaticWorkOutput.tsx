@@ -43,7 +43,7 @@ export default function AutomaticWorkOutput({ view, results, direction, shift, s
         {!output && !error && <p role="status">Собираем автоматический разбор…</p>}
         {output && <>
             <p role="status">Автоматически покрыто позиций: {output.covered} из {output.total}. {output.gaps.length ? `Неразрешённых участков: ${output.gaps.length}. Пропуски не заменяются паузами; полный музыкальный экспорт и проигрывание недоступны.` : "Готов единый двоезнаменник без ручного выбора."}</p>
-            {output.blocks.some(b => b.ranking?.fallbacks?.length) && <p className="text-sm text-amber-900">Есть заимствования вне выбранного гласа. Они помечены у своих слогов и не подтверждают глас произведения.</p>}
+            {output.blocks.some(b => b.ranking?.fallbacks?.length) && <p className="text-sm text-amber-900">Есть дополнительные предложения по помеченным вариантам или вне выбранного гласа. Основания указаны у соответствующих слогов.</p>}
             <div className="flex flex-wrap gap-2 my-2">
                 <button className={button} disabled={!output.notes} onClick={() => onPlay(output.notes)}>{active ? "Остановить автоматический разбор" : "Послушать автоматический разбор"}</button>
                 <button className={button} disabled={!exported} onClick={() => exported && onExport(exported)}>Экспорт автоматического двоезнаменника</button>

@@ -15,13 +15,51 @@
 .neumes {
     font-family: "Kruczie Mezenets", serif;
     font-size: 58px;
-    line-height: 1.7;
+    line-height: 1;
+    font-weight: 400;
+    font-synthesis: none;
     white-space: pre;
-    padding: 8px 2px;
-    min-height: 110px;
+    padding: 8px 6px;
+    min-height: 130px;
 }
 .music {
     font-family: "Kruczie Bravura", serif;
     font-weight: 400;
     font-synthesis: none;
+}
+
+.compound {
+    display: inline-grid;
+    grid-template-rows: 0.7em 1.5em;
+    justify-items: center;
+    vertical-align: bottom;
+    padding: 0 0.08em;
+}
+.cueRow {
+    grid-row: 1;
+    align-self: end;
+    white-space: pre;
+    line-height: 1.2;
+}
+.cue {
+    display: inline-block;
+    font-size: 0.6em;
+    line-height: 1.2;
+    color: #a11414;
+    padding: 0 0.05em;
+}
+.neumeBody {
+    grid-row: 2;
+    align-self: center;
+    line-height: 1.5;
+}
+.unknown {
+    font-family: monospace;
+    font-size: 0.3em;
+    color: #92400e;
+    border-bottom: 1px dotted currentColor;
+}
+.empty {
+    display: inline-block;
+    min-width: 0.8em;
 }

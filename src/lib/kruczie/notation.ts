@@ -16,10 +16,10 @@ const stepIndex = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
 export function staffY(pitch: Pitch): number {
     return 70 - (pitch.octave * 7 + stepIndex[pitch.step] - 34) * 5;
 }
-export function displayNotes(events: readonly MelodyEvent[], style: NoteStyle): DisplayNote[] {
+export function displayNotes(events: readonly MelodyEvent[], style: NoteStyle, displayOctave: -1 | 0 = 0): DisplayNote[] {
     return events.filter(e => e.kind === "note" || e.kind === "reciting").map(event => {
         if (event.kind !== "note" && event.kind !== "reciting") throw new Error("Expected note");
-        const y = staffY(event.pitch), down = y < 70;
+        const y = staffY({ ...event.pitch, octave: event.pitch.octave + displayOctave }), down = y < 70;
         const onLine = (y - 50) % 10 === 0;
         const ledgers: number[] = [];
         for (let line = 40; line >= y; line -= 10) ledgers.push(line);

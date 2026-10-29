@@ -33,3 +33,18 @@ test("неподдержанное начертание не подменяет 
     assert.ok(display[0].warning);
     assert.equal(display[1].glyph, "\uEC32");
 });
+
+test("показ на октаву ниже пересчитывает линии и начертания, сохраняя музыкальные данные", async () => {
+    const { parseMelody } = await import("@znamenica/kruczie/melody");
+    const events = parseMelody("г1 #с2. *в2").value!.events!;
+    const before = JSON.stringify(events);
+    for (const style of ["round", "kievan"] as const) {
+        const original = displayNotes(events, style), lower = displayNotes(events, style, -1);
+        assert.deepEqual(lower.map((note,i) => note.y-original[i].y), [35,35,35]);
+        assert.deepEqual(lower[0].ledgers, [100]);
+        assert.equal(lower[1].dot, original[1].dot);
+        assert.equal(lower[1].accidental, original[1].accidental);
+        assert.deepEqual(lower.map(n => n.raw), original.map(n => n.raw));
+    }
+    assert.equal(JSON.stringify(events), before);
+});

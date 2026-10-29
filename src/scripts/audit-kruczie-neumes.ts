@@ -1,8 +1,11 @@
+import { isCorpusNeume } from "../lib/kruczie/corpus/notation";
+import { getCorpusUnpitchedVariants } from "../lib/kruczie/corpus/unpitched";
+import { loadNgramApi } from "../lib/kruczie/corpus";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 async function main() {
-    const [{ parseZnamen }, { normalizeNeumes, parseNeumeGroup }, { getMeasuredNotes }] = await Promise.all([import("@znamenica/kruczie/formats/znamen"), import("@znamenica/kruczie"), import("@znamenica/kruczie/melody")]);
+    const [{ parseZnamen }, { normalizeNeumes }, { getMeasuredNotes }] = await Promise.all([import("@znamenica/kruczie/formats/znamen"), import("@znamenica/kruczie"), import("@znamenica/kruczie/melody")]);
     const root = join(process.cwd(), "data/chant-corpus/znamen-v1");
     const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8"));
     const targets = new Map<string, { neumes: string; hits: number; safeHits: number; safeRejectedHits: number; examples: object[]; unsafeExamples: object[] }>();
@@ -23,7 +26,7 @@ async function main() {
             const neumes = block.notation?.trim().split(/\s+/u).filter(Boolean) ?? [], notes = block.melody?.trim().split(/\s+/u).filter(Boolean) ?? [];
             const valid = neumes.map((neume, i) => {
                 const music = notes[i] ? getMeasuredNotes(notes[i]) : undefined;
-                return neume.split(/~~/u).every(group => parseNeumeGroup(group).value?.recognized) && !!music?.value?.length && !music?.diagnostics.some(d => d.severity === "error");
+                return isCorpusNeume(neume) && !!music?.value?.length && !music?.diagnostics.some(d => d.severity === "error");
             });
             const originallyRejected = !block.aligned || valid.some(v => !v) || neumes.length !== notes.length;
             for (const [position, neume] of neumes.entries()) {
@@ -61,24 +64,26 @@ async function main() {
     const [{ createBuiltinCatalog }, { createBuiltinNgramIndex }, { getNgramRealizations, getNgramFallbacks }, { translatePhrase }] = await Promise.all([
         import("@znamenica/kruczie/data"), import("@znamenica/kruczie/ngrams/data"), import("@znamenica/kruczie/ngrams"), import("@znamenica/kruczie"),
     ]);
+    await loadNgramApi();
     const catalog = createBuiltinCatalog(), index = createBuiltinNgramIndex();
     const context = { tradition: "znamenny" as const, tone: 2 as const };
     const coverage = [];
     for (const kind of ["pitched", "unpitched"]) {
         const file = parseZnamen(await readFile(join(process.cwd(), `src/lib/kruczie/fixtures/w20g1-${kind}.txt`), "utf8")).value!;
         const cells = file.document.pages.flatMap(page => page.paragraphs.flatMap(paragraph => paragraph.elements.filter(e => e.kind === "syllable")));
-        const groups = new Map<string, { catalog: boolean; strict: boolean; fallback: boolean }>();
+        const groups = new Map<string, { catalog: boolean; strict: boolean; fallback: boolean; unpitched: boolean }>();
         for (const cell of cells) {
             if (cell.kind !== "syllable" || !cell.notation || groups.has(cell.notation.raw)) continue;
             const raw = cell.notation.raw;
             const legacy = translatePhrase(catalog, [cell], { direction: "to-notes", ...context, maxCandidates: 3, maxSteps: 2500 }).candidates.length > 0;
             const strict = getNgramRealizations(index, raw, context).length > 0;
-            groups.set(raw, { catalog: legacy, strict: legacy || strict, fallback: legacy || strict || getNgramFallbacks(index, raw, context).length > 0 });
+            const fallback = legacy || strict || getNgramFallbacks(index, raw, context).length > 0;
+            groups.set(raw, { catalog: legacy, strict: legacy || strict, fallback, unpitched: fallback || getCorpusUnpitchedVariants(index, raw, context).length > 0 });
         }
-        const count = (field: "catalog" | "strict" | "fallback") => cells.filter(c => c.kind === "syllable" && c.notation && groups.get(c.notation.raw)?.[field]).length;
-        coverage.push({ fixture: `w20g1-${kind}.txt`, totalPositions: cells.length, uniqueGroups: groups.size, catalogCovered: count("catalog"), strictCovered: count("strict"), withFallbackCovered: count("fallback"), unresolvedGroups: [...groups].filter(([, value]) => !value.fallback).map(([raw]) => raw) });
+        const count = (field: "catalog" | "strict" | "fallback" | "unpitched") => cells.filter(c => c.kind === "syllable" && c.notation && groups.get(c.notation.raw)?.[field]).length;
+        coverage.push({ fixture: `w20g1-${kind}.txt`, totalPositions: cells.length, uniqueGroups: groups.size, catalogCovered: count("catalog"), strictCovered: count("strict"), withFallbackCovered: count("fallback"), withUnpitchedCovered: count("unpitched"), unresolvedGroups: [...groups].filter(([, value]) => !value.unpitched).map(([raw]) => raw) });
     }
-    const result = { schemaVersion: 1, corpusVersion: "znamen-2026-10-27-v2", scope: "Exact normalized groups from both w20g1 fixtures; all archived double-notation witnesses, including blocks excluded by the v1 whole-block check. Counts are raw occurrences, not deduplicated training frequencies.", coverage: { context, modelVersion: index.model.version, fixtures: coverage }, groups: [...targets.values()], absentGroupsBookScan: { scope: "Exact normalized group match in parsed musical blocks of all archived source books, including single notation; no musical mapping inferred", hits: bookHits } };
+    const result = { schemaVersion: 1, corpusVersion: index.model.version, scope: "Exact normalized groups from both w20g1 fixtures; all archived double-notation witnesses, including blocks excluded by the v1 whole-block check. Opaque spellings accepted for aligned measured positions. Counts are raw occurrences, not deduplicated training frequencies. Coverage additionally reports unpitched proposals from pitched variants.", coverage: { context, modelVersion: index.model.version, fixtures: coverage }, groups: [...targets.values()], absentGroupsBookScan: { scope: "Exact normalized group match in parsed musical blocks of all archived source books, including single notation; no musical mapping inferred", hits: bookHits } };
     await writeFile(join(root, "neume-audit.json"), JSON.stringify(result, null, 2) + "\n");
     console.log(JSON.stringify({ groups: result.groups.length, absent: result.groups.filter(g => !g.hits).map(g => g.neumes), recoverableFromRejected: result.groups.filter(g => g.safeRejectedHits).length }));
 }

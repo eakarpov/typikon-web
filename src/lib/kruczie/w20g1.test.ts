@@ -42,7 +42,9 @@ test("w20g1: отсутствие полного развода отделяет
     assert.equal(result.status, "untranslated");
     assert.ok(result.positions?.length);
     assert.ok(!result.diagnostics.some(d => d.code === "UNKNOWN_NEUME" || d.code === "LAYER_ALIGNMENT"));
-    assert.ok(result.diagnostics.some(d => d.code === "UNCOVERED_INPUT"));
+    assert.ok(!result.diagnostics.some(d => d.code === "UNCOVERED_INPUT"));
+    const missing = view.blocks[0].cells.flatMap((_, position) => result.positions?.some(p => p.index === position && p.notes.length) ? [] : [position]);
+    assert.deepEqual(result.diagnostics.find(d => d.code === "MUSICAL_GAPS")?.details?.positions ?? [], missing);
 });
 
 test("w20g1: частичный стан сохраняет все девять позиций и показывает пропуски", async () => {

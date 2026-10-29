@@ -5,6 +5,7 @@ import { type WorkView, type WorkResult, type WorkCandidate, type WorkCell } fro
 import type { Direction } from "@/lib/kruczie/model";
 import type { NoteStyle } from "@/lib/kruczie/notation";
 import TransposedScore from "./TransposedScore";
+import { NoteDisplayControl } from "./NoteDisplay";
 import type { NotationShift } from "@/lib/kruczie/transposition";
 import { useMelodyPlayback } from "./useMelodyPlayback";
 import ZnamenDialog from "./ZnamenDialog";
@@ -15,7 +16,7 @@ import CellNoteEditor from "./CellNoteEditor";
 import AutomaticWorkOutput from "./AutomaticWorkOutput";
 import { createNoteFill, resolvedWorkCells, exportCompletedWork, encodeWorkDraft, WORK_DRAFT_KEY, type WorkFills, type SavedWorkDraft } from "@/lib/kruczie/workDraft";
 
-import { diagnosticText } from "@/lib/kruczie/diagnostics";
+import { diagnosticText, resolveMusicalGaps } from "@/lib/kruczie/diagnostics";
 
 import PitchReference from "./PitchReference";
 import { DEFAULT_PITCH_REFERENCE, referenceShift, type PitchReferenceSettings } from "@/lib/kruczie/reference";
@@ -202,6 +203,7 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
                 <label>Темп <select className={field} value={bpm} onChange={e => { playback.stop(); setBpm(Number(e.target.value)); }}><option value={66}>66</option><option value={96}>96</option><option value={132}>132</option></select></label>
                 <button className={field} disabled={!wholeNotes || busy} onClick={() => { if (playback.active === -1) playback.stop(); else void playback.play(wholeNotes, -1); }}>{playback.active === -1 ? "Остановить произведение" : "Послушать ручной разбор"}</button>
             </div>
+            <NoteDisplayControl />
             <PitchReference tradition={tradition} tone={tone ? Number(tone) as Tone : undefined} value={pitchReference} onChange={value => { playback.stop(); setPitchReference(value); }} />
             {playback.error && <p role="alert" className="text-red-800">{playback.error}</p>}
             {view.file.diagnostics.length > 0 && <details><summary>Диагностика исходника ({view.file.diagnostics.length})</summary><ul className="text-sm list-disc pl-5">{view.file.diagnostics.map((d, i) => <li key={i}><code>{d.code}</code>: {diagnosticText(d)}</li>)}</ul></details>}
@@ -214,6 +216,7 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
             <h3 className="font-bold">Ручной разбор по блокам</h3>
             {view.blocks.map((row, index) => {
                 const block = view.file.blocks[index], result = results[index], cells = cellsOf(index);
+                const blockDiagnostics = result ? resolveMusicalGaps(result.diagnostics, cells.map(cell => !!cell.syllable.melody)) : [];
                 const chosen = selected[index];
                 const editorView: WorkView = chosen ? { ...view,
                     blocks: view.blocks.map((row, i) => i === index ? { ...row, cells: chosen.cells } : row),
@@ -255,7 +258,7 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
                             <p>Известные ноты показаны ниже на своих слогах. Неоднозначные варианты можно сравнить и выбрать. Пустые позиции показаны пропусками, а не паузами. Выбранные варианты и ручные ноты сохраняются в браузере. При экспорте заполненного произведения они записываются в нотный слой своих позиций.</p>
                             <ul className="list-disc pl-5">{result.positions.map(position => <li key={position.index}>Позиция {position.index + 1}, слог «{row.cells[position.index].syllable.text.raw || "∅"}»: <code>{position.notes.join(" | ")}</code></li>)}</ul>
                         </details>}
-                        {result.diagnostics.length > 0 && <details className="text-sm"><summary>Диагностика блока</summary><ul className="list-disc pl-5">{result.diagnostics.map((d, i) => <li key={i}><code>{d.code}</code>: {diagnosticText(d)}</li>)}</ul></details>}
+                        {blockDiagnostics.length > 0 && <details className="text-sm"><summary>Диагностика блока</summary><ul className="list-disc pl-5">{blockDiagnostics.map((d, i) => <li key={i}><code>{d.code}</code>: {diagnosticText(d)}</li>)}</ul></details>}
                     </>}
                     {editing === index && <BlockEditor view={editorView} index={index} onClose={() => setEditing(null)} onSave={value => { cancel(); playback.stop(); setResults({}); setPartialChoices({}); setSelected(old => { const next = { ...old }; delete next[index]; return next; }); setFills(old => { const next = { ...old }; delete next[index]; return next; }); setRaw(value); setEditing(null); }} />}
                     {cells.length ? <ScoreCells disabled={busy || editing !== null} onManual={(position, value) => saveManual(index, position, value)} onClear={position => clearFill(index, position)} onChoose={(position, choice) => chooseFill(index, position, choice)} shift={shift} cells={cells} style={style} activeNote={activeNote} /> : <pre className="text-sm font-mono whitespace-pre-wrap mt-2">{block.notation === undefined ? "" : `%з ${block.notation}\n`}{block.melody === undefined ? "" : `%н ${block.melody}\n`}{block.text === undefined ? "" : `%т ${block.text}`}</pre>}

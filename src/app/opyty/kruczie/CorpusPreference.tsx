@@ -5,13 +5,13 @@ function toneLabel(example: CorpusReference) {
 export function FallbackNotice({ fallback }: { fallback: CorpusFallback }) {
     const examples = fallback.ranking.evidence.flatMap(e => e.examples).slice(0, 4);
     return <div className="text-xs text-amber-900 border-l-2 border-amber-500 pl-2 my-2">
-        <p>Запасной поиск · вне выбранного гласа {fallback.requestedTone}: <code>{fallback.neumes}</code> → <code>{fallback.notes}</code>.</p>
-        <p>Источник соответствия; принадлежность к выбранному гласу не подтверждена. Высота взята из источника, без автоматической транспозиции.</p>
+        <p>{fallback.kind === "unpitched" ? `Поиск беспометного крюка через помеченный вариант ${fallback.sourceNeumes}${fallback.outsideTone ? ` · вне гласа ${fallback.requestedTone}` : ""}` : `Запасной поиск · вне выбранного гласа ${fallback.requestedTone}`}: <code>{fallback.neumes}</code> → <code>{fallback.notes}</code>.</p>
+        <p>{fallback.kind === "unpitched" ? "Предложение по совпадающему начертанию без высотных помет; исходная крюковая запись сохранена. Это не точное совпадение N-граммы." : "Принадлежность к выбранному гласу не подтверждена."} Высота взята из источника, без автоматической транспозиции.</p>
         {examples.map((example, i) => <a className="underline block" href={example.url} target="_blank" rel="noreferrer" key={i}>
             {example.sourceId} · {toneLabel(example)} · {example.workId.replace(/^znamen:/u, "")} · блок {example.block + 1}, позиция {example.position + 1}
             {example.recovery ? ` · восстановлен ${example.recovery === "music-only" ? "по совпадающим музыкальным слоям без привязки текста" : "из проверенного участка исключённого блока"}` : ""}
         </a>)}
-        <p>Поддержка без фильтра гласа: {fallback.ranking.evidence.map(e => `${e.count}/${e.total}`).join(", ")} вхождений. Эта оценка не прибавляется к поддержке выбранного гласа.</p>
+        <p>Поддержка исходного варианта{fallback.kind === "unpitched" && !fallback.outsideTone ? " в выбранном контексте" : " без фильтра гласа"}: {fallback.ranking.evidence.map(e => `${e.count}/${e.total}`).join(", ")} вхождений. Эта оценка не прибавляется к поддержке выбранного гласа.</p>
     </div>;
 }
 export default function CorpusPreference({ ranking, hypothesis = false }: { ranking?: CorpusRanking; hypothesis?: boolean }) {
