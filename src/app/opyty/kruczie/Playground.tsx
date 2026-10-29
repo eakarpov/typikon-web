@@ -79,9 +79,17 @@ export default function Playground() {
         const id = ++requestId.current;
         try {
             if (!worker.current) worker.current = new Worker(new URL("./conversion.worker.ts", import.meta.url));
-            worker.current.onmessage = (event: MessageEvent<{ id: number; value?: ConversionView; error?: string }>) => {
+            worker.current.onmessage = (event: MessageEvent<{ id: number; value?: ConversionView; error?: string; phase?: "initializing" | "searching" }>) => {
                 if (event.data.id !== requestId.current) return;
-                stopTimer(); setBusy(false);
+                if (event.data.phase) {
+                    setNotice(event.data.phase === "initializing" ? "Загружаем и проверяем музыкальную базу…" : "База готова. Ищем известные соответствия…");
+                    if (event.data.phase === "searching") {
+                        stopTimer();
+                        timeout.current = setTimeout(() => fail("Поиск занял слишком много времени. Попробуйте более короткую запись."), 30000);
+                    }
+                    return;
+                }
+                stopTimer(); setBusy(false); setNotice("");
                 if (event.data.error) setError(event.data.error);
                 else if (event.data.value) setView(event.data.value);
                 else fail("Получен пустой ответ. Повторите перевод.");
@@ -90,7 +98,7 @@ export default function Playground() {
                 event.preventDefault();
                 fail("Не удалось загрузить или выполнить перевод. Проверьте соединение и повторите попытку.");
             };
-            timeout.current = setTimeout(() => fail("Поиск занял слишком много времени. Попробуйте более короткую запись."), 30000);
+            timeout.current = setTimeout(() => fail("Не удалось подготовить музыкальную базу за две минуты. Повторите загрузку."), 120000);
             worker.current.postMessage({ id, request: { direction, tradition, input, corpusSourceId: corpusSource || undefined, ...(tone ? { tone: Number(tone) as Tone } : {}) } });
         } catch { fail("Не удалось запустить перевод в браузере."); }
     }
@@ -158,9 +166,10 @@ export default function Playground() {
                         <button type="button" className={buttonClass} onClick={() => { setInput(EXAMPLES[tradition][direction]); setTone(""); reset(); }}>Подставить пример</button>
                     </div>
                 </fieldset>
+                {busy && <button type="button" className={buttonClass} onClick={() => { stopTimer(); worker.current?.terminate(); worker.current = null; requestId.current++; setBusy(false); setNotice("Перевод остановлен."); }}>Остановить</button>}
             </form>
             <p className="text-sm text-slate-500">Вычисления выполняются в браузере. Библиотека и база загружаются при первом переводе; введённая запись не отправляется на сервер.</p>
-            <div role="status" aria-live="polite">{busy ? "Загружаем базу и ищем известные соответствия…" : notice}</div>
+            <div role="status" aria-live="polite">{busy ? notice || "Загружаем базу и ищем известные соответствия…" : notice}</div>
             {error && <p role="alert" className="text-red-800">{error}</p>}
             {view && <section aria-label="Результат перевода" className="flex flex-col gap-4">
                 <h2 className="font-bold">Варианты перевода: {view.candidates.length}</h2>
