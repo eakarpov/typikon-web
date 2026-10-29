@@ -20,6 +20,6 @@ export interface CorpusEvidence {
     count: number; total: number; chantCount: number; sourceIds: readonly string[]; examples: readonly CorpusReference[];
 }
 export interface CorpusFallback { position: number; neumes: string; notes: string; requestedTone?: Tone; kind?: "unpitched"; sourceNeumes?: string; outsideTone?: boolean; ranking: CorpusRanking }
-export interface CorpusRanking { score: number; evidence: readonly CorpusEvidence[]; supportedPositions: number; corpusVersion: string; fallbacks?: readonly CorpusFallback[] }
+export interface CorpusRanking { parallels?: readonly import("../parallelTypes").ParallelRealization[]; preference?: import("../parallelTypes").SequencePreference; score: number; evidence: readonly CorpusEvidence[]; supportedPositions: number; corpusVersion: string; fallbacks?: readonly CorpusFallback[] }
 export interface RankingGroup { neumes: string; notes: string | null }
 export interface RankedSequence { groups: readonly RankingGroup[]; ranking: CorpusRanking }

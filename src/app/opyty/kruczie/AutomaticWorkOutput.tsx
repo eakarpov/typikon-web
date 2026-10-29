@@ -38,11 +38,12 @@ export default function AutomaticWorkOutput({ view, results, direction, shift, s
     let offset = 0;
     return <section className="border-2 border-green-700 rounded p-3 min-w-0" aria-label="Автоматический двоезнаменник">
         <h3 className="font-bold">Автоматический двоезнаменник всего произведения</h3>
-        <p className="text-sm">Склейка лучших последовательностей по блокам с учётом гласа и источника. При равном рейтинге берётся первый вариант в стабильном порядке. Ручные выборы ниже не меняют этот результат.</p>
+        <p className="text-sm">Совместный выбор последовательности для всего произведения с учётом гласа, источника и соседних колен. При равном рейтинге берётся первый вариант в стабильном порядке. Ручные выборы ниже не меняют этот результат.</p>
         {error && <p role="alert" className="text-red-800">{error}</p>}
         {!output && !error && <p role="status">Собираем автоматический разбор…</p>}
         {output && <>
             <p role="status">Автоматически покрыто позиций: {output.covered} из {output.total}. {output.gaps.length ? `Неразрешённых участков: ${output.gaps.length}. Пропуски не заменяются паузами; полный музыкальный экспорт и проигрывание недоступны.` : "Готов единый двоезнаменник без ручного выбора."}</p>
+            {output.blocks.find(b => b.ranking?.preference?.scope === "work") && <CorpusPreference ranking={output.blocks.find(b => b.ranking?.preference?.scope === "work")!.ranking} />}
             {output.blocks.some(b => b.ranking?.fallbacks?.length) && <p className="text-sm text-amber-900">Есть дополнительные предложения по помеченным вариантам или вне выбранного гласа. Основания указаны у соответствующих слогов.</p>}
             <div className="flex flex-wrap gap-2 my-2">
                 <button className={button} disabled={!output.notes} onClick={() => onPlay(output.notes)}>{active ? "Остановить автоматический разбор" : "Послушать автоматический разбор"}</button>
@@ -57,11 +58,13 @@ export default function AutomaticWorkOutput({ view, results, direction, shift, s
                     const highlighted = active && activeNote !== null && activeNote >= offset && activeNote < offset + count ? activeNote - offset : null;
                     offset += count;
                     const fallback = block.ranking?.fallbacks?.find(f => f.position === position);
+                    const parallel = block.ranking?.parallels?.find(p => p.position === position);
                     const gap = output.gaps.find(g => g.block === blockIndex && g.position === position);
                     return <div className="min-w-[130px] border-r border-slate-200 px-1" key={`${blockIndex}:${position}`}>
                         <span className="text-xs text-slate-400">{blockIndex + 1}:{position + 1}</span>
                         <TransposedScore notation={cell.syllable.notation?.raw} unicode={cell.unicode} melody={cell.syllable.melody} shift={shift} style={style} activeNote={highlighted} compact />
                         {fallback && <FallbackNotice fallback={fallback} />}
+                        {parallel && <a className="block text-xs text-green-900 underline" href={parallel.url} target="_blank" rel="noreferrer">Из параллели {parallel.sourceId}, блок {parallel.sourceBlock+1}, позиция {parallel.sourcePosition+1}{parallel.match === "text-family" ? " · беспометный вариант по тексту и знаку" : " · точное крюковое соответствие"}</a>}
                         {gap && <p className="text-xs text-amber-800 border border-dashed border-amber-600 p-2">Пропуск · {gap.reason}</p>}
                         <p className="font-bold text-center">{cell.textUnicode || "∅"}{cell.syllable.text.separator === "-" ? "-" : ""}</p>
                     </div>;

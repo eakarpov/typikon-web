@@ -1,3 +1,4 @@
+import { compareCorpusRankings } from "./sequenceRanking";
 import { musicalDiagnostics } from "./diagnostics";
 import type { CorpusRanking, CorpusFallback } from "./corpus/types";
 import { builtinCorpusIndex } from "./corpus/builtin";
@@ -77,8 +78,8 @@ export async function translateWorkBlock(view: WorkView, blockIndex: number, opt
     const index = await builtinCorpusIndex();
     const context = { tradition: options.tradition, tone: options.tone, sourceId: options.corpusSourceId };
     for (const candidate of candidates) candidate.ranking = scoreCorpusSequence(index, candidate.syllables.map(s => ({ neumes: s.notation?.raw ?? "", notes: s.melody?.raw ?? null })), context);
-    candidates.sort((a,b) => (b.ranking?.score ?? 0) - (a.ranking?.score ?? 0));
-    if (candidates[0]?.ranking?.score) candidates.forEach((c,i) => { c.preferred = i === 0 && c.ranking!.score > (candidates[1]?.ranking?.score ?? -1); });
+    candidates.sort((a,b) => a.ranking&&b.ranking?compareCorpusRankings(a.ranking,b.ranking):0);
+    if (candidates[0]?.ranking?.score) candidates.forEach((c,i) => { c.preferred = i === 0 && (!candidates[1]?.ranking || compareCorpusRankings(c.ranking!,candidates[1].ranking!)<0); });
     let recommendation: WorkResult["recommendation"];
     if (options.direction === "to-notes") {
         let corpusLimited = false;
@@ -98,10 +99,10 @@ export async function translateWorkBlock(view: WorkView, blockIndex: number, opt
         const search = suggestCorpusSequences(index, choices, context);
         const fallbackFor = (position: number, notes: string | null) => (fallbacks.get(position) ?? []).find(f => notes !== null && melodyKey(f.notes) === melodyKey(notes));
         const fallbackScore = (groups: readonly { notes: string | null }[]) => groups.reduce((sum, group, position) => sum + (fallbackFor(position, group.notes)?.ranking.score ?? 0), 0);
-        const sequences = [...search.sequences].sort((a, b) => b.ranking.score - a.ranking.score || fallbackScore(b.groups) - fallbackScore(a.groups));
+        const sequences = [...search.sequences].sort((a, b) => compareCorpusRankings(a.ranking,b.ranking) || fallbackScore(b.groups) - fallbackScore(a.groups));
         const best = sequences[0];
         const chosenFallbacks = best?.groups.flatMap((group, position) => { const f = fallbackFor(position, group.notes); return f ? [f] : []; }) ?? [];
-        if (best && (best.ranking.score || chosenFallbacks.length)) recommendation = { notes: best.groups.map(g => g.notes), ranking: { ...best.ranking, ...(chosenFallbacks.length ? { fallbacks: chosenFallbacks } : {}) }, truncated: search.truncated || corpusLimited, tied: sequences.filter(s => Math.abs(s.ranking.score-best.ranking.score)<1e-9 && Math.abs(fallbackScore(s.groups)-fallbackScore(best.groups))<1e-9).length };
+        if (best && (best.ranking.score || chosenFallbacks.length)) recommendation = { notes: best.groups.map(g => g.notes), ranking: { ...best.ranking, ...(chosenFallbacks.length ? { fallbacks: chosenFallbacks } : {}) }, truncated: search.truncated || corpusLimited, tied: sequences.filter(s => compareCorpusRankings(s.ranking,best.ranking)===0 && Math.abs(fallbackScore(s.groups)-fallbackScore(best.groups))<1e-9).length };
         for (const [position, choice] of (!candidates.length ? choices.entries() : [])) {
             const ordered = choice.options.map((notes, order) => {
                 const sequence = sequences.find(s => s.groups[position].notes === notes);
@@ -110,7 +111,7 @@ export async function translateWorkBlock(view: WorkView, blockIndex: number, opt
                 const fallback = fallbackFor(position, notes);
                 const ranking = { ...base,evidence, ...(fallback ? { fallbacks: [fallback] } : {}) };
                 return { notes, ranking, order };
-            }).sort((a,b) => b.ranking.score - a.ranking.score || (fallbackFor(position,b.notes)?.ranking.score ?? 0) - (fallbackFor(position,a.notes)?.ranking.score ?? 0) || a.order - b.order);
+            }).sort((a,b) => compareCorpusRankings(a.ranking,b.ranking) || (fallbackFor(position,b.notes)?.ranking.score ?? 0) - (fallbackFor(position,a.notes)?.ranking.score ?? 0) || a.order - b.order);
             if (!ordered.length) continue;
             const value = { index: position, notes: ordered.map(v=>v.notes), melodies: ordered.map(v=>parseMelody(v.notes).value!), rankings: ordered.map(v=>v.ranking) };
             const old = positions.findIndex(p=>p.index===position);

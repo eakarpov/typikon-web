@@ -1,3 +1,4 @@
+import { compareCorpusRankings } from "./sequenceRanking";
 import { musicalDiagnostics } from "./diagnostics";
 import { builtinCorpusIndex } from "./corpus/builtin";
 import { scoreCorpusSequence, getCorpusRealizations, getCorpusSupplement, suggestCorpusSequences } from "./corpus";
@@ -62,7 +63,7 @@ export async function runConversion(request: ConversionRequest): Promise<Convers
             const search = suggestCorpusSequences(corpus, choices, context);
             const fallbackFor = (position: number, notes: string | null) => fallbacks.get(position)?.find(f => notes !== null && melodyKey(f.notes) === melodyKey(notes));
             const fallbackScore = (values: readonly { notes: string | null }[]) => values.reduce((n, v, position) => n + (fallbackFor(position, v.notes)?.ranking.score ?? 0), 0);
-            const sequences = [...search.sequences].sort((a, b) => (b.ranking?.score ?? 0) - (a.ranking?.score ?? 0) || fallbackScore(b.groups) - fallbackScore(a.groups));
+            const sequences = [...search.sequences].sort((a, b) => compareCorpusRankings(a.ranking,b.ranking) || fallbackScore(b.groups) - fallbackScore(a.groups));
             const seen = new Set<string | null>();
             for (const sequence of sequences) {
                 const notes = sequence.groups.map(g => g.notes!).join(" "), key = melodyKey(notes);
@@ -76,6 +77,6 @@ export async function runConversion(request: ConversionRequest): Promise<Convers
             corpusCoverage = { covered: choices.length, total: choices.length, outsideTone: candidates[0]?.ranking?.fallbacks?.filter(f => f.kind !== "unpitched" || f.outsideTone).length ?? 0, version: corpus.model.version, truncated: search.truncated || corpusLimited };
         }
     }
-    candidates.sort((a,b) => (a.kind === b.kind ? (b.ranking?.score ?? 0) - (a.ranking?.score ?? 0) : a.kind === "matched" ? -1 : 1));
+    candidates.sort((a,b) => (a.kind === b.kind ? (a.ranking&&b.ranking?compareCorpusRankings(a.ranking,b.ranking):0) : a.kind === "matched" ? -1 : 1));
     return { displayDiagnostics: effectiveGaps ? musicalDiagnostics(diagnostics, effectiveGaps) : diagnostics, musicalGaps: effectiveGaps, result: { ...result, diagnostics }, candidates, datasetVersion: catalog.dataset.manifest.version, ...(corpusCoverage ? { corpusCoverage } : {}) };
 }

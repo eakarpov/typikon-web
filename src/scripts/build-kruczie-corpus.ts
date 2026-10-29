@@ -39,6 +39,7 @@ async function main() {
         audit: { rejectedBlocks:rejected.length - recoveredBlocks, rejectedPositions, doubleWitnesses:witnesses.length, discoveryErrors:manifest.errors.length, scope:manifest.scope } };
     await writeFile(join(process.cwd(),"data/chant-corpus/znamen-v1/collection.json"),JSON.stringify(corpus)+"\n");
     await writeFile(join(process.cwd(),"src/data/kruczie-corpus-metadata.json"),JSON.stringify({ version:corpus.version,sources:corpus.sources,witnessCount:corpus.witnesses.length,workCount:corpus.works.length,rejectedBlocks:corpus.audit.rejectedBlocks,toneUnknownCount:witnesses.filter(w=>w.tone===undefined).length,recoveredBlocks,recoveredPositions,opaquePositions:samples.reduce((n,s)=>n+s.positions.filter(p=>p.opaque).length,0) })+"\n");
+    await writeFile(join(root,"parallel-index.json"),JSON.stringify({version:corpus.version,works:corpus.works.map(({id,canonicalCode,aliases})=>({id,canonicalCode,aliases})),witnesses:corpus.witnesses.map(({attribution,rightsUrl,...w})=>{void attribution;void rightsUrl;return w;})})+"\n");
     const model = await trainNgramModel(corpus);
     const { createNgramIndex } = await import("@znamenica/kruczie/ngrams"); createNgramIndex(model);
     await writeFile(join(process.cwd(),"../kruczie-npm/src/ngrams/model.json"),JSON.stringify(model)+"\n");

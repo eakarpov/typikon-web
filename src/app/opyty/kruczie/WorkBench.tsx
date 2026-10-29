@@ -82,6 +82,7 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [phase, setPhase] = useState<"initializing" | "searching" | "ranking">("initializing");
     const [error, setError] = useState("");
     const [editing, setEditing] = useState<number | null>(null);
     const [exportedRaw, setExportedRaw] = useState<string | null>(null);
@@ -129,22 +130,23 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
     }, [raw, selected, fills, view, results, partialChoices]);
     useEffect(() => () => { worker.current?.terminate(); if (watchdog.current) clearTimeout(watchdog.current); }, []);
     function convert() {
-        reset(); setBusy(true);
+        reset(); setBusy(true); setPhase("initializing");
         try {
             const active = new Worker(new URL("./work.worker.ts", import.meta.url));
             worker.current = active;
-            const arm = () => {
+            const arm = (milliseconds = 30000) => {
                 if (watchdog.current) clearTimeout(watchdog.current);
-                watchdog.current = setTimeout(() => { cancel(); setError("Обработка блока заняла слишком много времени. Уже найденные результаты сохранены."); }, 30000);
+                watchdog.current = setTimeout(() => { cancel(); setError("Обработка блока заняла слишком много времени. Уже найденные результаты сохранены."); }, milliseconds);
             };
-            active.onmessage = (event: MessageEvent<{ result?: WorkResult; completed?: number; done?: boolean; error?: string }>) => {
+            active.onmessage = (event: MessageEvent<{ result?: WorkResult; completed?: number; done?: boolean; error?: string; phase?: "initializing" | "ranking" }>) => {
                 if (worker.current !== active) return;
-                if (event.data.result) { const result = event.data.result; setResults(old => ({ ...old, [result.blockIndex]: result })); setProgress(event.data.completed ?? 0); arm(); }
+                if (event.data.phase) { setPhase(event.data.phase); arm(120000); }
+                if (event.data.result) { if (!event.data.phase) setPhase("searching"); const result = event.data.result; setResults(old => ({ ...old, [result.blockIndex]: result })); setProgress(event.data.completed ?? 0); arm(); }
                 if (event.data.error) { setError(event.data.error); cancel(); }
                 if (event.data.done) cancel();
             };
             active.onerror = event => { event.preventDefault(); cancel(); setError("Не удалось загрузить обработчик произведения. Повторите попытку."); };
-            arm(); active.postMessage({ raw, options: { direction, tradition, corpusSourceId: corpusSource || undefined, ...(tone ? { tone: Number(tone) as Tone } : {}) } });
+            arm(120000); active.postMessage({ raw, options: { direction, tradition, corpusSourceId: corpusSource || undefined, ...(tone ? { tone: Number(tone) as Tone } : {}) } });
         } catch { cancel(); setError("Не удалось начать обработку произведения."); }
     }
     async function exportFile() {
@@ -197,7 +199,7 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
                 <button className="bg-red-900 text-white rounded px-3 py-2 disabled:opacity-50" disabled={busy || editing !== null} onClick={convert}>Преобразовать всё произведение</button>
                 {busy && <button className={field} onClick={cancel}>Остановить обработку</button>}
             </div>
-            <p role="status">Обработано блоков: {progress} из {view.blocks.length}{busy ? "…" : ""}</p>
+            <p role="status">{busy && (phase === "initializing" ? "Загружаем базу и параллельные источники. " : phase === "ranking" ? "Сопоставляем произведение целиком. " : "Ищем музыкальные варианты. ")}Обработано блоков: {progress} из {view.blocks.length}{busy ? "…" : ""}</p>
             <div className="flex flex-wrap gap-3">
                 <label>Вид нот <select className={field} value={style} onChange={e => setStyle(e.target.value as NoteStyle)}><option value="round">Круглые</option><option value="kievan">Киевские квадратные</option></select></label>
                 <label>Темп <select className={field} value={bpm} onChange={e => { playback.stop(); setBpm(Number(e.target.value)); }}><option value={66}>66</option><option value={96}>96</option><option value={132}>132</option></select></label>

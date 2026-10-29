@@ -1,3 +1,5 @@
+import { loadNgramApi } from "./corpus";
+import { compareCorpusRankings } from "./sequenceRanking";
 import type { CorpusRanking } from "./corpus/types";
 import type { Direction } from "./model";
 import type { WorkCell, WorkResult, WorkView } from "./work";
@@ -20,17 +22,18 @@ export interface AutomaticWork {
 
 /** Pick one stable winner per block, independently of the user's manual draft. */
 export async function assembleAutomaticWork(view: WorkView, results: Readonly<Record<number, WorkResult>>, direction: Direction): Promise<AutomaticWork> {
+    await loadNgramApi();
     const { parseMelody } = await import("@znamenica/kruczie/melody");
     const output: AutomaticWork = { blocks: [], gaps: [], total: 0, covered: 0, notes: "" };
     for (const [block, row] of view.blocks.entries()) {
         const result = results[block];
         const candidates = (result?.candidates ?? []).map((candidate, order) => ({ candidate, order }))
-            .sort((a, b) => (b.candidate.ranking?.score ?? 0) - (a.candidate.ranking?.score ?? 0) || a.order - b.order);
+            .sort((a, b) => (a.candidate.ranking&&b.candidate.ranking?compareCorpusRankings(a.candidate.ranking,b.candidate.ranking):0) || a.order - b.order);
         const best = candidates[0]?.candidate;
         const recommendation = direction === "to-notes" ? result?.recommendation : undefined;
         const automatic: AutomaticWorkBlock = {
             cells: [], ranking: recommendation?.ranking ?? best?.ranking,
-            tied: recommendation?.tied ?? (best ? candidates.filter(c => Math.abs((c.candidate.ranking?.score ?? 0) - (best.ranking?.score ?? 0)) < 1e-9).length : 1),
+            tied: recommendation?.tied ?? (best ? candidates.filter(c => (c.candidate.ranking&&best.ranking?compareCorpusRankings(c.candidate.ranking,best.ranking)===0:true)).length : 1),
             truncated: !!(result?.truncated || recommendation?.truncated),
         };
         output.blocks.push(automatic);
