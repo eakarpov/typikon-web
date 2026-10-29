@@ -1,5 +1,5 @@
 {
-  "dependency": "0.2.3",
+  "dependency": "1.0.0",
   "datasetVersion": "2026.10.26",
   "method": "most-frequent-ending-of-distinct-measured-formulas",
   "profiles": [
