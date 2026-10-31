@@ -1,4 +1,5 @@
 'use client';
+import {saveProjectDraft,readProject} from '@/lib/kruczie/projects';
 import { useEffect, useRef, useState } from "react";
 import type { ChantTradition, Tone } from "@znamenica/kruczie";
 import { type WorkView, type WorkResult, type WorkCandidate, type WorkCell } from "@/lib/kruczie/work";
@@ -62,21 +63,23 @@ function MelodyAlternatives({ cell, position, shift, style, disabled, onChoose }
         {options.length>3 && <button className="underline" onClick={()=>setExpanded(!expanded)}>{expanded?"Свернуть варианты":`Показать остальные варианты (${options.length-3})`}</button>}
     </div>;
 }
-export default function WorkBench({ initialRaw, initialDraft, onBack }: { initialRaw: string; initialDraft?: SavedWorkDraft | null; onBack: () => void }) {
+export default function WorkBench({ initialRaw, initialDraft, projectId, onBack }: { initialRaw: string; initialDraft?: SavedWorkDraft | null; projectId?: string; onBack: () => void }) {
     const [raw, setRaw] = useState(initialRaw);
     const [fills, setFills] = useState<WorkFills>(initialDraft?.fills ?? {});
     const [saveStatus, setSaveStatus] = useState("");
+    const [projectTitle,setProjectTitle]=useState('');
+    useEffect(()=>{if(projectId)try{setProjectTitle(readProject(projectId).title)}catch{}},[projectId]);
     const [view, setView] = useState<WorkView | null>(null);
     const [results, setResults] = useState<Record<number, WorkResult>>({});
     const [partialChoices, setPartialChoices] = useState<Record<number, Record<number, number>>>({});
     const [selected, setSelected] = useState<Record<number, WorkCandidate>>({});
-    const [direction, setDirection] = useState<Direction>("to-notes");
-    const [tradition, setTradition] = useState<ChantTradition>("znamenny");
-    const [tone, setTone] = useState("");
-    const [corpusSource, setCorpusSource] = useState("");
-    const [style, setStyle] = useState<NoteStyle>("round");
-    const [bpm, setBpm] = useState(96);
-    const [pitchReference, setPitchReference] = useState<PitchReferenceSettings>({ ...DEFAULT_PITCH_REFERENCE });
+    const [direction, setDirection] = useState<Direction>(initialDraft?.settings?.direction??"to-notes");
+    const [tradition, setTradition] = useState<ChantTradition>(initialDraft?.settings?.tradition??"znamenny");
+    const [tone, setTone] = useState(initialDraft?.settings?.tone??"");
+    const [corpusSource, setCorpusSource] = useState(initialDraft?.settings?.corpusSource??"");
+    const [style, setStyle] = useState<NoteStyle>(initialDraft?.settings?.style??"round");
+    const [bpm, setBpm] = useState(initialDraft?.settings?.bpm??96);
+    const [pitchReference, setPitchReference] = useState<PitchReferenceSettings>(initialDraft?.settings?.pitchReference??{ ...DEFAULT_PITCH_REFERENCE });
     const shift = { semitones: referenceShift(pitchReference, tradition, tone ? Number(tone) as Tone : undefined), tradition, tone: tone ? Number(tone) as Tone : undefined };
     const playback = useMelodyPlayback(bpm, shift.semitones);
     const [loading, setLoading] = useState(true);
@@ -100,7 +103,7 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
         setLoading(true); setError("");
         import("@/lib/kruczie/work").then(api => api.inspectWork(raw)).then(value => { if (!cancelled) {
                 setView(value);
-                if (!initialized.current) { initialized.current = true; if (value.headerTone) setTone(String(value.headerTone)); if (value.file.blocks.every(block => block.notation === undefined)) setDirection("to-neumes"); }
+                if (!initialized.current) { initialized.current = true; if (initialDraft?.settings) return; if (value.headerTone) setTone(String(value.headerTone)); if (value.file.blocks.every(block => block.notation === undefined)) setDirection("to-neumes"); }
             } })
             .catch(cause => { if (!cancelled) setError(cause instanceof Error ? cause.message : "Не удалось прочитать произведение."); })
             .finally(() => { if (!cancelled) setLoading(false); });
@@ -119,15 +122,20 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
                 }
             });
         });
+        const settings={direction,tradition:tradition as 'znamenny'|'demestvenny',tone,corpusSource,style,bpm,pitchReference};
         try {
-            localStorage.setItem(WORK_DRAFT_KEY, encodeWorkDraft({ version: 1, raw, fills: persisted }));
+            if (projectId) saveProjectDraft(projectId, {version:1,raw,fills:persisted,settings});
+            else localStorage.setItem(WORK_DRAFT_KEY, encodeWorkDraft({ version: 1, raw, fills: persisted, settings }));
             setSaveStatus("Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.");
         } catch { setSaveStatus("Не удалось сохранить разбор в браузере. Текущие правки остаются открыты; экспортируйте заполненный документ."); }
         if (Object.keys(selected).length) void import("@/lib/kruczie/work").then(api => api.exportWork(raw, selected)).then(source => {
-            if (!cancelled) localStorage.setItem(WORK_DRAFT_KEY, encodeWorkDraft({ version: 1, raw: source, fills: persisted }));
+            if (!cancelled) {
+                if(projectId)saveProjectDraft(projectId,{version:1,raw:source,fills:persisted,settings});
+                else localStorage.setItem(WORK_DRAFT_KEY, encodeWorkDraft({ version: 1, raw: source, fills: persisted, settings }));
+            }
         }).catch(() => { if (!cancelled) setSaveStatus("Не удалось сохранить выбранные блоки в браузере."); });
         return () => { cancelled = true; };
-    }, [raw, selected, fills, view, results, partialChoices]);
+    }, [raw, selected, fills, view, results, partialChoices, projectId, direction, tradition, tone, corpusSource, style, bpm, pitchReference]);
     useEffect(() => () => { worker.current?.terminate(); if (watchdog.current) clearTimeout(watchdog.current); }, []);
     function convert() {
         reset(); setBusy(true); setPhase("initializing");
@@ -175,10 +183,10 @@ export default function WorkBench({ initialRaw, initialDraft, onBack }: { initia
     }
     let workNoteOffset = 0;
     return <div className="flex flex-col gap-4">
-        <h2 className="font-bold">Произведение целиком</h2>
+        <h2 className="font-bold">{projectTitle||"Произведение целиком"}</h2>
         <p className="text-sm text-slate-600">После преобразования появится единый автоматический двоезнаменник из лучших вариантов. Ниже остаётся независимый ручной разбор: его варианты и правки можно сохранять отдельно.</p>
         <div className="flex flex-wrap gap-2">
-            <button className={field} onClick={() => { cancel(); playback.stop(); onBack(); }}>Вернуться к отдельной строке</button>
+            <button className={field} onClick={() => { cancel(); playback.stop(); onBack(); }}>{projectId?"К списку проектов":"Вернуться к отдельной строке"}</button>
             <button className={field} disabled={loading || busy || !wholeNotes || editing !== null} onClick={exportFile}>Экспорт ручного разбора в znamen.ru</button>
         </div>
         {exportedRaw !== null && <ZnamenDialog mode="export" source={null} layers={{}} documentRaw={exportedRaw} onClose={() => setExportedRaw(null)} onImport={() => {}} />}

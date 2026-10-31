@@ -1,4 +1,6 @@
 'use client';
+import ProjectShelf from './ProjectShelf';
+import {createProject} from '@/lib/kruczie/projects';
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { ChantTradition, Tone } from "@znamenica/kruczie";
 import { EXAMPLES, MAX_INPUT_LENGTH, type ConversionView, type Direction } from "@/lib/kruczie/model";
@@ -15,7 +17,7 @@ import { useMelodyPlayback } from "./useMelodyPlayback";
 import WorkBench from "./WorkBench";
 import CorpusControls from "./CorpusControls";
 import CorpusPreference from "./CorpusPreference";
-import { readWorkDraft, type SavedWorkDraft } from "@/lib/kruczie/workDraft";
+import { type SavedWorkDraft } from "@/lib/kruczie/workDraft";
 
 import PitchReference from "./PitchReference";
 import { DEFAULT_PITCH_REFERENCE, referenceShift, type PitchReferenceSettings } from "@/lib/kruczie/reference";
@@ -35,10 +37,9 @@ const fieldClass = "border border-slate-300 rounded px-3 py-2 bg-white text-slat
 const buttonClass = "border border-slate-300 rounded px-3 py-2 hover:bg-slate-100 disabled:opacity-50";
 
 export default function Playground() {
-    const [savedDraft, setSavedDraft] = useState<SavedWorkDraft | null>(null);
+    const [projectId,setProjectId]=useState<string|undefined>();
     const [restoredDraft, setRestoredDraft] = useState<SavedWorkDraft | null>(null);
     const [draftError, setDraftError] = useState("");
-    useEffect(() => { let cancelled = false; readWorkDraft().then(value => { if (!cancelled) setSavedDraft(value); }).catch(() => { if (!cancelled) setDraftError("Не удалось восстановить сохранённый разбор."); }); return () => { cancelled = true; }; }, []);
     const [workRaw, setWorkRaw] = useState<string | null>(null);
     const [bpm, setBpm] = useState(96);
     const [direction, setDirection] = useState<Direction>("to-notes");
@@ -110,11 +111,11 @@ export default function Playground() {
         catch { setNotice("Не удалось скопировать автоматически. Выделите запись и скопируйте её вручную."); }
     }
 
-    if (workRaw !== null) return <WorkBench initialRaw={workRaw} initialDraft={restoredDraft} onBack={() => { setWorkRaw(null); void readWorkDraft().then(setSavedDraft).catch(() => {}); }} />;
+    if (workRaw !== null) return <WorkBench key={projectId} projectId={projectId} initialRaw={workRaw} initialDraft={restoredDraft} onBack={() => setWorkRaw(null)} />;
 
     return (
         <div className="flex flex-col gap-5">
-            {savedDraft && <button className={buttonClass} onClick={() => { reset(); setRestoredDraft(savedDraft); setWorkRaw(savedDraft.raw); }}>Восстановить сохранённое произведение</button>}
+            <ProjectShelf onOpen={(id,draft)=>{reset();setProjectId(id);setRestoredDraft(draft);setWorkRaw(draft.raw)}}/>
             {draftError && <p role="alert">{draftError}</p>}
             <div className="flex flex-wrap gap-2">
                 <button type="button" className={buttonClass} disabled={busy} onClick={() => openModal({ mode: "import", layers: {} })}>Импорт из znamen.ru</button>
@@ -123,7 +124,7 @@ export default function Playground() {
             {imported && <p className="text-sm text-slate-600">Импортирован блок {imported.blockIndex + 1}. Исходный документ сохранён для экспорта.
                 <button type="button" className="underline ml-2" disabled={busy} onClick={() => { setImported(null); setNotice("Связь с исходным документом снята; текущая строка сохранена."); }}>Отвязать исходник</button>
             </p>}
-            {modal && <ZnamenDialog onImportWork={value => { reset(); setModal(null); setRestoredDraft(null); setWorkRaw(value); }} mode={modal.mode} shift={shift} source={imported} layers={modal.layers} onClose={() => setModal(null)}
+            {modal && <ZnamenDialog onImportWork={value => { try { const project=createProject("Новое песнопение",{version:1,raw:value,fills:{}}); reset();setProjectId(project.id);setModal(null);setRestoredDraft(null);setWorkRaw(value); } catch(e) { setDraftError(e instanceof Error?e.message:String(e)); } }} mode={modal.mode} shift={shift} source={imported} layers={modal.layers} onClose={() => setModal(null)}
                 onImport={(source, layer, value) => { setImported(source); setInput(value); setDirection(layer === "notation" ? "to-notes" : "to-neumes"); reset(); setModal(null); }} />}
             <CorpusControls value={corpusSource} disabled={busy} onChange={value => { setCorpusSource(value); reset(); }} />
             <form onSubmit={submit} className="flex flex-col gap-4" aria-busy={busy}>

@@ -43,6 +43,8 @@ export interface PushDevice {
      * уведомление о чтениях, пришедшее в три ночи, хуже не пришедшего вовсе.
      */
     readingHour?: number | null;
+    readingPlanCapable?: boolean;
+    pomyannikEnabled?: boolean;
 }
 
 /**
@@ -60,11 +62,18 @@ export const rememberDevice = async (
     timeZone: string,
     platform: string,
     readingHour: number | null = null,
+    readingPlanCapable?: boolean,
+    pomyannikEnabled?: boolean,
 ): Promise<void> => {
     const collection = await devices();
     await collection.updateOne(
         { token },
-        { $set: { userId, token, timeZone, platform, readingHour, updatedAt: new Date() } },
+        { $set: {
+            userId, token, timeZone, platform, readingHour,
+            ...(readingPlanCapable !== undefined ? { readingPlanCapable } : {}),
+            ...(pomyannikEnabled !== undefined ? { pomyannikEnabled } : {}),
+            updatedAt: new Date(),
+        } },
         { upsert: true },
     );
 };
@@ -88,7 +97,7 @@ export const forgetAllDevices = async (userId: string): Promise<number> => {
 /** Устройства, у которых сейчас названный час по их собственному поясу. */
 export const devicesAtLocalHour = async (hour: number, now: Date = new Date()): Promise<PushDevice[]> => {
     const collection = await devices();
-    const all = (await collection.find({}).toArray()) as unknown as PushDevice[];
+    const all = (await collection.find({ pomyannikEnabled: { $ne: false } }).toArray()) as unknown as PushDevice[];
 
     return all.filter((device) => localHour(device.timeZone, now) === hour);
 };

@@ -1,3 +1,4 @@
+import MyTempleSelection from '@/app/components/MyTempleSelection';
 import {getAcceptedTextingCount, getItem} from "@/app/profile/api";
 import {cookies} from "next/headers";
 import {readSessionPayload} from "@/lib/authorize/sessions";
@@ -90,6 +91,7 @@ const ProfilePage = async () => {
                 {/* СВОИ ХРАМЫ. Ответственный входил на сайт и не видел, чем
                     ведает: до собственного расписания добирался через
                     указатель храмов, как посторонний */}
+                <MyTempleSelection />
                 <MyTemples userId={item.id} />
                 {capsOf(item).size > 0 && (
                     <div>

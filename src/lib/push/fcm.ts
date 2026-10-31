@@ -148,6 +148,7 @@ export const sendData = async (
     token: string,
     data: Record<string, string>,
     creds: FcmCredentials,
+    options: { ttlSeconds?: number; signal?: AbortSignal } = {},
 ): Promise<SendOutcome> => {
     const pass = await accessToken(creds);
 
@@ -155,6 +156,7 @@ export const sendData = async (
         `https://fcm.googleapis.com/v1/projects/${creds.projectId}/messages:send`,
         {
             method: "POST",
+            signal: options.signal,
             headers: {
                 Authorization: `Bearer ${pass}`,
                 "Content-Type": "application/json",
@@ -166,7 +168,7 @@ export const sendData = async (
                     android: {
                         // Напоминание о поминальном дне ждать не может: сутки
                         // спустя оно уже не о чем. Час — и хватит.
-                        ttl: "3600s",
+                        ttl: `${options.ttlSeconds ?? 3600}s`,
                         priority: "high",
                     },
                 },

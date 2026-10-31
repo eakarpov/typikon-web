@@ -2,7 +2,8 @@ import type { Melody } from "@znamenica/kruczie";
 import { partialWorkCells, exportWork, type WorkBlock, type WorkResult, type WorkCell, type WorkView, type WorkCandidate } from "./work";
 export interface NoteFill { raw: string; origin: "manual" | "catalog"; melody: Melody }
 export type WorkFills = Record<number, Record<number, NoteFill>>;
-export interface SavedWorkDraft { version: 1; raw: string; fills: WorkFills }
+export interface WorkDraftSettings { direction: 'to-notes'|'to-neumes'; tradition:'znamenny'|'demestvenny'; tone:string; corpusSource:string; style:'round'|'kievan'; bpm:number; pitchReference:{enabled:boolean;writtenMidi?:number;soundingMidi:number} }
+export interface SavedWorkDraft { version: 1; raw: string; fills: WorkFills; settings?:WorkDraftSettings }
 export const WORK_DRAFT_KEY = "kruczie.work-draft.v1";
 export async function createNoteFill(raw: string, origin: NoteFill["origin"]): Promise<NoteFill> {
     if (!raw.trim() || raw.length > 1000 || /[\r\n]/u.test(raw)) throw new Error("Введите измеренные ноты одной позиции, например с1м1 или п2.");
@@ -33,7 +34,7 @@ export async function exportCompletedWork(view: WorkView, rows: readonly (readon
 }
 export function encodeWorkDraft(draft: SavedWorkDraft): string {
     const fills = Object.fromEntries(Object.entries(draft.fills).map(([block, positions]) => [block, Object.fromEntries(Object.entries(positions).map(([position, fill]) => [position, { raw: fill.raw, origin: fill.origin }]))]));
-    return JSON.stringify({ version: 1, raw: draft.raw, fills });
+    return JSON.stringify({ version: 1, raw: draft.raw, fills, ...(draft.settings?{settings:draft.settings}:{}) });
 }
 export async function decodeWorkDraft(text: string): Promise<SavedWorkDraft> {
     if (text.length > 2000000) throw new Error("Сохранённый разбор слишком большой.");
@@ -55,7 +56,17 @@ export async function decodeWorkDraft(text: string): Promise<SavedWorkDraft> {
     for (const [block, positions] of Object.entries(fills)) for (const position of Object.keys(positions)) {
         if (!view.blocks[Number(block)]?.cells[Number(position)]) throw new Error("Сохранённая позиция отсутствует в произведении.");
     }
-    return { version: 1, raw: value.raw, fills };
+    let settings:WorkDraftSettings|undefined;
+    if(value.settings!==undefined){const p=value.settings;
+        const midi=(v:unknown)=>typeof v==='number'&&Number.isInteger(v)&&v>=0&&v<=127;
+        if(!object(p)||!['to-notes','to-neumes'].includes(String(p.direction))||!['znamenny','demestvenny'].includes(String(p.tradition))
+            ||typeof p.tone!=='string'||!/^([1-8])?$/.test(p.tone)||typeof p.corpusSource!=='string'||p.corpusSource.length>200
+            ||!['round','kievan'].includes(String(p.style))||![66,96,132].includes(Number(p.bpm))||typeof p.bpm!=='number'
+            ||!object(p.pitchReference)||typeof p.pitchReference.enabled!=='boolean'||!midi(p.pitchReference.soundingMidi)
+            ||p.pitchReference.writtenMidi!==undefined&&!midi(p.pitchReference.writtenMidi))throw Error('Некорректные настройки проекта.');
+        settings=p as unknown as WorkDraftSettings;
+    }
+    return { version: 1, raw: value.raw, fills, ...(settings?{settings}:{}) };
 }
 export async function readWorkDraft(): Promise<SavedWorkDraft | null> {
     const text = localStorage.getItem(WORK_DRAFT_KEY);

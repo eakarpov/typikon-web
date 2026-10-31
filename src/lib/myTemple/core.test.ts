@@ -1,0 +1,5 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {decodeLocalTemple,parseTempleChoice} from './core';
+test('temple request only accepts catalog slug or explicit clear; names and owner IDs are discarded',()=>{assert.deepEqual(parseTempleChoice({slug:'osm-way-123',name:'Подмена',userId:'other',roles:['admin']}),{slug:'osm-way-123',migrate:false});assert.deepEqual(parseTempleChoice({slug:null}),{slug:null,migrate:false});assert.deepEqual(parseTempleChoice({slug:'wd-q123',migrate:true}),{slug:'wd-q123',migrate:true})});
+test('reject operators, malformed slugs and migration tombstones',()=>{for(const raw of [{slug:{$ne:null}},{slug:'../private'},{slug:''},{slug:'a'.repeat(201)},{slug:null,migrate:true},{slug:'valid',migrate:'false'},null,[]])assert.equal(parseTempleChoice(raw),null)});
+test('legacy choice is recovered without trusting arbitrary storage',()=>{assert.deepEqual(decodeLocalTemple('{"slug":"osm-way-123","name":"Никольский храм"}'),{slug:'osm-way-123',name:'Никольский храм'});for(const raw of ['{','null','{"slug":{},"name":"x"}','{"slug":"ok","name":null}'])assert.equal(decodeLocalTemple(raw),null)});

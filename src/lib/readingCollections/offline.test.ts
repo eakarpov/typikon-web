@@ -1,0 +1,6 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readSavedCollections, saveCollectionSnapshot, removeCollectionSnapshot, SAVED_COLLECTIONS_KEY } from './offline';
+function memory() { let value: string | null = null; return { getItem: () => value, setItem: (_: string, s: string) => { value = s; } }; }
+test('offline collection keeps its reading order, selected statia and explicit failed pages', () => { const s = memory(); const row = { id: 'one', revision: 3, title: 'В дорогу', items: [{ textId: 'a', title: 'Второе', href: '/reading/second?statia=2', statia: 2 }, { textId: 'b', title: 'Первое', href: '/reading/first' }] }; saveCollectionSnapshot(row, ['/reading/first'], s); const got = readSavedCollections(s)[0]; assert.deepEqual(got.items, row.items); assert.deepEqual(got.failed, ['/reading/first']); saveCollectionSnapshot({ ...row, title: 'Новое имя' }, [], s); assert.equal(readSavedCollections(s).length, 1); removeCollectionSnapshot('one', s); assert.equal(readSavedCollections(s).length, 0); });
+test('local offline snapshot rejects executable or external links', () => { const s = memory(); s.setItem(SAVED_COLLECTIONS_KEY, JSON.stringify([{ id: 'x', title: 'x', items: [{ title: 'x', href: 'javascript:alert(1)' }] }])); assert.equal(readSavedCollections(s).length, 0); });

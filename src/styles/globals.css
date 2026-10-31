@@ -201,3 +201,12 @@ body {
         display: block;
     }
 }
+
+/* Сосредоточенное чтение: выход и переходы остаются в самом тексте. */
+html[data-reading-focus="true"] [data-site-nav] { display: none; }
+html[data-reading-focus="true"] #text-reading-container > :not([data-reading-surface]) { display: none; }
+html[data-reading-focus="true"] #text-reading-container ~ * { display: none; }
+html[data-reading-focus="true"] .reading-column { max-width: var(--reading-measure); margin-inline: auto; }
+.reading-column section > div > .text-lg, .reading-column section p.text-lg {
+    font-size: var(--reading-font-size); line-height: var(--reading-line-height);
+}

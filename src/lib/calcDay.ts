@@ -18,7 +18,7 @@ export interface ICalcDayResult {
 // Единая точка расчета "дня" (мердж подвижной Триоди и неподвижного календаря) —
 // используется и /api/calc (для Калькулятора и виджета "Сегодня" на главной), и
 // SSR-страницей /calculator/[date].
-export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayResult | null> => {
+export const getMovableDay = async (dateStr: string) => {
     const dateObj = new Date(dateStr);
     const easter = orthodoxEaster(dateObj);
     const prevDateObj = new Date(dateStr);
@@ -28,13 +28,8 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
     const prevEasterDate = easterDateUtc(prevEaster);
 
     const searchTriodion = getWeekAndDay(dateObj, easterDate, prevEasterDate);
-    const triodicPromise = getTriodicItem(searchTriodion);
-
-    const churchDate = new Date(dateObj.getTime() - 13 * 24 * 3600 * 1000);
-    const calendarPromise = getCalendarItem(churchDate);
-    const memoriesPromise = getDayMemories(churchDate.getMonth() + 1, churchDate.getDate());
-
-    const [foundTriodicDay, calendarDay, memories] = await Promise.all([triodicPromise, calendarPromise, memoriesPromise]);
+    const churchDate = new Date(dateObj.getTime() - 13 * 86400000);
+    const foundTriodicDay = await getTriodicItem(searchTriodion);
     let triodicDay = foundTriodicDay;
 
     // Седмицы с 34-й по счёту своего шаблона в базе не имеют: лекционарий кончается
@@ -53,10 +48,6 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
                 triodicDay.name = `${triodicDay.name} (по счёту седмица ${searchTriodion.week}-я: крещенская отступка)`;
             }
         }
-    }
-
-    if (!triodicDay && !calendarDay) {
-        return null;
     }
 
     // Отступка/преступка: зачало Евангелия/Апостола на Литургии может относиться
@@ -81,6 +72,17 @@ export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayRe
             if (apostleSource?.apostleLiturgy) triodicDay.apostleLiturgy = apostleSource.apostleLiturgy;
         }
     }
+
+    return { triodicDay, churchDate, searchTriodion };
+};
+
+export const calcDay = async (dateStr: string, lang: string): Promise<ICalcDayResult | null> => {
+    const { triodicDay, churchDate, searchTriodion } = await getMovableDay(dateStr);
+    const [calendarDay, memories] = await Promise.all([
+        getCalendarItem(churchDate),
+        getDayMemories(churchDate.getMonth() + 1, churchDate.getDate()),
+    ]);
+    if (!triodicDay && !calendarDay) return null;
 
     const client = await clientPromise;
     const db = client.db("typikon");

@@ -727,6 +727,27 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/AppVersion") },
             },
         },
+        "/api/v2/reading-plan": {
+            get: {
+                tags: ["Чтения"], summary: "Личный план и очередное чтение", security: personal,
+                description: "Только по сессии владельца; private, no-store. Без плана возвращает null. Текст текущей статии включён в current.",
+                responses: { "200": ok("#/components/schemas/PersonalReadingPlan"), "401": needsSession },
+            },
+            patch: {
+                tags: ["Чтения"], summary: "Изменить личный план или расписание", security: personal,
+                requestBody: sends("#/components/schemas/ReadingPlanChange"),
+                description: "id и revision защищают от устаревших изменений. Пауза сохраняет расписание и прекращает отправку; завершённый план не получает уведомлений.",
+                responses: { "200": ok("#/components/schemas/PersonalReadingPlan"), "400": errorResponse("Неверное действие"), "409": errorResponse("План изменился или настройки недопустимы"), "401": needsSession },
+            },
+        },
+        "/api/v2/reading-plan/notice": {
+            get: {
+                tags: ["Чтения"], summary: "Проверить сигнал напоминания плана", security: personal,
+                description: "Сессия владельца и свежая доставка обязательны. Вернёт null при паузе, отключении, смене расписания, удалении или завершении плана. Текст берётся из текущего чтения; private, no-store.",
+                parameters: [{name:"delivery",in:"query",required:true,schema:{type:"string",pattern:"^[a-f0-9]{64}$"}}],
+                responses: { "200": ok("#/components/schemas/ReadingPlanNotice"), "401": needsSession },
+            },
+        },
         "/api/v2/pomyannik/devices": {
             post: {
                 tags: ["Помянник"],
@@ -742,7 +763,7 @@ export const openapi = () => ({
                     + "в Петропавловске и восемь утра в Калининграде — одиннадцать часов "
                     + "разницы.\n\n`readingHour` — час, в который слать чтения дня: местный, "
                     + "целый, от 0 до 23. Не прислан или `null` — о чтениях этому устройству "
-                    + "не пишем: молчание тут и есть выбор.",
+                    + "не пишем: молчание тут и есть выбор. readingPlanCapable=true объявляет поддержку планов; pomyannikEnabled=false отключает серверный помянник, сохраняя устройство для плана.",
                 responses: {
                     "200": ok("#/components/schemas/Ok"),
                     "400": errorResponse("Нет ключа доставки или пояс неизвестен"),
@@ -1556,6 +1577,28 @@ export const openapi = () => ({
             },
         },
         schemas: {
+            PlanReminder: {
+                type: "object", required: ["enabled", "time", "weekdays", "timeZone"],
+                properties: {
+                    enabled: {type:"boolean"}, time:{type:"string",pattern:"^([01]\\d|2[0-3]):[0-5]\\d$"},
+                    weekdays:{type:"array",maxItems:7,items:{type:"integer",minimum:1,maximum:7},description:"Понедельник — 1, воскресенье — 7; для включённого расписания нужен хотя бы один день"},
+                    timeZone:{type:"string",description:"IANA, например Europe/Moscow"}, version:{type:"string",readOnly:true},
+                },
+            },
+            PersonalReadingPlan: {
+                type:["object","null"], properties:{
+                    userId:{type:"string"},id:{type:"string"},revision:{type:"integer"},title:{type:"string"},status:{enum:["active","paused","completed"]},
+                    reminder:{anyOf:[{$ref:"#/components/schemas/PlanReminder"},{type:"null"}]},reminderDevices:{type:"integer"},
+                    current:{type:["object","null"],properties:{title:{type:"string"},href:{type:"string"},content:{type:["string","null"]},footnotes:{type:"array",items:{type:"string"}},markdown:{type:"boolean"},csSource:{type:"boolean"}}},
+                },
+            },
+            ReadingPlanChange: {
+                type:"object",required:["id","revision","action"],properties:{id:{type:"string"},revision:{type:"integer"},action:{enum:["reminder","pause","resume","advance"]},reminder:{$ref:"#/components/schemas/PlanReminder"}},
+            },
+            ReadingPlanNotice: {
+                type:["object","null"],properties:{userId:{type:"string"},planId:{type:"string"},deliveryId:{type:"string"},title:{type:"string"},body:{type:"string"}},
+            },
+
             Error: {
                 type: "object",
                 properties: {

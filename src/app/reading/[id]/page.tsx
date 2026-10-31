@@ -1,3 +1,5 @@
+import {notFound} from 'next/navigation';
+import {selectedStatia} from '@/lib/readingParts';
 import { canonicalPath, withSearch } from "@/lib/contentAliases";
 import {getBibleRedirect, getItem} from "@/app/reading/[id]/api";
 import Content from "@/app/reading/[id]/Content";
@@ -47,12 +49,14 @@ const ReadingItem = async ({ params: { id }, searchParams }: Props) => {
     const result = await getItem(id);
     const [item, , shouldRedirect] = result;
     if (item && shouldRedirect) redirect(withSearch(canonicalPath("reading", item), searchParams));
+    const fragment = searchParams.statia === undefined ? null : selectedStatia(item?.content || '', searchParams.statia);
+    if(searchParams.statia !== undefined && !fragment)notFound();
     const itemPromise = Promise.resolve(result);
 
     return (
       <div className={myFont.variable}>
           <Suspense fallback={<div>Loading...</div>}>
-              <Content itemPromise={itemPromise} showAccents={accents === "1"} />
+              <Content itemPromise={itemPromise} showAccents={accents === "1"} statia={fragment?.statia} />
           </Suspense>
       </div>
     );

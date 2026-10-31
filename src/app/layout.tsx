@@ -1,3 +1,5 @@
+import MyTempleProvider from '@/app/components/MyTempleProvider';
+import NetworkStatus from '@/app/components/NetworkStatus';
 import '../styles/globals.css';
 import React from "react";
 import CountMeta from "@/app/meta/CountMeta";
@@ -81,6 +83,7 @@ export default function RootLayout({
       </head>
       <body>
           <CommonMeta />
+          <NetworkStatus />
           <noscript>
               <div>
                   <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />
@@ -89,6 +92,7 @@ export default function RootLayout({
           <CountMeta />
           <ServiceWorkerRegistrar />
           <StoreProvider>
+              <MyTempleProvider>
               <>
                   <SessionLoader />
                   <AuthorizeChecker />
@@ -99,7 +103,7 @@ export default function RootLayout({
                   {/* На печать шапка не идёт: правило в globals.css снимает
                       её со всякого листа — на бумаге нужна записка, а не
                       строка разделов сайта */}
-                  <nav className="border-b-2 w-full overflow-scroll">
+                  <nav data-site-nav className="border-b-2 w-full overflow-scroll">
                       <div className={myFont.variable}>
                           <NavMenu
                               showButton={process.env.SHOW_LOGIN_BUTTON}
@@ -112,6 +116,7 @@ export default function RootLayout({
                       {children}
                   </div>
               </>
+              </MyTempleProvider>
           </StoreProvider>
       </body>
     </html>

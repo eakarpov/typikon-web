@@ -1,3 +1,7 @@
+import AddToCollection from '@/app/reading-collections/AddToCollection';
+import ReadingFocus from '@/app/components/ReadingFocus';
+import {readingParts} from '@/lib/readingParts';
+import ReadingPlanStep from '@/app/reading-plan/ReadingPlanStep';
 import { ReadinessButton } from "@/app/components/DayPart";
 import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon, BookOpenIcon, MapPinIcon} from "@heroicons/react/24/outline";
@@ -20,9 +24,11 @@ import {TextReadiness} from "@/utils/texts";
 import AccentedSwitch from "@/app/reading/[id]/AccentedSwitch";
 import {getAccentedView} from "@/app/reading/[id]/api";
 
-const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Promise<any>, showAccents?: boolean }) => {
+const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromise: Promise<any>, showAccents?: boolean; statia?: number }) => {
 
-    const [item, err, shouldRedirect] = await itemPromise;
+    const [source, err, shouldRedirect] = await itemPromise;
+    const parts=readingParts(source?.content);
+    const item=source&&statia?{...source,content:parts[statia-1],readingFragment:true,name:`${source.name} · статия ${statia} из ${parts.length}`} : source;
 
     if (!item) {
         return (
@@ -132,7 +138,17 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
                     ))}
                 </div>
             )}
+            <AddToCollection textId={String(item.id)} statia={statia}/>
+            <ReadingFocus title={item.name||"Чтение"}>
+            {!statia&&parts.length>1&&<details className="py-2"><summary className="min-h-11 cursor-pointer py-2">Читать отдельную статию</summary><ol>{parts.map((part,n)=>part.trim()&&<li key={n}><Link className="underline block min-h-11 py-2" href={`/reading/${item.alias||item.id}?statia=${n+1}`}>Статия {n+1}</Link></li>)}</ol></details>}
+            {statia && <nav data-reading-nav aria-label="Статии произведения" className="flex gap-3 flex-wrap py-3">
+                {statia>1&&<Link className="underline min-h-11 p-2" href={`/reading/${item.alias||item.id}?statia=${statia-1}`}>← Предыдущая статия</Link>}
+                <Link className="underline min-h-11 p-2" href={`/reading/${item.alias||item.id}`}>Всё произведение</Link>
+                {statia<parts.length&&<Link className="underline min-h-11 p-2" href={`/reading/${item.alias||item.id}?statia=${statia+1}`}>Следующая статия →</Link>}
+            </nav>}
             <AccentedReading item={item} showAccents={showAccents} />
+            <ReadingPlanStep textId={String(item.id)} statia={statia} />
+            </ReadingFocus>
             {item.info && (
                 <div className="font-serif">
                     <p>
@@ -177,7 +193,7 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
 // Текст и, если он размечен не полностью, переключатель показа с машинными
 // ударениями. Сам корпус при этом не трогается — подменяется только то, что видно.
 const AccentedReading = async ({ item, showAccents }: { item: any, showAccents: boolean }) => {
-    const view = await getAccentedView(item, showAccents);
+    const view = item.readingFragment ? null : await getAccentedView(item, showAccents);
 
     if (!view) return <ReadingContent item={item} />;
 

@@ -51,8 +51,12 @@ export async function POST(request: Request) {
     }
     const readingHour = typeof raw === "number" ? raw : null;
 
+    if (body?.readingPlanCapable !== undefined && typeof body.readingPlanCapable !== "boolean")
+        return fail("bad_request", "readingPlanCapable — логическое значение.");
+    if (body?.pomyannikEnabled !== undefined && typeof body.pomyannikEnabled !== "boolean")
+        return fail("bad_request", "pomyannikEnabled — логическое значение.");
     try {
-        await rememberDevice(access.userId, token, timeZone, platform, readingHour);
+        await rememberDevice(access.userId, token, timeZone, platform, readingHour, body?.readingPlanCapable, body?.pomyannikEnabled);
         return respondPrivate({ ok: true }, { access });
     } catch (e) {
         reportError(e, { where: "app/api/v2/pomyannik/devices/route#POST", source: "api" });

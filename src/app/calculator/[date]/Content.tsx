@@ -48,6 +48,7 @@ const Content = async ({ date, resultPromise }: { date: string; resultPromise: P
                             label={`Чтения на день: ${date}${result.day?.name ? ` — ${result.day.name}` : ""}`}
                         />
                     </div>
+                    <p className="text-center py-2"><Link href="/offline-readings" className="underline">Сохранить неделю или диапазон без сети</Link></p>
                     <DayMemories memories={result.memories} />
                     <DayFullContent item={result.day} paschal />
                 </>

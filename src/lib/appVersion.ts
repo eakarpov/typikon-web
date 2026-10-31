@@ -34,7 +34,7 @@ const releaseDirectories = () => [
  * поломку. Число здесь — пол, а не истина; правится при выпуске, если каталог
  * почему-то читать перестали.
  */
-export const LAST_KNOWN: AppVersion = { major: 2, minor: 3, patch: 4 };
+export const LAST_KNOWN: AppVersion = { major: 2, minor: 3, patch: 5 };
 
 export interface AppVersion {
     major: number;

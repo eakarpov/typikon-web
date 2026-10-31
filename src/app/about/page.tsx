@@ -16,11 +16,11 @@ const About = () => {
                 не заходя на эту страницу.
             </p>
             <h2>
-                Выпущена версия 6.4
+                Выпущена версия 6.5
             </h2>
             <p>
-                <a href="/news/versiya-6-4" className="text-amber-800 underline underline-offset-4">
-                    Что нового в выпуске 6.4
+                <a href="/news/versiya-6-5" className="text-amber-800 underline underline-offset-4">
+                    Что нового в выпуске 6.5
                 </a>
             </p>
         </div>

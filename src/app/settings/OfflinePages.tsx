@@ -99,21 +99,21 @@ const OfflinePages = () => {
     const titles = tripTitles();
     const groups = new Map<string, SavedPage[]>();
     for (const page of pages) {
-        if (!page.group) continue;
-        groups.set(page.group, [...(groups.get(page.group) ?? []), page]);
+        for (const group of page.groups ?? (page.group ? [page.group] : []))
+            groups.set(group, [...(groups.get(group) ?? []), page]);
     }
-    const single = pages.filter((page) => !page.group);
+    const single = pages.filter((page) => page.standalone || (!page.group && !page.groups?.length));
 
     return (
         <div className="flex flex-col gap-2">
             {[...groups].map(([group, list]) => (
                 <details key={group} className="font-serif">
                     <summary>
-                        Поездка «{titles[group] ?? group}»: {list.length} {plural(list.length, "страница", "страницы", "страниц")}
+                        Пакет «{titles[group] ?? group}»: {list.length} {plural(list.length, "страница", "страницы", "страниц")}
                         {" · "}
                         <button type="button" disabled={busy} onClick={() => onForgetGroup(group)}
                                 className="text-sm text-slate-500 hover:text-red-600 disabled:cursor-wait">
-                            убрать поездку
+                            убрать пакет
                         </button>
                     </summary>
                     <ul className="ml-4 text-sm">

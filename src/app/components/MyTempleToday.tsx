@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { readMyTemple } from "@/app/temples/[slug]/MyTemple";
+import { useMyTemple } from "./MyTempleProvider";
 
 // «В вашем храме сегодня». Ради этой строки и заводился каталог: престол —
 // параметр службы, и в свой день он поднимает её знак по храмовой главе
@@ -17,21 +17,23 @@ interface Answer {
 }
 
 const MyTempleToday = ({ date }: { date: string }) => {
-    const [answer, setAnswer] = useState<Answer | null>(null);
+    const {temple: mine, owner} = useMyTemple();
+    const slug = mine?.slug;
+    const [answer, setAnswer] = useState<(Answer & {forDate:string}) | null>(null);
 
     useEffect(() => {
-        const mine = readMyTemple();
-        if (!mine) return;
+        setAnswer(null);
+        if (!slug) return;
         let alive = true;
-        fetch(`/api/temples/feast?slug=${encodeURIComponent(mine.slug)}&date=${date}`)
+        fetch(`/api/temples/feast?slug=${encodeURIComponent(slug)}&date=${date}`)
             .then((r) => (r.ok ? r.json() : null))
-            .then((data) => { if (alive && data?.feast) setAnswer(data); })
+            .then((data) => { if (alive && data?.feast) setAnswer({...data,forDate:date}); })
             // Отметка — украшение дня, а не сам день: не ответила, и ладно.
             .catch(() => undefined);
         return () => { alive = false; };
-    }, [date]);
+    }, [date, slug, owner]);
 
-    if (!answer?.feast || !answer.prestol) return null;
+    if (!mine || answer?.temple.slug !== mine.slug || answer.forDate !== date || !answer.feast || !answer.prestol) return null;
 
     return (
         <div className="font-serif border-l-4 border-amber-800 pl-3 my-3">

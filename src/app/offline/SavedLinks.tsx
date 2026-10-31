@@ -30,12 +30,12 @@ const SavedLinks = () => {
             <ul className="flex flex-col gap-1">
                 {pages.map((page) => (
                     <li key={page.url}>
-                        <Link
+                        <a
                             href={page.url}
                             className="font-serif text-amber-800 underline underline-offset-4"
                         >
                             {page.label}
-                        </Link>
+                        </a>
                     </li>
                 ))}
             </ul>

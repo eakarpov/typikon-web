@@ -17,6 +17,8 @@ export type SavedPage = {
     bytes: number;
     /** Поездка, с которой страница сохранена: так её и убирают — всю разом. */
     group?: string;
+    groups?: string[];
+    standalone?: boolean;
 };
 
 export type OfflineAnswer =

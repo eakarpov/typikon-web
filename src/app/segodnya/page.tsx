@@ -1,3 +1,5 @@
+import MyTempleSelection from '@/app/components/MyTempleSelection';
+import PlanManager from '@/app/reading-plan/PlanManager';
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -90,6 +92,11 @@ const SegodnyaPage = async () => {
                     <MyTempleToday date={date} />
                 </div>
             </div>
+
+            <MyTempleSelection />
+            <PlanManager compact />
+            <Link className="underline" href="/reading-collections">Мои подборки чтений</Link>
+            <Link className="underline" href="/offline-readings">Чтения на неделю без сети</Link>
 
             {data.progress.length > 0 && (
                 <Section title="Продолжить чтение">

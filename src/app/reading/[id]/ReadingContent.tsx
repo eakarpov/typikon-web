@@ -531,7 +531,7 @@ const ReadingContent = ({ item }: { item: any }) => {
             className="space-y-1 mt-2 pb-2"
             onContextMenu={onContextMenuHandler}
         >
-            {isAuthorized && item.id && <ReadingProgressTracker textId={item.id} />}
+            {isAuthorized && item.id && !item.readingFragment && <ReadingProgressTracker textId={item.id} />}
             <div
                 className="context-menu"
                 style={{

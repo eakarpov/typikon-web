@@ -21,6 +21,7 @@ const Offline = () => (
             Чтения, которые вы уже открывали, доступны и сейчас — откройте их
             из истории браузера или по прежним ссылкам.
         </p>
+        <p><a className="underline" href="/saved-collections">Сохранённые подборки</a></p>
         <SavedLinks />
         <p className="font-serif">
             <Link href="/" className="text-amber-800 underline underline-offset-4">

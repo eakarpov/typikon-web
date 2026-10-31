@@ -187,6 +187,15 @@ const SPECS: Spec[] = [
     { db: "typikon-users", collection: "readingProgress", key: { userId: 1, updatedAt: -1 },
       why: "страница «Сегодня»: что продолжить, свежее сверху" },
 
+    { db: "typikon-users", collection: "readingCollections", key: { userId: 1, title: 1 },
+      why: "личные подборки: выдача только владельцу в порядке названий" },
+    { db: "typikon-users", collection: "readingCollectionShares", key: { userId: 1, collectionId: 1 },
+      why: "отзыв опубликованных копий владельцем и удаление вместе с подборкой" },
+
+    { db: "typikon-users", collection: "readingPlans", key: { status: 1, "reminder.enabled": 1 }, why: "планы с включёнными напоминаниями" },
+    { db: "typikon-users", collection: "pushDevices", key: { userId: 1, readingPlanCapable: 1 }, why: "совместимые телефоны владельца личного плана" },
+    { db: "typikon-users", collection: "readingPlanDeliveries", key: { createdAt: 1 }, options: { expireAfterSeconds: 604800 }, why: "краткая дедупликация напоминаний, без истории чтения" },
+
     // --- typikon-users: помянник
     //
     // Помянник спрашивают целиком и всегда одним разворотом: сперва о здравии,

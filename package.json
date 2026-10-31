@@ -119,7 +119,8 @@
     "kruczie:references": "tsx src/scripts/build-kruczie-references.ts",
     "corpus:collect": "python3 scripts/collect-znamen.py",
     "corpus:build": "tsx src/scripts/build-kruczie-corpus.ts",
-    "corpus:audit": "tsx src/scripts/audit-kruczie-neumes.ts"
+    "corpus:audit": "tsx src/scripts/audit-kruczie-neumes.ts",
+    "push:reading-plan": "tsx src/scripts/send-reading-plan-push.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

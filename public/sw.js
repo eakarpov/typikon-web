@@ -15,7 +15,7 @@
 // переживает смену версии воркера: это «я сохранил, значит открою».
 //
 // Версию поднимать при изменении правил: старые кэши удаляются при активации.
-const VERSION = "v3";
+const VERSION = "v4";
 const SHELL_CACHE = `typikon-shell-${VERSION}`;
 const ASSET_CACHE = `typikon-assets-${VERSION}`;
 const PAGE_CACHE = `typikon-pages-${VERSION}`;
@@ -42,7 +42,7 @@ const PAGE_LIMIT = 100;
 // «Сегодня», помянник, поминовение, настройки и заметки добавлены в v3: их
 // страницы читают сессию на сервере, и имена из помянника оседали в кэше
 // страниц. Подъём версии этот кэш и сносит.
-const PRIVATE = /^\/(api|admin|profile|texting|login|segodnya|pomyannik|pominovenie|settings|notes)(\/|$)/;
+const PRIVATE = /^\/(api|admin|profile|texting|login|reading-plan|collections|segodnya|pomyannik|pominovenie|settings|notes)(\/|$)/;
 
 // ignoreVary везде, где ищем по кэшам: отложенное кладёт сам воркер обычным
 // fetch, а спрашивает браузер навигацией — заголовки запросов разные, и без
@@ -202,6 +202,8 @@ self.addEventListener("fetch", (event) => {
 const assetsOf = (html) => new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) || []);
 
 const savePage = async (url, label, assets, group) => {
+    const target = new URL(url, self.location.origin);
+    if (target.origin !== self.location.origin || PRIVATE.test(target.pathname)) throw new Error("личную или внешнюю страницу сохранять нельзя");
     const request = new Request(url, { credentials: "same-origin" });
     const response = await fetch(request, { cache: "reload" });
     if (!response.ok) throw new Error(`страница ответила ${response.status}`);
@@ -209,13 +211,12 @@ const savePage = async (url, label, assets, group) => {
     const cache = await caches.open(SAVED_CACHE);
     const measured = response.clone();
     const html = await response.clone().text();
-    await cache.put(request, response);
-
     let bytes = (await measured.blob()).size;
 
     // Подкладки кладём поштучно и молча пропускаем то, что не далось: страница
     // без одной картинки читается, а вот отказ из-за неё был бы непонятен.
     const all = new Set([...(assets || []), ...assetsOf(html)]);
+    const missing = [];
     await Promise.all([...all].map(async (asset) => {
         try {
             const assetUrl = new URL(asset, self.location.origin);
@@ -223,18 +224,23 @@ const savePage = async (url, label, assets, group) => {
             if (await cache.match(assetUrl.href, MATCH)) return;
 
             const assetResponse = await fetch(assetUrl.href, { credentials: "same-origin" });
-            if (!assetResponse.ok) return;
+            if (!assetResponse.ok) throw new Error("asset unavailable");
 
             const assetCopy = assetResponse.clone();
             await cache.put(assetUrl.href, assetResponse);
             bytes += (await assetCopy.blob()).size;
         } catch (e) {
-            // не даётся — и не надо
+            if (/\.(css|js|woff2?)(\?|$)/.test(asset)) missing.push(asset);
         }
     }));
-
-    const entries = (await readIndex()).filter((entry) => entry.url !== url);
-    entries.push({ url, label, savedAt: Date.now(), bytes, ...(group ? { group } : {}) });
+    if (missing.length) throw new Error("не удалось сохранить стили, шрифты или скрипты страницы");
+    await cache.put(request, response);
+    const old = await readIndex();
+    const previous = old.find(entry => entry.url === url);
+    const groups = [...new Set([...(previous?.groups || (previous?.group ? [previous.group] : [])), ...(group ? [group] : [])])];
+    const standalone = !group || previous?.standalone === true || !!(previous && !previous.group && !previous.groups?.length);
+    const entries = old.filter((entry) => entry.url !== url);
+    entries.push({ url, label, savedAt: Date.now(), bytes, groups, standalone, ...(groups[0] ? {group: groups[0]} : {}) });
     await writeIndex(entries);
 
     return entries;
@@ -273,8 +279,14 @@ const forgetPage = async (url) => {
 const forgetGroup = async (group) => {
     const cache = await caches.open(SAVED_CACHE);
     const all = await readIndex();
-    await Promise.all(all.filter((entry) => entry.group === group).map((entry) => cache.delete(entry.url)));
-    const entries = all.filter((entry) => entry.group !== group);
+    const entries = [];
+    for (const entry of all) {
+        const groups = (entry.groups || (entry.group ? [entry.group] : [])).filter(g => g !== group);
+        const belonged = (entry.groups || (entry.group ? [entry.group] : [])).includes(group);
+        if (belonged && !groups.length && !entry.standalone) { await cache.delete(entry.url); continue; }
+        const {group: oldGroup, ...rest} = entry;
+        entries.push({...rest, groups, ...(groups[0] ? {group:groups[0]} : {})});
+    }
     await writeIndex(entries);
     return entries;
 };
@@ -298,6 +310,7 @@ const savedBytes = async () => {
     return total;
 };
 
+let offlineQueue = Promise.resolve();
 self.addEventListener("message", (event) => {
     const data = event.data || {};
     if (typeof data.type !== "string" || !data.type.startsWith("offline:")) return;
@@ -329,8 +342,10 @@ self.addEventListener("message", (event) => {
         }
     };
 
+    const operation = offlineQueue.then(run);
+    offlineQueue = operation.catch(() => {});
     event.waitUntil(
-        run().then(
+        operation.then(
             (payload) => answer({ ok: true, ...payload }),
             (error) => answer({ ok: false, error: String(error && error.message || error) }),
         ),
