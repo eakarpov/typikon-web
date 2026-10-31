@@ -16,24 +16,13 @@ const About = () => {
                 не заходя на эту страницу.
             </p>
             <h2>
-                Выпущена версия 6.3
+                Выпущена версия 6.4
             </h2>
             <p>
-                <a href="/news/versiya-6-3" className="text-amber-800 underline underline-offset-4">
-                    Что нового в выпуске 6.3
+                <a href="/news/versiya-6-4" className="text-amber-800 underline underline-offset-4">
+                    Что нового в выпуске 6.4
                 </a>
             </p>
-            <h2>
-                В работе: выпуск 6.4
-            </h2>
-            <ul>
-                <li>
-                    - Алиасы в разделе Библиотека
-                </li>
-                <li>
-                    - Готовность Цветной Триоди
-                </li>
-            </ul>
         </div>
     );
 };
