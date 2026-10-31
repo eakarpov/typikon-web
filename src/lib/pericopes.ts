@@ -5,6 +5,8 @@ import { referenceChapterLengths } from "@/utils/bibleVersification";
 import { booksForCanon, editionForLang, ResolvedVerse, versesForCanonRanges } from "@/lib/bible/query";
 import { pericopeResolvesDirectly, pericopeVersification, versificationLabel } from "@/utils/versification";
 import { absentInBook } from "@/lib/bible/absent";
+import { applyLiturgicalEnding } from "@/lib/liturgicalEnding";
+import { liturgicalText } from "@/lib/liturgicalText";
 import { isVerseInRanges, verseOrder } from "@/utils/verses";
 
 // Зачало — это отрезок канона («Дан. 3:1–88»), а не отрезок конкретной книги
@@ -38,6 +40,13 @@ const toPericopeVerse = (verse: ResolvedVerse) => ({
  * было назвать чтением, — решение о запасном языке принимает вызывающий.
  */
 export const resolvePericopeVerses = async (db: Db, pericope: any, lang: string) => {
+    if (pericope.liturgicalText !== undefined) {
+        const text = liturgicalText(pericope.liturgicalText);
+        if (!text || lang !== text.language) return null;
+        // Текст из Триоди не выдаётся за стихи конкретного библейского издания.
+        return { textId: null, textName: text.sourceTitle, textAlias: "", editionCode: null,
+            verses: [], liturgicalText: text };
+    }
     // В КАКОМ СЧЁТЕ ЗАПИСАНО ЗАЧАЛО. Наши 1067 — из Типикона Русской Церкви, и
     // «Дан. 3:1–88» у них значит номера Елизаветинской Библии, то есть эталон;
     // потому и резолвятся они прямо по canonRef. Зачало другого устава может
@@ -82,7 +91,7 @@ export const resolvePericopeVerses = async (db: Db, pericope: any, lang: string)
             absent: { supplied: item.supplied, why: item.why },
         }));
 
-    const verses = supplied.length
+    let verses = supplied.length
         ? [...found, ...supplied].sort((a, b) =>
             verseOrder(a.canonChapter, a.canonVerse) - verseOrder(b.canonChapter, b.canonVerse))
         : found;
@@ -96,6 +105,12 @@ export const resolvePericopeVerses = async (db: Db, pericope: any, lang: string)
     // печатает, и засчитывать его в покрытие значило бы утверждать обратное.
     const expected = expectedVerseCount(ranges, referenceChapterLengths(canonId));
     if (expected && found.length < expected * COVERAGE_FLOOR) return null;
+
+    if (pericope.liturgicalEnding !== undefined) {
+        const clipped = applyLiturgicalEnding(verses, pericope.liturgicalEnding, edition.code);
+        if (!clipped) return null;
+        verses = clipped;
+    }
 
     // Книга издания — та, где чтение НАЧИНАЕТСЯ: одну книгу канона издание может
     // собирать из нескольких своих (румынский Даниил собран из четырёх).
@@ -157,6 +172,8 @@ export const resolveItemsPericopes = async (db: Db, withItems: any, lang: string
                 bookSlug: pericope.bookSlug,
                 label: pericope.label,
                 ranges: pericope.ranges,
+                ...(pericope.liturgicalEnding ? { liturgicalEnding: pericope.liturgicalEnding } : {}),
+                ...(pericope.liturgicalSourceUrl ? { liturgicalSourceUrl: pericope.liturgicalSourceUrl } : {}),
                 ...resolved,
             },
         };
@@ -174,7 +191,7 @@ export const resolveDayPericopes = async (db: Db, day: any, lang: string) => {
         "vespersProkimenon", "vigil", "kathisma1", "kathisma2", "kathisma3",
         "ipakoi", "polyeleos", "song3", "song6", "before1h", "panagia",
         "h1", "h3", "h6", "h9", "apolutikaTroparia", "before50",
-        "apostleLiturgy", "gospelLiturgy", "gospelMatins",
+        "apostleLiturgy", "gospelLiturgy", "gospelMatins", "gospelVespers",
     ];
 
     const resolvedEntries = await Promise.all(

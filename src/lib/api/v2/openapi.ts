@@ -229,7 +229,7 @@ export const openapi = () => ({
             get: {
                 tags: ["Тексты"],
                 summary: "Книга и её тексты",
-                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }, ...pageParams],
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" }, description: "ID книги, текущий или прежний алиас" }, ...pageParams],
                 responses: { "200": ok("#/components/schemas/BookDetail"), "404": errorResponse("Книга не найдена") },
             },
         },
@@ -2636,6 +2636,7 @@ export const openapi = () => ({
                 type: "object",
                 properties: {
                     id: { type: "string" },
+                    alias: { type: ["string", "null"], description: "Текущий адрес книги; ID остаётся постоянным" },
                     name: { type: "string" },
                     author: { type: ["string", "null"] },
                     translator: { type: ["string", "null"] },
@@ -2663,7 +2664,8 @@ export const openapi = () => ({
                 type: "object",
                 description: "Место службы и что на нём читается",
                 properties: {
-                    slot: { type: "string", example: "song6" },
+                    slot: { type: "string", example: "song6",
+                        description: "Место чтения. gospelVespers — Евангелие вечерни в сам день праздника; у Пасхи следует после Литургии." },
                     title: { type: "string", example: "По шестой песни" },
                     items: { type: "array", items: { $ref: "#/components/schemas/SlotItem" } },
                 },
@@ -2673,6 +2675,15 @@ export const openapi = () => ({
                 properties: {
                     cite: { type: ["string", "null"] },
                     description: { type: ["string", "null"] },
+                    continuousReading: {
+                        type: "object", description: "Последовательное чтение книги без назначенной конечной границы; не зачало",
+                        properties: {
+                            bookSlug: { type: "string" }, fromChapter: { type: "integer", minimum: 1,
+                                description: "Только если начало указано. Отсутствует для продолжения с места остановки; границы фрагмента не назначены." },
+                            sourceUrl: { type: "string", format: "uri" },
+                            label: { type: "string" }, href: { type: "string" },
+                        },
+                    },
                     text: { oneOf: [{ $ref: "#/components/schemas/Text" }, { type: "null" }] },
                     pericope: { oneOf: [{ $ref: "#/components/schemas/Pericope" }, { type: "null" }] },
                 },
@@ -2751,6 +2762,18 @@ export const openapi = () => ({
                     number: { type: ["integer", "null"] },
                     label: { type: ["string", "null"], example: "Мк. 11" },
                     ranges: { type: "array", items: { type: "object" } },
+                    liturgicalEnding: { type: "object", description: "Точное окончание внутри последнего стиха, проверенное для конкретного издания. Для остальных изданий используется запасной язык.",
+                        required: ["editionCode", "chapter", "verse", "endAfter"], properties: {
+                            editionCode: { type: "string" }, chapter: { type: "integer", minimum: 1 },
+                            verse: { type: "integer", minimum: 1 }, endAfter: { type: "string" },
+                        } },
+                    liturgicalSourceUrl: { type: "string", format: "uri" },
+                    liturgicalText: { type: "object",
+                        description: "Точный богослужебный текст вместо сборки стихов: verses пуст; ranges — только параллельные ссылки. Читать content, сохраняя порядок источника.",
+                        required: ["language", "sourceTitle", "sourceUrl", "content", "referencesOnly"],
+                        properties: { language: { type: "string", enum: ["cs"] },
+                            sourceTitle: { type: "string" }, sourceUrl: { type: "string", format: "uri" },
+                            content: { type: "string" }, referencesOnly: { type: "boolean", const: true } } },
                     occasions: { type: "array", items: { type: "string" }, description: "Когда это зачало читается" },
                     verses: { type: "array", items: { $ref: "#/components/schemas/Verse" } },
                 },

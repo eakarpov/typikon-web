@@ -36,7 +36,7 @@ const Layer = ({ layer, base }: { layer: DumpLayerInfo; base: string }) => {
     const bytes = layer.files.reduce((sum, file) => sum + file.bytes, 0);
 
     return (
-        <section className="flex flex-col gap-2">
+        <section id={layer.id} className="flex flex-col gap-2">
             <h3 className="font-bold">
                 {layer.title}{" "}
                 <span className="font-normal text-slate-500">
@@ -153,21 +153,49 @@ const Layer = ({ layer, base }: { layer: DumpLayerInfo; base: string }) => {
 
 const DataPage = () => {
     const manifest = readManifest();
+    const hasChants = manifest?.layers.some(layer => layer.id === "chants");
+    const hasWitnesses = manifest?.layers.some(layer => layer.id === "chant-witnesses");
 
     return (
         <div className={`${myFont.variable} flex flex-col gap-6 pt-4 pb-8 font-serif`}>
             <section className="flex flex-col gap-2">
                 <h1 className="text-xl font-bold">Выгрузка корпуса</h1>
                 <p>
-                    Корпус можно взять целиком и разом, не обходя сайт постранично и не
-                    выбирая его через API по тридцать запросов в минуту. Один набор файлов,
-                    открытый формат, контрольные суммы и ясные условия на каждый слой.
+                    Доступные слои корпуса можно скачать разом, не обходя сайт постранично.
+                    Открытый формат, контрольные суммы и условия использования каждого слоя.
+                    Состав конкретной версии перечислен в её манифесте.
                 </p>
                 <p>
                     Формат — <b>JSON Lines</b>, сжатый gzip: одна запись в строке, читается
                     чем угодно. Дампа Mongo здесь намеренно нет — он читается только Mongo и
                     везёт наружу нашу схему вместе со всеми её случайностями.
                 </p>
+            </section>
+
+            <section className="flex flex-col gap-2">
+                <h2 className="text-lg font-bold">Певческий корпус</h2>
+                <p>
+                    Слой <code>chants</code> содержит церковнославянские песнопения,
+                    структуру канонов, молитвы, рубрики, зачины и связи. Охват ограничен
+                    перечисленными книгами; современные службы, прочие сборники акафистов
+                    и переводы с неуточнёнными условиями не включены. Числа включённых
+                    и исключённых строк по языкам приведены в <code>chant-coverage.jsonl.gz</code>.
+                </p>
+                <p>
+                    Отдельный слой <code>chant-witnesses</code> — указатель произведений
+                    и источников мастерской: ссылки, атрибуции, версии и контрольные суммы.
+                    Полные внешние исходники и модель расшифровки в него не входят.
+                    <Link href="/license#chants" className="ml-1 text-amber-800 underline underline-offset-4">Условия певческих слоёв</Link>.
+                </p>
+                {hasChants && hasWitnesses ? (
+                    <p><a href="#chants" className="text-amber-800 underline underline-offset-4">Файлы певческого корпуса</a>{" · "}
+                        <a href="#chant-witnesses" className="text-amber-800 underline underline-offset-4">Указатель источников</a></p>
+                ) : (
+                    <p className="text-slate-600">
+                        {manifest ? "Эта версия выгрузки ещё не содержит всех певческих слоёв. Они появятся после пересборки корпуса; прежние версии сохраняют свой состав."
+                            : "Ссылки на певческие слои появятся после сборки выгрузки."}
+                    </p>
+                )}
             </section>
 
             {!manifest ? (
@@ -184,6 +212,7 @@ const DataPage = () => {
                 <>
                     <section className="flex flex-col gap-2">
                         <h2 className="text-lg font-bold">Как брать</h2>
+                        {manifest.partial && <p>Эта сборка содержит выбранные слои, а не полный снимок корпуса.</p>}
                         <p>
                             Собрана {formatBuiltAt(manifest.builtAt)}. Начните с{" "}
                             <a
@@ -219,7 +248,7 @@ const DataPage = () => {
                         )}
                         {manifest.doi && (
                             <p className="text-slate-700">
-                                DOI этой версии:{" "}
+                                DOI собрания:{" "}
                                 <a
                                     href={`https://doi.org/${manifest.doi}`}
                                     className="text-amber-800 underline underline-offset-4"

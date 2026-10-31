@@ -1,0 +1,106 @@
+{
+  "checkedAt": "2026-10-30T20:41:47.179Z",
+  "scope": "current local corpus; production unchanged",
+  "chosenReading": "Acts, continuously from the beginning; Chrysostom remains after kathismas from Bright Monday",
+  "sourceUrls": [
+    "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/50",
+    "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/2"
+  ],
+  "periods": [
+    {
+      "period": "penticostarion",
+      "weeks": 9,
+      "days": 57,
+      "structure": [],
+      "dateCoverage": [],
+      "unreachedDays": [],
+      "statuses": {
+        "text-present": 242,
+        "pericope-resolved": 141,
+        "continuous-reading": 9,
+        "calendar-reference": 1
+      }
+    },
+    {
+      "period": "triodion",
+      "weeks": 11,
+      "days": 70,
+      "structure": [],
+      "dateCoverage": [],
+      "unreachedDays": [],
+      "statuses": {
+        "pericope-resolved": 220,
+        "text-present": 145
+      }
+    }
+  ],
+  "continuousReading": {
+    "bookSlug": "deyaniya",
+    "fromChapter": 1,
+    "sourceUrl": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/50",
+    "label": "Деяния апостолов",
+    "href": "/bible/deyaniya/1"
+  },
+  "http": [
+    {
+      "name": "antipascha",
+      "status": 200,
+      "location": null,
+      "acts": true,
+      "note": true,
+      "legacyEntry": false,
+      "size": 241228
+    },
+    {
+      "name": "old-alias",
+      "status": 307,
+      "location": "/penticostarion/pascha?from=old",
+      "acts": false,
+      "note": false,
+      "legacyEntry": true,
+      "size": 13908
+    },
+    {
+      "name": "old-id",
+      "status": 307,
+      "location": "/penticostarion/pascha",
+      "acts": false,
+      "note": false,
+      "legacyEntry": false,
+      "size": 13911
+    },
+    {
+      "name": "old-api",
+      "status": 200,
+      "location": null,
+      "id": "63c96246e99d9f4d9010c596",
+      "acts": false,
+      "note": false,
+      "legacyEntry": false,
+      "size": 9176
+    },
+    {
+      "name": "anti-api",
+      "status": 200,
+      "location": null,
+      "id": "63d16f25bec689206fc697d1",
+      "acts": false,
+      "note": false,
+      "legacyEntry": false,
+      "size": 10666
+    },
+    {
+      "name": "post",
+      "status": 200,
+      "location": null,
+      "acts": false,
+      "note": false,
+      "legacyEntry": false,
+      "size": 46508
+    }
+  ],
+  "legacyV1CanonicalDayId": "63c96246e99d9f4d9010c596",
+  "actsChapter1Page": "200",
+  "corpusCheckedAt": "2026-10-31T09:08:48.429Z",
+  "httpChecksNote": "HTTP-проверки относятся к предыдущему этапу; corpusCheckedAt и periods обновлены после локальной валидации 33 назначений Цветной Триоди; результат в pentecostarion-local-validation.json."
+}

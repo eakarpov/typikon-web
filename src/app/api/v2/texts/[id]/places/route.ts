@@ -1,5 +1,5 @@
+import { aliasMatcher } from "@/lib/contentAliases";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
 import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { cached, CacheTag } from "@/lib/cache";
@@ -19,9 +19,7 @@ export const revalidate = 3600;
 
 const loadText = cached(async (idOrAlias: string) => {
     const db = (await clientPromise).db("typikon");
-    const matcher = ObjectId.isValid(idOrAlias)
-        ? { _id: new ObjectId(idOrAlias) }
-        : { alias: idOrAlias };
+    const matcher = aliasMatcher(idOrAlias);
 
     return db.collection("texts").findOne(matcher, { projection: { content: 1, alias: 1 } });
 }, ["api-v2-text-places-doc"], [CacheTag.TEXTS]);

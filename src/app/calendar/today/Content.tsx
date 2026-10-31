@@ -16,7 +16,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
     return (
         <div className="flex flex-col pt-2 md:flex-row">
-            <div className="w-1/4">
+            <div className="w-full md:w-1/4 md:shrink-0 md:pr-4">
                 <ul className="space-y-2">
                     <DayTitle value={item.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} />
                     <DayTitle value={item.vigil} valueName={TextType.VIGIL} />
@@ -33,9 +33,10 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayTitle value={item.gospelMatins} valueName={TextType.GOSPEL_MATINS} />
                     <DayTitle value={item.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} />
                     <DayTitle value={item.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} />
+                    <DayTitle value={item.gospelVespers} valueName={TextType.GOSPEL_VESPERS} />
                 </ul>
             </div>
-            <div className="flex flex-col flex-1 space-y-4">
+            <div className="flex min-w-0 flex-col flex-1 space-y-4">
                 <DayPartReading value={item.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} />
                 <DayPartReading value={item.vigil} valueName={TextType.VIGIL} />
                 <DayPartReading value={item.kathisma1} valueName={TextType.KATHISMA_1} />
@@ -51,6 +52,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                 <DayPartReading value={item.panagia} valueName={TextType.PANAGIA} />
                 <DayPartReading value={item.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} />
                 <DayPartReading value={item.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} />
+                <DayPartReading value={item.gospelVespers} valueName={TextType.GOSPEL_VESPERS} />
             </div>
         </div>
     );

@@ -1,0 +1,36 @@
+{
+  "validatedAt": "2026-10-31T09:04:33.438Z",
+  "scope": "read-only local corpus; assignments unchanged",
+  "dayId": "63d17229bec689206fc697fb",
+  "textId": "63f4f2d43f71d33cda1d9f3b",
+  "bookIndex": 21,
+  "readiness": "ready",
+  "sha256": "84a72fbc7a7408a2a1a48c199fa394cb8127825eded6c74fb7e53a1c54e615ed",
+  "checks": {
+    "singleTextBothSlots": true,
+    "statiaOrder": [
+      1,
+      2
+    ],
+    "parts": 2,
+    "fullCoverageWithoutMarker": true,
+    "applicationAggregation": true,
+    "apiSelectors": true,
+    "htmlBothPartsMatch": true
+  },
+  "parts": [
+    {
+      "statia": 1,
+      "length": 10883,
+      "start": "В после́дний день вели́кий пра́здника стоя́ше Иису́с и зва́ше глаго́ля: «А́ще кто жа́ждет, да гряде́т ко Мне и пие́т. Ве́руяй",
+      "end": "ая овча́та Христо́ва. Сих бо всех отрица́ется Госпо́дь глаго́ля: «Не ве́де вас, отступи́те от Мене́ вси де́латели непра́вде»."
+    },
+    {
+      "statia": 2,
+      "length": 9213,
+      "start": "«Мно́зи же от наро́да слы́шавше сло́во се глаго́лаху: «Се есть вои́стину Проро́к, о Нем же Моисе́й написа́, «я́ко проро́ка ва",
+      "end": "м, с Ни́мже Отцу́ ку́пно и Ду́ху Свято́му, сла́ва и держа́ва, честь и поклоне́ние, ны́не и при́сно и во ве́ки веко́в. Ами́нь."
+    }
+  ],
+  "status": "passed"
+}

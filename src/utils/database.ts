@@ -22,6 +22,7 @@ export const getAggregationAddField = (name: TextType, withText: boolean = true)
                                             paschal: "$$i.paschal",
                                             description: "$$i.description",
                                             statia: "$$i.statia",
+                                            continuousReading: "$$i.continuousReading",
                                             pericopeId: { $toString: "$$i.pericopeId" },
                                             text: {
                                                 $mergeObjects: [

@@ -1,0 +1,14 @@
+# НОВАЯ машина: включить в существующий server{} для www.typikon.info.
+# Заменить OLD_GATEWAY_IPV4 фактическим исходящим IP СТАРОЙ машины.
+# Это намеренно неготовый placeholder: nginx -t потребует указать адрес.
+set_real_ip_from OLD_GATEWAY_IPV4/32;
+# Если шлюз подключается по IPv6, добавить только его фактический адрес:
+# set_real_ip_from OLD_GATEWAY_IPV6/128;
+real_ip_header X-Real-IP;
+real_ip_recursive off;
+
+# В существующем proxy location нового nginx должны остаться:
+# proxy_set_header Host $host;
+# proxy_set_header X-Real-IP $remote_addr;
+# proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+# Не добавлять здесь location /: на новом сервере уже есть маршруты /dump/ и /app/.

@@ -1,5 +1,5 @@
+import { resolveDayAddress } from "@/lib/dayRedirect";
 import clientPromise from "@/lib/mongodb";
-import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {aggregationDayWithMonth, aggregationTextWithBook, getAggregationAddField} from "@/utils/database";
 import {resolveDayPericopes} from "@/lib/pericopes";
@@ -13,8 +13,9 @@ import {reportError} from "@/lib/reportError";
 const loadDay = cached(async (id: string, lang: string) => {
     const client = await clientPromise;
     const db = client.db("typikon");
-    // Somehow september-13 is reviewed as a valid objectId, that is why the additional rule added
-    const matcher = ObjectId.isValid(id) && !id.includes('-') ? { _id: new ObjectId(id) } : { alias: id };
+    const target = await resolveDayAddress(db, id);
+    if (!target) return null;
+    const matcher = { _id: target.id };
 
     const days = await db
         .collection("days")
@@ -41,6 +42,7 @@ const loadDay = cached(async (id: string, lang: string) => {
             getAggregationAddField(TextType.H6),
             getAggregationAddField(TextType.H9),
             getAggregationAddField(TextType.GOSPEL_MATINS),
+            getAggregationAddField(TextType.GOSPEL_VESPERS),
             getAggregationAddField(TextType.APOSTLE_LITURGY),
             getAggregationAddField(TextType.GOSPEL_LITURGY),
             {
@@ -88,8 +90,9 @@ const loadDay = cached(async (id: string, lang: string) => {
                 }}
         ])
         .toArray();
-    return await resolveDayPericopes(db, days[0], lang);
-}, ["calendar-day"], [CacheTag.DAYS, CacheTag.TEXTS, CacheTag.BOOKS, CacheTag.MONTHS]);
+    const resolved = await resolveDayPericopes(db, days[0], lang);
+    return resolved ? { ...resolved, redirectPath: target.redirectPath } : null;
+}, ["calendar-day"], [CacheTag.DAYS, CacheTag.TEXTS, CacheTag.BOOKS, CacheTag.MONTHS, CacheTag.WEEKS]);
 
 export const getItem = async (id: string, lang: string = DEFAULT_BIBLE_LANGUAGE) => {
     try {

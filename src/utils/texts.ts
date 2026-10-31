@@ -154,6 +154,7 @@ export enum TextType {
     APOSTLE_LITURGY= "apostleLiturgy",
     GOSPEL_LITURGY= "gospelLiturgy",
     GOSPEL_MATINS= "gospelMatins",
+    GOSPEL_VESPERS= "gospelVespers",
 }
 
 export const footNotesToArray = (footNotesText: string): Nullable<string>[] =>
@@ -208,6 +209,8 @@ export const DAY_SLOT_ORDER: TextType[] = [
     TextType.PANAGIA,
     TextType.APOSTLE_LITURGY,
     TextType.GOSPEL_LITURGY,
+    // Пасхальная вечерня совершается в сам день Пасхи, после Литургии.
+    TextType.GOSPEL_VESPERS,
 ];
 
 export const valueTitle = (valueName: TextType) => {
@@ -253,6 +256,8 @@ export const valueTitle = (valueName: TextType) => {
           return "Евангелие на Литургии";
       case TextType.GOSPEL_MATINS:
           return "Евангелие на утрени";
+      case TextType.GOSPEL_VESPERS:
+          return "Евангелие на вечерне";
   }
 };
 

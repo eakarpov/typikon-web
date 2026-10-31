@@ -14,6 +14,7 @@
 //   npx tsx src/scripts/ensure-indexes.ts --apply   # создать недостающие
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
+import { ALIAS_KEYS_INDEX } from "@/lib/contentAliases";
 
 const APPLY = process.argv.includes("--apply");
 
@@ -98,6 +99,13 @@ const SPECS: Spec[] = [
     { db: "typikon", collection: "weeks", key: { triodion: 1, penticostration: 1 },
       why: "разделы Постной и Цветной триоди" },
 
+    { db: "typikon", collection: "books", key: { alias: 1 }, options: NON_EMPTY_ALIAS,
+      why: "текущий адрес книги, прежние ID продолжают работать" },
+    ...(["books", "texts"] as const).map(collection => ({
+        db: "typikon", collection, key: { aliases: 1 as const },
+        options: ALIAS_KEYS_INDEX,
+        why: "единое пространство нынешних и прежних адресов; прежний адрес нельзя занять другой записью",
+    })),
     { db: "typikon", collection: "books", key: { public: 1, name: 1 },
       why: "список библиотеки: фильтр по public и сортировка по названию" },
 

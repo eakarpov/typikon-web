@@ -28,12 +28,19 @@ test("следующее воскресенье — вторая седмица"
     assert.equal(result.type, "Pascha");
 });
 
-test("пятидесятый день ещё относится к Пасхе, пятьдесят первый — уже нет", () => {
-    assert.equal(getWeekAndDay(shift(PASCHA, 50), PASCHA, PREV_PASCHA).type, "Pascha");
-
-    const afterPentecost = getWeekAndDay(shift(PASCHA, 51), PASCHA, PREV_PASCHA);
-    assert.equal(afterPentecost.type, "Penticostarion", "первая седмица по Пятидесятнице — особый тип");
-    assert.equal(afterPentecost.week, 1);
+test("Пятидесятница и День Святого Духа выбирают разные шаблоны базы", () => {
+    for (const [year, date] of [[2024, "2024-05-05"], [2026, "2026-04-12"], [2027, "2027-05-02"]] as const) {
+        const pascha = new Date(`${date}T00:00:00Z`);
+        const previous = new Date(Date.UTC(year - 1, 3, 1));
+        const at = (n: number) => getWeekAndDay(new Date(+pascha + n * 86400000), pascha, previous);
+        assert.deepEqual(at(49), { week: 8, day: 0, type: "Pascha" });
+        assert.deepEqual(at(50), { week: 1, day: 1, type: "Penticostarion", pentecostAnchorYear: year });
+        assert.equal(at(51).day, 2);
+        assert.equal(at(56).day, 7);
+        assert.equal(at(56).week, 1);
+        assert.equal(at(57).type, "first");
+        assert.equal(at(57).week, 2);
+    }
 });
 
 test("недели со второй по тридцать третью считаются от Пятидесятницы", () => {

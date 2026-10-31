@@ -1,0 +1,617 @@
+{
+  "textIncipits": [
+    {
+      "id": "63f51aa53f71d33cda1d9f5d",
+      "name": "Поуче́ние в неде́лю святы́х, трехсо́т и осмина́десяти богоно́сных оте́ц",
+      "bookId": "63f373ecf9b2f15ac55cddae",
+      "start": "",
+      "incipit": "По пра́зднице пресла́внаго Вознесе́ния Го́спода на́шего Иису́са Христа́, па́мять пра́зднуем в сию́ неде́лю, святы́х и богоно́сных оте́ц на́ших, три́ста и осмьна́десять и́же при Константи́не вели́цем и правове́рнем христи"
+    },
+    {
+      "id": "63f4f2d43f71d33cda1d9f3b",
+      "name": "Поуче́ние в неде́лю святы́я Пятидеся́тницы на Ева́нгелие от Иоа́нна",
+      "bookId": "63f373ecf9b2f15ac55cddae",
+      "start": "",
+      "incipit": "В после́дний день вели́кий пра́здника стоя́ше Иису́с и зва́ше глаго́ля: «А́ще кто жа́ждет, да гряде́т ко Мне и пие́т. Ве́руяй в Мя, я́коже рече́ Писа́ние, ре́ки от чре́ва его́ истеку́т во́ды жи́вы». Се же рече́ о Ду́се, "
+    },
+    {
+      "id": "63f51a483f71d33cda1d9f5b",
+      "name": "Поуче́ние в неде́лю пе́рвую всех святы́х, Ева́нгелие от Матфе́я, сло́во 22:",
+      "bookId": "63f373ecf9b2f15ac55cddae",
+      "start": "",
+      "incipit": "Рече́ Госпо́дь: Всяк и́же испове́сть Мя пред челове́ки, испове́м его́ и Аз пред Отце́м Мои́м И́же на небесе́х.\n\nТолкова́ние:\nНа муче́ние зде подвиза́ет учени́к Свои́х Христо́с, и сердца́ их устроя́ет, и подвиза́ет вся пр"
+    },
+    {
+      "id": "63d6fcb7ccb3e32423c34c06",
+      "name": "Синаксарий в среду Преполовения",
+      "bookIndex": 6,
+      "incipit": "В сре́ду разсла́бленнаго, пра́здник преполове́ния Пятдеся́тницы пра́зднуем, по́чести ра́ди вели́кою двою́ дни́ пра́зднику, Па́схи, глаго́лю, и Пятдеся́тницы, я́ко обою́ соединя́ющу и совокупля́ющ. Бы́сть же си́й та́ко: п"
+    },
+    {
+      "id": "63d6fd07ccb3e32423c34c08",
+      "name": "Синаксарий в неделю шестую по Пасце",
+      "bookIndex": 8,
+      "incipit": "В то́йже де́нь, в неде́лю шесту́ю по Па́сце, и́же от рожде́ния слепа́го, пра́зднуем Го́спода Бо́га и Спа́са на́шего Иису́са Христа́ е́же у́бо и то́ от воды́ соде́яся, я́коже и е́же о самаряны́ни, и о разсла́бленнем. Бы́с"
+    },
+    {
+      "id": "63d6febaccb3e32423c34c0c",
+      "name": "Синакса́рий в понедельник по Пятьдеся́тнице, си́есть, Свята́го Ду́ха",
+      "bookIndex": 13,
+      "incipit": "В си́й де́нь, в понеде́льник Пятдеся́тницы, того́ Всесвята́го и Животворя́щаго, и Всеси́льнаго Ду́ха пра́зднуем, еди́наго от Тро́ицы Бо́га, единоче́стна и единосу́щна и единосла́вна Отцу́ и Сы́ну. В си́й у́бо де́нь Пятде"
+    },
+    {
+      "id": "682b9e29a9ea69e17000afef",
+      "name": "Cло́во я́ко подоба́ет благоуха́ти са́ми себе́ доброде́тельми",
+      "bookIndex": 6,
+      "incipit": "{k|Исходя́ще в притво́р, пое́м стихи́ру ева́нгельскую: Сла́ва и ны́не, глас 8:}\n\nМари́ины сле́зы / не всу́е пролива́ются те́пле: / се́ бо сподо́бися и уча́щих а́нгелов, / и виде́ния Самаго́ Иису́са: / но еще́ земна́я му́"
+    },
+    {
+      "id": "692752de9c79fc672a968300",
+      "name": "В неде́лю седму́ю по Па́сце, сло́во о собо́ре святы́х оте́ц трехсо́т и осмина́десяти, соше́дшихся в Нике́и на А́рия еретика́:",
+      "bookIndex": 8,
+      "incipit": "Во Александри́и еги́петстей, бысть не́кто презви́тер вели́кия це́ркве, и́менем А́рий, хитр сый кни́гам и имея́ глубину́ слове́с, вни́хже и глубину́ обре́т и во глубину́ злых впаде́ся, ему́же повеле́ Петр свяще́нноепи́ско"
+    },
+    {
+      "id": "67b1043859e97267fa52fde8",
+      "name": "Синаксарь в неделю сыропустную",
+      "bookIndex": 6,
+      "incipit": "Въ сíй де́нь воспомина́ніе твори́мъ отъ ра́йскія пи́щи испаде́нія первозда́ннаго Ада́ма, е́же боже́ственніи святíи отцы́ на́ши пре́жде святы́я Четыредеся́тницы вчини́ша, я́коже тѣ́ми показу́юще вещьми́, ели́ка по́стная л"
+    },
+    {
+      "id": "67b1059859e97267fa52fdec",
+      "name": "Синаксарь в неделю первую поста (Торжества Православия)",
+      "bookIndex": 8,
+      "incipit": "Въ сíй де́нь, въ недѣ́лю пе́рвую святы́хъ посто́въ Правосла́вія, си́рѣчь возставле́ніе святы́хъ и честны́хъ ико́нъ Це́рковь Христо́ва пра́здновати прія́тъ, бы́вшее отъ Михаи́ла и Ѳеодо́ры, святы́я и блаже́ннѣйшія цари́цы"
+    },
+    {
+      "id": "67b1089e59e97267fa52fdfd",
+      "name": "Синаксарь в субботу пятыя седмицы Великого поста (суббота Акафиста)",
+      "bookIndex": 13,
+      "incipit": "Въ се́й де́нь несѣда́льную пѣ́снь пра́зднуемъ Пресвяты́я Влады́чицы на́шея Богоро́дицы, вины́ ра́ди сицевы́:\n\nИраклíю, самодержа́вное Гре́ческое нача́льство пра́вящу, Хосро́й же, Пе́рсскій ца́рь, ви́дѣвъ гре́ческая ски́п"
+    },
+    {
+      "id": "67d2a9de935c3ab817eba413",
+      "name": "Бесе́да тре́тия на́десять",
+      "bookIndex": 13,
+      "incipit": "Тогда́ возведе́н бы́сть Ду́хом Иису́с в пусты́ни, искуси́тися отдиа́вола:\n\nТогда́, когда́, по ду́ха с ше́ствии, по гла́се с вы́ше снесе́ном, и глаголющем: Се́й е́сть сы́н мо́й возлю́бленный, оне́мже благоволи́х. И е́же у"
+    }
+  ],
+  "calendarSong6": [
+    {
+      "offset": 0,
+      "date": "2026-03-30",
+      "calendarDayId": "63e2c6c6b42c9bcdbaf22129",
+      "items": 10,
+      "ready": 6
+    },
+    {
+      "offset": 1,
+      "date": "2026-03-31",
+      "calendarDayId": "66184dbc9542f5fd843c5d6f",
+      "items": 8,
+      "ready": 5
+    },
+    {
+      "offset": 2,
+      "date": "2026-04-01",
+      "calendarDayId": "6619abe31cd50c4ab8550ef2",
+      "items": 7,
+      "ready": 5
+    },
+    {
+      "offset": 3,
+      "date": "2026-04-02",
+      "calendarDayId": "6619b9731cd50c4ab8550ef5",
+      "items": 7,
+      "ready": 5
+    },
+    {
+      "offset": 4,
+      "date": "2026-04-03",
+      "calendarDayId": "661cfbba150da3d82fa22fdc",
+      "items": 9,
+      "ready": 4
+    },
+    {
+      "offset": 5,
+      "date": "2026-04-04",
+      "calendarDayId": "661e88bff2805fc99c2d27ba",
+      "items": 5,
+      "ready": 5
+    },
+    {
+      "offset": 6,
+      "date": "2026-04-05",
+      "calendarDayId": "661fa945fe6cc7b2967671b0",
+      "items": 9,
+      "ready": 6
+    },
+    {
+      "offset": 7,
+      "date": "2026-04-06",
+      "calendarDayId": "662041a5d3e4a59355220e0d",
+      "items": 7,
+      "ready": 4
+    },
+    {
+      "offset": 8,
+      "date": "2026-04-07",
+      "calendarDayId": "6621807a134323bed97d9bd8",
+      "items": 7,
+      "ready": 5
+    },
+    {
+      "offset": 9,
+      "date": "2026-04-08",
+      "calendarDayId": "6622e47262d74c4acdb73167",
+      "items": 5,
+      "ready": 4
+    },
+    {
+      "offset": 10,
+      "date": "2026-04-09",
+      "calendarDayId": "6624404162d74c4acdb7316a",
+      "items": 6,
+      "ready": 6
+    },
+    {
+      "offset": 11,
+      "date": "2026-04-10",
+      "calendarDayId": "66268c2bf24848f0ebf88799",
+      "items": 6,
+      "ready": 5
+    },
+    {
+      "offset": 12,
+      "date": "2026-04-11",
+      "calendarDayId": "6627c8c553d565fbe772420d",
+      "items": 7,
+      "ready": 5
+    },
+    {
+      "offset": 13,
+      "date": "2026-04-12",
+      "calendarDayId": "6629204576ac67d1ebc4bff6",
+      "items": 7,
+      "ready": 5
+    },
+    {
+      "offset": 14,
+      "date": "2026-04-13",
+      "calendarDayId": "66297513ac9a36b9a7a74947",
+      "items": 8,
+      "ready": 5
+    },
+    {
+      "offset": 15,
+      "date": "2026-04-14",
+      "calendarDayId": "63ea94fd1de0729bac3b269a",
+      "items": 7,
+      "ready": 6
+    },
+    {
+      "offset": 16,
+      "date": "2026-04-15",
+      "calendarDayId": "662c21d40b8a825e1641e41e",
+      "items": 8,
+      "ready": 5
+    },
+    {
+      "offset": 17,
+      "date": "2026-04-16",
+      "calendarDayId": "662c26f30b8a825e1641e427",
+      "items": 5,
+      "ready": 5
+    },
+    {
+      "offset": 18,
+      "date": "2026-04-17",
+      "calendarDayId": "662d6b780b8a825e1641e448",
+      "items": 5,
+      "ready": 5
+    },
+    {
+      "offset": 19,
+      "date": "2026-04-18",
+      "calendarDayId": "662d6edb0b8a825e1641e44c",
+      "items": 7,
+      "ready": 6
+    },
+    {
+      "offset": 20,
+      "date": "2026-04-19",
+      "calendarDayId": "662d70ac0b8a825e1641e450",
+      "items": 6,
+      "ready": 6
+    },
+    {
+      "offset": 21,
+      "date": "2026-04-20",
+      "calendarDayId": "662d71fa0b8a825e1641e454",
+      "items": 6,
+      "ready": 4
+    },
+    {
+      "offset": 22,
+      "date": "2026-04-21",
+      "calendarDayId": "662d75120b8a825e1641e45a",
+      "items": 9,
+      "ready": 7
+    },
+    {
+      "offset": 23,
+      "date": "2026-04-22",
+      "calendarDayId": "662e87bcb7b9290b3ca9a639",
+      "items": 6,
+      "ready": 4
+    },
+    {
+      "offset": 24,
+      "date": "2026-04-23",
+      "calendarDayId": "662e8b5bb7b9290b3ca9a641",
+      "items": 4,
+      "ready": 4
+    },
+    {
+      "offset": 25,
+      "date": "2026-04-24",
+      "calendarDayId": "6638e8f1d3531420fcdbf9e0",
+      "items": 6,
+      "ready": 5
+    },
+    {
+      "offset": 26,
+      "date": "2026-04-25",
+      "calendarDayId": "663a0a53d90ecc2e117a8f43",
+      "items": 6,
+      "ready": 3
+    },
+    {
+      "offset": 27,
+      "date": "2026-04-26",
+      "calendarDayId": "663aa6c4e68a9eab28470375",
+      "items": 5,
+      "ready": 2
+    },
+    {
+      "offset": 28,
+      "date": "2026-04-27",
+      "calendarDayId": "663be4c3626103adac83a0e7",
+      "items": 6,
+      "ready": 3
+    },
+    {
+      "offset": 29,
+      "date": "2026-04-28",
+      "calendarDayId": "663d3426626103adac83a0ed",
+      "items": 9,
+      "ready": 5
+    },
+    {
+      "offset": 30,
+      "date": "2026-04-29",
+      "calendarDayId": "663d36ce626103adac83a0f3",
+      "items": 7,
+      "ready": 6
+    },
+    {
+      "offset": 31,
+      "date": "2026-04-30",
+      "calendarDayId": "663ff4f7626103adac83a0fa",
+      "items": 7,
+      "ready": 5
+    },
+    {
+      "offset": 32,
+      "date": "2026-05-01",
+      "calendarDayId": "66411d65626103adac83a0fe",
+      "items": 7,
+      "ready": 5
+    },
+    {
+      "offset": 33,
+      "date": "2026-05-02",
+      "calendarDayId": "66411dce626103adac83a105",
+      "items": 5,
+      "ready": 4
+    },
+    {
+      "offset": 34,
+      "date": "2026-05-03",
+      "calendarDayId": "66411dda626103adac83a106",
+      "items": 5,
+      "ready": 4
+    },
+    {
+      "offset": 35,
+      "date": "2026-05-04",
+      "calendarDayId": "6643891fef74b88d07456495",
+      "items": 9,
+      "ready": 6
+    },
+    {
+      "offset": 36,
+      "date": "2026-05-05",
+      "calendarDayId": "66472e239f55db049c7a9e68",
+      "items": 3,
+      "ready": 3
+    },
+    {
+      "offset": 37,
+      "date": "2026-05-06",
+      "calendarDayId": "6648883146da5bcdc43c78eb",
+      "items": 8,
+      "ready": 3
+    },
+    {
+      "offset": 38,
+      "date": "2026-05-07",
+      "calendarDayId": "66488cef46da5bcdc43c78f2",
+      "items": 9,
+      "ready": 5
+    },
+    {
+      "offset": 39,
+      "date": "2026-05-08",
+      "calendarDayId": "664b6508ff0beeba699f0aa6",
+      "items": 9,
+      "ready": 7
+    },
+    {
+      "offset": 40,
+      "date": "2026-05-09",
+      "calendarDayId": "664bb94f5ce6415ed4da5e07",
+      "items": 5,
+      "ready": 4
+    },
+    {
+      "offset": 41,
+      "date": "2026-05-10",
+      "calendarDayId": "664e07dcd9db14849cf749af",
+      "items": 8,
+      "ready": 6
+    },
+    {
+      "offset": 42,
+      "date": "2026-05-11",
+      "calendarDayId": "664f2dd7e02d45663e53ba03",
+      "items": 6,
+      "ready": 6
+    },
+    {
+      "offset": 43,
+      "date": "2026-05-12",
+      "calendarDayId": "66507260ed9130fcb3061bd4",
+      "items": 8,
+      "ready": 6
+    },
+    {
+      "offset": 44,
+      "date": "2026-05-13",
+      "calendarDayId": "66507556ed9130fcb3061bdb",
+      "items": 8,
+      "ready": 5
+    },
+    {
+      "offset": 45,
+      "date": "2026-05-14",
+      "calendarDayId": "665253471ebd1d59ddec3f68",
+      "items": 8,
+      "ready": 4
+    },
+    {
+      "offset": 46,
+      "date": "2026-05-15",
+      "calendarDayId": "66549ce3df8d33b0c3882cb5",
+      "items": 9,
+      "ready": 6
+    },
+    {
+      "offset": 47,
+      "date": "2026-05-16",
+      "calendarDayId": "6654ff2edf8d33b0c3882cbe",
+      "items": 16,
+      "ready": 3
+    },
+    {
+      "offset": 48,
+      "date": "2026-05-17",
+      "calendarDayId": "66550259df8d33b0c3882cc5",
+      "items": 6,
+      "ready": 6
+    },
+    {
+      "offset": 49,
+      "date": "2026-05-18",
+      "calendarDayId": "665877c069ce3bc9bc2397e9",
+      "items": 12,
+      "ready": 7
+    },
+    {
+      "offset": 50,
+      "date": "2026-05-19",
+      "calendarDayId": "6658e42cdcf9f120502b943b",
+      "items": 12,
+      "ready": 7
+    },
+    {
+      "offset": 51,
+      "date": "2026-05-20",
+      "calendarDayId": "665af07cc7335ea7e8f9c40b",
+      "items": 11,
+      "ready": 5
+    },
+    {
+      "offset": 52,
+      "date": "2026-05-21",
+      "calendarDayId": "665af696c7335ea7e8f9c411",
+      "items": 8,
+      "ready": 4
+    },
+    {
+      "offset": 53,
+      "date": "2026-05-22",
+      "calendarDayId": "665dd08fe8eebb693f38cc47",
+      "items": 8,
+      "ready": 3
+    },
+    {
+      "offset": 54,
+      "date": "2026-05-23",
+      "calendarDayId": "665f21e398da58c2b3e1029a",
+      "items": 9,
+      "ready": 5
+    },
+    {
+      "offset": 55,
+      "date": "2026-05-24",
+      "calendarDayId": "66600f11c1436b04633b33e4",
+      "items": 6,
+      "ready": 4
+    },
+    {
+      "offset": 56,
+      "date": "2026-05-25",
+      "calendarDayId": "6660b8cfc2f9f70462247939",
+      "items": 7,
+      "ready": 3
+    }
+  ],
+  "pericopeCandidates": [
+    {
+      "id": "6a820cb93f7812bfa7c4f5b8",
+      "label": "Лк. 113",
+      "book": "luki",
+      "number": 113,
+      "variant": null,
+      "ranges": [
+        {
+          "chapterFrom": 24,
+          "verseFrom": 12,
+          "chapterTo": 24,
+          "verseTo": 35
+        }
+      ]
+    },
+    {
+      "id": "6a820cb93f7812bfa7c4f70a",
+      "label": "Еф. 229",
+      "book": "efesyanam",
+      "number": 229,
+      "variant": null,
+      "ranges": [
+        {
+          "chapterFrom": 5,
+          "verseFrom": 9,
+          "chapterTo": 5,
+          "verseTo": 19
+        }
+      ]
+    },
+    {
+      "id": "6a820cb93f7812bfa7c4f5ca",
+      "label": "Ин. 16",
+      "book": "ioanna",
+      "number": 16,
+      "variant": null,
+      "ranges": [
+        {
+          "chapterFrom": 5,
+          "verseFrom": 24,
+          "chapterTo": 5,
+          "verseTo": 30
+        }
+      ]
+    },
+    {
+      "id": "6a820cb93f7812bfa7c4f5cb",
+      "label": "Ин. 17",
+      "book": "ioanna",
+      "number": 17,
+      "variant": null,
+      "ranges": [
+        {
+          "chapterFrom": 5,
+          "verseFrom": 30,
+          "chapterTo": 6,
+          "verseTo": 2
+        }
+      ]
+    },
+    {
+      "id": "6a820cb93f7812bfa7c4f602",
+      "label": "Ин. 65А",
+      "book": "ioanna",
+      "number": 65,
+      "variant": "А",
+      "ranges": [
+        {
+          "chapterFrom": 20,
+          "verseFrom": 19,
+          "chapterTo": 20,
+          "verseTo": 23
+        }
+      ]
+    },
+    {
+      "id": "6a820cb93f7812bfa7c4f603",
+      "label": "Ин. 65Б",
+      "book": "ioanna",
+      "number": 65,
+      "variant": "Б",
+      "ranges": [
+        {
+          "chapterFrom": 20,
+          "verseFrom": 19,
+          "chapterTo": 20,
+          "verseTo": 25
+        }
+      ]
+    },
+    {
+      "id": "6a820cb93f7812bfa7c4f604",
+      "label": "Ин. 65В",
+      "book": "ioanna",
+      "number": 65,
+      "variant": "В",
+      "ranges": [
+        {
+          "chapterFrom": 20,
+          "verseFrom": 19,
+          "chapterTo": 20,
+          "verseTo": 31
+        }
+      ]
+    },
+    {
+      "id": "6a820cb93f7812bfa7c4f606",
+      "label": "Ин. 67",
+      "book": "ioanna",
+      "number": 67,
+      "variant": null,
+      "ranges": [
+        {
+          "chapterFrom": 21,
+          "verseFrom": 15,
+          "chapterTo": 21,
+          "verseTo": 25
+        }
+      ]
+    }
+  ],
+  "corinthReading": {
+    "checkedAt": "2026-10-31",
+    "textId": "68e77afb42faa8ee591f64a7",
+    "alias": "torzestvennik-triod-101",
+    "bookId": "63f515d308f7ee04e7b53f19",
+    "readiness": "ready",
+    "sha256": "787616bcb92e902705a5e6f33f357c87ed6a9ce64a99443c527f1cb7cf33b6f6",
+    "incipit": "Все́ется в те́ло душе́вно, востае́т в те́ло духо́вно. Елма́ же у́бо сих хо́щем наслажда́тися благи́х, в си́й ся введе́м чин…",
+    "identificationUrl": "https://azbyka.ru/otechnik/Ioann_Zlatoust/besedy-na-1-e-poslanie-k-korinfjanam/41",
+    "basis": "1Кор.15:44; заключительный нравственный раздел о воскресении, неумеренном плаче и зерне у земледельца; четья редакция Торжественника",
+    "fromSlot": "kathisma2",
+    "toSlot": "kathisma1",
+    "otherReadingPreserved": "68f0977f76805efc636c607c",
+    "note": "Номер конкретного слова — редакторский выбор. В Типиконе задан род чтения, а не номер41/101."
+  }
+}

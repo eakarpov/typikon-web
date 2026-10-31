@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { withSearch } from "@/lib/contentAliases";
 import {getItem} from "@/app/calendar/[id]/api";
 import {Suspense} from "react";
 import Content from "@/app/calendar/[id]/Content";
@@ -11,6 +13,7 @@ import { SITE_URL } from "@/utils/site";
 
 type Props = {
     params: { id: string }
+    searchParams: Record<string, string | string[] | undefined>
 }
 
 export async function generateMetadata(
@@ -22,6 +25,8 @@ export async function generateMetadata(
     // fetch data
     const lang = (await cookies()).get(BIBLE_LANGUAGE_COOKIE)?.value || DEFAULT_BIBLE_LANGUAGE;
     const [item] = await getItem(id, lang);
+
+    if (item?.redirectPath) return { title: item.name, alternates: { canonical: `${SITE_URL}${item.redirectPath}` } };
 
     return {
         title: `Уставные чтения на день: ${getMonthLabel(item?.month.value - 1)}, ${item?.monthIndex} число`,
@@ -35,9 +40,11 @@ export async function generateMetadata(
     }
 }
 
-const AdminTextId = async ({ params: { id }}: { params: { id: string }}) => {
+const AdminTextId = async ({ params: { id }, searchParams }: Props) => {
     const lang = (await cookies()).get(BIBLE_LANGUAGE_COOKIE)?.value || DEFAULT_BIBLE_LANGUAGE;
-    const itemPromise = getItem(id, lang);
+    const result = await getItem(id, lang);
+    if (result[0]?.redirectPath) redirect(withSearch(result[0].redirectPath, searchParams));
+    const itemPromise = Promise.resolve(result);
     setMeta();
 
     return (

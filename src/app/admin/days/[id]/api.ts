@@ -73,6 +73,7 @@ export const getItem = async (id: string, inWeek: boolean) => {
                 getAggregationAddField(TextType.PANAGIA, false),
                 getAggregationAddField(TextType.BEFORE_50, false),
                 getAggregationAddField(TextType.GOSPEL_MATINS, false),
+                getAggregationAddField(TextType.GOSPEL_VESPERS, false),
                 getAggregationAddField(TextType.APOSTLE_LITURGY, false),
                 getAggregationAddField(TextType.GOSPEL_LITURGY, false),
                 ...parentProject,

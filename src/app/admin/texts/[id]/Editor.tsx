@@ -276,6 +276,10 @@ const AdminEditor = ({ value }: any) => {
         });
 
         Promise.allSettled([mainProcess, notesProcess]).then(async ([main]) => {
+            if (main.status === "rejected") {
+                alert("Не удалось сохранить текст: нет ответа сервера");
+                return;
+            }
             // Отказ сервера (например, занятый alias) раньше проглатывался, и правка
             // выглядела сохранённой — показываем причину.
             if (main.status === "fulfilled" && !main.value.ok) {

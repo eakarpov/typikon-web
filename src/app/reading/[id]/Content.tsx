@@ -44,7 +44,7 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
 
     if (shouldRedirect) {
         return (
-            <Redirector alias={item.alias} />
+            <Redirector alias={item.alias || item.id} />
         );
     }
 
@@ -76,7 +76,7 @@ const Content = async ({ itemPromise, showAccents = false }: { itemPromise: Prom
                     )}
                     {item.bookId && (
                         <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
-                            <Link href={`/library/${item.bookId}`}>
+                            <Link href={`/library/${item.bookAlias || item.bookId}`}>
                                 Книга&nbsp;
                             </Link>
                             <BookOpenIcon className="w-4 h-4" />

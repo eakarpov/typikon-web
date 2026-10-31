@@ -5,12 +5,13 @@ import DayPart from "@/app/admin/components/DayPart";
 import {TextType} from "@/utils/texts";
 import {ISaintPartItem, SaintPart} from "@/app/admin/components/SaintPart";
 import {revalidateDays} from "@/lib/admin/revalidate";
+import type { ContinuousReading } from "@/lib/continuousReading";
 
 interface IAdminEditor {
     value: any;
 }
 
-interface IDayPartItem { textId?: string; pericopeId?: string; cite?: string; description?: string; paschal: boolean; statia?: number; }
+interface IDayPartItem { continuousReading?: ContinuousReading; textId?: string; pericopeId?: string; cite?: string; description?: string; paschal: boolean; statia?: number; }
 
 const AdminEditor = ({ value }: IAdminEditor) => {
     const [subnames, setSubnames] = useState<string[]>(value.subnames || []);
@@ -37,6 +38,7 @@ const AdminEditor = ({ value }: IAdminEditor) => {
     const [apostleLiturgy, setApostleLiturgy] = useState(value.apostleLiturgy);
     const [gospelLiturgy, setGospelLiturgy] = useState(value.gospelLiturgy);
     const [gospelMatins, setGospelMatins] = useState(value.gospelMatins);
+    const [gospelVespers, setGospelVespers] = useState(value.gospelVespers);
     const [alias, setAlias] = useState(value.alias || "");
 
     const [signs, setSigns] = useState(value.signs || []);
@@ -148,6 +150,11 @@ const AdminEditor = ({ value }: IAdminEditor) => {
                 newGospelLiturgy.items[index][field] = value;
                 setGospelLiturgy(newGospelLiturgy);
                 return;
+            case TextType.GOSPEL_VESPERS:
+                const newGospelVespers = {...gospelVespers};
+                newGospelVespers.items[index][field] = value;
+                setGospelVespers(newGospelVespers);
+                return;
             case TextType.GOSPEL_MATINS:
                 const newGospelMatins = {...gospelMatins};
                 newGospelMatins.items[index][field] = value;
@@ -185,6 +192,7 @@ const AdminEditor = ({ value }: IAdminEditor) => {
             apostleLiturgy,
             gospelLiturgy,
             gospelMatins,
+            gospelVespers,
         };
         if (paschal) {
             body.weekIndex = index;
@@ -391,6 +399,13 @@ const AdminEditor = ({ value }: IAdminEditor) => {
                 value={h9}
                 setter={setH9}
                 valueName={TextType.H9}
+                setTextField={setTextField}
+                paschal={paschal}
+            />
+            <DayPart
+                value={gospelVespers}
+                setter={setGospelVespers}
+                valueName={TextType.GOSPEL_VESPERS}
                 setTextField={setTextField}
                 paschal={paschal}
             />

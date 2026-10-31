@@ -12,6 +12,7 @@
     "release": "bash scripts/release.sh",
     "release:setup": "bash scripts/release.sh --setup",
     "release:rollback": "bash scripts/release.sh --rollback",
+    "release:gateway": "bash scripts/release-gateway.sh",
     "release:db": "bash scripts/release-db.sh",
     "release:common": "npm run release && npm run release:db",
     "release-app": "bash scripts/release-app.sh",

@@ -1,8 +1,11 @@
 'use client';
-import {fullTitle, isFootnoteBook, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
-import {BookOpenIcon, InformationCircleIcon} from "@heroicons/react/24/outline";
+import ContinuousReading from "@/app/components/ContinuousReading";
+import {isFootnoteBook, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
+import {BookOpenIcon} from "@heroicons/react/24/outline";
 import Link from "next/link";
-import {useCallback, useMemo, useState} from "react";
+import React from "react";
+import ReadingAssignmentHeader, { ReadingAssignmentNote } from "./ReadingAssignmentHeader";
+import { readingParts } from "@/lib/readingParts";
 import reactStringReplace from "react-string-replace";
 import {SAINT_MARK, PLACE_MARK, RED_MARK, FOOTNOTE_MARK, splitLinkMark} from "@/lib/markup/patterns";
 import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
@@ -56,7 +59,8 @@ export const ReadinessButton = ({ value }: { value: TextReadiness }) => {
 };
 
 const StartPart = ({ part, firstText }: { part: TextType, firstText?: any; }) => {
-    const stubText = !firstText?.text?.startPhrase && `(Или иное название перваго чтения с испрошением благословения)`;
+    const stubText = !firstText?.text?.startPhrase && !firstText?.continuousReading
+        && `(Или иное название перваго чтения с испрошением благословения)`;
 
     switch (part) {
         case TextType.VIGIL:
@@ -66,7 +70,9 @@ const StartPart = ({ part, firstText }: { part: TextType, firstText?: any; }) =>
                         На бдении по еже благословити иерею:
                     </span> Благословение Господне на вас, Того благодатию и человеколюбием всегда ныне и присно и во веки веков <br/>
                     <span className="text-red-600">Поет лик:</span> Аминь.<br/>
-                    <span className="text-red-600">И глаголет учиненный чтец:</span> {firstText?.text?.startPhrase || `Деяний святых апстол благослови, владыко, прочести.`} <span className="text-red-600">{stubText}<br/>
+                    <span className="text-red-600">И глаголет учиненный чтец:</span> {firstText?.text?.startPhrase || (firstText?.continuousReading?.bookSlug === "iakova"
+                        ? "Соборнаго послания святаго апостола Иакова благослови, владыко, прочести."
+                        : "Деяний святых апостол благослови, владыко, прочести.")} <span className="text-red-600">{stubText}<br/>
                         И отвещает иерей:</span> {firstText?.text?.initialPriestExclamation || `Молитвами святых отец наших Господи, Иисусе Христе Боже наш, помилуй нас.`}<br/>
                     <span className="text-red-600">И чтец:</span> Аминь.
                 </span>
@@ -155,49 +161,14 @@ const EndPart = ({ part }: { part: TextType }) => {
     return null;
 };
 
-const getStatias = (content: string) => {
-  const regSreda = /\[Среда:]/; // Для ввода ударения если получится, использовать отдельный кейс
-  if (regSreda.test(content)) {
-      const parts = content.split(regSreda);
-      return parts;
-  } else {
-      const regStatias = /\[Статия \d+]/; // Для учета двоеточия или ударения если нужно - отдельный кейс, чтобы не сломать обратную совместимость
-      if (regStatias.test(content)) {
-          const parts = content.split(regStatias);
-          return parts;
-      } else {
-          return [content];
-      }
-  }
-};
-
 const DayPartReading = ({
     value,
     valueName,
     paschal,
 }: IReadDayPart) => {
-    const [showDescription, setShowDescription] = useState(false);
-    const [showTitle, setShowTitle] = useState(false);
-
-    const onShowTitle = useCallback(() => {
-        setShowTitle(true);
-    }, []);
-
-    const onHideTitle = useCallback(() => {
-        setShowTitle(false);
-    }, []);
-
-    const onShowDescription = useCallback(() => {
-        setShowDescription(true);
-    }, []);
-
-    const onHideDescription = useCallback(() => {
-        setShowDescription(false);
-    }, []);
-
     const getContent = (item: any) => {
         const statia = (item.statia - 1) || 0;
-        const parts = getStatias(item.text.content);
+        const parts = readingParts(item.text.content);
         return parts[statia] || "";
     };
 
@@ -228,12 +199,15 @@ const DayPartReading = ({
                         адрес канонический, поэтому ведёт в нужное место в любом
                         издании, а не только в том, откуда стихи взяты сейчас. */}
                     {item.pericope.bookSlug && (
-                        <Link href={`/bible/${item.pericope.bookSlug}/${item.pericope.ranges?.[0]?.chapterFrom ?? 1}`}>
-                            <BookOpenIcon className="w-6 h-6" />
+                        <Link href={`/bible/${item.pericope.bookSlug}/${item.pericope.ranges?.[0]?.chapterFrom ?? 1}`}
+                            aria-label={`Открыть ${item.pericope.label} в Библии`}
+                            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800">
+                            <BookOpenIcon aria-hidden="true" className="w-6 h-6" />
                         </Link>
                     )}
                     <span className="font-serif text-red-600 pl-1">{item.pericope.label}</span>
                 </div>
+                <ReadingAssignmentNote cite={item.cite} title={item.pericope.label} />
                 {item.description && (
                     <p className="font-serif text-red-600">{item.description}</p>
                 )}
@@ -244,7 +218,26 @@ const DayPartReading = ({
                 {substitution && (
                     <p className="font-serif text-sm text-amber-700">{substitution}</p>
                 )}
-                {!item.pericope.verses ? (
+                {item.pericope.liturgicalEnding && (
+                    <p className="font-serif text-sm text-stone-600">
+                        Последний стих читается частично, до окончания, указанного в Цветной Триоди.
+                        {substitution && " Точное окончание проверено для церковнославянского издания."}
+                    </p>
+                )}
+                {item.pericope.liturgicalSourceUrl && (
+                    <p className="font-serif text-sm"><a href={item.pericope.liturgicalSourceUrl}
+                        target="_blank" rel="noreferrer" className="text-stone-500 underline">
+                        Чтение в Цветной Триоди
+                    </a></p>
+                )}
+                {item.pericope.liturgicalText ? (
+                    <div className="font-serif space-y-2">
+                        <p className="text-sm text-stone-600">
+                            Богослужебная редакция Цветной Триоди. Состав и порядок фрагментов сохранены по источнику.
+                        </p>
+                        <p className="whitespace-pre-wrap text-justify text-lg">{item.pericope.liturgicalText.content}</p>
+                    </div>
+                ) : !item.pericope.verses ? (
                     <p className="font-serif text-slate-400">
                         Не удалось собрать стихи (книга ещё не размечена ни для одного языка)
                     </p>
@@ -283,38 +276,16 @@ const DayPartReading = ({
     };
 
     return value?.items && (
-            <section className="space-y-2" id={valueName}>
-                <p className="text-1xl font-bold font-serif text-red-600">
+            <section className="min-w-0 space-y-2" id={valueName}>
+                <h2 className="text-1xl font-bold font-serif text-red-600">
                     {valueTitle(valueName)}:
-                </p>
+                </h2>
                 <StartPart part={valueName} firstText={value.items[0]} />
-                {value.items?.map((item: any, index: number) => item.pericope ? renderPericopeItem(item, index) : item.text ? (
-                    <div key={item.text._id}>
-                        <div className="flex flex-row">
-                            <Link
-                                href={`/reading/${item.text._id}`}
-                                onMouseLeave={onHideTitle}
-                                onMouseEnter={onShowTitle}
-                            >
-                                <BookOpenIcon className="w-6 h-6" />
-                            </Link>
-                            <div
-                                onMouseEnter={onShowDescription}
-                                onMouseLeave={onHideDescription}
-                            >
-                                <InformationCircleIcon className="w-6 h-6" />
-                            </div>
-                            {showDescription && item.cite && (
-                                <p className="font-serif text-red-600">
-                                    <strong>Типикон:</strong> {item.cite}
-                                </p>
-                            )}
-                            {showTitle && (
-                                <p className="font-serif text-red-600">
-                                    <strong>Название:</strong> {fullTitle(item.text.type, item.text.book?.author, item.text.start)}
-                                </p>
-                            )}
-                        </div>
+                {value.items?.map((item: any, index: number) => item.pericope ? renderPericopeItem(item, index) : item.continuousReading ? (
+                    <ContinuousReading key={`continuous-${index}`} value={item.continuousReading} />
+                ) : item.text ? (
+                    <div key={`${item.text._id}-${index}`} className="min-w-0 space-y-2">
+                        <ReadingAssignmentHeader text={item.text} statia={item.statia} cite={item.cite} />
                         {item.description && (
                             <p className="font-serif text-red-600">
                                 {item.description}

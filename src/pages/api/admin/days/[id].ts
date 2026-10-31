@@ -56,6 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             monthIndex: data.monthIndex,
                             alias: data.alias,
                             vespersProkimenon: mapToDbObject(data.vespersProkimenon),
+                            ...(data.gospelVespers !== undefined ? { gospelVespers: mapToDbObject(data.gospelVespers) } : {}),
                             vigil: mapToDbObject(data.vigil),
                             kathisma1: mapToDbObject(data.kathisma1),
                             kathisma2: mapToDbObject(data.kathisma2),

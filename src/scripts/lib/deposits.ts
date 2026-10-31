@@ -124,6 +124,17 @@ export const DEPOSITS: DepositRecord[] = [
             version: "10.5281/zenodo.22884108",
         },
     },
+    {
+        id: "chants",
+        layers: ["chants", "chant-witnesses"],
+        title: "Певческий корпус «Уставные чтения»: тексты, структура и указатель источников",
+        titleEn: "Typikon Chant Corpus: Church Slavonic texts, structure and source catalogue",
+        license: layerOf("chants").license,
+        keywords: ["Church Slavonic", "liturgical chants", "canons", "source catalogue", "песнопения", "каноны"],
+        summary: "Церковнославянские певческие тексты и структура выбранных книг из typikon-rules, "
+            + "а также собственный указатель произведений и источников певческой мастерской. "
+            + "Охват и исключения названы в манифесте; внешние нотные исходники и модель не включены.",
+    },
 ];
 
 /** Слои, не попавшие ни в одну запись. Пусто — значит ничего не забыли. */

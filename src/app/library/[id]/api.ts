@@ -1,5 +1,5 @@
+import { aliasMatcher } from "@/lib/contentAliases";
 import clientPromise from "@/lib/mongodb";
-import {ObjectId} from "mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
 import {reportError} from "@/lib/reportError";
 
@@ -11,7 +11,7 @@ const loadBook = async (id: string): Promise<[any, any]> => {
         const books = await db
             .collection("books")
             .aggregate([
-                { $match: { _id: new ObjectId(id) }},
+                { $match: aliasMatcher(id) },
                 {
                     // Только поля оглавления. Без проекции $lookup вкладывал в книгу
                     // тексты целиком, с content и полями поиска, а весь ответ — один
@@ -22,7 +22,7 @@ const loadBook = async (id: string): Promise<[any, any]> => {
                         localField: "texts",
                         foreignField: "_id",
                         pipeline: [
-                            { $project: { name: 1, type: 1, readiness: 1, dneslovId: 1, bookIndex: 1 } },
+                            { $project: { alias: 1, name: 1, type: 1, readiness: 1, dneslovId: 1, bookIndex: 1 } },
                         ],
                         as: "texts"
                     },
@@ -63,14 +63,15 @@ export const getItem = cachedTuple(loadBook, ["library-book"], [CacheTag.BOOKS, 
  */
 export const getBibleEditionCode = cachedTuple(async (id: string): Promise<[string | null, any]> => {
     try {
-        if (!ObjectId.isValid(id)) return [null, null];
         const client = await clientPromise;
+        const book = await client.db("typikon").collection("books").findOne(aliasMatcher(id), { projection: { _id: 1 } });
+        if (!book) return [null, null];
         const edition = await client.db("typikon")
             .collection("bible_editions")
-            .findOne({ bookId: new ObjectId(id) }, { projection: { code: 1 } });
+            .findOne({ bookId: book._id }, { projection: { code: 1 } });
         return [(edition?.code as string) ?? null, null];
     } catch (e) {
         reportError(e, { where: "app/library/[id]/api#getBibleEditionCode" });
         return [null, null];
     }
-}, ["library-bible-edition"], [CacheTag.BIBLE]);
+}, ["library-bible-edition"], [CacheTag.BIBLE, CacheTag.BOOKS]);

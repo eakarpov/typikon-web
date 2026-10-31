@@ -63,6 +63,8 @@ export interface DumpManifest {
     /** Версия сборки, она же имя каталога; у выгрузок до 2026-09-07 её нет. */
     version?: string;
     versionUrl?: string;
+    /** Сборка явно выбранных слоёв через --layers, не полный снимок. */
+    partial?: boolean;
     /** Проставляется, когда версия положена в архив с DOI. */
     doi?: string | null;
     citation: string;

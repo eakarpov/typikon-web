@@ -1,3 +1,4 @@
+import { aliasMatcher } from "@/lib/contentAliases";
 // Ревью пар «место ↔ статья энциклопедии Никифора» (place_nikifor_candidates).
 //
 // Кандидатов оставляет link-nikifor, когда сам решить не может: чаще всего статья
@@ -43,7 +44,7 @@ export const decideCandidate = async (db: Db, candidateId: string, status: Decis
     };
 
     if (status === "approved") {
-        const article = await db.collection("texts").findOne({ alias }, { projection: { name: 1 } });
+        const article = await db.collection("texts").findOne(aliasMatcher(alias), { projection: { name: 1 } });
         if (!article) throw new Error(`Статьи ${alias} нет в корпусе`);
         const forms = articleForms(article.name);
         const hasExternal = (place.externals ?? []).some((e: any) => e.source === "nikifor" && e.id === alias);

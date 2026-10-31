@@ -10,14 +10,14 @@ const DayFullContent = ({ item, paschal }: { item: any; paschal?: boolean }) => 
 
     return (
         <div className="flex flex-col pt-2 md:flex-row">
-            <div className="w-1/4">
+            <div className="w-full md:w-1/4 md:shrink-0 md:pr-4">
                 <ul className="space-y-2">
                     {DAY_FIELDS.map((field) => (
                         <DayTitle key={field} value={item[field]} valueName={field} />
                     ))}
                 </ul>
             </div>
-            <div className="flex flex-col flex-1 space-y-4">
+            <div className="flex min-w-0 flex-col flex-1 space-y-4">
                 {DAY_FIELDS.map((field) => (
                     <DayPartReading key={field} value={item[field]} valueName={field} paschal={paschal} />
                 ))}

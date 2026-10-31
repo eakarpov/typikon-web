@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { withSearch } from "@/lib/contentAliases";
 import {getItem} from "@/app/weeks/[id]/api";
 import Content from "@/app/weeks/[id]/Content";
 import {Suspense} from "react";
@@ -9,6 +11,7 @@ import { SITE_URL } from "@/utils/site";
 
 type Props = {
     params: { id: string }
+    searchParams: Record<string, string | string[] | undefined>
 }
 
 export async function generateMetadata(
@@ -33,13 +36,15 @@ export async function generateMetadata(
     }
 }
 
-const PenticostarionItem = async ({ params: { id }}: { params: {id: string}}) => {
+const PenticostarionItem = async ({ params: { id }, searchParams }: Props) => {
 
     // Язык Библии тот же, что и на прочих страницах дня: без него зачала
     // резолвились с lang === undefined и всегда падали в церковнославянский
     // фолбек, а страница считала это подменой издания.
     const lang = (await cookies()).get(BIBLE_LANGUAGE_COOKIE)?.value || DEFAULT_BIBLE_LANGUAGE;
-    const itemPromise = getItem(id, lang);
+    const item = await getItem(id, lang);
+    if (item?.redirectPath) redirect(withSearch(item.redirectPath, searchParams));
+    const itemPromise = Promise.resolve(item);
 
     return (
       <div className={myFont.variable}>

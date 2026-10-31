@@ -130,7 +130,7 @@ const Index = async ({ selected }: { selected: string }) => {
                     <p className="font-bold text-red-900">{section.label}</p>
                     <ul className="mt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4">
                         {section.books.map((book) => (
-                            <li key={book.id} title={book.note}>
+                            <li key={book.id} id={`book-${book.id}`} title={book.note}>
                                 <Link href={`/bible/${book.id}/1${suffix}`} className="hover:text-red-900">
                                     {book.name}
                                 </Link>

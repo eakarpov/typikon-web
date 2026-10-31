@@ -1,4 +1,6 @@
 import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
+import { continuousReadingView } from "@/lib/continuousReading";
+import { liturgicalText } from "@/lib/liturgicalText";
 import { jdnToGregorian, jdnToJulian, weekdayOf } from "@/utils/chronology";
 import { baseYearLabel, kindLabel, memoryDaysOf, orderLabel } from "@/lib/saintFacts";
 // Что именно уходит наружу.
@@ -245,6 +247,7 @@ export const verse = (doc: any) => ({
 
 export const book = (doc: any) => ({
     id: id(doc._id ?? doc.id),
+    alias: doc.alias || null,
     name: doc.name ?? "",
     author: doc.author || null,
     translator: doc.translator || null,
@@ -293,6 +296,9 @@ export const pericope = (doc: any) => ({
     variant: doc.variant ?? null,
     label: doc.label ?? null,
     ranges: doc.ranges ?? [],
+    ...(liturgicalText(doc.liturgicalText) ? { liturgicalText: liturgicalText(doc.liturgicalText) } : {}),
+    ...(doc.liturgicalEnding ? { liturgicalEnding: doc.liturgicalEnding } : {}),
+    ...(doc.liturgicalSourceUrl ? { liturgicalSourceUrl: doc.liturgicalSourceUrl } : {}),
     // В чьём счёте записаны эти ranges. Не проставлено — значит славянский:
     // зачала Типикона Русской Церкви (@/utils/versification). Отдаём наружу,
     // чтобы читающий API не гадал, номера какого издания перед ним.
@@ -312,6 +318,8 @@ export const pericope = (doc: any) => ({
  * вкладывая тела внутрь.
  */
 const slotItem = (item: any, withContent = false) => ({
+    ...(continuousReadingView(item.continuousReading)
+        ? { continuousReading: continuousReadingView(item.continuousReading) } : {}),
     cite: item.cite || null,
     description: item.description || null,
     statia: item.statia ?? null,

@@ -1,7 +1,8 @@
+import { canonicalPath, withSearch } from "@/lib/contentAliases";
 import Content from "@/app/library/[id]/Content";
 import {Suspense} from "react";
 import {getBibleEditionCode, getItem} from "@/app/library/[id]/api";
-import {permanentRedirect} from "next/navigation";
+import {permanentRedirect, redirect, notFound} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
@@ -17,6 +18,7 @@ export const generateStaticParams = async () => [] as { id: string }[];
 
 type Props = {
     params: { id: string }
+    searchParams: Record<string, string | string[] | undefined>
 }
 
 export async function generateMetadata(
@@ -34,24 +36,33 @@ export async function generateMetadata(
 
     return {
         title: item.name,
+        alternates: { canonical: `${SITE_URL}${canonicalPath("library", item)}` },
         description: item.description ||
             `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`,
         openGraph: {
             title: item.name,
             type: "website",
-            url: `${SITE_URL}/library/${id}`,
+            url: `${SITE_URL}${canonicalPath("library", item)}`,
             description: item.description ||
                 `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`
         },
     }
 }
 
-const Library = async ({ params: { id }}: { params: {id: string}}) => {
+const Library = async ({ params: { id }, searchParams }: Props) => {
     // Оглавление издания Библии — по канону, и живёт оно в своём разделе.
     const [bibleCode] = await getBibleEditionCode(id);
-    if (bibleCode) permanentRedirect(`/bible?v=${bibleCode}`);
+    if (bibleCode) permanentRedirect(withSearch(`/bible?v=${bibleCode}`, searchParams));
 
-    const itemPromise = getItem(id);
+    const result = await getItem(id);
+    const [item, error] = result;
+    if (error) throw error;
+    if (!item) notFound();
+    const path = canonicalPath("library", item);
+    // Адрес редактор может вернуть или снять: постоянный редирект в браузере
+    // тогда создал бы петлю. Канонический адрес указан отдельно в метаданных.
+    if (path !== `/library/${id}`) redirect(withSearch(path, searchParams));
+    const itemPromise = Promise.resolve(result);
     setMeta();
 
     return (

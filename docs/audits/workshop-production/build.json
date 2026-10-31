@@ -1,0 +1,51 @@
+{
+  "buildId": "AVi8yQ61aZ08yId4HXxnG",
+  "assets": [
+    {
+      "path": ".next/static/chunks/6467.a83c43229056cceb.js",
+      "bytes": 19914,
+      "sha256": "64e0ce45bbd2291e16832d15e07e903c2324c0cfc5b33126c78842ab7689b1b0",
+      "worker": "work",
+      "httpStatus": 200,
+      "servedSha256": "64e0ce45bbd2291e16832d15e07e903c2324c0cfc5b33126c78842ab7689b1b0",
+      "matchesBuiltFile": true
+    },
+    {
+      "path": ".next/static/chunks/6222.a738b734c90dcc83.js",
+      "bytes": 8804,
+      "sha256": "967266f5bc3156bb430f44816c5e4727c9bc7343e47719cef4b9cbd8a98ae5b8",
+      "worker": "conversion",
+      "httpStatus": 200,
+      "servedSha256": "967266f5bc3156bb430f44816c5e4727c9bc7343e47719cef4b9cbd8a98ae5b8",
+      "matchesBuiltFile": true
+    }
+  ],
+  "mode": "next build --experimental-build-mode compile",
+  "nextVersion": "14.2.35",
+  "status": "passed",
+  "isolation": "temporary checkout; existing dev build untouched",
+  "staticGeneration": "not run; compile mode only",
+  "sourceHashes": {
+    "src/app/opyty/kruczie/work.worker.ts": "7a30947329ce98d71de4fe4a87b842b7a12081092b4bfaa7bcb6a8120873bab6",
+    "src/app/opyty/kruczie/conversion.worker.ts": "4432a02c4632cff3c5c7c0f146bb9fa2653bec866a33db0d8d3e1c88b549781f",
+    "src/app/opyty/kruczie/WorkBench.tsx": "98dab5eddd7046514db13afe219f0cb755be15dd3f6de8dc9e227596da6f0c63",
+    "src/app/opyty/kruczie/Playground.tsx": "e8515f2b0055fcde2be716292276e10f430aadca325ceb1c7a19f517e9e9b456",
+    "package-lock.json": "9ada296c7504e6b6c044c627fa239c7e0e99ba24e39d8a477443af8828fbdd00"
+  },
+  "parallelCorpus": {
+    "httpStatus": 200,
+    "code": "w20g1",
+    "version": "znamen-2026-10-29-v3",
+    "witnesses": 2,
+    "indexSha256": "f079e66a058781a3545148567fa9477d27527eb64119b76f96373370329d559f"
+  },
+  "runtimeRequirements": [
+    "data/chant-corpus/znamen-v1/parallel-index.json",
+    "Raw witness files referenced by parallel-index.json"
+  ],
+  "checks": {
+    "compileExitCode": 0,
+    "bothWorkerFilesServed": true,
+    "parallelCorpusReady": true
+  }
+}

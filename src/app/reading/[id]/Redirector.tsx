@@ -3,12 +3,8 @@
 import {redirect} from "next/navigation";
 
 const Redirector = ({ alias }: { alias: string }) => {
-    const hash = typeof window !== 'undefined' ? window.location.hash : "";
-    if (hash) {
-        redirect(`/reading/${alias}${hash}`);
-    } else {
-        redirect(`/reading/${alias}`);
-    }
+    const suffix = typeof window !== "undefined" ? window.location.search + window.location.hash : "";
+    redirect(`/reading/${alias}${suffix}`);
     return null;
 }
 

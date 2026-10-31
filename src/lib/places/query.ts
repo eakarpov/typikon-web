@@ -211,7 +211,7 @@ const loadArticles = async (aliases: string[]): Promise<PlaceText[]> => {
     if (!aliases.length) return [];
     try {
         const rows = await (await db()).collection("texts")
-            .find({ alias: { $in: aliases } }, { projection: { name: 1, alias: 1 } }).toArray();
+            .find({ $or: [{ alias: { $in: aliases } }, { aliases: { $in: aliases } }] }, { projection: { name: 1, alias: 1 } }).toArray();
         return rows.map((t) => ({ id: String(t._id), alias: t.alias, name: t.name }));
     } catch (e) {
         reportError(e, { where: "lib/places/query#loadArticles" });

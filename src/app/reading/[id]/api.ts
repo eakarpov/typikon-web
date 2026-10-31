@@ -1,3 +1,4 @@
+import { aliasMatcher } from "@/lib/contentAliases";
 import clientPromise from "@/lib/mongodb";
 import {ObjectId} from "mongodb";
 import {DayDTO} from "@/types/dto/days";
@@ -20,22 +21,25 @@ const loadText = cached(async (id: string) => {
     const client = await clientPromise;
     const db = client.db("typikon");
 
-    const matcher = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { alias: id };
+    const matcher = aliasMatcher(id);
 
     const texts = await db
         .collection("texts")
         .aggregate([
             { $match: matcher },
+            { $lookup: { from: "books", localField: "bookId", foreignField: "_id",
+                pipeline: [{ $project: { alias: 1 } }], as: "_book" } },
             {
                 $addFields: {
                     id: { $toString: "$_id" },
+                    bookAlias: { $arrayElemAt: ["$_book.alias", 0] },
                 },
             },
-            { $project: { _id: 0 }}
+            { $project: { _id: 0, _book: 0 }}
         ])
         .toArray();
     return texts[0] ?? null;
-}, ["reading-text"], [CacheTag.TEXTS]);
+}, ["reading-text"], [CacheTag.TEXTS, CacheTag.BOOKS]);
 
 /**
  * Куда вести со старого адреса библейской книги.
@@ -58,14 +62,13 @@ export const getBibleRedirect = cached(async (id: string): Promise<string | null
 
 export const getItem = async (id: string): Promise<[any, any, boolean]> => {
     try {
-        const shouldRedirect = ObjectId.isValid(id);
         const res = await loadText(id);
 
         if (!res) {
             return [undefined, null, false];
         }
 
-        return [res, null, shouldRedirect && res.alias];
+        return [res, null, id !== (res.alias || res.id)];
     } catch (e) {
         reportError(e, { where: "app/reading/[id]/api#getItem" });
         return [null, e, false];

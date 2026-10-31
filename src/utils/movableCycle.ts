@@ -51,7 +51,7 @@ export const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
             return { week, day, type: typeForPenticostWeek(week), pentecostAnchorYear: prevEaster.getFullYear() };
         }
     }
-    if (diffDays <= 50) {
+    if (diffDays <= 49) {
         // count from Pascha, 0 - sunday, 6 - saturday
         return { week: Math.floor(diffDays / 7) + 1, day: Math.floor(diffDays % 7), type: "Pascha" };
     } else {

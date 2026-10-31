@@ -1,0 +1,115 @@
+{
+  "validatedAt": "2026-10-31T09:36:39.695Z",
+  "status": "passed",
+  "scope": "Local browser and captured UI artifacts; no production validation",
+  "browser": {
+    "fixture": "double.txt",
+    "blocks": 8,
+    "positions": 50,
+    "playback": [
+      {
+        "case": "start-whole",
+        "stopButton": true,
+        "cursor": []
+      },
+      {
+        "case": "cursor-advances",
+        "cursor": [
+          {
+            "score": 9,
+            "x": "18"
+          }
+        ]
+      },
+      {
+        "case": "stop",
+        "playButton": true,
+        "highlights": 0
+      },
+      {
+        "case": "tempo-stops-playback",
+        "playButton": true,
+        "highlights": 0
+      },
+      {
+        "case": "whole-replaces-block",
+        "wholeStop": true,
+        "blockPlay": true
+      },
+      {
+        "case": "export-stops-playback",
+        "highlights": 0
+      },
+      {
+        "case": "natural-completion-block8",
+        "playButton": true,
+        "highlights": 0
+      },
+      {
+        "case": "leave-work",
+        "stopButtons": 0,
+        "highlights": 0
+      },
+      {
+        "case": "automatic-start",
+        "stopButton": true
+      },
+      {
+        "case": "automatic-export-stops-playback",
+        "highlights": 0
+      }
+    ],
+    "roundtrip": {
+      "browserInputExact": true,
+      "characters": 864,
+      "clipboardExact": true,
+      "repeatExportExact": true
+    },
+    "automatic": {
+      "blocks": 3,
+      "positions": 8,
+      "addedMelodyLayers": 2,
+      "repeatExportExact": true
+    },
+    "incomplete": {
+      "manualExportBlocked": true,
+      "wholePlaybackBlocked": true,
+      "automaticExportBlocked": true,
+      "automaticPlaybackBlocked": true
+    },
+    "consoleErrors": []
+  },
+  "roundtrip": {
+    "blocks": 8,
+    "syllablePositions": 50,
+    "exactInputAndBothExports": true,
+    "inputSha256": "cb34b6811ab130b7fe19e11ec6bc0bf81f89de0069a31d6990f0f36a6292b042",
+    "exportSha256": "cb34b6811ab130b7fe19e11ec6bc0bf81f89de0069a31d6990f0f36a6292b042",
+    "repeatExportSha256": "cb34b6811ab130b7fe19e11ec6bc0bf81f89de0069a31d6990f0f36a6292b042",
+    "allLayersAndSyllableSeparators": true,
+    "BOMPreserved": true,
+    "CRLF": "Browser textarea normalizes CRLF to LF; comparison starts at its input value. Library BOM/CRLF export checked separately and passed.",
+    "playback": {
+      "tones": 87,
+      "duration96": 89.375,
+      "duration132": 64.99999999999996,
+      "repeatImportPlanIdentical": true
+    }
+  },
+  "automatic": {
+    "blocks": 3,
+    "syllablePositions": 8,
+    "addedMelodyLayers": 2,
+    "inputSha256": "86921ebd270b46c57dc564fec7e44b2a53d52ef16fe46a24c0eb2058f464ce38",
+    "exportSha256": "1d87c60b075f4647ad086abe6d3c55b427fe85c5b543fac2b45db8cea187895c",
+    "repeatExportSha256": "1d87c60b075f4647ad086abe6d3c55b427fe85c5b543fac2b45db8cea187895c",
+    "existingBlockExact": true,
+    "onlyTwoMelodyLinesAdded": true,
+    "headerFooterAndSyllablesExact": true,
+    "playbackTones": 12
+  },
+  "limits": [
+    "Playback verified through browser controls, advancing note cursor and absence of playback errors; acoustic output was not assessed by ear.",
+    "This verifies software behavior and preservation of input, not historical correctness of automatic musical choices."
+  ]
+}

@@ -1,0 +1,1697 @@
+{
+  "reviewedAt": "2026-10-31",
+  "scope": "57 подвижных шаблонов; без всех сочетаний с Минеей и без построчной текстологии произведений",
+  "sources": [
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/2",
+      "sha256": "095741a3e5a05fc31e13fe9495c4c5e425312cb1d4cfec36bf5f1ec73a16db5d",
+      "paragraphs": 252,
+      "chapter": 2
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/9",
+      "sha256": "736ee35b6ff3433daa6c8a66c98c317b99e27b03a013d38b7c20fccf0cd28944",
+      "paragraphs": 192,
+      "chapter": 9
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/10",
+      "sha256": "ab283a1d679011b67e2226c402056d25260ef7b29354e31fdcde6561ee16bb17",
+      "paragraphs": 4,
+      "chapter": 10
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/35",
+      "sha256": "437556440aa06538f916dc5833ed6f01a2ace0c0a1870ee62fcb68cb47bf524e",
+      "paragraphs": 36,
+      "chapter": 35
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/49",
+      "sha256": "2ec2a284faaff3fd0456dd7ed70b323010a8fc50a6f24eaea919db670d845db0",
+      "paragraphs": 1740,
+      "chapter": 49
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/tipikon/50",
+      "sha256": "5e8bcf3c4bcfba946de0c75f5d021884da9464a67008c1b535086948d98ffcdb",
+      "paragraphs": 1419,
+      "chapter": 50
+    }
+  ],
+  "bibleTables": [
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/apostol-bogosluzhebnyj-grazhdanskim-shriftom-s-udarenijami/",
+      "sha256": "00d765a8b7856f98cd5a4ba6a9348651ed21db42da2c5350793a1dbe72336667",
+      "lines": [
+        2590,
+        2940
+      ],
+      "note": "Книги, номера и рубрики дней; вариант/границы зачала проверяются отдельно, не только по номеру."
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/evangelie-bogosluzhebnoe-grazhdanskim-shriftom-s-udarenijami/",
+      "sha256": "7e0799d275636a19534b889b93cd524c750e6bb05021d9df8684bfb6a9f9bdd3",
+      "lines": [
+        2856,
+        3007
+      ],
+      "note": "Книги, номера и рубрики дней; вариант/границы зачала проверяются отдельно, не только по номеру."
+    }
+  ],
+  "days": [
+    {
+      "offset": 0,
+      "sourceChapter": 50,
+      "sourceParagraph": 1,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 1
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 1
+        },
+        "gospelVespers": {
+          "bookSlug": "ioanna",
+          "number": 65,
+          "variant": "Б",
+          "ranges": [
+            {
+              "chapterFrom": 20,
+              "verseFrom": 19,
+              "chapterTo": 20,
+              "verseTo": 25
+            }
+          ]
+        }
+      }
+    },
+    {
+      "offset": 1,
+      "sourceChapter": 50,
+      "sourceParagraph": 241,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 2
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 2
+        }
+      }
+    },
+    {
+      "offset": 2,
+      "sourceChapter": 50,
+      "sourceParagraph": 279,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 4
+        },
+        "gospelLiturgy": {
+          "bookSlug": "luki",
+          "number": 113
+        }
+      }
+    },
+    {
+      "offset": 3,
+      "sourceChapter": 50,
+      "sourceParagraph": 304,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 5
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 4
+        }
+      }
+    },
+    {
+      "offset": 4,
+      "sourceChapter": 50,
+      "sourceParagraph": 319,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 6
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 8
+        }
+      }
+    },
+    {
+      "offset": 5,
+      "sourceChapter": 50,
+      "sourceParagraph": 341,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 7
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 7
+        }
+      }
+    },
+    {
+      "offset": 6,
+      "sourceChapter": 50,
+      "sourceParagraph": 364,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 8
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 11
+        }
+      }
+    },
+    {
+      "offset": 7,
+      "sourceChapter": 50,
+      "sourceParagraph": 377,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 14
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 65
+        },
+        "gospelMatins": {
+          "bookSlug": "matfeya",
+          "number": 116
+        }
+      }
+    },
+    {
+      "offset": 8,
+      "sourceChapter": 50,
+      "sourceParagraph": 447,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 9
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 6
+        }
+      }
+    },
+    {
+      "offset": 9,
+      "sourceChapter": 50,
+      "sourceParagraph": 447,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 10
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 10
+        }
+      }
+    },
+    {
+      "offset": 10,
+      "sourceChapter": 50,
+      "sourceParagraph": 447,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 11
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 15
+        }
+      }
+    },
+    {
+      "offset": 11,
+      "sourceChapter": 50,
+      "sourceParagraph": 447,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 12
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 16
+        }
+      }
+    },
+    {
+      "offset": 12,
+      "sourceChapter": 50,
+      "sourceParagraph": 447,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 13
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 17
+        }
+      }
+    },
+    {
+      "offset": 13,
+      "sourceChapter": 50,
+      "sourceParagraph": 515,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 15
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 19
+        }
+      }
+    },
+    {
+      "offset": 14,
+      "sourceChapter": 50,
+      "sourceParagraph": 538,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 16
+        },
+        "gospelLiturgy": {
+          "bookSlug": "marka",
+          "number": 69
+        },
+        "gospelMatins": {
+          "bookSlug": "marka",
+          "number": 71
+        }
+      }
+    },
+    {
+      "offset": 15,
+      "sourceChapter": 50,
+      "sourceParagraph": 616,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 17
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 13
+        }
+      }
+    },
+    {
+      "offset": 16,
+      "sourceChapter": 50,
+      "sourceParagraph": 616,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 18
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 20
+        }
+      }
+    },
+    {
+      "offset": 17,
+      "sourceChapter": 50,
+      "sourceParagraph": 616,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 19
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 21
+        }
+      }
+    },
+    {
+      "offset": 18,
+      "sourceChapter": 50,
+      "sourceParagraph": 616,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 20
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 22
+        }
+      }
+    },
+    {
+      "offset": 19,
+      "sourceChapter": 50,
+      "sourceParagraph": 616,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 21
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 23
+        }
+      }
+    },
+    {
+      "offset": 20,
+      "sourceChapter": 50,
+      "sourceParagraph": 643,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 22
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 52
+        }
+      }
+    },
+    {
+      "offset": 21,
+      "sourceChapter": 50,
+      "sourceParagraph": 653,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 23
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 14
+        },
+        "gospelMatins": {
+          "bookSlug": "luki",
+          "number": 112
+        }
+      }
+    },
+    {
+      "offset": 22,
+      "sourceChapter": 50,
+      "sourceParagraph": 698,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 24
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 24
+        }
+      }
+    },
+    {
+      "offset": 23,
+      "sourceChapter": 50,
+      "sourceParagraph": 698,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 25
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 25
+        }
+      }
+    },
+    {
+      "offset": 24,
+      "sourceChapter": 50,
+      "sourceParagraph": 702,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 34
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 26
+        }
+      }
+    },
+    {
+      "offset": 25,
+      "sourceChapter": 50,
+      "sourceParagraph": 753,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 26
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 29
+        }
+      }
+    },
+    {
+      "offset": 26,
+      "sourceChapter": 50,
+      "sourceParagraph": 753,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 27
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 30
+        }
+      }
+    },
+    {
+      "offset": 27,
+      "sourceChapter": 50,
+      "sourceParagraph": 764,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 29
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 31
+        }
+      }
+    },
+    {
+      "offset": 28,
+      "sourceChapter": 50,
+      "sourceParagraph": 769,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 28
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 12
+        },
+        "gospelMatins": {
+          "bookSlug": "ioanna",
+          "number": 63
+        }
+      }
+    },
+    {
+      "offset": 29,
+      "sourceChapter": 50,
+      "sourceParagraph": 828,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 30
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 32
+        }
+      }
+    },
+    {
+      "offset": 30,
+      "sourceChapter": 50,
+      "sourceParagraph": 828,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 31
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 33
+        }
+      }
+    },
+    {
+      "offset": 31,
+      "sourceChapter": 50,
+      "sourceParagraph": 832,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 32
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 18
+        }
+      }
+    },
+    {
+      "offset": 32,
+      "sourceChapter": 50,
+      "sourceParagraph": 841,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 35
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 35
+        }
+      }
+    },
+    {
+      "offset": 33,
+      "sourceChapter": 50,
+      "sourceParagraph": 841,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 36
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 37
+        }
+      }
+    },
+    {
+      "offset": 34,
+      "sourceChapter": 50,
+      "sourceParagraph": 845,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 37
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 38
+        }
+      }
+    },
+    {
+      "offset": 35,
+      "sourceChapter": 50,
+      "sourceParagraph": 856,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 38
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 34
+        },
+        "gospelMatins": {
+          "bookSlug": "ioanna",
+          "number": 64
+        }
+      }
+    },
+    {
+      "offset": 36,
+      "sourceChapter": 50,
+      "sourceParagraph": 912,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 39
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 40
+        }
+      }
+    },
+    {
+      "offset": 37,
+      "sourceChapter": 50,
+      "sourceParagraph": 912,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 40
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 42
+        }
+      }
+    },
+    {
+      "offset": 38,
+      "sourceChapter": 50,
+      "sourceParagraph": 917,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 41
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 43
+        }
+      }
+    },
+    {
+      "offset": 39,
+      "sourceChapter": 50,
+      "sourceParagraph": 967,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 1
+        },
+        "gospelLiturgy": {
+          "bookSlug": "luki",
+          "number": 114
+        },
+        "gospelMatins": {
+          "bookSlug": "marka",
+          "number": 71
+        }
+      }
+    },
+    {
+      "offset": 40,
+      "sourceChapter": 50,
+      "sourceParagraph": 1073,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 42
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 47
+        }
+      }
+    },
+    {
+      "offset": 41,
+      "sourceChapter": 50,
+      "sourceParagraph": 1084,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 43
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 48
+        }
+      }
+    },
+    {
+      "offset": 42,
+      "sourceChapter": 50,
+      "sourceParagraph": 1091,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 44
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 56
+        },
+        "gospelMatins": {
+          "bookSlug": "ioanna",
+          "number": 66
+        }
+      }
+    },
+    {
+      "offset": 43,
+      "sourceChapter": 50,
+      "sourceParagraph": 1168,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 45
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 49
+        }
+      }
+    },
+    {
+      "offset": 44,
+      "sourceChapter": 50,
+      "sourceParagraph": 1168,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 46
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 53
+        }
+      }
+    },
+    {
+      "offset": 45,
+      "sourceChapter": 50,
+      "sourceParagraph": 1168,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 47
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 54
+        }
+      }
+    },
+    {
+      "offset": 46,
+      "sourceChapter": 50,
+      "sourceParagraph": 1168,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 48
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 55
+        }
+      }
+    },
+    {
+      "offset": 47,
+      "sourceChapter": 50,
+      "sourceParagraph": 1174,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 50
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 57
+        }
+      }
+    },
+    {
+      "offset": 48,
+      "sourceChapter": 50,
+      "sourceParagraph": 1180,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 51
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 67
+        }
+      }
+    },
+    {
+      "offset": 49,
+      "sourceChapter": 50,
+      "sourceParagraph": 1182,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "deyaniya",
+          "number": 3
+        },
+        "gospelLiturgy": {
+          "bookSlug": "ioanna",
+          "number": 27
+        },
+        "gospelMatins": {
+          "bookSlug": "ioanna",
+          "number": 65
+        }
+      }
+    },
+    {
+      "offset": 50,
+      "sourceChapter": 50,
+      "sourceParagraph": 1298,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "efesyanam",
+          "number": 229
+        },
+        "gospelLiturgy": {
+          "bookSlug": "matfeya",
+          "number": 75
+        }
+      }
+    },
+    {
+      "offset": 51,
+      "sourceChapter": 50,
+      "sourceParagraph": 1325,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "rimlyanam",
+          "number": 79
+        },
+        "gospelLiturgy": {
+          "bookSlug": "matfeya",
+          "number": 10
+        }
+      }
+    },
+    {
+      "offset": 52,
+      "sourceChapter": 50,
+      "sourceParagraph": 1325,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "rimlyanam",
+          "number": 80
+        },
+        "gospelLiturgy": {
+          "bookSlug": "matfeya",
+          "number": 12
+        }
+      }
+    },
+    {
+      "offset": 53,
+      "sourceChapter": 50,
+      "sourceParagraph": 1325,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "rimlyanam",
+          "number": 81
+        },
+        "gospelLiturgy": {
+          "bookSlug": "matfeya",
+          "number": 13
+        }
+      }
+    },
+    {
+      "offset": 54,
+      "sourceChapter": 50,
+      "sourceParagraph": 1325,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "rimlyanam",
+          "number": 82
+        },
+        "gospelLiturgy": {
+          "bookSlug": "matfeya",
+          "number": 14
+        }
+      }
+    },
+    {
+      "offset": 55,
+      "sourceChapter": 50,
+      "sourceParagraph": 1326,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "rimlyanam",
+          "number": 79
+        },
+        "gospelLiturgy": {
+          "bookSlug": "matfeya",
+          "number": 15
+        }
+      }
+    },
+    {
+      "offset": 56,
+      "sourceChapter": 50,
+      "sourceParagraph": 1336,
+      "expectedBible": {
+        "apostleLiturgy": {
+          "bookSlug": "evreyam",
+          "number": 330
+        },
+        "gospelLiturgy": {
+          "bookSlug": "matfeya",
+          "number": 38
+        },
+        "gospelMatins": {
+          "bookSlug": "matfeya",
+          "number": 116
+        }
+      }
+    }
+  ],
+  "findings": [],
+  "companionSources": [
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-chetvertoj-sedmitsy-po-pashe/4",
+      "sha256": "b64b34d63e1e7e64be1c84aaa227468390bfd4d7ecb195d16ca4a7fad3b93c84"
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-shestoj-sedmitsy-po-pashe/5",
+      "sha256": "fa3d00572909ca49ae35a4ff00ea07adc186cbdb67c98706808265904d008524"
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-sedmoj-sedmitsy-po-pashe/1",
+      "sha256": "3f0bea96f72764defc624dd25d2e106185c544ad47e07989ec9158e6bdceeb74"
+    },
+    {
+      "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-vosmoj-sedmitsy-po-pashe/8",
+      "sha256": "2ded8a72357c87179d308b2d8e38be4f632c6f410a82d9a39a838f0b53b67e93"
+    }
+  ],
+  "openQuestions": [
+    {
+      "code": "pentecost-commentary-attribution",
+      "offsets": [
+        49
+      ],
+      "note": "Наше Учительное21, обе статии, локально провалидировано без пропусков и повторов. Назначение сохраняется. Историческое отождествление источниковой нумерации8 и21 в рамки локальной валидации не входит; не подменять текст и не перенумеровывать его по одной цитате.",
+      "localValidation": {
+        "status": "passed",
+        "validatedAt": "2026-10-31",
+        "report": "pentecost-local-validation.json",
+        "scope": "Готовность и полнота нашего текста, обе статии в прикладной загрузке, HTML и API; назначения не менялись."
+      }
+    },
+    {
+      "code": "source-number-discrepancies",
+      "offsets": [
+        34,
+        42,
+        48
+      ],
+      "note": "Гл.50 P853: Деян36, начало соответствует37; P1112: Ин67, начало соответствует66 (так и стоит в базе). Гл.49 P162: заупокойное Ин17, богослужебное Евангелие даёт16. Требуется проверка печатного оригинала; номера существующих правильных чтений не заменять."
+    },
+    {
+      "code": "bright-week-song6",
+      "offsets": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "note": "Гл.50 P251–253 содержит чтение после6-й песни, не называет отдельного произведения. Календарные чтения автоматически добавляются; не считать шесть обязательных вторых бесед Златоуста отсутствующими."
+    },
+    {
+      "code": "kyrio-pascha-condition",
+      "offsets": [
+        0
+      ],
+      "note": "Григорий, слово1 в song6, снабжён человеческим условием «Аще Кириопасха». Машинного условия у назначения нет. Отдельная проверка календарного применения, а не обычная обязательная пасхальная лакуна."
+    },
+    {
+      "code": "calendar-combinations",
+      "note": "Все сочетания с Минеей, храмовыми праздниками, Благовещением и переносами не перебирались; это отдельный слой проверки калькулятора. Для пасхального цикла2026 проверено наличие готовых календарных song6 в57/57 датах; не все тексты каждого дня готовы."
+    }
+  ],
+  "resolvedFindings": [
+    {
+      "code": "bright-tuesday-gospel",
+      "offset": 2,
+      "slot": "gospelLiturgy",
+      "expected": "Лк.113, Лк.24:12–35",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 291,
+          "text": "Евангелие Луки, зачало 113: Петр востав тече ко гробу:"
+        }
+      ],
+      "pericopeId": "6a820cb93f7812bfa7c4f5b8",
+      "resolvedAt": "2026-10-30",
+      "migration": "src/scripts/fill-pentecostarion-readings.ts"
+    },
+    {
+      "code": "midpentecost-synaxarion",
+      "offset": 24,
+      "slot": "song6",
+      "expected": "Синаксарий Преполовения",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 726,
+          "text": "И икос, и синаксарий. На 9-й песни, Честнейшую не поем, но ирмос кийждо лик, и последи ирмос: Чужде матерем девство: и поклон. Светилен праздника, трижды. На хвалитех: Всякое дыхание: Стихиры праздника на 4, глас 4."
+        }
+      ],
+      "textId": "63d6fcb7ccb3e32423c34c06",
+      "resolvedAt": "2026-10-30",
+      "migration": "src/scripts/fill-pentecostarion-readings.ts"
+    },
+    {
+      "code": "fathers-studite",
+      "offset": 42,
+      "slot": "before1h",
+      "expected": "Оглашение Студитово",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 207,
+          "text": "Таже творим исхождение в притвор, поюще стихиру самогласну, яко обычай, и оглашение студитово."
+        },
+        {
+          "chapter": 50,
+          "paragraph": 413,
+          "text": "Славословие великое, и тропарь праздника. Ектении, и отпуст. Начинаются же отднесь литии, сиречь исхождения в притвор, такожде и оглашения преподобнаго отца нашего Феодора Студита: в нихже поем: Слава, и ныне, стихиру евангельскую, глас 1: На гору учеником идущим:"
+        },
+        {
+          "chapter": 50,
+          "paragraph": 414,
+          "text": "[Смотри] Внемли, яко литии в притворе прежде 1– го часа бывают и оглашения Студитова. Потом час и прочее обычно, и совершенный отпуст."
+        }
+      ],
+      "textId": "692752de9c79fc672a968300",
+      "note": "В корпусе есть слово №8 на собор 318 Отцов. Общая норма задаёт род чтения; номер — редакторский выбор.",
+      "resolvedAt": "2026-10-30",
+      "migration": "src/scripts/fill-pentecostarion-readings.ts"
+    },
+    {
+      "code": "memorial-ordinary-gospel",
+      "offset": 48,
+      "slot": "gospelLiturgy",
+      "expected": "Рядовое Ин.67, Ин.21:15–25",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1181,
+          "text": "И поем всю службу о усопших вечер и утро, якоже предызъявися в субботу мясопустную, во всем подобне."
+        }
+      ],
+      "pericopeId": "6a820cb93f7812bfa7c4f606",
+      "note": "Ряд уточнён по богослужебному Евангелию, рубрика субботы 7-й седмицы.",
+      "resolvedAt": "2026-10-30",
+      "migration": "src/scripts/fill-pentecostarion-readings.ts"
+    },
+    {
+      "code": "memorial-apostle",
+      "offset": 48,
+      "slot": "apostleLiturgy",
+      "expected": "За упокой: 1 Фес.270, 1Фес.4:13–17",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1181,
+          "text": "И поем всю службу о усопших вечер и утро, якоже предызъявися в субботу мясопустную, во всем подобне."
+        },
+        {
+          "chapter": 49,
+          "paragraph": 159,
+          "text": "Другий за упокой, к солуняном, зачало 270: Не хощу вас не ведети:"
+        }
+      ],
+      "resolvedAt": "2026-10-30",
+      "migration": "src/scripts/fill-pentecostarion-readings.ts"
+    },
+    {
+      "code": "memorial-gospel",
+      "offset": 48,
+      "slot": "gospelLiturgy",
+      "expected": "За упокой: Ин.5:24–30 (каталог Ин.16)",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1181,
+          "text": "И поем всю службу о усопших вечер и утро, якоже предызъявися в субботу мясопустную, во всем подобне."
+        },
+        {
+          "chapter": 49,
+          "paragraph": 162,
+          "text": "Другое, Иоанна, зачало 17: Рече Господь ко пришедшим к нему иудеем:"
+        }
+      ],
+      "pericopeId": "6a820cb93f7812bfa7c4f5ca",
+      "note": "В гл.49 напечатан номер 17, в богослужебном Евангелии 16; выбирать по тексту, см. вопросы источника.",
+      "resolvedAt": "2026-10-30",
+      "migration": "src/scripts/fill-pentecostarion-readings.ts"
+    },
+    {
+      "code": "holy-spirit-apostle",
+      "offset": 50,
+      "slot": "apostleLiturgy",
+      "expected": "Еф.229, Еф.5:9–19",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1319,
+          "text": "Апостол к ефесеем, зачало 229: Яко чада света ходите: Аллилуиа, глас 2: Помилуй мя Боже, по велицей милости твоей:"
+        }
+      ],
+      "pericopeId": "6a820cb93f7812bfa7c4f70a",
+      "resolvedAt": "2026-10-30",
+      "migration": "src/scripts/fill-pentecostarion-readings.ts"
+    },
+    {
+      "code": "acts-great-reading",
+      "offset": 14,
+      "slot": "vigil",
+      "expected": "Продолжение Деяний перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 98,
+          "text": "[Зри] Ведомо же буди: Яко от недели Святыя Пасхи, даже до недели всех святых, по благословении хлебов, чтутся Деяния святых апостол. В прочия же недели всего лета чтутся седмь соборная послания апостольская, и четыренадесять посланий святаго апостола Павла, и откровение святаго апостола Иоанна Богослова."
+        },
+        {
+          "chapter": 50,
+          "paragraph": 554,
+          "text": "На благословении хлебов тропарь: Богородице Дево, трижды. И обычное чтение деяний."
+        }
+      ],
+      "note": "Чтение подряд; начало/конец фрагмента источник не задаёт. Не ставить всем главу 1.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "acts-great-reading",
+      "offset": 21,
+      "slot": "vigil",
+      "expected": "Продолжение Деяний перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 98,
+          "text": "[Зри] Ведомо же буди: Яко от недели Святыя Пасхи, даже до недели всех святых, по благословении хлебов, чтутся Деяния святых апостол. В прочия же недели всего лета чтутся седмь соборная послания апостольская, и четыренадесять посланий святаго апостола Павла, и откровение святаго апостола Иоанна Богослова."
+        }
+      ],
+      "note": "Чтение подряд; начало/конец фрагмента источник не задаёт. Не ставить всем главу 1.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "acts-great-reading",
+      "offset": 28,
+      "slot": "vigil",
+      "expected": "Продолжение Деяний перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 98,
+          "text": "[Зри] Ведомо же буди: Яко от недели Святыя Пасхи, даже до недели всех святых, по благословении хлебов, чтутся Деяния святых апостол. В прочия же недели всего лета чтутся седмь соборная послания апостольская, и четыренадесять посланий святаго апостола Павла, и откровение святаго апостола Иоанна Богослова."
+        }
+      ],
+      "note": "Чтение подряд; начало/конец фрагмента источник не задаёт. Не ставить всем главу 1.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "acts-great-reading",
+      "offset": 35,
+      "slot": "vigil",
+      "expected": "Продолжение Деяний перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 98,
+          "text": "[Зри] Ведомо же буди: Яко от недели Святыя Пасхи, даже до недели всех святых, по благословении хлебов, чтутся Деяния святых апостол. В прочия же недели всего лета чтутся седмь соборная послания апостольская, и четыренадесять посланий святаго апостола Павла, и откровение святаго апостола Иоанна Богослова."
+        }
+      ],
+      "note": "Чтение подряд; начало/конец фрагмента источник не задаёт. Не ставить всем главу 1.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "acts-great-reading",
+      "offset": 39,
+      "slot": "vigil",
+      "expected": "Продолжение Деяний перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 98,
+          "text": "[Зри] Ведомо же буди: Яко от недели Святыя Пасхи, даже до недели всех святых, по благословении хлебов, чтутся Деяния святых апостол. В прочия же недели всего лета чтутся седмь соборная послания апостольская, и четыренадесять посланий святаго апостола Павла, и откровение святаго апостола Иоанна Богослова."
+        },
+        {
+          "chapter": 50,
+          "paragraph": 989,
+          "text": "И чтение великое в Деяниих святых апостол."
+        }
+      ],
+      "note": "Чтение подряд; начало/конец фрагмента источник не задаёт. Не ставить всем главу 1.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "acts-great-reading",
+      "offset": 42,
+      "slot": "vigil",
+      "expected": "Продолжение Деяний перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 98,
+          "text": "[Зри] Ведомо же буди: Яко от недели Святыя Пасхи, даже до недели всех святых, по благословении хлебов, чтутся Деяния святых апостол. В прочия же недели всего лета чтутся седмь соборная послания апостольская, и четыренадесять посланий святаго апостола Павла, и откровение святаго апостола Иоанна Богослова."
+        },
+        {
+          "chapter": 50,
+          "paragraph": 1105,
+          "text": "И праздника, единожды: и благословение хлебов, и чтение Деяний святых апостол."
+        }
+      ],
+      "note": "Чтение подряд; начало/конец фрагмента источник не задаёт. Не ставить всем главу 1.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "acts-great-reading",
+      "offset": 49,
+      "slot": "vigil",
+      "expected": "Продолжение Деяний перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 2,
+          "paragraph": 98,
+          "text": "[Зри] Ведомо же буди: Яко от недели Святыя Пасхи, даже до недели всех святых, по благословении хлебов, чтутся Деяния святых апостол. В прочия же недели всего лета чтутся седмь соборная послания апостольская, и четыренадесять посланий святаго апостола Павла, и откровение святаго апостола Иоанна Богослова."
+        },
+        {
+          "chapter": 50,
+          "paragraph": 1195,
+          "text": "И чтение Деяний святых апостол."
+        }
+      ],
+      "note": "Чтение подряд; начало/конец фрагмента источник не задаёт. Не ставить всем главу 1.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "james-great-reading",
+      "offset": 56,
+      "slot": "vigil",
+      "expected": "Соборное послание Иакова перед шестопсалмием",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1366,
+          "text": "И благословение хлебов, и чтение послания соборнаго Иаковля."
+        },
+        {
+          "chapter": 50,
+          "paragraph": 1367,
+          "text": "[Смотри] [от сея же недели начинаем чести на утренях недельных седмь посланий соборных, и 14 посланий святаго апостола Павла. Откровение Иоанна Богослова. Чтем же их на бдениих недельных, прежде иных чтений, до великия святыя недели Пасхи. В 50-цу же всю Деяния святых апостол чтем в неделях, якоже предписася."
+        }
+      ],
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-vigils.ts"
+    },
+    {
+      "code": "fathers-paremias",
+      "offset": 42,
+      "slot": "vespersProkimenon",
+      "expected": "Три паремии Отцов: Быт.14; Втор.1; Втор.10",
+      "kind": "missing",
+      "count": 3,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1096,
+          "text": "Прокимен : Господь воцарися, со стихи его: и чтения отцев 3."
+        }
+      ],
+      "note": "Книги/главы уточнены по Цветной Триоди, седмица 7 / 1. Концы стихов при назначении сверить по полному литургическому тексту.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-paremias.ts",
+      "verifiedReadings": [
+        {
+          "id": "ac17ee7dae3f6500e802ae8d",
+          "label": "Быт.14:14–20а",
+          "ranges": [
+            {
+              "chapterFrom": 14,
+              "verseFrom": 14,
+              "chapterTo": 14,
+              "verseTo": 20
+            }
+          ],
+          "liturgicalSourceUrl": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-sedmoj-sedmitsy-po-pashe/1",
+          "expectedVerses": 7,
+          "liturgicalEnding": {
+            "editionCode": "cs-eliz",
+            "chapter": 14,
+            "verse": 20,
+            "endAfter": "под̾ рꙋ́ки тебѣ̀."
+          }
+        },
+        {
+          "id": "84b9c17ebd2ff8d47b111f5f",
+          "label": "Втор.1:8–11,15–17а",
+          "ranges": [
+            {
+              "chapterFrom": 1,
+              "verseFrom": 8,
+              "chapterTo": 1,
+              "verseTo": 11
+            },
+            {
+              "chapterFrom": 1,
+              "verseFrom": 15,
+              "chapterTo": 1,
+              "verseTo": 17
+            }
+          ],
+          "liturgicalSourceUrl": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-sedmoj-sedmitsy-po-pashe/1",
+          "expectedVerses": 7,
+          "liturgicalEnding": {
+            "editionCode": "cs-eliz",
+            "chapter": 1,
+            "verse": 17,
+            "endAfter": "ꙗ҆́кѡ сꙋ́дъ бж҃їй є҆́сть:"
+          }
+        },
+        {
+          "id": "dc97669a16f9b7681d5764c6",
+          "label": "Втор.10:14–21",
+          "ranges": [
+            {
+              "chapterFrom": 10,
+              "verseFrom": 14,
+              "chapterTo": 10,
+              "verseTo": 21
+            }
+          ],
+          "liturgicalSourceUrl": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-sedmoj-sedmitsy-po-pashe/1",
+          "expectedVerses": 8
+        }
+      ]
+    },
+    {
+      "code": "all-saints-paremias",
+      "offset": 56,
+      "slot": "vespersProkimenon",
+      "expected": "Три паремии: Ис.43; Прем.3; Прем.5–6",
+      "kind": "missing",
+      "count": 3,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1353,
+          "text": "Чтения 3. 1-е, пророчества Исаиина: Тако глаголет Господь, вси язы́цы собрашася вкупе:"
+        },
+        {
+          "chapter": 50,
+          "paragraph": 1354,
+          "text": "2-е, Премудрости Соломони: Праведных души в руце Божии:"
+        },
+        {
+          "chapter": 50,
+          "paragraph": 1355,
+          "text": "3-е: Премудрости Соломони: Праведницы во веки живут:"
+        }
+      ],
+      "note": "Книги/главы уточнены по Цветной Триоди, седмица 8 / 8. Концы стихов сверить при назначении.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fill-pentecostarion-paremias.ts",
+      "verifiedReadings": [
+        {
+          "id": "44ecd46252967fb3aedbea2f",
+          "label": "Ис.43:9–14а",
+          "ranges": [
+            {
+              "chapterFrom": 43,
+              "verseFrom": 9,
+              "chapterTo": 43,
+              "verseTo": 14
+            }
+          ],
+          "liturgicalSourceUrl": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-vosmoj-sedmitsy-po-pashe/8",
+          "expectedVerses": 6,
+          "liturgicalEnding": {
+            "editionCode": "cs-eliz",
+            "chapter": 43,
+            "verse": 14,
+            "endAfter": "ст҃ы́й і҆и҃левъ:"
+          }
+        },
+        {
+          "id": "7228edacfc9efd2ec3700fc7",
+          "label": "Прем.3:1–9",
+          "ranges": [
+            {
+              "chapterFrom": 3,
+              "verseFrom": 1,
+              "chapterTo": 3,
+              "verseTo": 9
+            }
+          ],
+          "liturgicalSourceUrl": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-vosmoj-sedmitsy-po-pashe/8",
+          "expectedVerses": 9
+        },
+        {
+          "id": "d7c4d4295430a288370857e2",
+          "label": "Прем.5:15–6:3а",
+          "ranges": [
+            {
+              "chapterFrom": 5,
+              "verseFrom": 15,
+              "chapterTo": 6,
+              "verseTo": 3
+            }
+          ],
+          "liturgicalSourceUrl": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-vosmoj-sedmitsy-po-pashe/8",
+          "expectedVerses": 13,
+          "liturgicalEnding": {
+            "editionCode": "cs-eliz",
+            "chapter": 6,
+            "verse": 3,
+            "endAfter": "и҆ си́ла ѿ вы́шнѧгѡ,"
+          }
+        }
+      ]
+    },
+    {
+      "code": "easter-vespers-gospel",
+      "offset": 0,
+      "slot": "gospelVespers",
+      "expected": "Ин. 65Б, Ин.20:19–25",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 220,
+          "text": "Чтет Евангелие настоятель во олтари, Иоанна, зачало 65: Сущу позде в день той: Конец, Не иму веры"
+        }
+      ],
+      "pericopeId": "6a820cb93f7812bfa7c4f603",
+      "note": "В TextType нет отдельного gospelVespers; это лакуна модели и назначения.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/close-pentecostarion-gaps.ts",
+      "resolutionNote": "Отдельный gospelVespers в самом дне Пасхи, после Литургии; Ин.65Б,20:19–25,7 стихов. Не утреннее Евангелие и не паремия."
+    },
+    {
+      "code": "memorial-kathisma-reading",
+      "offset": 48,
+      "slot": "kathisma1",
+      "expected": "Словеса об умерших из толкования на 1 Кор.",
+      "kind": "missing",
+      "count": 1,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1181,
+          "text": "И поем всю службу о усопших вечер и утро, якоже предызъявися в субботу мясопустную, во всем подобне."
+        },
+        {
+          "chapter": 49,
+          "paragraph": 116,
+          "text": "Слава, и ныне, Богородичен: Тебе и стену, и пристанище: и обычное стихословие, и седальны октоиха."
+        },
+        {
+          "chapter": 49,
+          "paragraph": 117,
+          "text": "Чтутся же и словеса о мертвых, к коринфяном в 1-м послании."
+        }
+      ],
+      "note": "Слот пуст; конкретное слово и деление требуют выбора. Имеющиеся слова kathisma2 оставлены отдельно.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/close-pentecostarion-gaps.ts",
+      "textId": "68e77afb42faa8ee591f64a7",
+      "method": "relocated-existing-reading-from-kathisma2",
+      "identificationUrl": "https://azbyka.ru/otechnik/Ioann_Zlatoust/besedy-na-1-e-poslanie-k-korinfjanam/41",
+      "textSha256": "787616bcb92e902705a5e6f33f357c87ed6a9ce64a99443c527f1cb7cf33b6f6",
+      "resolutionNote": "Четья редакция заключительной части беседы41 на 1Кор., начало1Кор.15:44; слово уже было во втором чтении. Перенесено в первое без дублирования, Дамаскин сохранён во втором. Номер слова редакторский, не прямое предписание Типикона."
+    }
+  ],
+  "withdrawnFindings": [
+    {
+      "code": "all-saints-commentary-book",
+      "offset": 56,
+      "slot": "kathisma1+kathisma2",
+      "expected": "Златоуст, толкование Матфея от слова 13 первой книги",
+      "kind": "different-book",
+      "count": 2,
+      "evidence": [
+        {
+          "chapter": 50,
+          "paragraph": 1368,
+          "text": "[Смотри] от сего же бдения начинаем чести толкования Иоанна Златоустаго, Евангелие еже от Матфеа, от 13 слова первыя книги. Оставшая же Богослова чтем во 12 днех по Христове Рождестве. В весь же месяц сей, и вторый, совершаем обе книги толковательныя, 1-ю и 2-ю, на чтениих утренних, до исхода месяца августа: кроме егда прилучится житие некоего святаго, тогда оставляем, и чтем житие святаго.]"
+        }
+      ],
+      "textId": "67d2a9de935c3ab817eba413",
+      "note": "Сейчас Учительное Евангелие, слово22, две статии, начало Мф.10:32. В наличии Златоуст, беседа13, начало Мф.4:1. Это разные тексты. Деление беседы на две части ещё не выбрано.",
+      "withdrawnAt": "2026-10-31",
+      "reason": "Уточнение владельца: в саму неделю Всех святых читается толкование праздничного Евангелия. Последовательное чтение Златоуста на Матфея с беседы13 начинается с понедельника после этой недели. Предложенная замена и связанная с ней переделка статий отменены. Назначения и деление воскресного слова22 сохраняются."
+    }
+  ],
+  "resolvedDiscrepancies": [
+    {
+      "code": "midpentecost-micah-order",
+      "offset": 24,
+      "slot": "vespersProkimenon",
+      "kind": "composite-range",
+      "count": 1,
+      "expected": "Мих.4 → Мих.6 → Мих.5; уточнить Мих.6:5 и границы отдельных стихов",
+      "evidence": [
+        {
+          "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-chetvertoj-sedmitsy-po-pashe/4",
+          "text": "После «мы же пойдем именем Господа» следуют «услышите холми суд Господень» и «людие Мои, помяните», в конце «упасет стадо Свое в мире»."
+        }
+      ],
+      "note": "В базе порядок трёх items: Мих.4:2–3,5; Мих.5:4; Мих.6:2–4,8. Перестановка внутри составного чтения и неполнота диапазона; не три самостоятельных паремии.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fix-composite-paremias.ts",
+      "resolution": "По три цельных чтения в порядке Триоди. Точные редакции сохранены как liturgicalText; ranges являются параллельными ссылками, а не телом составного чтения."
+    },
+    {
+      "code": "midpentecost-isaiah-composite",
+      "offset": 24,
+      "slot": "vespersProkimenon",
+      "kind": "composite-range",
+      "count": 1,
+      "expected": "Составное чтение Ис.55 с фрагментом Ис.12:3–4",
+      "evidence": [
+        {
+          "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-chetvertoj-sedmitsy-po-pashe/4",
+          "text": "Внутри чтения: «почерпите воду с веселием от источник спасения» и «возвестите во языцех славная его»."
+        }
+      ],
+      "note": "В базе только Ис.55:1–3,6–13: переход в Ис.12 отсутствует. При исправлении сверить порядок и частичные стихи по литургическому тексту.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fix-composite-paremias.ts",
+      "resolution": "По три цельных чтения в порядке Триоди. Точные редакции сохранены как liturgicalText; ranges являются параллельными ссылками, а не телом составного чтения."
+    },
+    {
+      "code": "ascension-partial-verses",
+      "offset": 39,
+      "slot": "vespersProkimenon",
+      "kind": "boundary-review",
+      "count": 1,
+      "expected": "Уточнить частичные стихи Ис.2:3 и начало Зах.14:1",
+      "evidence": [
+        {
+          "url": "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/sluzhby-shestoj-sedmitsy-po-pashe/5",
+          "text": "Первая паремия кончается «и пойдем по нему»; третья начинается «се день грядет Господень» перед «станут нозе Его»."
+        }
+      ],
+      "note": "Диапазон Ис.2:2–3 включает продолжение после литургического окончания. Зах.14:4,8–11 не включает начальную фразу 14:1. Требуются точные литургические границы, а не добавление целых стихов вслепую.",
+      "resolvedAt": "2026-10-31",
+      "migration": "src/scripts/fix-composite-paremias.ts",
+      "resolution": "По три цельных чтения в порядке Триоди. Точные редакции сохранены как liturgicalText; ranges являются параллельными ссылками, а не телом составного чтения."
+    }
+  ],
+  "localCorpusValidation": {
+    "report": "pentecostarion-local-validation.json",
+    "validatedAt": "2026-10-31T09:07:44.889Z",
+    "placements": 33,
+    "texts": 31,
+    "days": 11,
+    "status": "passed",
+    "note": "Все 33 назначения локально подтверждены. Это не историческая переатрибуция произведений; 80 редакторских трапезных и толково-апостольских назначений остаются отдельной категорией."
+  },
+  "deferredValidationCases": {
+    "recordedAt": "2026-10-31",
+    "status": "not-validated;deferred",
+    "report": "../triodion-special-cases.md",
+    "cases": [
+      {
+        "id": "TC-01",
+        "name": "Кириопасха",
+        "status": "not-validated"
+      },
+      {
+        "id": "TC-02",
+        "name": "Благовещение и переносы",
+        "status": "not-validated"
+      },
+      {
+        "id": "TC-03",
+        "name": "Святой с полиелеем/бдением",
+        "status": "not-validated"
+      },
+      {
+        "id": "TC-04",
+        "name": "Храмовый праздник",
+        "status": "not-validated"
+      },
+      {
+        "id": "TC-05",
+        "name": "Календарный Пролог",
+        "status": "not-validated"
+      },
+      {
+        "id": "TC-06",
+        "name": "Светлая седмица: song6",
+        "status": "not-validated"
+      },
+      {
+        "id": "TC-07",
+        "name": "Всех святых → понедельник",
+        "status": "not-validated"
+      }
+    ]
+  }
+}

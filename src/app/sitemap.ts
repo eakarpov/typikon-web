@@ -147,7 +147,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 .find({ alias: { $nin: ["", null] } }, { projection: { alias: 1, updatedAt: 1 } })
                 .toArray(),
             db.collection("books")
-                .find({ public: { $ne: false } }, { projection: { updatedAt: 1 } })
+                .find({ public: { $ne: false } }, { projection: { alias: 1, updatedAt: 1 } })
                 .toArray(),
             db.collection("weeks")
                 .find({ $or: [{ penticostration: true }, { triodion: true }] },
@@ -236,7 +236,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             .catch(() => [] as Array<{ name: string }>);
 
         const days = await db.collection("days")
-            .find({ alias: { $nin: ["", null] } }, { projection: { alias: 1, updatedAt: 1, paschal: 1 } })
+            .find({ alias: { $nin: ["", null] }, redirectTo: { $exists: false } }, { projection: { alias: 1, updatedAt: 1, paschal: 1 } })
             .toArray();
 
         const dayEntries = days.map((day) => {
@@ -282,7 +282,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             ...months.map((month) =>
                 entry(`/months/${month.alias}`, month.updatedAt, 0.6, "monthly")),
             ...books.map((book) =>
-                entry(`/library/${book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
+                entry(`/library/${book.alias || book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
             ...saints.map((saint) =>
                 entry(saint.path, saint.updatedAt, 0.6, "monthly")),
             ...places.map((place) =>

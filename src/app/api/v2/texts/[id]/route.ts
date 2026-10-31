@@ -1,5 +1,5 @@
+import { aliasMatcher } from "@/lib/contentAliases";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { textDetail } from "@/lib/api/v2/serialize";
@@ -20,9 +20,7 @@ const loadText = cached(async (idOrAlias: string) => {
     const client = await clientPromise;
     const db = client.db("typikon");
 
-    const matcher = ObjectId.isValid(idOrAlias)
-        ? { _id: new ObjectId(idOrAlias) }
-        : { alias: idOrAlias };
+    const matcher = aliasMatcher(idOrAlias);
 
     const doc = await db.collection("texts").findOne(matcher);
     if (!doc) return null;

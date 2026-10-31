@@ -1,5 +1,5 @@
+import { aliasMatcher } from "@/lib/contentAliases";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { readPage } from "@/lib/api/v2/params";
@@ -18,17 +18,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const access = await authorize(request, "texts");
     if (access.denied) return access.denied;
 
-    if (!ObjectId.isValid(params.id)) {
-        return fail("bad_request", "Идентификатор книги указан неверно");
-    }
-
     const { limit, offset } = readPage(new URL(request.url));
 
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
 
-        const doc = await db.collection("books").findOne({ _id: new ObjectId(params.id), public: { $ne: false } });
+        const doc = await db.collection("books").findOne({ ...aliasMatcher(params.id), public: { $ne: false } });
         if (!doc) return fail("not_found", "Книга не найдена");
 
         const filter = { bookId: doc._id };

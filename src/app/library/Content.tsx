@@ -32,7 +32,7 @@ const Content = async ({ itemsPromise }: IContent) => {
                             className="cursor-pointer font-bold font-serif"
                             href={book.bibleCode
                                 ? `/bible?v=${book.bibleCode}`
-                                : `/library/${book._id.toString()}`}>
+                                : `/library/${book.alias || book._id.toString()}`}>
                             {index + 1}. {book.name} {book.author ? `(${book.author})` : ""}
                         </Link>
                         {/* Язык показываем, только когда он не тот, на котором

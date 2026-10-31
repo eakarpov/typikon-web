@@ -1,0 +1,92 @@
+{
+  "checkedAt": "2026-10-31T09:40:07.697Z",
+  "development": {
+    "demestvennyForward": {
+      "notes": 1
+    },
+    "demestvennyReverse": {
+      "neume": 1
+    },
+    "cancelled": {
+      "restartEnabled": true,
+      "stopButtonAbsent": true,
+      "progressBefore": [
+        "Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.",
+        "Обработано блоков: 0 из 9"
+      ],
+      "progressAfter": [
+        "Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.",
+        "Обработано блоков: 0 из 9"
+      ],
+      "noLateResult": true
+    },
+    "changeVariant": {
+      "playButtonReturned": true,
+      "highlights": 0
+    },
+    "restartCompleted": true,
+    "navigation": {
+      "leftWorkshop": true,
+      "highlights": 0,
+      "immediateSnapshotBeforeNavigation": {
+        "leftWorkshop": false,
+        "highlights": 1
+      }
+    }
+  },
+  "production": {
+    "singleLine": {
+      "notes": 1
+    },
+    "cancelled": {
+      "restartEnabled": true,
+      "stopButtonAbsent": true,
+      "progressBefore": [
+        "Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.",
+        "Обработано блоков: 0 из 9"
+      ],
+      "progressAfter": [
+        "Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.",
+        "Обработано блоков: 0 из 9"
+      ],
+      "noLateResult": true
+    },
+    "restart": {
+      "progress": [
+        "Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.",
+        "Обработано блоков: 3 из 3",
+        "Автоматически покрыто позиций: 8 из 8. Готов единый двоезнаменник без ручного выбора."
+      ],
+      "exportEnabled": true,
+      "exportMatchesDevelopment": true
+    },
+    "withoutParallelCorpus": {
+      "exportMatchesDevelopment": false,
+      "note": "Isolated test copy initially omitted data/chant-corpus/znamen-v1; fallback result differed. Public corpus added and server restarted before final comparison."
+    },
+    "partialCancel": {
+      "after": [
+        "Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.",
+        "Обработано блоков: 4 из 20"
+      ],
+      "restartEnabled": true,
+      "later": [
+        "Разбор сохранён в этом браузере. Его можно восстановить после перезагрузки.",
+        "Обработано блоков: 4 из 20"
+      ],
+      "noLateProgress": true
+    },
+    "navigateDuringWork": {
+      "leftWorkshop": true,
+      "workControlsAbsent": true
+    },
+    "consoleErrors": []
+  },
+  "status": "passed",
+  "scope": "Локальные dev- и production-сборки; production-компиляция без генерации статических страниц и без выкладки.",
+  "limits": [
+    "Звучание на слух и физическое мобильное устройство не проверялись.",
+    "Проверены интерфейсные состояния отмены/ухода; внутренний AudioContext после навигации не измерялся.",
+    "Демественный распев проверен на встроенном примере в обе стороны, не на целом историческом произведении."
+  ]
+}

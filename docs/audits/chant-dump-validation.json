@@ -1,0 +1,421 @@
+{
+  "status": "passed",
+  "version": "2026-10-31",
+  "checkedFiles": 54,
+  "layers": [
+    "chants",
+    "chant-witnesses",
+    "corpus",
+    "fathers",
+    "bible",
+    "temples"
+  ],
+  "newLayers": [
+    {
+      "id": "chants",
+      "title": "Церковнославянский певческий корпус",
+      "license": {
+        "id": "CC-BY-4.0",
+        "name": "Creative Commons Attribution 4.0 International",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "attribution": "Корпус «Уставные чтения» (typikon.info), CC BY 4.0",
+      "rationale": "Певческие тексты и структура книг из базы typikon-rules: каноны, древний акафист, молитвы, рубрики, зачины и связи. CC BY относится к работе проекта над набором и разметкой; не заменяет условий исходных изданий. Экспорт ограничен перечисленными церковнославянскими книгами; современные службы, сборники акафистов и переводы с неуточнёнными условиями исключены. Файл chant-coverage перечисляет включённые и исключённые строки по языкам; это не вся база движка.",
+      "files": [
+        {
+          "path": "chants/chant-editions.jsonl.gz",
+          "title": "Издания, источники и условия исходных книг",
+          "records": 5,
+          "bytes": 703,
+          "sha256": "6a592a3aa69e91d6d8a80c38e8373e0a1a10919829c685628511e96f095e4cea"
+        },
+        {
+          "path": "chants/chant-positions.jsonl.gz",
+          "title": "Места песнопений в службе",
+          "records": 64,
+          "bytes": 1879,
+          "sha256": "c1601849d079ffb3c6e454d5fa42cc485ede1c65b3aa797cac7330e6cebaf110"
+        },
+        {
+          "path": "chants/chant-groups.jsonl.gz",
+          "title": "Группы песнопений и источники",
+          "records": 22709,
+          "bytes": 755328,
+          "sha256": "283cfaf35110bb06238d2a5c74028e536fbec490c14b6f0eced8b066bf7bffc5"
+        },
+        {
+          "path": "chants/chant-canons.jsonl.gz",
+          "title": "Каноны",
+          "records": 1596,
+          "bytes": 32418,
+          "sha256": "1da9b7aab227af5ab8a8ee29e8bb413fa23bb1ef5e8a7a12f12d9e0ecf7d0497"
+        },
+        {
+          "path": "chants/chant-akathists.jsonl.gz",
+          "title": "Акафист Постной Триоди",
+          "records": 1,
+          "bytes": 345,
+          "sha256": "0da0edca4f44fba9d54636babd81615f2fdc7aa51878e2629b2d6bb773730a73"
+        },
+        {
+          "path": "chants/chant-prayers.jsonl.gz",
+          "title": "Молитвы Минеи",
+          "records": 365,
+          "bytes": 4566,
+          "sha256": "368b72e8fb044023afcf5ed6777001cbc003dc05acaccf215c3fc32f84b326ad"
+        },
+        {
+          "path": "chants/chant-items.jsonl.gz",
+          "title": "Тексты и порядок певческих позиций",
+          "records": 95673,
+          "bytes": 11871535,
+          "sha256": "f7a4896b6c6098334d91894a01bc3034432609cfc85cf7659ce665990e302af2"
+        },
+        {
+          "path": "chants/chant-rubrics.jsonl.gz",
+          "title": "Рубрики книг",
+          "records": 13287,
+          "bytes": 701613,
+          "sha256": "9580b29ee6fa958ef2cf6c706a537c64270c5a4cbcfe3c85b43fac496b1049b8"
+        },
+        {
+          "path": "chants/chant-links.jsonl.gz",
+          "title": "Связи между включёнными текстами",
+          "records": 25992,
+          "bytes": 363381,
+          "sha256": "b49224ac0921f0612ff5433392199923663a40c5e988bfcce930f8f742d2a850"
+        },
+        {
+          "path": "chants/chant-incipits.jsonl.gz",
+          "title": "Зачины включённых текстов",
+          "records": 94755,
+          "bytes": 2180112,
+          "sha256": "5e6d1e0908ce0783bb14ff4a44edd39a8b7dc47a165fe1c63f4aaa08f1ad0fd9"
+        },
+        {
+          "path": "chants/chant-source-keys.jsonl.gz",
+          "title": "Ключи исходных книг",
+          "records": 0,
+          "bytes": 20,
+          "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+        },
+        {
+          "path": "chants/chant-coverage.jsonl.gz",
+          "title": "Охват выгрузки и исключения",
+          "records": 8,
+          "bytes": 493,
+          "sha256": "34c4a64d8ce23718130738a29c2124cb9e6b180fa0ddbbf248ca86986ad9bd35"
+        }
+      ],
+      "notShipped": [
+        {
+          "what": "Современные службы, прочие акафисты и переводы",
+          "why": "Условия этих исходных собраний не уточнены; они не получают лицензию проекта автоматически.",
+          "where": "Каталоги и источники доступны в разделах /chants, /canons и /akathists; состав выгрузки — chant-coverage.jsonl.gz."
+        }
+      ]
+    },
+    {
+      "id": "chant-witnesses",
+      "title": "Указатель источников певческой мастерской",
+      "license": {
+        "id": "CC-BY-4.0",
+        "name": "Creative Commons Attribution 4.0 International",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "attribution": "Корпус «Уставные чтения» (typikon.info), CC BY 4.0",
+      "rationale": "Составленный проектом указатель произведений и свидетельств: коды, источники, атрибуции, ссылки, версии и контрольные суммы исходников znamen.ru. Это метаданные происхождения, а не полные нотные исходники или обученная модель. Условия внешних источников сохранены отдельно.",
+      "files": [
+        {
+          "path": "chant-witnesses/witness-works.jsonl.gz",
+          "title": "Произведения и варианты кодов",
+          "records": 2144,
+          "bytes": 19412,
+          "sha256": "ffe0c033102e4558e716581b97de216c4d0f8ae8534c72f151e2ddb1649a2a65"
+        },
+        {
+          "path": "chant-witnesses/witness-sources.jsonl.gz",
+          "title": "Свидетельства, источники и атрибуции",
+          "records": 2700,
+          "bytes": 193799,
+          "sha256": "ab52f230eec20ec0831e3a9f1d7e67807f8794f5268b73481f2d89e998bff60e"
+        }
+      ],
+      "notShipped": [
+        {
+          "what": "Полные исходники znamen.ru и модель kruczie",
+          "why": "У исходников нет стандартной лицензии набора данных, пакет kruczie помечен UNLICENSED. В эту выгрузку их тела и модель не включены и под CC BY не перелицензированы.",
+          "where": "Исходники — по url/sourceUrl каждой записи; исходные условия: https://znamen.ru/org.php#usl. Версия используемой модели указана в документации мастерской."
+        }
+      ]
+    }
+  ],
+  "coverage": [
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 329,
+      "language": "ar",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 0,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 329
+    },
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 226,
+      "language": "cu",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 0,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 226
+    },
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 43483,
+      "language": "cu_gr",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 95673,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 139156
+    },
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 24542,
+      "language": "en",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 0,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 24542
+    },
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 1285,
+      "language": "et",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 0,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 1285
+    },
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 38594,
+      "language": "grc",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 0,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 38594
+    },
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 7212,
+      "language": "ja",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 0,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 7212
+    },
+    {
+      "canonPrefixes": [
+        "oktoih-",
+        "mineya-",
+        "triod-",
+        "obshaya-"
+      ],
+      "excludedItems": 53415,
+      "language": "ro",
+      "reason": "Экспортируются церковнославянские тексты перечисленных книг; современные службы, переводы и сборники с неуточнёнными условиями не включены.",
+      "shippedItems": 0,
+      "sourceBooks": [
+        "octoechos",
+        "menaion",
+        "triod-postnaya",
+        "triod-tsvetnaya",
+        "obshaya-mineya"
+      ],
+      "totalItems": 53415
+    }
+  ],
+  "checks": {
+    "allGzipAndRecordCounts": true,
+    "allHashesAndSizes": true,
+    "repeatedNewFilesIdentical": true,
+    "parentReferencesPresent": true,
+    "textLinksClosed": true,
+    "sourceBodiesNotShipped": true,
+    "newLayersHaveNoInheritedDOI": true,
+    "partialBuildMarked": true
+  },
+  "validatedAt": "2026-10-31T10:34:16.748226+00:00",
+  "pageChecks": {
+    "data": {
+      "itemHref": "/dump/2026-10-31/chants/chant-items.jsonl.gz",
+      "coverageHref": "/dump/2026-10-31/chants/chant-coverage.jsonl.gz",
+      "doiLabel": 1
+    },
+    "license": {
+      "heading": 1
+    },
+    "compatibility": {
+      "oldManifestNotice": 1,
+      "noNewFileLinks": true,
+      "noManifestNotice": 1
+    }
+  },
+  "httpChecks": [
+    {
+      "path": "chants/chant-editions.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-positions.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-groups.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-canons.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-akathists.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-prayers.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-items.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-rubrics.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-links.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-incipits.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-source-keys.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chants/chant-coverage.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chant-witnesses/witness-works.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "chant-witnesses/witness-sources.jsonl.gz",
+      "status": 200,
+      "sha256Matches": true
+    }
+  ],
+  "tests": 27,
+  "scope": "Локальная полная сборка и повторная сборка новых слоёв, без выкладки. Корпус и базы не изменялись.",
+  "fullManifestSummary": {
+    "name": "Выгрузка корпуса «Уставные чтения»",
+    "builtAt": "2026-10-31",
+    "version": "2026-10-31"
+  },
+  "typecheck": "passed"
+}

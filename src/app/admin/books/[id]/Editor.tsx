@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { revalidateTags } from "@/lib/admin/revalidate";
+import { CacheTag } from "@/lib/cache";
 import {useState} from "react";
 import {TextReadiness} from "@/utils/texts";
 import {BOOK_LANGUAGES, DEFAULT_BOOK_LANGUAGE} from "@/utils/bookLanguages";
 
 const AdminEditor = ({ value }: any) => {
+    const [alias, setAlias] = useState(value.alias || "");
+    const [error, setError] = useState("");
     const [name, setName] = useState(value.name || "");
     const [description, setDescription] = useState(value.description || "");
     const [author, setAuthor] = useState(value.author || "");
@@ -28,6 +32,7 @@ const AdminEditor = ({ value }: any) => {
     };
     const onSubmitSave = () => {
         setIsSaved(false);
+        setError("");
         fetch(`/api/admin/books/${value.id}`, {
             method: "POST",
             headers: {
@@ -35,15 +40,22 @@ const AdminEditor = ({ value }: any) => {
             },
             body: JSON.stringify({
                 name,
+                alias,
                 description,
                 translator,
                 order: parseInt(order),
                 public: isPublic,
                 language,
             }),
-        }).then(() => {
+        }).then(async (res) => {
+            if (!res.ok) {
+                const body = await res.json().catch(() => null);
+                setError(body?.error || `Не сохранено: ${res.status}`);
+                return;
+            }
+            await revalidateTags([CacheTag.BOOKS, CacheTag.BIBLE]);
             setIsSaved(true);
-        });
+        }).catch(() => setError("Не удалось сохранить книгу: нет ответа сервера"));
     };
     return (
         <div className="flex flex-col">
@@ -53,6 +65,10 @@ const AdminEditor = ({ value }: any) => {
             <button onClick={onSubmitSave}>
                 {saved ? "Сохранено!" : "Сохранить"}
             </button>
+            {error && <p role="alert" className="text-red-800">{error}</p>}
+            <label htmlFor="book-alias">Адрес книги</label>
+            <input id="book-alias" className="border-2" value={alias} onChange={e => setAlias(e.target.value)} />
+            <p className="text-sm text-stone-500">При смене адреса прежние ссылки сохраняются.</p>
             <label>
                 Название
             </label>

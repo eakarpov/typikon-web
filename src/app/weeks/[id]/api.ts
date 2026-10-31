@@ -1,5 +1,5 @@
+import { resolveDayAddress } from "@/lib/dayRedirect";
 import clientPromise from "@/lib/mongodb";
-import {ObjectId} from "mongodb";
 import {TextType} from "@/utils/texts";
 import {getAggregationAddField, aggregationTextWithBook} from "@/utils/database";
 import {resolveDayPericopes} from "@/lib/pericopes";
@@ -9,7 +9,9 @@ import {reportError} from "@/lib/reportError";
 const loadWeekDay = cached(async (id: string, lang: string) => {
     const client = await clientPromise;
     const db = client.db("typikon");
-    const matcher = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { alias: id };
+    const target = await resolveDayAddress(db, id);
+    if (!target) return null;
+    const matcher = { _id: target.id };
 
     const days = await db
         .collection("days")
@@ -35,6 +37,7 @@ const loadWeekDay = cached(async (id: string, lang: string) => {
             getAggregationAddField(TextType.H6),
             getAggregationAddField(TextType.H9),
             getAggregationAddField(TextType.GOSPEL_MATINS),
+            getAggregationAddField(TextType.GOSPEL_VESPERS),
             getAggregationAddField(TextType.APOSTLE_LITURGY),
             getAggregationAddField(TextType.GOSPEL_LITURGY),
             {
@@ -45,8 +48,9 @@ const loadWeekDay = cached(async (id: string, lang: string) => {
             { $project: { texts: 0, books: 0, weekId: 0, _id: 0 }}
         ])
         .toArray();
-    return (await resolveDayPericopes(db, days[0], lang)) || {};
-}, ["week-day"], [CacheTag.DAYS, CacheTag.TEXTS, CacheTag.BOOKS]);
+    const resolved = await resolveDayPericopes(db, days[0], lang);
+    return resolved ? { ...resolved, redirectPath: target.redirectPath } : null;
+}, ["week-day"], [CacheTag.DAYS, CacheTag.TEXTS, CacheTag.BOOKS, CacheTag.WEEKS]);
 
 export const getItem = async (id: string, lang: string): Promise<any> => {
     try {

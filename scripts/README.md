@@ -194,3 +194,135 @@ MongoDB, внешний `RULES_DB`, движок устава, выгрузки 
 GOOGLE_APPLICATION_CREDENTIALS проверяются
 на доступность; относительные пути превращаются в абсолютные относительно
 прежнего checkout. Для новых настроек предпочитай абсолютные пути вне релизов.
+
+## Шлюз старого домена
+
+Конфигурация nginx для старой машины, доверие IP шлюза на новой, проверки
+и вывод старого приложения из эксплуатации — [docs/legacy-gateway.md](../docs/legacy-gateway.md).
+DNS `.su` остаётся прежним. Подготовленные конфиги лежат в `nginx/`; на сервере
+их нужно адаптировать к существующим сертификатам и фактическому IP старой машины.
+
+```bash
+python3 scripts/check-legacy-gateway.py --old-ip АДРЕС_СТАРОЙ_МАШИНЫ
+```
+
+Проверка не следует редиректам и не отключает TLS-проверку. Выполняется после
+`nginx -t`/reload и повторяется при остановленных старых web/ordo. Она не
+отключает службы, не меняет конфигурацию и не удаляет данные.
+
+Автоматическая выкладка только шлюза на явно выбранную старую машину:
+
+```bash
+npm run release:gateway -- --target legacy
+```
+
+В файле цели нужны `GATEWAY_SITE_FILE` и `GATEWAY_ACME_ROOT`; примеры —
+`.env.release.example`, порядок и ограничения — раздел 3 инструкции шлюза.
+Команда сохраняет полный backup nginx, проверяет исходные маршруты, делает
+`nginx -t`/reload и smoke. При ошибке восстанавливает затронутые файлы и
+проверяет прежние маршруты. Старые приложение, движок, кроны и базы не отключает.
+
+### Расшифровка полной копии пользовательской базы
+
+Проверенная полная копия содержит штатный `mongodump --gzip` в tar, зашифрованном
+AES-256-GCM. Зашифрованный файл и ключ хранятся отдельно; фактические пути и
+результат проверки восстановления — в [инструкции шлюза](../docs/legacy-gateway.md).
+
+```bash
+restore_check_dir=$(mktemp -d /tmp/typikon-users-restore.XXXXXXXX)
+node scripts/decrypt-users-backup.cjs \
+  db-user-restore-backup-20261021/users.dump.tar.enc \
+  "$restore_check_dir/users.dump.tar" < .env.user-restore.20261021.local
+mkdir -m 700 "$restore_check_dir/input"
+tar -xf "$restore_check_dir/users.dump.tar" -C "$restore_check_dir/input"
+```
+
+Скрипт принимает ключ через stdin, проверяет подлинность всего архива до записи
+открытого файла, создаёт его с правами 0600 и отказывает при существующем пути.
+Он не подключается к MongoDB. Для пробного восстановления выбирай новое имя базы
+и передавай URI через закрытый `--config` файл MongoDB Tools:
+
+```bash
+mongorestore --config /ЗАКРЫТЫЙ_КАТАЛОГ/mongo-tools.yaml \
+  --gzip --dir "$restore_check_dir/input" \
+  --nsInclude 'typikon-users.*' --nsFrom 'typikon-users.*' \
+  --nsTo 'typikon-users-restorecheck-manual.*' --stopOnError
+```
+
+Перед восстановлением указанная тестовая база должна отсутствовать. После
+проверки удали созданную тестовую базу и временный каталог с открытой копией;
+зашифрованный архив и файл ключа сохрани. Проверяй документы с BSON-типами,
+определения индексов и коллекций; метаданные `mongodump` разбирай как Extended JSON.
+
+## Пересылка почты поддержки
+
+С 2026-10-25 `support@typikon.info` настроен на пересылку в целевой Gmail на
+прод-машине. Адрес назначения хранится в серверном alias-map; в репозитории
+персональный адрес не публикуется. Это пересылка входящих писем, без IMAP-ящика
+и без настройки отправки ответов через Gmail от имени `support`.
+
+Публичный SMTP слушает `72.56.27.163:25`, использует сертификат
+`/etc/ssl/typikon-full.crt` / ключ `/etc/ssl/typikon.key` с SAN `mail.typikon.info`.
+Прежний вход `127.0.0.1:25`, его сертификат, существующие alias-map, DKIM и SRS
+для `dachamatics.org` не менялись. Основные параметры hostname/inet_interfaces,
+правила relay и исходящий транспорт по умолчанию сохранены.
+
+Отдельные элементы Typikon:
+
+- `/etc/postfix/typikon-support-aliases[.db]`: support и служебные postmaster
+  для `typikon.info` / `mail.typikon.info`, без catch-all;
+- `/etc/postfix/typikon-support-senders[.db]`: отправители `@mail.typikon.info`
+  выбирают транспорт `typikon-support-smtp` с EHLO `mail.typikon.info`;
+- `/etc/postfix/master.cf`: отдельные публичный SMTP, `typikon-support-cleanup`
+  и `typikon-support-smtp`; исходные сервисы localhost/cleanup/smtp сохранены;
+- `typikon-support-srs.service`: forward/reverse на **127.0.0.1:10003/10004**,
+  домен SRS `mail.typikon.info`. Исходный postsrsd остаётся на 10001/10002.
+  Оба используют неизменённый штатный `/etc/postsrsd.secret`; при ротации
+  ключа учитывай оба процесса. AppArmor не отключался и не ослаблялся.
+
+SRS меняет только envelope sender; адрес получателя переписывается только в
+envelope. Заголовки подписанного исходного письма не переписываются canonical maps.
+Чужие адреса пересылки и неизвестные получатели отвергаются на SMTP RCPT;
+криптографически валидные SRS-возвраты обрабатываются обратной таблицей.
+
+В REG.RU опубликованы записи (MX — именно на корне, а не на поддомене mail):
+
+| Тип | Имя | Значение |
+|---|---|---|
+| A | `mail` | `72.56.27.163` |
+| MX | `@` | `mail.typikon.info.` с приоритетом 10 |
+| TXT | `mail` | `v=spf1 ip4:72.56.27.163 -all` |
+
+В панели VPS обратная запись IP `72.56.27.163` задана как `mail.typikon.info`.
+AAAA для SMTP не опубликована. SPF на поддомене относится к SRS-отправителю;
+это не настройка исходящих ответов от `support@typikon.info`.
+
+Backup конфигурации и состояние операции на прод-машине:
+`/var/backups/typikon-support-mail/20261025T181919Z-bbfe870a/` (root 0700).
+В нём `main.cf.before`, `master.cf.before`, сохранённые исходные файлы,
+`preserved.sha256.json`, `dns-verified.json`, `state.json`, `commands.log`,
+`ROLLBACK.txt`. Backup содержит секрет SRS и закрытый TLS-ключ старого сервиса:
+его содержимое нельзя публиковать. Во время обновления DNS новый вход временно
+возвращал 4xx на DATA; после проверки авторитетных A/MX/SPF и публичного PTR
+отсрочка снята, состояние `active`. Старый localhost вход не блокировался.
+
+Проверки обслуживания:
+
+```bash
+sudo postfix check
+sudo systemctl is-active postfix typikon-support-srs postsrsd opendkim
+sudo postmap -q support@typikon.info hash:/etc/postfix/typikon-support-aliases
+sudo postmap -q @mail.typikon.info hash:/etc/postfix/typikon-support-senders
+```
+
+Проверены SMTP из внешней сети, STARTTLS с проверкой hostname/CA, принятие support,
+отказ неизвестному получателю и запрет open relay, SRS forward/reverse и отказ
+невалидной подписи. Указанные проверки не отправляют письмо. Реальная доставка
+подтверждается отдельным согласованным тестовым письмом и ответом Gmail на его DATA;
+попадание во входящие проверяется в самом Gmail.
+
+2026-10-25 по отдельному явному разрешению владельца отправлено ровно одно
+тестовое письмо на support с темой «Проверка пересылки Typikon». Gmail принял
+пересылку ответом **250 2.0.0 OK**, DSN `2.0.0`, `status=sent`. Итог и идентификатор
+хранятся в закрытом `test-message.json` того же backup. Доступ к Gmail-ящику
+для просмотра письма не использовался.

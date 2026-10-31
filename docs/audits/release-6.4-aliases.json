@@ -1,0 +1,423 @@
+{
+  "checkedAt": "2026-10-30T20:27:29.265Z",
+  "scope": "current local typikon corpus; no production changes",
+  "newAddresses": [
+    {
+      "collection": "books",
+      "id": "63c96645e99d9f4d9010c5ad",
+      "name": "Сборник слов Григория Богослова",
+      "alias": "sbornik-slov-grigoriya-bogoslova"
+    },
+    {
+      "collection": "books",
+      "id": "63cf97b9a0245854ba1d790f",
+      "name": "Синаксари Цветной Триоди",
+      "alias": "sinaksari-cvetnoy-triodi"
+    },
+    {
+      "collection": "books",
+      "id": "63cffe1fa0245854ba1d7914",
+      "name": "Другие слова Иоанна Златоуста",
+      "alias": "drugie-slova-ioanna-zlatousta"
+    },
+    {
+      "collection": "books",
+      "id": "63e0a13761c39059532d1f2d",
+      "name": "Беседы на Евангелие от Иоанна",
+      "alias": "besedy-na-evangelie-ot-ioanna"
+    },
+    {
+      "collection": "books",
+      "id": "63e0a18f61c39059532d1f2e",
+      "name": "Толковый апостол",
+      "alias": "tolkovyy-apostol"
+    },
+    {
+      "collection": "books",
+      "id": "63e0a1bd61c39059532d1f2f",
+      "name": "Оглашения Феодора Студита",
+      "alias": "oglasheniya-feodora-studita"
+    },
+    {
+      "collection": "books",
+      "id": "63e0b40702d746453f8d2176",
+      "name": "Пролог (март)",
+      "alias": "prolog-mart"
+    },
+    {
+      "collection": "books",
+      "id": "63eb3c60a9bca9a4f774333a",
+      "name": "Пролог (апрель)",
+      "alias": "prolog-aprel"
+    },
+    {
+      "collection": "books",
+      "id": "63eb3c67a9bca9a4f774333b",
+      "name": "Пролог (май)",
+      "alias": "prolog-may"
+    },
+    {
+      "collection": "books",
+      "id": "63eb3c6da9bca9a4f774333c",
+      "name": "Пролог (июнь)",
+      "alias": "prolog-iyun"
+    },
+    {
+      "collection": "books",
+      "id": "63efe3ee6afed3a683f5c2ea",
+      "name": "Златоустник",
+      "alias": "zlatoustnik"
+    },
+    {
+      "collection": "books",
+      "id": "63f373ecf9b2f15ac55cddae",
+      "name": "Евангелие учительное",
+      "alias": "evangelie-uchitelnoe"
+    },
+    {
+      "collection": "books",
+      "id": "63f515d308f7ee04e7b53f19",
+      "name": "Торжественник триодный",
+      "alias": "torzhestvennik-triodnyy"
+    },
+    {
+      "collection": "books",
+      "id": "64ab000c3b382e95ab11b46d",
+      "name": "Торжественник минейный",
+      "alias": "torzhestvennik-mineynyy"
+    },
+    {
+      "collection": "books",
+      "id": "64adbd451d6a5cdd784d5cfb",
+      "name": "Пролог (июль)",
+      "alias": "prolog-iyul"
+    },
+    {
+      "collection": "books",
+      "id": "64d77558d7a3678afe89d069",
+      "name": "Пролог (август)",
+      "alias": "prolog-avgust"
+    },
+    {
+      "collection": "books",
+      "id": "6501c2cbcb56dd4224ee1804",
+      "name": "Пролог (сентябрь)",
+      "alias": "prolog-sentyabr"
+    },
+    {
+      "collection": "books",
+      "id": "65293e8392a0dbf4cbc64b3e",
+      "name": "Пролог (октябрь)",
+      "alias": "prolog-oktyabr"
+    },
+    {
+      "collection": "books",
+      "id": "6546b5283fcacc9e6edcaf57",
+      "name": "Пролог (ноябрь)",
+      "alias": "prolog-noyabr"
+    },
+    {
+      "collection": "books",
+      "id": "6546b5343fcacc9e6edcaf58",
+      "name": "Пролог (декабрь)",
+      "alias": "prolog-dekabr"
+    },
+    {
+      "collection": "books",
+      "id": "6546b5413fcacc9e6edcaf59",
+      "name": "Молитвы",
+      "alias": "molitvy"
+    },
+    {
+      "collection": "books",
+      "id": "655f0478a17467ae88787e05",
+      "name": "Жития святых",
+      "alias": "zhitiya-svyatyh"
+    },
+    {
+      "collection": "books",
+      "id": "65994e517a09d61b41570d7b",
+      "name": "Пролог (январь)",
+      "alias": "prolog-yanvar"
+    },
+    {
+      "collection": "books",
+      "id": "65994e867a09d61b41570d7c",
+      "name": "Пролог (февраль)",
+      "alias": "prolog-fevral"
+    },
+    {
+      "collection": "books",
+      "id": "65f09d2ec768d7d9df11f318",
+      "name": "Паренесис",
+      "alias": "parenesis"
+    },
+    {
+      "collection": "books",
+      "id": "662c1afb0f3c42b7c34c2870",
+      "name": "Синаксари Постной Триоди",
+      "alias": "sinaksari-postnoy-triodi"
+    },
+    {
+      "collection": "books",
+      "id": "665048e1e63c6518b68e1eb2",
+      "name": "Службы",
+      "alias": "sluzhby"
+    },
+    {
+      "collection": "books",
+      "id": "6797627444236fa4ab11574c",
+      "name": "Беседы на Евангелие от Матфея",
+      "alias": "besedy-na-evangelie-ot-matfeya"
+    },
+    {
+      "collection": "books",
+      "id": "67bdad4c6d0a6a67d91e0154",
+      "name": "Торжественник триодный (постный)",
+      "alias": "torzhestvennik-triodnyy-postnyy"
+    },
+    {
+      "collection": "books",
+      "id": "67dbc04f65eff75af347b015",
+      "name": "Последования мирского чина",
+      "alias": "posledovaniya-mirskogo-china"
+    },
+    {
+      "collection": "books",
+      "id": "67e06087545c525e05bf419f",
+      "name": "Часослов (Соф.1052)",
+      "alias": "chasoslov-sof-1052"
+    },
+    {
+      "collection": "books",
+      "id": "695268f3f86313eabc66f3da",
+      "name": "Лествица",
+      "alias": "lestvica"
+    },
+    {
+      "collection": "books",
+      "id": "695ad885d095cc428a7432c3",
+      "name": "Добротолюбие, или словеса и главизны священного трезвения",
+      "alias": "dobrotolyubie"
+    },
+    {
+      "collection": "books",
+      "id": "6960025ad095cc428a7432c4",
+      "name": "Лавсаик",
+      "alias": "lavsaik"
+    },
+    {
+      "collection": "books",
+      "id": "698266d03eb449fef879dac2",
+      "name": "Ифика Иерополитика",
+      "alias": "ifika-ieropolitika"
+    },
+    {
+      "collection": "books",
+      "id": "6982670e3eb449fef879dac3",
+      "name": "Алфавит Духовный",
+      "alias": "alfavit-duhovnyy"
+    },
+    {
+      "collection": "books",
+      "id": "6982f221b97a02b4f5b62110",
+      "name": "Книга правил святых апостолов, святых соборов вселенских и поместных",
+      "alias": "kniga-pravil"
+    },
+    {
+      "collection": "books",
+      "id": "6989959c169656dfeafaa36a",
+      "name": "Сфънта Скриптура (Библия - на румынской кириллице)",
+      "alias": "sfnta-skriptura-bibliya-na-rumynskoy-kirillice"
+    },
+    {
+      "collection": "books",
+      "id": "6990424cbc8ea9ea56f84d1a",
+      "name": "Новый Пролог",
+      "alias": "novyy-prolog"
+    },
+    {
+      "collection": "books",
+      "id": "6992d190b9df99cbe01f6174",
+      "name": "Маргарит",
+      "alias": "margarit"
+    },
+    {
+      "collection": "books",
+      "id": "69ef24e59a92a456ed64117b",
+      "name": "Беседы на Бытие",
+      "alias": "besedy-na-bytie"
+    },
+    {
+      "collection": "books",
+      "id": "6a0b3f02069334c00c9ff637",
+      "name": "Повесть временных лет",
+      "alias": "povest-vremennyh-let"
+    },
+    {
+      "collection": "books",
+      "id": "6a0b7292f220c517efabaf0e",
+      "name": "Пролог для чтения (ЦС шрифт)",
+      "alias": "prolog-dlya-chteniya-cs-shrift"
+    },
+    {
+      "collection": "books",
+      "id": "6a8202a20ee48daf61f4247f",
+      "name": "Библия (церковнославянский, Елизаветинская)",
+      "alias": "bibliya-cerkovnoslavyanskiy-elizavetinskaya"
+    },
+    {
+      "collection": "books",
+      "id": "6a830695bf9411b8a617d148",
+      "name": "Толковое Евангелие от Луки",
+      "alias": "tolkovoe-evangelie-ot-luki"
+    },
+    {
+      "collection": "books",
+      "id": "6a830695bf9411b8a617d162",
+      "name": "Толковое Евангелие от Марка",
+      "alias": "tolkovoe-evangelie-ot-marka"
+    },
+    {
+      "collection": "books",
+      "id": "6a830695bf9411b8a617d354",
+      "name": "Толкование на Апокалипсис",
+      "alias": "tolkovanie-na-apokalipsis"
+    },
+    {
+      "collection": "books",
+      "id": "6a97fe86e50dad707c061284",
+      "name": "Biblia 1914 (Библия - румынская синодальная)",
+      "alias": "biblia-1914-bibliya-rumynskaya-sinodalnaya"
+    },
+    {
+      "collection": "books",
+      "id": "6a9b302aa0f9dae8957390a6",
+      "name": "Великие Четьи-Минеи (сентябрь)",
+      "alias": "velikie-cheti-minei-sentyabr"
+    },
+    {
+      "collection": "books",
+      "id": "6aa851caa21b602b9e97a4c3",
+      "name": "Библейская энциклопедия",
+      "alias": "bibleyskaya-enciklopediya"
+    },
+    {
+      "collection": "texts",
+      "id": "63cffe68111f4300dcdb4fbc",
+      "name": "Сло́во огласи́тельное Иоа́нна Златоу́стого на Святую Пасху",
+      "alias": "slovo-oglasitelnoe-ioanna-zlatoustogo-na-svyatuyu-pashu"
+    },
+    {
+      "collection": "texts",
+      "id": "63f4f2d43f71d33cda1d9f3b",
+      "name": "Поуче́ние в неде́лю святы́я Пятидеся́тницы на Ева́нгелие от Иоа́нна",
+      "alias": "pouchenie-na-pyatidesyatnicu"
+    },
+    {
+      "collection": "texts",
+      "id": "63f512ea3f71d33cda1d9f45",
+      "name": "Поуче́ние на Благове́щение Пресвяты́я Влады́чицы на́шея Богоро́дицы и при́сно Де́вы Мари́и. Слово 71",
+      "alias": "pouchenie-na-blagoveschenie-slovo-71"
+    },
+    {
+      "collection": "texts",
+      "id": "63f514093f71d33cda1d9f46",
+      "name": "Ме́сяца апри́ля в 23 день, поуче́ние на па́мять свята́го великому́ченика Гео́ргия. Ева́нгелие от Матфе́я, зача́ло 38 (Сло́во 72)",
+      "alias": "pouchenie-georgiyu-slovo-72"
+    },
+    {
+      "collection": "texts",
+      "id": "63f517193f71d33cda1d9f4e",
+      "name": "Пасха. Слово 8",
+      "alias": "pasha-slovo-8"
+    },
+    {
+      "collection": "texts",
+      "id": "63f5178d3f71d33cda1d9f50",
+      "name": "Фомина неделя. Слово 1",
+      "alias": "fomina-nedelya-slovo-1"
+    },
+    {
+      "collection": "texts",
+      "id": "65440d0e72949a78b5383142",
+      "name": "В то́йже день муче́ние и похвала́ свята́го апо́стола Иа́кова, бра́та Госпо́дня по пло́ти (дубль)",
+      "alias": "muchenie-i-pohvala-iakova-brata-gospodnya-dubl"
+    },
+    {
+      "collection": "texts",
+      "id": "6546b5501a72257abecc4f8e",
+      "name": "Молитва святителю Иоанну Шанхайскому",
+      "alias": "molitva-svyatitelyu-ioannu-shanhayskomu"
+    },
+    {
+      "collection": "texts",
+      "id": "6546b5521a72257abecc4f8f",
+      "name": "Молитва святителю Иоанну Шанхайскому (кратко)",
+      "alias": "molitva-svyatitelyu-ioannu-shanhayskomu-kratko"
+    },
+    {
+      "collection": "texts",
+      "id": "6546b5531a72257abecc4f90",
+      "name": "Молитва святителю Иоанну Шанхайскому (сокращенная)",
+      "alias": "molitva-svyatitelyu-ioannu-shanhayskomu-sokraschennaya"
+    },
+    {
+      "collection": "texts",
+      "id": "65a5293bef484c5aeb08bff3",
+      "name": "Слово Кирилла Иерусалимского в предпразднство Богоявлений",
+      "alias": "slovo-kirilla-ierusalimskogo-v-predprazdnstvo-bogoyavleniy"
+    },
+    {
+      "collection": "texts",
+      "id": "692716872bbf51ebb1dbed92",
+      "name": "И́же во святы́х отца́ на́шего Иоа́нна Златоу́стаго поуче́ние от филипписи́йския еписто́лии, в не́мже ка́жет уме́ршим по́льзу су́щу:",
+      "alias": "zlatoust-o-polze-umershim-poslanie-k-filippiycam"
+    }
+  ],
+  "seededExistingAliases": 7366,
+  "after": {
+    "missingBookAliases": 0,
+    "missingTextAliasesWithContent": 0,
+    "missingEmptyTextAliases": 608,
+    "penticostarionDateGaps": []
+  },
+  "http": [
+    {
+      "name": "book-old",
+      "status": 307,
+      "location": "/library/sbornik-slov-grigoriya-bogoslova?tag=a&tag=b"
+    },
+    {
+      "name": "book-new",
+      "status": 200,
+      "location": null
+    },
+    {
+      "name": "text-old",
+      "status": 307,
+      "location": "/reading/slovo-oglasitelnoe-ioanna-zlatoustogo-na-svyatuyu-pashu?accents=1"
+    },
+    {
+      "name": "bible-old",
+      "status": 308,
+      "location": "/bible?v=cs-eliz&from=old"
+    },
+    {
+      "name": "friday",
+      "status": 200,
+      "location": null
+    },
+    {
+      "name": "spirit",
+      "status": 200,
+      "location": null
+    },
+    {
+      "name": "book-api",
+      "status": 200,
+      "location": null
+    }
+  ],
+  "browserRedirect": "old text ObjectId + ?accents=1#p-0 -> current alias + ?accents=1#p-0"
+}

@@ -25,7 +25,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                 Если чтения отсутствуют - значит, по данному дню еще не были добавлены тексты.
             </p>
             <div className="flex flex-col pt-2 md:flex-row">
-                <div className="w-1/4">
+                <div className="w-full md:w-1/4 md:shrink-0 md:pr-4">
                     <ul className="space-y-2">
                         <DayTitle value={item.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} />
                         <DayTitle value={item.vigil} valueName={TextType.VIGIL} />
@@ -39,6 +39,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         <DayTitle value={item.song6} valueName={TextType.SONG_6} />
                         <DayTitle value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} />
                         <DayTitle value={item.before1h} valueName={TextType.BEFORE_1h} />
+                        <DayTitle value={item.h1} valueName={TextType.H1} />
                         <DayTitle value={item.panagia} valueName={TextType.PANAGIA} />
                         <DayTitle value={item.h3} valueName={TextType.H3} />
                         <DayTitle value={item.h6} valueName={TextType.H6} />
@@ -46,9 +47,10 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                         <DayTitle value={item.gospelMatins} valueName={TextType.GOSPEL_MATINS} />
                         <DayTitle value={item.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} />
                         <DayTitle value={item.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} />
+                        <DayTitle value={item.gospelVespers} valueName={TextType.GOSPEL_VESPERS} />
                     </ul>
                 </div>
-                <div className="flex flex-col flex-1 space-y-4">
+                <div className="flex min-w-0 flex-col flex-1 space-y-4">
                     <DayPartReading value={item.vespersProkimenon} valueName={TextType.VESPERS_PROKIMENON} paschal />
                     <DayPartReading value={item.vigil} valueName={TextType.VIGIL} paschal />
                     <DayPartReading value={item.kathisma1} valueName={TextType.KATHISMA_1} paschal />
@@ -61,6 +63,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayPartReading value={item.song3} valueName={TextType.SONG_3} paschal />
                     <DayPartReading value={item.song6} valueName={TextType.SONG_6} paschal />
                     <DayPartReading value={item.before1h} valueName={TextType.BEFORE_1h} paschal />
+                    <DayPartReading value={item.h1} valueName={TextType.H1} paschal />
                     <DayPartReading value={item.apolutikaTroparia} valueName={TextType.APOLUTIKA_TROPARIA} paschal />
                     <DayPartReading value={item.panagia} valueName={TextType.PANAGIA} paschal />
                     <DayPartReading value={item.h3} valueName={TextType.H3} paschal />
@@ -68,6 +71,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <DayPartReading value={item.h9} valueName={TextType.H9} paschal />
                     <DayPartReading value={item.apostleLiturgy} valueName={TextType.APOSTLE_LITURGY} paschal />
                     <DayPartReading value={item.gospelLiturgy} valueName={TextType.GOSPEL_LITURGY} paschal />
+                    <DayPartReading value={item.gospelVespers} valueName={TextType.GOSPEL_VESPERS} paschal />
                 </div>
             </div>
         </div>

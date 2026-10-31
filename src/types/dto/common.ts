@@ -1,4 +1,7 @@
+import type { ContinuousReading } from "@/lib/continuousReading";
+
 export interface IPartItem {
+    continuousReading?: ContinuousReading;
     cite: string;
     textId?: string;      // прямая ссылка на конкретный текст
     pericopeId?: string;  // ссылка на зачало — стихи собираются на лету под выбранный язык Библии
@@ -31,4 +34,5 @@ export interface WithParts {
     apostleLiturgy: WithItems|null;
     gospelLiturgy: WithItems|null;
     gospelMatins: WithItems|null;
+    gospelVespers?: WithItems|null;
 }

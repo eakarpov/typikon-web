@@ -67,7 +67,7 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                             />
                         </div>
                         <Link
-                            href={`/reading/${text._id.toString()}`}
+                            href={`/reading/${text.alias || text._id.toString()}`}
                             className={`
                               cursor-pointer font-serif 
                               ${text.readiness === TextReadiness.CORRECTION && ` text-yellow-600 `}

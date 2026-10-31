@@ -1,10 +1,12 @@
 "use client";
 import {TextType, valueTitle} from "@/utils/texts";
+import type { ContinuousReading } from "@/lib/continuousReading";
+import ContinuousReadingView from "@/app/components/ContinuousReading";
 import {TrashIcon, PlusIcon, InformationCircleIcon, LinkIcon} from "@heroicons/react/24/outline";
 import {memo, useCallback, useEffect, useState} from "react";
 
 export interface IDayTextPart {
-    item: { textId?: string; pericopeId?: string; cite?: string; description?: string; paschal: boolean; statia?: number; };
+    item: { continuousReading?: ContinuousReading; textId?: string; pericopeId?: string; cite?: string; description?: string; paschal: boolean; statia?: number; };
     index: number;
     paschal: boolean;
     value: any;
@@ -85,7 +87,8 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
   return (
       <div className="flex flex-col mt-4">
           <div className="flex flex-row items-end gap-2">
-              {item.paschal === paschal && (
+              {item.continuousReading && <ContinuousReadingView value={item.continuousReading} />}
+              {item.paschal === paschal && !item.continuousReading && (
                   <div className="flex flex-col">
                       <label>
                           Идентификатор текста
@@ -99,7 +102,7 @@ const DayTextPart = ({ item, index, paschal, setTextField, value, valueName, set
                       />
                   </div>
               )}
-              {item.paschal === paschal && (
+              {item.paschal === paschal && !item.continuousReading && (
                   <div className="flex flex-col">
                       <label>
                           Идентификатор зачала (вместо текста — стихи соберутся из Библии)

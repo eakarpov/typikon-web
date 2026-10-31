@@ -38,6 +38,7 @@ export const getItem = async (lang: string = DEFAULT_BIBLE_LANGUAGE, date?: stri
                 getAggregationAddField(TextType.H6),
                 getAggregationAddField(TextType.H9),
                 getAggregationAddField(TextType.GOSPEL_MATINS),
+                getAggregationAddField(TextType.GOSPEL_VESPERS),
                 getAggregationAddField(TextType.APOSTLE_LITURGY),
                 getAggregationAddField(TextType.GOSPEL_LITURGY),
                 { $match: { "month.value": { $eq: month } }},

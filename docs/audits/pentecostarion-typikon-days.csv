@@ -1,0 +1,58 @@
+offset,dayId,alias,name,typikonChapter,paragraph,expectedApostle,actualApostle,expectedGospel,actualGospel,expectedMatinsGospel,actualMatinsGospel,expectedVespersGospel,actualVespersGospel,findings,review
+0,63c96246e99d9f4d9010c596,pascha,Пасха,50,1,deyaniya:1,Деян. 1А,ioanna:1,Ин. 1,,,ioanna:65,Ин. 65Б,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+1,63cd8607f6bb0f3a9baffee0,bright-week-monday,Понедельник Светлой седмицы,50,241,deyaniya:2,Деян. 2,ioanna:2,Ин. 2,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+2,63cd86a0f6bb0f3a9baffee1,bright-week-tuesday,Вторник Светлой седмицы,50,279,deyaniya:4,Деян. 4,luki:113,Лк. 113,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+3,63cd86a2f6bb0f3a9baffee2,bright-week-wednesday,Среда Светлой седмицы,50,304,deyaniya:5,Деян. 5,ioanna:4,Ин. 4,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+4,63cd86a5f6bb0f3a9baffee3,,Четверг Светлой седмицы,50,319,deyaniya:6,Деян. 6,ioanna:8,Ин. 8,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+5,63cd86a7f6bb0f3a9baffee4,bright-week-friday,Пятница Светлой седмицы,50,341,deyaniya:7,Деян. 7,ioanna:7,Ин. 7,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+6,63cd86a8f6bb0f3a9baffee5,,Суббота Светлой седмицы,50,364,deyaniya:8,Деян. 8,ioanna:11,Ин. 11,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+7,63d16f25bec689206fc697d1,antipascha,Фомина неделя,50,377,deyaniya:14,Деян. 14,ioanna:65,Ин. 65В,matfeya:116,Мф. 116,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+8,63d16f26bec689206fc697d2,,Понедельник второй седмицы по Пасхе,50,447,deyaniya:9,Деян. 9,ioanna:6,Ин. 6,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+9,63d16f26bec689206fc697d3,,Вторник второй седмицы по Пасхе,50,447,deyaniya:10,Деян. 10,ioanna:10,Ин. 10,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+10,63d16f27bec689206fc697d4,,Среда второй седмицы по Пасхе,50,447,deyaniya:11,Деян. 11,ioanna:15,Ин. 15,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+11,63d16f27bec689206fc697d5,,Четверг второй седмицы по Пасхе,50,447,deyaniya:12,Деян. 12,ioanna:16,Ин. 16,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+12,63d16f28bec689206fc697d6,,Пятница второй седмицы по Пасхе,50,447,deyaniya:13,Деян. 13,ioanna:17,Ин. 17,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+13,63d16f29bec689206fc697d7,,Суббота второй седмицы по Пасхе,50,515,deyaniya:15,Деян. 15,ioanna:19,Ин. 19,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+14,63d16fa3bec689206fc697d8,third-week-sunday,Неделя мироносиц,50,538,deyaniya:16,Деян. 16,marka:69,Мк. 69Б,marka:71,Мк. 71,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+15,63d16fa3bec689206fc697d9,,Понедельник третьей седмицы по Пасхе,50,616,deyaniya:17,Деян. 17,ioanna:13,Ин. 13,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+16,63d16fa3bec689206fc697da,,Вторник третьей седмицы по Пасхе,50,616,deyaniya:18,Деян. 18,ioanna:20,Ин. 20,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+17,63d16fa4bec689206fc697db,,Среда третьей седмицы по Пасхе,50,616,deyaniya:19,Деян. 19,ioanna:21,Ин. 21,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+18,63d16fa4bec689206fc697dc,,Четверг третьей седмицы по Пасхе,50,616,deyaniya:20,Деян. 20,ioanna:22,Ин. 22,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+19,63d16fa4bec689206fc697dd,,Пятница третьей седмицы по Пасхе,50,616,deyaniya:21,Деян. 21А,ioanna:23,Ин. 23,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+20,63d16fa5bec689206fc697de,,Суббота третьей седмицы по Пасхе,50,643,deyaniya:22,Деян. 22,ioanna:52,Ин. 52,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+21,63d17058bec689206fc697df,,Неделя о расслабленном,50,653,deyaniya:23,Деян. 23,ioanna:14,Ин. 14Б,luki:112,Лк. 112,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+22,63d17058bec689206fc697e0,,Понедельник четвертой седмицы по Пасце,50,698,deyaniya:24,Деян. 24,ioanna:24,Ин. 24,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+23,63d17058bec689206fc697e1,,Вторник четвертой седмицы по Пасце,50,698,deyaniya:25,Деян. 25,ioanna:25,Ин. 25,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+24,63d17059bec689206fc697e2,,Преполовение Пятидесятницы,50,702,deyaniya:34,Деян. 34,ioanna:26,Ин. 26,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+25,63d17059bec689206fc697e3,,Четверток четвертой седмицы по Пасце,50,753,deyaniya:26,Деян. 26,ioanna:29,Ин. 29,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+26,63d17059bec689206fc697e4,,Пяток четвертой седмицы по Пасце,50,753,deyaniya:27,Деян. 27,ioanna:30,Ин. 30,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+27,63d17059bec689206fc697e5,,Суббота четвертой седмицы по Пасце,50,764,deyaniya:29,Деян. 29,ioanna:31,Ин. 31,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+28,63d170c2bec689206fc697e6,,Неделя о самаряныни,50,769,deyaniya:28,Деян. 28,ioanna:12,Ин. 12,ioanna:63,Ин. 63,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+29,63d170c5bec689206fc697e7,,Понедельник пятой седмицы по Пасце,50,828,deyaniya:30,Деян. 30,ioanna:32,Ин. 32,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+30,63d170c5bec689206fc697e8,,Вторник пятой седмицы по Пасце,50,828,deyaniya:31,Деян. 31,ioanna:33,Ин. 33,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+31,63d170c6bec689206fc697e9,,Среда пятой седмицы по Пасце,50,832,deyaniya:32,Деян. 32,ioanna:18,Ин. 18,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+32,63d170c6bec689206fc697ea,,Четверток пятой седмицы по Пасце,50,841,deyaniya:35,Деян. 35,ioanna:35,Ин. 35А,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+33,63d170c6bec689206fc697eb,,Пяток пятой седмицы по Пасце,50,841,deyaniya:36,Деян. 36,ioanna:37,Ин. 37А,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+34,63d170c7bec689206fc697ec,,Суббота пятой седмицы по Пасце,50,845,deyaniya:37,Деян. 37,ioanna:38,Ин. 38,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+35,63d17171bec689206fc697ed,,Неделя о слепом,50,856,deyaniya:38,Деян. 38,ioanna:34,Ин. 34,ioanna:64,Ин. 64,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+36,63d17171bec689206fc697ee,,Понедельник шестой седмицы по Пасце,50,912,deyaniya:39,Деян. 39,ioanna:40,Ин. 40,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+37,63d17172bec689206fc697ef,,Вторник шестой седмицы по Пасце,50,912,deyaniya:40,Деян. 40Б,ioanna:42,Ин. 42А,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+38,63d17172bec689206fc697f0,,Отдание Пасхи,50,917,deyaniya:41,Деян. 41,ioanna:43,Ин. 43,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+39,63d17172bec689206fc697f1,,Вознесение Господне,50,967,deyaniya:1,Деян. 1Б,luki:114,Лк. 114,marka:71,Мк. 71,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+40,63d17172bec689206fc697f2,,Пяток шестой седмицы по Пасце,50,1073,deyaniya:42,Деян. 42,ioanna:47,Ин. 47,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+41,63d17173bec689206fc697f3,,Суббота шестой седмицы по Пасце,50,1084,deyaniya:43,Деян. 43,ioanna:48,Ин. 48А,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+42,63d171cfbec689206fc697f4,,Неделя святых отец собора иже в Никеи,50,1091,deyaniya:44,Деян. 44,ioanna:56,Ин. 56,ioanna:66,Ин. 66,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+43,63d171d0bec689206fc697f5,,Понедельник седмой седмицы по Пасце,50,1168,deyaniya:45,Деян. 45,ioanna:49,Ин. 49,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+44,63d171d1bec689206fc697f6,,Вторник седмой седмицы по Пасце,50,1168,deyaniya:46,Деян. 46,ioanna:53,Ин. 53,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+45,63d171d1bec689206fc697f7,,Среда седмой седмицы по Пасце,50,1168,deyaniya:47,Деян. 47,ioanna:54,Ин. 54,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+46,63d171d2bec689206fc697f8,,Четверток седмой седмицы по Пасце,50,1168,deyaniya:48,Деян. 48,ioanna:55,Ин. 55,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+47,63d171d2bec689206fc697f9,,Пяток седмой седмицы по Пасце,50,1174,deyaniya:50,Деян. 50,ioanna:57,Ин. 57,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+48,63d171d3bec689206fc697fa,,Суббота седмой седмицы по Пасце,50,1180,deyaniya:51,Деян. 51; 1Фес. 270,ioanna:67,Ин. 67; Ин. 16,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+49,63d17229bec689206fc697fb,,Пятидесятница,50,1182,deyaniya:3,Деян. 3,ioanna:27,Ин. 27,ioanna:65,Ин. 65А,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+50,63d17249bec689206fc697fc,,День Святаго Духа,50,1298,efesyanam:229,Еф. 229,matfeya:75,Мф. 75,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+51,63d1724abec689206fc697fd,,Вторник первой седмицы по Пятидесятнице,50,1325,rimlyanam:79,Рим. 79А,matfeya:10,Мф. 10Б,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+52,63d1724abec689206fc697fe,,Среда первой седмицы по Пятидесятнице,50,1325,rimlyanam:80,Рим. 80,matfeya:12,Мф. 12,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+53,63d1724bbec689206fc697ff,,Четверток первой седмицы по Пятидесятнице,50,1325,rimlyanam:81,Рим. 81А,matfeya:13,Мф. 13,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+54,63d1724bbec689206fc69800,,Пяток первой седмицы по Пятидесятнице,50,1325,rimlyanam:82,Рим. 82,matfeya:14,Мф. 14,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+55,63d1724bbec689206fc69801,,Суббота первой седмицы по Пятидесятнице,50,1326,rimlyanam:79,Рим. 79Б,matfeya:15,Мф. 15,,,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits
+56,63d1724cbec689206fc69802,,Неделя всех святых,50,1336,evreyam:330,Евр. 330,matfeya:38,Мф. 38А,matfeya:116,Мф. 116,,,,book-number-reviewed;local-corpus-validation-complete;see-json-for-limits

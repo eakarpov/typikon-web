@@ -3,11 +3,18 @@ import assert from "node:assert/strict";
 import {
     akathistDetail, akathistSummary, canonDetail, canonSummary,
     chantDetail, chantSummary, daySaint, namedPrayer, posledovanieRow, prayerDetail, prayerSummary, saintLife,
-    textDetail, textSummary,
+    textDetail, textSummary, book,
     PLACE_SAINTS_CAVEAT, PLACES_ATTRIBUTION,
     placeChantRef, placeRelationRef, placeSaintRef, placeScriptureBook, placeSummary, placeVerse,
 } from "@/lib/api/v2/serialize";
 import { openapi } from "@/lib/api/v2/openapi";
+
+test("алиас книги добавляется к API без изменения постоянного ID", () => {
+    assert.equal(book({ id: "fixed", alias: "new-address" }).id, "fixed");
+    assert.equal(book({ id: "fixed", alias: "new-address" }).alias, "new-address");
+    assert.equal(book({ id: "fixed" }).alias, null);
+    assert.ok(Object.keys(openapi().components.schemas.Book.properties).includes("alias"));
+});
 
 // Описание API и то, что ручка на самом деле отдаёт, расходятся молча: схема
 // не участвует в ответе, а ответ не сверяется со схемой. Так и вышло — в схеме

@@ -1,0 +1,604 @@
+{
+  "validatedAt": "2026-10-31T10:43:46.954863+00:00",
+  "status": "passed",
+  "scope": "Локальная проверка общего компонента чтений дня; корпус и назначения не изменялись.",
+  "browser": {
+    "page": "2026-05-31",
+    "keyboard": {
+      "tabToExplanation": true,
+      "enterOpens": true,
+      "spaceCloses": true,
+      "escapeClosesAndReturnsFocus": true,
+      "tabLeavesExplanation": {
+        "left": true,
+        "slot": "kathisma2",
+        "tag": "A"
+      },
+      "focusOutline": {
+        "style": "solid",
+        "width": "2px"
+      },
+      "shiftTabReturnsToFullText": true
+    },
+    "pointer": {
+      "tapOpens": true,
+      "independentExplanations": true
+    },
+    "targets": [
+      {
+        "height": 44,
+        "label": "Полный текст",
+        "width": 130.1875
+      },
+      {
+        "height": 44,
+        "label": "Пояснение назначения",
+        "width": 170.25
+      }
+    ],
+    "widths": [
+      {
+        "scroll": 360,
+        "width": 360
+      },
+      {
+        "scroll": 390,
+        "width": 390
+      },
+      {
+        "scroll": 768,
+        "width": 768
+      },
+      {
+        "scroll": 1280,
+        "width": 1280
+      }
+    ],
+    "fullTextHref": "/reading/pouchenie-na-pyatidesyatnicu",
+    "fullTextReached": "http://127.0.0.1:3000/reading/pouchenie-na-pyatidesyatnicu",
+    "fullTextVerified": {
+      "url": "http://127.0.0.1:3000/reading/pouchenie-na-pyatidesyatnicu",
+      "title": 1,
+      "secondPartPresent": true
+    },
+    "visibleHeaders": [
+      {
+        "part": "Статия 1 из 2",
+        "title": "Поуче́ние в неде́лю святы́я Пятидеся́тницы на Ева́нгелие от Иоа́нна"
+      },
+      {
+        "part": "Статия 2 из 2",
+        "title": "Поуче́ние в неде́лю святы́я Пятидеся́тницы на Ева́нгелие от Иоа́нна"
+      }
+    ]
+  },
+  "tests": 48,
+  "typecheck": "passed",
+  "regression": {
+    "summary": {
+      "placements": 33,
+      "texts": 31,
+      "days": 11,
+      "technicalPassed": 33,
+      "technicalFailed": 0
+    },
+    "statiaPairs": [
+      {
+        "textId": "63f373f64cbc8e49d49ab2c3",
+        "statias": [
+          1,
+          2
+        ],
+        "completeCoverage": true
+      },
+      {
+        "textId": "63f519c23f71d33cda1d9f58",
+        "statias": [
+          1,
+          2
+        ],
+        "completeCoverage": true
+      }
+    ],
+    "placements": [
+      {
+        "dayId": "63d16f25bec689206fc697d1",
+        "slot": "kathisma1",
+        "index": 0,
+        "textId": "63f51a7c3f71d33cda1d9f5c",
+        "sha256": "a1c620deafc9db4ccbde83d70e001c5e0da076d4f6814e9c5846c055a17527ed",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d16f25bec689206fc697d1",
+        "slot": "kathisma2",
+        "index": 0,
+        "textId": "65ae6c89a8921114974aeac1",
+        "sha256": "588251c581ac246165a2677caaff9e0a03f0c87f88a346250ef16363a6bf90b0",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d16f25bec689206fc697d1",
+        "slot": "polyeleos",
+        "index": 0,
+        "textId": "65a7cb8d3d32580afbcb2dd0",
+        "sha256": "d48a3140811d88e3cb273be193de5c86612e285d17f7d6219658ee58bb8a8003",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d16fa3bec689206fc697d8",
+        "slot": "kathisma1",
+        "index": 0,
+        "textId": "63f373f64cbc8e49d49ab2c3",
+        "sha256": "80c66b4ca719e6d8cddd6b1af947e8fd3009a864971fb4be0fdef89dd0a35894",
+        "statia": 1,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d16fa3bec689206fc697d8",
+        "slot": "kathisma2",
+        "index": 0,
+        "textId": "63f373f64cbc8e49d49ab2c3",
+        "sha256": "80c66b4ca719e6d8cddd6b1af947e8fd3009a864971fb4be0fdef89dd0a35894",
+        "statia": 2,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d16fa3bec689206fc697d8",
+        "slot": "ipakoi",
+        "index": 0,
+        "textId": "65e249deae0d889a32f565dc",
+        "sha256": "1d737779eb7d1d89c1464b310f371f0fc7d0c3bdbf0fb2cb5e2f785835bad573",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d16fa3bec689206fc697d8",
+        "slot": "song3",
+        "index": 0,
+        "textId": "65e24a80ae0d889a32f565dd",
+        "sha256": "fabe0c9721d9e21e34abbf9b76f027d17ee854401958538e9d60eeb836ebceed",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17058bec689206fc697df",
+        "slot": "song3",
+        "index": 0,
+        "textId": "667074ef1070124d0ef007dc",
+        "sha256": "874000109c47e63f8d78af4edee511bd319f9c9b2080422cb4f5babbabe09bec",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17059bec689206fc697e2",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f517693f71d33cda1d9f4f",
+        "sha256": "575c84325e20ae3fd0fbda4d28b66ee5554f70961faa19bb7767550f56d2f7e6",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17059bec689206fc697e2",
+        "slot": "song3",
+        "index": 1,
+        "textId": "678d886e5ded11cb4c488e48",
+        "sha256": "f5063d5d91077b2890c98497f31c49cc47647943e2ef3ec99f21980fabed1c3b",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17171bec689206fc697ed",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f50fa13f71d33cda1d9f3e",
+        "sha256": "067132b6947e018f3dc0bffcae8e50eda8896aa6b21f15ca00b8930efb070066",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17171bec689206fc697ed",
+        "slot": "song3",
+        "index": 1,
+        "textId": "686c2d35a9ba37deddf6849b",
+        "sha256": "9e8c0c074a1f8d0aa130925964224dbc5676bd04544226bf328af1e7a0acb005",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17172bec689206fc697f1",
+        "slot": "kathisma1",
+        "index": 0,
+        "textId": "63f519c23f71d33cda1d9f58",
+        "sha256": "e113b3a7df83ec55835a859bfb94950dfdb127627d1d53cf5427b39cc9cdd27b",
+        "statia": 1,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17172bec689206fc697f1",
+        "slot": "kathisma2",
+        "index": 0,
+        "textId": "63f519c23f71d33cda1d9f58",
+        "sha256": "e113b3a7df83ec55835a859bfb94950dfdb127627d1d53cf5427b39cc9cdd27b",
+        "statia": 2,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17172bec689206fc697f1",
+        "slot": "polyeleos",
+        "index": 0,
+        "textId": "63f517bd3f71d33cda1d9f51",
+        "sha256": "c52ad6203bd45587fc9dfc8d38c8d55e0bf75a7aabe75952ff9452c540def751",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17172bec689206fc697f1",
+        "slot": "polyeleos",
+        "index": 1,
+        "textId": "687b8491cff7c0f9a4548e3a",
+        "sha256": "0786c90eef801404f16f0ac31ae6be00181a73ad55ab7bf3c5e307f9acb3e8c3",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17172bec689206fc697f1",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f510503f71d33cda1d9f3f",
+        "sha256": "2d0ecce1953a2afd9b9d0e15f66e96d58805ca1f7057ef0d6202acc2889958f8",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17172bec689206fc697f1",
+        "slot": "song3",
+        "index": 1,
+        "textId": "63f517f13f71d33cda1d9f52",
+        "sha256": "a52b919f352e1d23ea3402c52cd80a0880b036a62fe29c1e8a81fa8621bc4be9",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d171cfbec689206fc697f4",
+        "slot": "ipakoi",
+        "index": 0,
+        "textId": "68d952351276f08bfeaad405",
+        "sha256": "4c23093ed85ef4cf0d5bbbd26415a883bc63fc76d3a9254e5cceb11f2fff77b4",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d171cfbec689206fc697f4",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f510bb3f71d33cda1d9f40",
+        "sha256": "b0a1017cde3850a558f5135001a3c645238d3b585f41b916b43ba9d9c01ab1cd",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d171d3bec689206fc697fa",
+        "slot": "kathisma2",
+        "index": 0,
+        "textId": "68f0977f76805efc636c607c",
+        "sha256": "f67376cd36be54c40c5f7d6055f910aacd189aa184c2d47940d62ead7e48937a",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d171d3bec689206fc697fa",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f510e83f71d33cda1d9f41",
+        "sha256": "08aeaf1841b6e9d6d68fd74b1e094cbca82f6693664c69e4c3f1a33a0d7e6503",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d171d3bec689206fc697fa",
+        "slot": "song3",
+        "index": 1,
+        "textId": "67b1001f59e97267fa52fdd0",
+        "sha256": "6a24f075a535d077210b9f2670420ab8b87812aa8fdfa4c1a4673745c1886e45",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d171d3bec689206fc697fa",
+        "slot": "song3",
+        "index": 2,
+        "textId": "68f3f3b30298f4bccdf51592",
+        "sha256": "2fa26ac041008c417aac107fba37780ce526dd30671a77c45a7f1c96c903f7e8",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17229bec689206fc697fb",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f511163f71d33cda1d9f42",
+        "sha256": "0aaea4a9762a6828bb4b3e07731d90be8e9b0f6b9b742da083845a2adb806d4f",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17249bec689206fc697fc",
+        "slot": "kathisma1",
+        "index": 0,
+        "textId": "63f5181d3f71d33cda1d9f53",
+        "sha256": "1c8048f977a35cea1c3b8a03a404004a5b4569d0730a6e85e120b0f619197e92",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17249bec689206fc697fc",
+        "slot": "kathisma1",
+        "index": 1,
+        "textId": "63f5188a3f71d33cda1d9f55",
+        "sha256": "f26073c2c7785ad34bff03f71aabb3485c19805adc89a3af0c051ab7d18496d3",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17249bec689206fc697fc",
+        "slot": "kathisma2",
+        "index": 0,
+        "textId": "63f518603f71d33cda1d9f54",
+        "sha256": "6cf94c5ec0b87d3e4b0523be94332595827eba2fc17ec82f9670ebd99bb875b7",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17249bec689206fc697fc",
+        "slot": "kathisma2",
+        "index": 1,
+        "textId": "63f518b33f71d33cda1d9f56",
+        "sha256": "5f430e668b998ff49e52e0d47a0f5f639322f42fb624fb905ac9e847ca2d0579",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d17249bec689206fc697fc",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f511373f71d33cda1d9f43",
+        "sha256": "5b60f41b927dee0191be6816b1a6317d1ba0d35527b07f19262d030b571b310f",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d1724cbec689206fc69802",
+        "slot": "ipakoi",
+        "index": 0,
+        "textId": "63f518e43f71d33cda1d9f57",
+        "sha256": "0b2237a2120c572a70b7251b5cd03d094f470df82b034ebba650622ad1181350",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d1724cbec689206fc69802",
+        "slot": "song3",
+        "index": 0,
+        "textId": "63f511563f71d33cda1d9f44",
+        "sha256": "c4a0d0935ae481b5104c7da48328103aaa5cbb61885b15e89ac4984b7d4336a2",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      },
+      {
+        "dayId": "63d1724cbec689206fc69802",
+        "slot": "song3",
+        "index": 1,
+        "textId": "69320607595531db76a50a1c",
+        "sha256": "9ecff0ece61ed6f44491babdbf90116b44882ec299357cbc924a80804032fff6",
+        "statia": null,
+        "checks": {
+          "ready": true,
+          "selectedPartNonempty": true,
+          "aggregationContent": true,
+          "apiTextAndSelector": true,
+          "htmlCompleteSelectedPart": true
+        }
+      }
+    ]
+  },
+  "limits": [
+    "Проверены указатель, клавиатура и размеры окна браузера; отдельной проверки физического телефона и скринридера не было."
+  ]
+}

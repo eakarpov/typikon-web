@@ -48,6 +48,7 @@ import {
 } from "@/scripts/lib/dumpLayers";
 import { SITE_URL } from "@/utils/site";
 import { DEPOSITS, recordOfLayer } from "@/scripts/lib/deposits";
+import { openChantDump, witnessDump } from "@/scripts/lib/chantDump";
 
 /** Полные тексты чужих лицензий — их GPL требует передавать вместе с работой. */
 const LICENSE_SOURCE = "licenses";
@@ -73,6 +74,11 @@ const testamentFilter = (testament: "ot" | "nt") => (testament === "nt"
 const args = process.argv.slice(2);
 const outIndex = args.indexOf("--out");
 const OUT = outIndex >= 0 ? args[outIndex + 1] : "data-dump";
+const option = (name: string) => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
+const requestedLayers = option("--layers")?.split(",");
+if (requestedLayers?.some(id => !LAYERS.some(layer => layer.id === id))) throw new Error("Неизвестный слой --layers");
+const layers = LAYERS.filter(layer => !requestedLayers || requestedLayers.includes(layer.id));
+let chantExport: ReturnType<typeof openChantDump> | undefined;
 
 interface FileReport {
     file: string;
@@ -279,6 +285,13 @@ const citationCff = (version: string, doi: string | null) => [
 ].join("\n");
 
 const run = async () => {
+    // Preflight before deleting the output: a missing second corpus must not
+    // silently produce an apparently complete dump, or erase an older one.
+    if (layers.some(layer => layer.id === "chants")) {
+        chantExport = openChantDump(option("--rules-db") ?? process.env.RULES_DB ?? "");
+    }
+    const witnessGenerators = layers.some(layer => layer.id === "chant-witnesses")
+        ? witnessDump(option("--chant-witnesses") ?? "data/chant-corpus/znamen-v1") : {};
     const client = await clientPromise;
     const db = client.db("typikon");
 
@@ -312,7 +325,7 @@ const run = async () => {
     // ошибка в отборе не падает, а тихо недодаёт: первый заход так потерял 2 034
     // стиха девяти книг, которых нет в славянском каноне. Поэтому половины должны
     // сойтись с целым — иначе сборка останавливается.
-    for (const collection of LAYERS.flatMap((layer) => layer.collections)) {
+    for (const collection of layers.flatMap((layer) => layer.collections)) {
         if (!collection.testament || !collection.edition) continue;
 
         const editionId = editionByCode.get(collection.edition);
@@ -554,6 +567,8 @@ const run = async () => {
     };
 
     const derived: Record<string, () => AsyncGenerator<any>> = {
+        ...chantExport?.generators,
+        ...witnessGenerators,
         "bible-concordance": concordance,
         "saint-external-ids": saintExternalIds,
         accents,
@@ -566,7 +581,7 @@ const run = async () => {
 
     const built: { layer: DumpLayer; files: FileReport[] }[] = [];
 
-    for (const layer of LAYERS) {
+    for (const layer of layers) {
         const dir = join(OUT, layer.id);
         mkdirSync(dir, { recursive: true });
 
@@ -656,10 +671,12 @@ const run = async () => {
         builtAt,
         version,
         versionUrl: `${SITE_URL}/dump/${version}/`,
+        partial: Boolean(requestedLayers),
         // DOI записи «корпус»: им ссылаются, имея в виду собрание вообще. Пусто,
         // пока версия не положена в архив; проставляется в одном месте —
         // src/scripts/lib/deposits.ts, — и оттуда доходит и сюда, и до страницы.
-        doi: (DEPOSITS.find((record) => record.id === "corpus")?.doi?.concept ?? null) as string | null,
+        doi: (layers.some(layer => layer.id === "corpus")
+            ? DEPOSITS.find((record) => record.id === "corpus")?.doi?.concept ?? null : null) as string | null,
         citation: CITATION,
         licenseUrl: `${SITE_URL}/license`,
         layers: built.map(({ layer, files }) => ({
@@ -712,7 +729,7 @@ const run = async () => {
     await client.close();
 };
 
-run().catch((error) => {
+run().finally(() => chantExport?.close()).catch((error) => {
     console.error(error);
     process.exit(1);
 });
