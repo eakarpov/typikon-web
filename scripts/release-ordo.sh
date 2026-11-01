@@ -14,6 +14,7 @@
 #     npm run release:ordo
 #     npm run release:ordo -- --target test
 
+set -e
 . "$(dirname "$0")/release-target.sh"
 
 RULES_SRC=${RULES_SRC:-../typikon-rules}
