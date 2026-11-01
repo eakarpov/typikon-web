@@ -121,3 +121,11 @@ test('one continuous Psalter position spans parts, supports more reading and rej
  s=applyOperation(s,op(2,'mark',{blockId:'ps0',done:true,expectedCursor:1}),now);
  assert.equal(s.psalterCursor,2);assert.equal(ensureCycle(s,'2026-11-05').cursors.ps1,2);
 });
+
+test('existing v1 Psalter position survives adding a different ready variant',()=>{
+ const c=initialConfig();c.variants[0].blocks.push({id:'oldps',title:'Псалтирь',kind:'psalter',key:'psaltir',part:'evening',weekdays:[1,2,3,4,5,6,7],mode:'scheduled',unit:'kathisma',schedule:{'7':[1]}});
+ let s=createState(c);s.cursors.oldps=49;
+ const template={id:'psalter',key:'psaltir',title:'Псалтирь',status:'verified',kind:'psalter' as const};
+ s=applyOperation(s,op(0,'override',{part:'morning',templateId:'psalter',template}),now);
+ assert.equal(s.psalterCursor,49);assert.equal(ensureCycle(s,'2026-11-01').cursors['ready:psalter:morning'],49);
+});

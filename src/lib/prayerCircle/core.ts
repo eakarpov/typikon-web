@@ -114,6 +114,11 @@ export function createState(config: CircleConfig): CircleState { return {revisio
 export function ensureCycle(state: CircleState,key: string): CycleState {
     if (!validDate(key)) throw new CircleError('Неверная дата.');
     const config=state.pending&&key>=state.pending.effectiveCycle?state.pending.config:state.config;
+    if(state.psalterCursor===undefined) {
+        const variants=[...config.variants.filter(v=>v.id===config.activeId),...config.variants.filter(v=>v.id!==config.activeId)];
+        const previous=variants.flatMap(v=>v.blocks).filter(b=>b.kind==='psalter').map(b=>state.cursors[b.id]).find(n=>Number.isInteger(n)&&n>=0&&n<60);
+        if(previous!==undefined)state.psalterCursor=previous;
+    }
     if (!state.cycles[key]) {
         const saved=state.history?.[key],savedConfig=saved?.configRef?state.historyConfigs?.[saved.configRef]:undefined;
         state.cycles[key]={key,config:structuredClone(savedConfig??config),overrides:{...saved?.overrides},marks:{...saved?.marks,...(state.communionMarks??{})},counters:{...saved?.counters},cursors:{...(saved?.cursors??state.cursors)},advanced:[...(saved?.advanced??[])],...(saved?.bookmark?{bookmark:saved.bookmark}:{})};
