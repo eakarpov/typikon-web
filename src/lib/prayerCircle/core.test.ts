@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyOperation,initialConfig,createState,ensureCycle,cycleAt,blocksFor,compose,validateConfig,type Operation } from './core';
+import { availablePresets,presetVariant,applyOperation,initialConfig,createState,ensureCycle,cycleAt,blocksFor,compose,validateConfig,type Operation } from './core';
 const now=new Date('2026-11-01T13:00:00Z');
 function op(revision:number,action:Operation['action'],extra:Record<string,unknown>={},id='op-'+revision):Operation{return {id,revision,cycle:'2026-11-01',action,...extra};}
 test('local 15:00 boundary and midnight preserve a cycle',()=>{
@@ -60,4 +60,26 @@ test('apply today keeps unchanged marks and clears marks for changed content',()
  s=applyOperation(s,op(2,'config',{config,applyToday:true}),now);
  assert.equal(ensureCycle(s,'2026-11-01').marks.morning_prayerbook,true);
  assert.equal(ensureCycle(s,'2026-11-01').marks.evening_prayerbook,undefined);
+});
+
+test('a ready rule is selected atomically without changing the default, marks or pending composition',()=>{
+ let s=createState(initialConfig());s=applyOperation(s,op(0,'mark',{blockId:'evening_prayerbook',done:true}),now);
+ s=applyOperation(s,op(1,'config',{config:initialConfig()}),now);
+ const template={id:'horologion',key:'horologion',title:'Правило по Часослову',status:'verified'};
+ const select=op(2,'override',{part:'morning',templateId:template.id,template});s=applyOperation(s,select,now);
+ assert.equal(s.config.activeId,'ordinary');assert.ok(s.pending);
+ assert.equal(ensureCycle(s,'2026-11-01').marks.evening_prayerbook,true);
+ assert.equal(blocksFor(ensureCycle(s,'2026-11-01')).find(b=>b.part==='morning')?.key,'horologion');
+ assert.equal(blocksFor(ensureCycle(s,'2026-11-01')).find(b=>b.part==='evening')?.key,'na-son');
+ assert.equal(applyOperation(s,select,now),s);
+ s=applyOperation(s,op(3,'override',{part:'evening',templateId:template.id,template}),now);
+ assert.equal(s.config.variants.filter(v=>v.basedOn==='horologion').length,1);
+});
+test('ready rules do not reuse an edited personal composition and unverified sources are rejected',()=>{
+ const template={id:'horologion',key:'horologion',title:'Часослов',status:'verified'};
+ const c=initialConfig();const v=presetVariant(template,'ready:horologion');v.blocks[0].key='serafimovo';c.variants.push(v);
+ let s=createState(c);s=applyOperation(s,op(0,'override',{part:'morning',templateId:template.id,template}),now);
+ assert.equal(s.config.variants[1].blocks[0].key,'serafimovo');
+ assert.equal(blocksFor(ensureCycle(s,'2026-11-01')).find(b=>b.part==='morning')?.key,'horologion');
+ assert.throws(()=>applyOperation(s,op(1,'override',{part:'morning',templateId:'old',template:{id:'old',key:'old',title:'1636',status:'needs_collation'}}),now));
 });

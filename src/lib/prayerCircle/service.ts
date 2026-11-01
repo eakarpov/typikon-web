@@ -1,6 +1,6 @@
 import clientPromise from '@/lib/mongodb';
-import { applyOperation, createState, ensureCycle, cycleAt, CircleError, validateConfig, type CircleState, type Operation } from './core';
-import { assembleCycle } from './assembly';
+import { applyOperation, createState, ensureCycle, cycleAt, CircleError, validateConfig, type CircleState, type Operation,availablePresets } from './core';
+import { assembleCycle,getCatalog } from './assembly';
 const collection=async()=> (await clientPromise).db('typikon-users').collection<CircleState & {_id:string}>('prayerCircles');
 export async function readCircle(userId:string,cycle?:string):Promise<CircleState|null> {
     const doc=await (await collection()).findOne({_id:userId});if(!doc)return null;
@@ -27,7 +27,13 @@ export async function writeCircle(userId:string,raw:unknown,create=false):Promis
         return s;
     }
     const d=await col.findOne({_id:userId});if(!d)throw new CircleError('Сначала сохраните круг.',404);
-    const {_id,...s}=d;const next=applyOperation(s,b as Operation);
+    const {_id,...s}=d;if(s.receipts.includes(String(b.id)))return s;let operation=b as Operation;
+    if(b.action==='override'&&b.templateId!==undefined){
+        const template=availablePresets(await getCatalog()).find(t=>t.id===b.templateId);
+        if(!template)throw new CircleError('Последование ещё не проверено или недоступно.');
+        operation={...operation,template};
+    }
+    const next=applyOperation(s,operation);
     if(next===s)return s;
     if(!(await col.replaceOne({_id:userId,revision:s.revision},next)).matchedCount)throw new CircleError('Круг изменился на другом устройстве. Обновите данные.',409);
     return next;

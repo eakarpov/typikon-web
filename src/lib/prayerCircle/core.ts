@@ -48,7 +48,7 @@ const integer = (v: unknown, min:number,max:number): v is number => Number.isInt
 export function validateConfig(raw: unknown): CircleConfig {
     if (!raw || typeof raw !== 'object') throw new CircleError('Неверный круг.');
     const c = raw as CircleConfig;
-    if (!Array.isArray(c.variants) || c.variants.length<1 || c.variants.length>12 || !word(c.activeId)
+    if (!Array.isArray(c.variants) || c.variants.length<1 || c.variants.length>32 || !word(c.activeId)
         || !['m','f'].includes(c.gender) || !['cu','cu_gr'].includes(c.lang)) throw new CircleError('Проверьте варианты правила.');
     if(typeof c.timeZone!=='string'||!c.timeZone||c.timeZone.length>80)throw new CircleError('Проверьте часовой пояс.');
     try { new Intl.DateTimeFormat('ru',{timeZone:c.timeZone}).format(); } catch { throw new CircleError('Проверьте часовой пояс.'); }
@@ -75,6 +75,27 @@ export function validateConfig(raw: unknown): CircleConfig {
     // Reject oversized/unknown payloads before persistence, then retain only the public schema.
     if (JSON.stringify(c).length>60000) throw new CircleError('Слишком большой круг.');
     return {variants:c.variants.map(v=>({id:v.id,title:v.title.trim(),...(v.basedOn?{basedOn:v.basedOn}:{}),blocks:v.blocks.map(b=>({id:b.id,title:b.title,kind:b.kind,key:b.key,part:b.part,weekdays:b.weekdays,...(b.templateId?{templateId:b.templateId}:{}),...(b.count!==undefined?{count:b.count}:{}),...(b.mode?{mode:b.mode}:{}),...(b.unit?{unit:b.unit}:{}),...(b.schedule?{schedule:b.schedule}:{}),...(b.departed!==undefined?{departed:!!b.departed}:{}),...(b.chapter?{chapter:b.chapter}:{}),...(b.verseFrom?{verseFrom:b.verseFrom}:{}),...(b.verseTo?{verseTo:b.verseTo}:{})}))})),activeId:c.activeId,gender:c.gender,lang:c.lang,timeZone:c.timeZone,reminders:{morning:c.reminders.morning,evening:c.reminders.evening},...(c.communion?{communion:{date:c.communion.date,days:c.communion.days,...(c.communion.customKeys?{customKeys:c.communion.customKeys}:{})}}:{})};
+}
+export interface Preset {id:string;key:string;title:string;status:string;kind?:'template'|'psalter'}
+export function availablePresets(catalog:Catalog):Preset[] {
+    return [...catalog.templates.filter(t=>t.status==='verified'),{id:'psalter',key:'psaltir',title:'Псалтирь — в своём темпе',status:'verified',kind:'psalter' as const}];
+}
+export function presetVariant(t:Preset,id:string):Variant {
+    if(t.status!=='verified'||!word(t.id)||!word(t.key)||!['template','psalter'].includes(t.kind??'template'))throw new CircleError('Последование ещё не проверено.');
+    return {id,title:t.title,basedOn:t.id,blocks:(['evening','morning','day'] as Part[]).map(part=>({id:id+':'+part,title:t.title,kind:t.kind??'template',key:t.key,templateId:t.id,part,weekdays:[1,2,3,4,5,6,7],...(t.key==='jesus'?{count:100}:{}),...(t.kind==='psalter'?{mode:'continuous' as const,unit:'kathisma' as const,departed:false}:{})}))};
+}
+function selectPreset(s:CircleState,cycle:CycleState,op:Operation):string {
+    const t=op.template as Preset;if(!t||t.id!==op.templateId)throw new CircleError('Последование не найдено.');
+    const configs=[s.config,cycle.config,...(s.pending?[s.pending.config]:[])];
+    const signature=(v:Variant)=>JSON.stringify(v.blocks.map(b=>[b.kind,b.key,b.part,b.weekdays,b.count,b.mode,b.unit,b.departed,b.schedule]));
+    let id='ready:'+t.id;let variant=presetVariant(t,id);
+    if(configs.some(c=>c.variants.some(v=>v.id===id&&signature(v)!==signature(variant)))){id+=':'+op.id;variant=presetVariant(t,id);}
+    for(const c of configs)if(!c.variants.some(v=>v.id===id)){c.variants.push(structuredClone(variant));validateConfig(c);}
+    if(t.kind==='psalter') {
+        const cursor=op.startCursor??0;if(!integer(cursor,0,59))throw new CircleError('Неверное место Псалтири.');
+        for(const b of variant.blocks)if(s.cursors[b.id]===undefined){s.cursors[b.id]=Number(cursor)-Number(cursor)%3;cycle.cursors[b.id]=s.cursors[b.id];}
+    }
+    return id;
 }
 export function initialConfig(zone='Europe/Moscow'): CircleConfig {
     return {activeId:'ordinary',gender:'m',lang:'cu_gr',timeZone:zone,reminders:{morning:false,evening:false},variants:[{id:'ordinary',title:'Обычное правило',blocks:[
@@ -125,8 +146,10 @@ export function applyOperation(original: CircleState,op: Operation,now=new Date(
             for(const [key,snapshot] of Object.entries(s.cycles))if(key>=effectiveCycle){replaceCycleConfig(snapshot,config);}
         }
     } else if(op.action==='override') {
-        if(!['evening','morning','day'].includes(String(op.part))||!cycle.config.variants.some(v=>v.id===op.variantId)) throw new CircleError('Вариант не найден.');
-        cycle.overrides[op.part as Part]=String(op.variantId);
+        if(!['evening','morning','day'].includes(String(op.part)))throw new CircleError('Неверная часть дня.');
+        const id=op.templateId!==undefined?selectPreset(s,cycle,op):String(op.variantId);
+        if(!cycle.config.variants.some(v=>v.id===id))throw new CircleError('Вариант не найден.');
+        cycle.overrides[op.part as Part]=id;
     } else if(op.action==='bookmark') {
         if(typeof op.rowId!=='string'||op.rowId.length>240)throw new CircleError('Неверная закладка.');cycle.bookmark=op.rowId;
     } else if(op.action==='communion-plan') {

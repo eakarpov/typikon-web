@@ -1,4 +1,6 @@
 import { ObjectId } from 'mongodb';
+import { getCanon } from '@/lib/canons';
+import {horologionCanon} from './horologion';
 import clientPromise from '@/lib/mongodb';
 import { rulesDb } from '@/lib/rulesDb';
 import { canRedistribute } from '@/lib/molitvoslov/rights';
@@ -64,16 +66,23 @@ async function horologion(b:Block,date:string):Promise<BlockResult> {
         const kind=b.part==='evening'?'compline':'midnight';
         const raw=await compiler<any>('/day',{date});
         const tone=raw?.day?.tone;
-        const day=['voskresenie','ponedelnik','vtornik','sreda','chetverg','pyatnica','subbota'][weekday];
-        const canon=rulesDb()?.prepare(`SELECT c.canon_key,c.canon_id FROM canons c JOIN memories m ON m.memory_id=c.memory_id JOIN positions p ON p.position_id=c.position_id WHERE m.book='octoechos' AND m.weekday=? AND COALESCE(m.tone,c.tone)=? AND p.service=? AND c.language='cu_gr' LIMIT 1`).get(day,tone,kind) as {canon_key:string;canon_id:string}|undefined;
+        const db=rulesDb();
+        const canon=db&&horologionCanon(db,date,kind,tone);
         if(!canon)return {rows,missing:['Канон Часослова для дня и гласа не подобран.']};
         // Use structured canon lines and the book's rubric insertion marker.
-        const lines=rulesDb()!.prepare('SELECT text,ode,content_unit FROM content_items WHERE canon_id=? ORDER BY ode,item_index').all(canon.canon_id) as {text:string;ode:number;content_unit:string}[];
+        const detail=getCanon(canon.canon_id);
+        if(!detail)return {rows,missing:['Канон Часослова не найден.']};
+        const absent:string[]=[];
+        const lines:Row[]=detail.odesList.flatMap(ode=>[...ode.irmos,...ode.troparia].map((l,n)=>{
+            if(l.reference||!l.text)absent.push(`Не разрешён текст песни ${ode.ode}: ${l.reference??'пустая строка'}`);
+            return {id:`canon:${ode.ode}:${n}`,text:l.text,kind:'text',label:`Песнь ${ode.ode}`,repeatCount:l.repeat,sourceBook:'octoechos',language:'cu_gr',note:[l.marker?({slava:'Слава:',bogorodicen:'Богородичен',troicen:'Троичен',krestobogorodicen:'Крестобогородичен'}[l.marker]??'Книжная помета'):'',l.borrowed?'Текст по книжной ссылке из общего корпуса':''].filter(Boolean).join(' · ')};
+        }));
         const text=rows[rows.length-1].text;
         const matches=[...text.matchAll(/\{k\|[^}]*\}/g)];
         const marker=matches.find(m=>/(чтем|глаголем)\s+канон/.test(m[0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()));
         if(!marker)return {rows,missing:['В книге не найдено место канона.']};
-        const last=rows.pop()!;rows.push({...last,id:last.id+':before',text:text.slice(0,marker.index)},...lines.map((l,n)=>({id:`canon:${n}`,text:l.text,kind:'text',label:`Песнь ${l.ode}`,sourceBook:'octoechos',language:'cu_gr'})),{...last,id:last.id+':after',text:text.slice(marker.index!+marker[0].length)});
+        const last=rows.pop()!;rows.push({...last,id:last.id+':before',text:text.slice(0,marker.index)},...lines,{...last,id:last.id+':after',text:text.slice(marker.index!+marker[0].length)});
+        return {rows,missing:absent};
     }
     return {rows,missing:[]};
 }
