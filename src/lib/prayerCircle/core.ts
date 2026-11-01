@@ -94,7 +94,7 @@ export function presetVariant(t:Preset,id:string):Variant {
 function selectPreset(s:CircleState,cycle:CycleState,op:Operation):string {
     const t=op.template as Preset;if(!t||t.id!==op.templateId)throw new CircleError('Последование не найдено.');
     const configs=[s.config,cycle.config,...(s.pending?[s.pending.config]:[])];
-    const signature=(v:Variant)=>JSON.stringify(v.blocks.map(b=>[b.kind,b.key,b.part,b.weekdays,b.count,b.mode,b.unit,b.departed,b.schedule]));
+    const signature=(v:Variant)=>JSON.stringify(v.blocks.map(b=>[b.kind,b.key,b.part,b.weekdays,b.count,b.durationMinutes,b.placement,b.mode,b.unit,b.departed,b.schedule]));
     let id='ready:'+t.id;let variant=presetVariant(t,id);
     if(configs.some(c=>c.variants.some(v=>v.id===id&&signature(v)!==signature(variant)))){id+=':'+op.id;variant=presetVariant(t,id);}
     for(const c of configs)if(!c.variants.some(v=>v.id===id)){c.variants.push(structuredClone(variant));validateConfig(c);}

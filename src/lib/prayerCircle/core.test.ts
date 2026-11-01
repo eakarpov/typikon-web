@@ -129,3 +129,13 @@ test('existing v1 Psalter position survives adding a different ready variant',()
  s=applyOperation(s,op(0,'override',{part:'morning',templateId:'psalter',template}),now);
  assert.equal(s.psalterCursor,49);assert.equal(ensureCycle(s,'2026-11-01').cursors['ready:psalter:morning'],49);
 });
+
+test('choosing a ready rule preserves its personally timed variant',()=>{
+ const template={id:'jesus',key:'jesus',title:'Иисусова молитва',status:'verified'};
+ let s=applyOperation(createState(initialConfig()),op(0,'override',{part:'evening',templateId:'jesus',template}),now);
+ for(const config of [s.config,s.cycles['2026-11-01'].config])for(const b of config.variants.find(v=>v.id==='ready:jesus')!.blocks)b.durationMinutes=10;
+ s=applyOperation(s,op(1,'override',{part:'evening',templateId:'jesus',template}),now);
+ assert.equal(s.config.variants.find(v=>v.id==='ready:jesus')!.blocks[0].durationMinutes,10);
+ const selected=s.cycles['2026-11-01'].overrides.evening;
+ assert.notEqual(selected,'ready:jesus');assert.equal(s.config.variants.find(v=>v.id===selected)!.blocks[0].durationMinutes,undefined);
+});
