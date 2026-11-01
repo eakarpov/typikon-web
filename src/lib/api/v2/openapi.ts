@@ -727,6 +727,31 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/AppVersion") },
             },
         },
+        "/api/v2/prayer-circle/catalog": {
+            get: { tags: ["Чтения"], summary: "Источники и варианты молитвенного круга",
+                description: "Шаблоны со статусами сверки, источники, доступные каноны, акафисты и книги Писания. Непроверенные издания не предлагаются как готовые.",
+                responses: { "200": ok("#/components/schemas/PrayerCircleCatalog"), "503": errorResponse("Корпус недоступен") } },
+        },
+        "/api/v2/prayer-circle/preview": {
+            post: { tags: ["Чтения"], summary: "Собрать единое келейное последование",
+                description: "Вечерняя дата cycle, конфигурация и необязательные отметки progress. Имена и связанный план доступны по сессии и совпадающему expectedUserId; без него сборка обезличена. Ответ private, no-store; complete=false перечисляет недостающие части.",
+                requestBody: sends("#/components/schemas/PrayerCirclePreviewRequest"),
+                responses: { "200": ok("#/components/schemas/PrayerCirclePreview"), "400": errorResponse("Неверный состав или дата") } },
+        },
+        "/api/v2/prayer-circle": {
+            get: { tags: ["Чтения"], summary: "Личный круг", security: personal,
+                parameters: [{name:"cycle",in:"query",schema:{type:"string",format:"date"},description:"Вечерняя дата цикла; по умолчанию текущий цикл в часовом поясе круга"}],
+                description: "userId и state владельца; state=null до первого переноса. private, no-store.",
+                responses: {"200":ok("#/components/schemas/PrayerCircleEnvelope"),"401":needsSession} },
+            post: { tags: ["Чтения"], summary: "Перенести круг в аккаунт", security: personal,
+                description: "Создание без перезаписи существующего круга; expectedUserId должен совпадать с сессией. cursors и progress разрешают явный перенос местного прогресса.",
+                requestBody:sends("#/components/schemas/PrayerCirclePreviewRequest"),
+                responses:{"200":ok("#/components/schemas/PrayerCircleEnvelope"),"401":needsSession,"409":errorResponse("В аккаунте уже есть круг")} },
+            patch: {tags:["Чтения"],summary:"Изменить состав или прогресс круга",security:personal,
+                description:"expectedUserId должен совпадать с сессией. id — идемпотентный ID операции, revision — ожидаемая ревизия, cycle — вечерняя дата. Повторная доставка не продвигает Псалтирь повторно. config применяется со следующего цикла либо applyToday=true.",
+                requestBody:sends("#/components/schemas/PrayerCircleOperation"),
+                responses:{"200":ok("#/components/schemas/PrayerCircleEnvelope"),"401":needsSession,"400":errorResponse("Неверная операция"),"409":errorResponse("Круг изменился на другом устройстве")} },
+        },
         "/api/v2/reading-plan": {
             get: {
                 tags: ["Чтения"], summary: "Личный план и очередное чтение", security: personal,
@@ -1577,6 +1602,17 @@ export const openapi = () => ({
             },
         },
         schemas: {
+            PrayerCircleConfig: { type:"object",required:["variants","activeId","gender","lang","timeZone","reminders"], properties:{
+                variants:{type:"array",minItems:1,maxItems:12,items:{type:"object",required:["id","title","blocks"],properties:{id:{type:"string"},title:{type:"string"},basedOn:{type:"string"},blocks:{type:"array",maxItems:60,items:{$ref:"#/components/schemas/PrayerCircleBlock"}}}}},
+                activeId:{type:"string"},gender:{type:"string",enum:["m","f"]},lang:{type:"string",enum:["cu","cu_gr"]},timeZone:{type:"string"},reminders:{type:"object",properties:{morning:{type:"boolean"},evening:{type:"boolean"}}},communion:{type:"object",properties:{date:{type:"string",format:"date"},days:{type:"integer",minimum:0,maximum:40},customKeys:{type:"array",items:{type:"string"}}}}
+            }},
+            PrayerCircleBlock:{type:"object",required:["id","title","kind","key","part","weekdays"],properties:{id:{type:"string"},title:{type:"string"},kind:{type:"string",enum:["template","canon","akathist","psalter","scripture","day-readings","reading-plan"]},key:{type:"string"},part:{type:"string",enum:["evening","morning","day"]},weekdays:{type:"array",items:{type:"integer",minimum:1,maximum:7}},mode:{type:"string",enum:["continuous","scheduled","liturgical"]},unit:{type:"string",enum:["statia","kathisma"]},schedule:{type:"object",additionalProperties:{type:"array",items:{type:"integer",minimum:1,maximum:20}}},departed:{type:"boolean"},chapter:{type:"integer"},verseFrom:{type:"integer"},verseTo:{type:"integer"},count:{type:"integer",minimum:1,maximum:10000}}},
+            PrayerCircleCatalog:{type:"object",required:["version","sources","templates"],properties:{version:{type:"integer"},sources:{type:"array",items:{type:"object",properties:{id:{type:"string"},title:{type:"string"},url:{type:"string",format:"uri"},role:{type:"string",enum:["text","order","research"]},status:{type:"string"},locator:{type:"string"},checkedAt:{type:"string",format:"date"}}}},templates:{type:"array",items:{type:"object"}},options:{type:"object"}}},
+            PrayerCirclePreviewRequest:{type:"object",required:["config","cycle"],properties:{expectedUserId:{type:"string",nullable:true,description:"Ожидаемый ID сессии; обязателен при переносе и для персональных данных сборки"},config:{$ref:"#/components/schemas/PrayerCircleConfig"},cycle:{type:"string",format:"date"},progress:{type:"object"},cursors:{type:"object",additionalProperties:{type:"integer",minimum:0,maximum:59}}}},
+            PrayerCirclePreview:{type:"object",required:["cycle","sections","rows","complete","sources"],properties:{cycle:{type:"string",format:"date"},sections:{type:"array",items:{type:"object"}},rows:{type:"array",items:{type:"object",required:["id","kind","text"],properties:{id:{type:"string"},blockId:{type:"string"},kind:{type:"string"},text:{type:"string"},note:{type:"string"},repeatCount:{type:"integer"},zone:{type:"string"}}}},sources:{type:"array",items:{type:"object"}},complete:{type:"boolean"},corpusVersions:{type:"array",items:{type:"string"}},communion:{type:"object",nullable:true}}},
+            PrayerCircleEnvelope:{type:"object",required:["userId","state"],properties:{userId:{type:"string"},state:{type:"object",nullable:true,properties:{revision:{type:"integer"},config:{$ref:"#/components/schemas/PrayerCircleConfig"},pending:{type:"object"},cycles:{type:"object"},cursors:{type:"object"},communionMarks:{type:"object"},receipts:{type:"array",items:{type:"string"}}}}}},
+            PrayerCircleOperation:{type:"object",required:["id","revision","cycle","action","expectedUserId"],properties:{expectedUserId:{type:"string"},id:{type:"string"},revision:{type:"integer"},cycle:{type:"string",format:"date"},action:{type:"string",enum:["config","override","mark","counter","bookmark","communion-mark","communion-plan"]},config:{$ref:"#/components/schemas/PrayerCircleConfig"},applyToday:{type:"boolean"},blockId:{type:"string"},done:{type:"boolean"},count:{type:"integer"},rowId:{type:"string"},part:{type:"string"},variantId:{type:"string"},plan:{type:"object"}}},
+
             PlanReminder: {
                 type: "object", required: ["enabled", "time", "weekdays", "timeZone"],
                 properties: {

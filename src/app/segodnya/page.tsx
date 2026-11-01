@@ -94,6 +94,7 @@ const SegodnyaPage = async () => {
             </div>
 
             <MyTempleSelection />
+            <Link href="/prayer-circle" className="underline">Мой круг чтения и молитвы</Link>
             <PlanManager compact />
             <Link className="underline" href="/reading-collections">Мои подборки чтений</Link>
             <Link className="underline" href="/offline-readings">Чтения на неделю без сети</Link>

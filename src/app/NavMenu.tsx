@@ -53,6 +53,11 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
         fetch("/api/logout", {
             method: "POST"
         });
+        for (const key of Object.keys(localStorage)) {
+            if (key.startsWith('prayer-circle:user:') && key.includes(':preview:')) localStorage.removeItem(key);
+        }
+        sessionStorage.removeItem('prayer-circle-owner');
+        window.dispatchEvent(new Event('prayer-circle-owner-changed'));
         dispatch(AuthSlice.actions.Logout());
         router.push("/");
     }, []);
@@ -119,6 +124,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         { href: "/canons", label: "Каноны" },
                         { href: "/akathists", label: "Акафисты" },
                         { href: "/prayers", label: "Молитвы" },
+                        { href: "/prayer-circle", label: "Мой круг" },
                         // Указатели, а не собрания: они ничего не содержат сами, а
                         // ведут в «Песнопения» — и потому стоят последними в
                         // группе, к книгам которой отсылают. Зачин — вход по
