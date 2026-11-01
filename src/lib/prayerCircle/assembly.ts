@@ -1,6 +1,5 @@
-import { ObjectId } from 'mongodb';
-import { getCanon } from '@/lib/canons';
-import {horologionCanon} from './horologion';
+import {missingVerses} from './coverage';
+import {preparationSlot,dueInCycle} from './preparation';
 import clientPromise from '@/lib/mongodb';
 import { rulesDb } from '@/lib/rulesDb';
 import { canRedistribute } from '@/lib/molitvoslov/rights';
@@ -21,7 +20,12 @@ export async function compiler<T>(path:string,params:Record<string,string>={}):P
     const base=process.env.ORDO_SERVICE_URL;
     if(!base)throw new CircleError('Сборщик последований пока недоступен.',503);
     const u=new URL(path,base);for(const [k,v] of Object.entries(params))u.searchParams.set(k,v);
-    const r=await fetch(u,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+    let r=await fetch(u,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+    // A bounded upstream rejects bursts quickly. Retry once, never fan out.
+    if(r.status===503) {
+        await new Promise(resolve=>setTimeout(resolve,2000));
+        r=await fetch(u,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+    }
     if(!r.ok)throw new CircleError('Не удалось собрать последование.',503);
     return r.json();
 }
@@ -40,51 +44,14 @@ export async function getCatalog():Promise<Catalog> {
     scripture=books.map(b=>({key:b.canonId as string,title:b.name as string}));}catch{/* Prayer sources and templates remain available without the Bible database. */}
     return {...c,options:{canons,scripture,akathists:akathists.filter(a=>a.source_book==='Триодь постная, суббота 5-й седмицы'||canRedistribute(a.source_book,'cu_gr')).map(({key,title})=>({key,title}))}};
 }
-async function scripture(key:string,chapter:number,from=1,to=1000):Promise<Row[]> {
+async function scripture(key:string,chapter:number,from=1,to=1000):Promise<BlockResult> {
     const db=(await clientPromise).db('typikon');
     const edition=await editionForLang(db,DEFAULT_BIBLE_LANGUAGE);
     const book=edition?await db.collection('bible_books').findOne({editionId:edition._id,$or:[{canonId:key},{alias:key}]}):null;
-    if(!book||!edition)throw new CircleError('Издание или книга Писания не найдены.',503);
+    if(!book||!edition||edition.public===false)throw new CircleError('Издание или книга Писания не найдены.',503);
     const vs=await versesForCanonChapter(db,edition._id,book.canonId,chapter);
-    return vs.filter(v=>v.canonVerse>=from&&v.canonVerse<=to).map(v=>({id:`${chapter}:${v.canonVerse}`,kind:'text',label:`${chapter}:${v.canonVerse}`,text:v.content,language:'cu',sourceBook:'bible'}));
-}
-async function reading(id:string):Promise<Row[]> {
-    const db=(await clientPromise).db('typikon');const t=await db.collection('texts').findOne({_id:new ObjectId(id)});
-    if(!t||!t.content||t.bookId&&await db.collection('books').findOne({_id:t.bookId,public:false}))throw new CircleError('Текст недоступен.',503);
-    return [{id,kind:'text',text:t.content,footnotes:t.footnotes??[],markdown:!!t.newUi,language:t.csSource?'cu':'cu_gr',sourceBook:'library'}];
-}
-const midnightIds=['67dbc9c427c94f2d975da68a','67dbdbb0593e26758a828d09','67dbdcd6593e26758a828d0b'];
-async function horologion(b:Block,date:string):Promise<BlockResult> {
-    // Published lay-reader texts already used by the mobile rule. Never strip priest lines.
-    const weekday=new Date(date+'T12:00:00Z').getUTCDay();
-    const ids=b.part==='evening'?['67df2a9b94428ce850c0f9af']:['67e0472294428ce850c0f9bd',midnightIds[weekday===0?2:weekday===6?1:0]];
-    const rows:Row[]=[];
-    for(const id of ids)rows.push(...await reading(id));
-    // Until the calendar canon is resolved below, a rubric slot is explicitly incomplete.
-    const needs=b.part==='evening'||weekday===0;
-    if(needs) {
-        const kind=b.part==='evening'?'compline':'midnight';
-        const raw=await compiler<any>('/day',{date});
-        const tone=raw?.day?.tone;
-        const db=rulesDb();
-        const canon=db&&horologionCanon(db,date,kind,tone);
-        if(!canon)return {rows,missing:['Канон Часослова для дня и гласа не подобран.']};
-        // Use structured canon lines and the book's rubric insertion marker.
-        const detail=getCanon(canon.canon_id);
-        if(!detail)return {rows,missing:['Канон Часослова не найден.']};
-        const absent:string[]=[];
-        const lines:Row[]=detail.odesList.flatMap(ode=>[...ode.irmos,...ode.troparia].map((l,n)=>{
-            if(l.reference||!l.text)absent.push(`Не разрешён текст песни ${ode.ode}: ${l.reference??'пустая строка'}`);
-            return {id:`canon:${ode.ode}:${n}`,text:l.text,kind:'text',label:`Песнь ${ode.ode}`,repeatCount:l.repeat,sourceBook:'octoechos',language:'cu_gr',note:[l.marker?({slava:'Слава:',bogorodicen:'Богородичен',troicen:'Троичен',krestobogorodicen:'Крестобогородичен'}[l.marker]??'Книжная помета'):'',l.borrowed?'Текст по книжной ссылке из общего корпуса':''].filter(Boolean).join(' · ')};
-        }));
-        const text=rows[rows.length-1].text;
-        const matches=[...text.matchAll(/\{k\|[^}]*\}/g)];
-        const marker=matches.find(m=>/(чтем|глаголем)\s+канон/.test(m[0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()));
-        if(!marker)return {rows,missing:['В книге не найдено место канона.']};
-        const last=rows.pop()!;rows.push({...last,id:last.id+':before',text:text.slice(0,marker.index)},...lines,{...last,id:last.id+':after',text:text.slice(marker.index!+marker[0].length)});
-        return {rows,missing:absent};
-    }
-    return {rows,missing:[]};
+    const missing=missingVerses(vs.map(v=>v.canonVerse),from,to===1000?undefined:to);
+    return {missing:missing.length?[`Отсутствуют стихи ${key} ${chapter}: ${missing.join(', ')}.`]:[],rows:vs.filter(v=>v.canonVerse>=from&&v.canonVerse<=to).map(v=>({id:`${chapter}:${v.canonVerse}`,kind:'text',label:`${chapter}:${v.canonVerse}`,text:v.content,language:edition.language,sourceBook:'bible',sourceEdition:edition.code,sourceLocator:`${book.canonId} ${chapter}:${v.canonVerse}`}))};
 }
 async function psalter(b:Block,date:string,cursor:number,gender:'m'|'f',userId?:string):Promise<BlockResult> {
     let ns:number[];
@@ -108,7 +75,7 @@ async function psalter(b:Block,date:string,cursor:number,gender:'m'|'f',userId?:
         const n=ns[index];
         const ref=await compiler<{parts:{psalm:number;from:number;to:number;statia:number}[]}>('/prayer-circle/psalter',{number:String(n),statia:b.mode==='continuous'&&b.unit==='statia'?String(cursor%3):'all'});
         for(let i=0;i<ref.parts.length;i++) {
-            const part=ref.parts[i];const verses=await scripture('psaltir',part.psalm,part.from,part.to);
+            const part=ref.parts[i];const reading=await scripture('psaltir',part.psalm,part.from,part.to);const verses=reading.rows;missing.push(...reading.missing);
             if(!verses.length)missing.push(`Не удалось загрузить псалом ${part.psalm}.`);
             rows.push(...verses.map(r=>({...r,id:`${index}:${part.psalm}:${r.id}`})));
             const end=i===ref.parts.length-1||part.statia!==ref.parts[i+1].statia;
@@ -131,14 +98,15 @@ async function resolve(b:Block,date:string,cycle:CycleState,catalog:Catalog,user
     if(b.kind==='template') {
         const t=catalog.templates.find(t=>t.key===b.key&&t.status==='verified');
         if(!t)throw new CircleError('Редакция ещё не сверена.');
-        if(b.key==='horologion')return horologion(b,date);
+
     }
     if(['template','canon','akathist'].includes(b.kind)) {
-        const r=await compiler<BlockResult>('/prayer-circle/block',{date,kind:b.kind,key:b.key,lang:cycle.config.lang,gender:cycle.config.gender,count:String(b.count??100)});
+        const r=await compiler<BlockResult>('/prayer-circle/block',{date,kind:b.kind,key:b.key,part:b.part,lang:cycle.config.lang,gender:cycle.config.gender,count:String(b.count??100)});
+        if(b.key==='jesus'&&b.durationMinutes)r.rows=r.rows.map(row=>({...row,repeatCount:1,note:`Читать в течение ${b.durationMinutes} мин. Продолжительность назначена вами.`}));
         const refused=r.rows.filter(r=>r.redistributable!==true);
         return {...r,rows:r.rows.filter(r=>r.redistributable===true),missing:[...r.missing,...(refused.length?['Некоторые тексты не разрешены к выдаче.']:[])]};
     }
-    if(b.kind==='scripture'){const rows=await scripture(b.key,b.chapter!,b.verseFrom,b.verseTo);return {rows,missing:rows.length?[]:['Выбранные стихи не найдены в издании.']};}
+    if(b.kind==='scripture')return scripture(b.key,b.chapter!,b.verseFrom,b.verseTo);
     if(b.kind==='psalter')return psalter(b,date,cycle.cursors[b.id]??0,cycle.config.gender,userId);
     if(b.kind==='reading-plan') {
         if(!userId)return {rows:[],missing:['Войдите для подключения личного плана.']};
@@ -157,25 +125,36 @@ async function resolve(b:Block,date:string,cycle:CycleState,catalog:Catalog,user
     return {rows,missing:rows.length?[]:['Чтения дня не найдены.']};
 }
 export async function assembleCycle(cycle:CycleState,userId?:string) {
-    const catalog=await getCatalog(),blocks=blocksFor(cycle);const sections:{block:Block;date:string;missing:string[];sources:string[];changes:unknown[]}[]=[];
-    let rows:Row[]=[];const versions=new Set<string>();let embeddingBase:string|undefined;
+    const catalog=await getCatalog(),blocks=blocksFor(cycle);const sections:{block:Block;cursor?:number;date:string;missing:string[];sources:string[];changes:unknown[];note?:string}[]=[];
+    let rows:Row[]=[];const versions=new Set<string>(catalog.corpusVersion?[catalog.corpusVersion]:[]);let embeddingBase:string|undefined;
     // Sequential bounded assembly avoids opening dozens of upstream requests per client.
     for(const b of blocks) {
         const date=b.part==='evening'?cycle.key:shiftDate(cycle.key,1);let r:BlockResult;
         try{r=await resolve(b,date,cycle,catalog,userId);}catch(e){r={rows:[],missing:[e instanceof CircleError?e.message:'Не удалось загрузить этот блок.']};}
-        const template=catalog.templates.find(t=>t.key===b.key);const sources=template?.sources??(b.kind==='canon'||b.kind==='akathist'?['kelia-order']:b.kind==='psalter'?['sledpsalt']:[]);
-        sections.push({block:b,date,missing:r.missing,sources,changes:r.changes??[]});if(r.version)versions.add(r.version);
-        const content=r.rows.map(row=>({...row,id:`${b.id}:${row.id}`,blockId:b.id}));
+        const template=catalog.templates.find(t=>t.key===b.key);const sources=template?.sources??(b.kind==='canon'||b.kind==='akathist'?['kelia-order']:b.kind==='psalter'?['bible-eliz','psalter-prayers','sledpsalt']:b.kind==='scripture'||b.kind==='day-readings'?['bible-eliz']:[]);
+        sections.push({block:b,...(b.kind==='psalter'&&b.mode==='continuous'?{cursor:cycle.cursors[b.id]??0}:{}),date,missing:r.missing,sources,changes:r.changes??[],note:template?.note});if(r.version)versions.add(r.version);
+        const content=r.rows.map(row=>({...row,id:`${b.id}:${row.id}`,legacyId:row.legacyId?`${b.id}:${row.legacyId}`:undefined,blockId:b.id}));
         const heading:Row={id:`${b.id}:heading`,blockId:b.id,kind:'heading',text:b.title};
         const previous=sections.find(s=>s.block.id===embeddingBase)?.block;
-        const canEmbed=previous?.part===b.part&&(['canon','akathist'].includes(b.kind)||b.kind==='template'&&b.key==='trekhkanonnik');
+        const scheme=catalog.compositionRules?.find(r=>r.bases.includes(previous?.key??'')&&r.supplements.includes(b.kind==='template'?b.key:b.kind));
+        const canEmbed=b.placement==='embedded'&&!!scheme&&previous?.part===b.part&&(['canon','akathist'].includes(b.kind)||b.kind==='template'&&b.key==='trekhkanonnik');
+        if(b.placement==='embedded'&&(!canEmbed||!rows.some(row=>row.blockId===previous?.id&&row.zone==='closing'))) {
+            sections[sections.length-1].missing.push('Для этого состава и дня нет проверенного места включения. Показано самостоятельное чтение; выберите его в настройке блока.');
+        }
         if(canEmbed) {
             const start=rows.findIndex(row=>row.blockId===previous.id);const prefix=rows.slice(0,start);
             rows=[...prefix,...compose(rows.slice(start),[heading,...content])];
         } else {rows.push(heading,...content);embeddingBase=b.kind==='template'&&['utrennie','na-son'].includes(b.key)?b.id:undefined;}
     }
     const communion=await assembleCommunion(cycle,catalog);
-    return {communion,cycle:cycle.key,sections,rows,sources:catalog.sources,corpusVersions:[...versions],complete:sections.every(s=>!s.missing.length)&&(!communion||communion.sections.every(s=>!s.missing.length)),bookmark:cycle.bookmark??null,marks:cycle.marks,counters:cycle.counters};
+    const readerSections=sections.map(s=>({id:s.block.id,title:s.block.title}));
+    for(const section of communion?.sections??[])if(section.due) {
+        const id=`communion:${communion!.date}:${section.id}`;
+        readerSections.push({id,title:section.title});
+        rows.push({id:id+':heading',blockId:id,kind:'heading',text:section.title},...section.rows.map(r=>({...r,id:id+':'+r.id,blockId:id})));
+    }
+    const bookmark=cycle.bookmark?(rows.find(r=>r.legacyId===cycle.bookmark||r.id===cycle.bookmark)?.id??null):null;
+    return {communion,cycle:cycle.key,sections,readerSections,rows,sources:catalog.sources,corpusVersions:[...versions],complete:sections.every(s=>!s.missing.length)&&(!communion||communion.sections.filter(s=>s.due).every(s=>!s.missing.length)),bookmark,bookmarkMissing:!!cycle.bookmark&&!bookmark,marks:cycle.marks,counters:cycle.counters};
 }
 
 async function assembleCommunion(cycle:CycleState,catalog:Catalog) {
@@ -187,11 +166,16 @@ async function assembleCommunion(cycle:CycleState,catalog:Catalog) {
         catch{sections.push({id,title,rows:[],missing:['Не удалось загрузить чтение.']});}
     }
     if(plan.customKeys) {
-        for(const [i,key] of plan.customKeys.entries())await add('custom:'+i,catalog.templates.find(t=>t.key===key)?.title??key,'template',key);
+        const seen:Record<string,number>={};
+        for(const key of plan.customKeys) {
+            const occurrence=seen[key]??0;seen[key]=occurrence+1;
+            await add(`custom:${key}:${occurrence}`,catalog.templates.find(t=>t.key===key)?.title??key,'template',key);
+        }
     } else {
         const combined=await compiler<BlockResult>('/prayer-circle/block',{date:plan.date,kind:'template',key:'trekhkanonnik',lang:cycle.config.lang,gender:cycle.config.gender}).catch(()=>null);
         const pascha=combined?.changes?.some((p:any)=>p.period==='svetlaya');
-        if(pascha)sections.push({id:'pascha',title:'Пасхальный канон',rows:combined!.rows,missing:combined!.missing});
+        if(!combined)sections.push({id:'canons',title:'Каноны подготовки',rows:[],missing:['Не удалось определить календарный состав подготовки. Повторите загрузку.']});
+        else if(pascha)sections.push({id:'pascha',title:'Пасхальный канон',rows:combined!.rows,missing:combined!.missing});
         else {
             await add('canon:0','Канон покаянный','canon','kanon-pokayanny');
             await add('canon:1','Канон Богородице','canon','kanon-bogorodice');
@@ -204,5 +188,9 @@ async function assembleCommunion(cycle:CycleState,catalog:Catalog) {
         else service.missing.push('Не найдена граница молитв ко Причащению. Последование сохранено целиком.');
     }
     await add('thanksgiving','Благодарственные по Причащении','template','blagodarstvennye');
-    return {...plan,sections};
+    const preparatory=sections.filter(s=>!['service','prayers','thanksgiving'].includes(s.id));
+    return {...plan,sections:sections.map(s=>{
+        const slot=preparationSlot(plan,s.id,Math.max(0,preparatory.indexOf(s)),preparatory.length);
+        return {...s,...slot,due:dueInCycle(cycle.key,slot.date,slot.part)};
+    })};
 }

@@ -17,6 +17,7 @@ export async function writeCircle(userId:string,raw:unknown,create=false):Promis
         const known=new Set(s.config.variants.flatMap(v=>v.blocks).map(b=>b.id));
         const cursors=b.cursors as Record<string,unknown>|undefined;
         for(const [id,value] of Object.entries(cursors??{}))if(known.has(id)&&Number.isInteger(value)&&Number(value)>=0&&Number(value)<60){s.cursors[id]=Number(value);snapshot.cursors[id]=Number(value);}
+        if(b.psalterCursor!==undefined){if(!Number.isInteger(b.psalterCursor)||Number(b.psalterCursor)<0||Number(b.psalterCursor)>59)throw new CircleError('Неверное место Псалтири.');s.psalterCursor=Number(b.psalterCursor);}
         const progress=b.progress as Record<string,any>|undefined;
         for(const [id,value] of Object.entries(progress?.marks??{}))if(typeof value==='boolean'){
             if(known.has(id))snapshot.marks[id]=value;

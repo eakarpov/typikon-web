@@ -49,14 +49,16 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
         router.refresh();
     }, [router]);
 
-    const onLogout = useCallback(() => {
-        fetch("/api/logout", {
-            method: "POST"
-        });
+    const onLogout = useCallback(async () => {
+        try {
+            const response=await fetch("/api/logout", {method:"POST"});
+            if(!response.ok)throw Error();
+        } catch {window.alert("Не удалось выйти из аккаунта. Проверьте сеть и повторите.");return;}
         for (const key of Object.keys(localStorage)) {
             if (key.startsWith('prayer-circle:user:') && key.includes(':preview:')) localStorage.removeItem(key);
         }
         sessionStorage.removeItem('prayer-circle-owner');
+        localStorage.removeItem('prayer-circle-offline-owner');
         window.dispatchEvent(new Event('prayer-circle-owner-changed'));
         dispatch(AuthSlice.actions.Logout());
         router.push("/");

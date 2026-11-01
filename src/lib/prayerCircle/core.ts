@@ -2,25 +2,26 @@ export type Part = 'evening' | 'morning' | 'day';
 export type BlockKind = 'template' | 'canon' | 'akathist' | 'psalter' | 'scripture' | 'day-readings' | 'reading-plan';
 export interface Block {
     id: string; title: string; kind: BlockKind; key: string; part: Part; weekdays: number[];
-    templateId?: string; count?: number; mode?: 'continuous' | 'scheduled' | 'liturgical';
+    templateId?: string; count?: number; durationMinutes?: number; placement?: 'standalone'|'embedded'; mode?: 'continuous' | 'scheduled' | 'liturgical';
     unit?: 'statia' | 'kathisma'; schedule?: Record<string, number[]>; departed?: boolean;
     chapter?: number; verseFrom?: number; verseTo?: number;
 }
 export interface Variant { id: string; title: string; blocks: Block[]; basedOn?: string }
 export interface CircleConfig {
     variants: Variant[]; activeId: string; gender: 'm' | 'f'; lang: 'cu' | 'cu_gr'; timeZone: string;
+    readerFont?: 'civil'|'church';
     reminders: { morning: boolean; evening: boolean };
     communion?: { date: string; days: number; customKeys?: string[] };
 }
 export interface Row {
-    id: string; blockId?: string; text: string; label?: string | null; kind: string; note?: string | null;
-    repeatCount?: number; poklon?: string | boolean | null; language?: string; sourceBook?: string;
+    id: string; legacyId?:string; contentKey?:string; sourceIds?:string[]; blockId?: string; text: string; label?: string | null; kind: string; note?: string | null;
+    repeatCount?: number; poklon?: string | boolean | null; language?: string; sourceBook?: string; sourceEdition?:string; sourceLocator?:string;
     redistributable?: boolean; zone?: string; footnotes?: string[]; markdown?: boolean;
 }
 export interface BlockResult { rows: Row[]; missing: string[]; changes?: unknown[]; version?: string }
-export interface Source { id: string; title: string; url: string; role: string; status: string; locator?: string; edition?: string }
-export interface Template { id: string; title: string; key: string; part: Part; status: string; sources: string[]; izvod: string; tradition: string; celebration: string }
-export interface Catalog { version: number; sources: Source[]; templates: Template[]; options?: { canons: {key:string;title:string}[]; akathists: {key:string;title:string}[]; scripture: {key:string;title:string}[] } }
+export interface Source { id: string; title: string; url: string; role: string; status: string; locator?: string; edition?: string; checkedAt?:string; purpose?:string; bibliography?:{title?:string;publisher?:string;year?:number};scan?:{transcription?:string} }
+export interface Template { id: string; title: string; key: string; part: Part; status: string; sources: string[]; izvod: string; tradition: string; celebration: string; note?:string }
+export interface Catalog { version: number; corpusVersion?:string; compositionRules?:{id:string;edition:string;bases:string[];supplements:string[];sources:string[]}[]; sources: Source[]; templates: Template[]; options?: { canons: {key:string;title:string}[]; akathists: {key:string;title:string}[]; scripture: {key:string;title:string}[] } }
 export interface CycleState {
     key: string; config: CircleConfig; overrides: Partial<Record<Part, string>>;
     marks: Record<string, boolean>; counters: Record<string, number>; bookmark?: string;
@@ -29,6 +30,9 @@ export interface CycleState {
 export interface CircleState {
     revision: number; config: CircleConfig; communionMarks: Record<string,boolean>; pending?: { effectiveCycle: string; config: CircleConfig };
     cycles: Record<string, CycleState>; cursors: Record<string, number>; receipts: string[];
+    psalterCursor?:number;
+    historyConfigs?:Record<string,CircleConfig>;
+    history?: Record<string,{blocks:{id:string;title:string;part:Part;done:boolean}[];configRef?:string;marks?:Record<string,boolean>;counters?:Record<string,number>;cursors?:Record<string,number>;advanced?:string[];overrides?:Partial<Record<Part,string>>;bookmark?:string}>;
 }
 export class CircleError extends Error { constructor(message: string, public status = 400) { super(message); } }
 export const dateKey = (d: Date) => d.toISOString().slice(0,10);
@@ -52,6 +56,7 @@ export function validateConfig(raw: unknown): CircleConfig {
         || !['m','f'].includes(c.gender) || !['cu','cu_gr'].includes(c.lang)) throw new CircleError('Проверьте варианты правила.');
     if(typeof c.timeZone!=='string'||!c.timeZone||c.timeZone.length>80)throw new CircleError('Проверьте часовой пояс.');
     try { new Intl.DateTimeFormat('ru',{timeZone:c.timeZone}).format(); } catch { throw new CircleError('Проверьте часовой пояс.'); }
+    if(c.readerFont!==undefined&&!['civil','church'].includes(c.readerFont))throw new CircleError('Выберите шрифт читателя.');
     if (!c.reminders || typeof c.reminders.morning !== 'boolean' || typeof c.reminders.evening !== 'boolean') throw new CircleError('Проверьте напоминания.');
     const ids = new Set<string>(), blockIds = new Set<string>();
     for (const v of c.variants) {
@@ -62,6 +67,8 @@ export function validateConfig(raw: unknown): CircleConfig {
                 || !['evening','morning','day'].includes(b.part) || !['template','canon','akathist','psalter','scripture','day-readings','reading-plan'].includes(b.kind)
                 || !Array.isArray(b.weekdays) || !b.weekdays.length || b.weekdays.length>7 || b.weekdays.some(d=>!integer(d,1,7)) || new Set(b.weekdays).size!==b.weekdays.length) throw new CircleError('Проверьте блок и дни недели.');
             blockIds.add(b.id);
+            if(b.placement!==undefined&&!['standalone','embedded'].includes(b.placement))throw new CircleError('Выберите способ включения канона.');
+            if(b.durationMinutes!==undefined&&!integer(b.durationMinutes,1,240))throw new CircleError('Продолжительность от 1 до 240 минут.');
             if (b.count!==undefined && !integer(b.count,1,10000)) throw new CircleError('Число повторений от 1 до 10000.');
             if (b.kind==='psalter') {
                 if (!['continuous','scheduled','liturgical'].includes(b.mode??'') || !['statia','kathisma'].includes(b.unit??'')) throw new CircleError('Выберите способ чтения Псалтири.');
@@ -74,7 +81,7 @@ export function validateConfig(raw: unknown): CircleConfig {
     if (c.communion && (!validDate(c.communion.date)||!integer(c.communion.days,0,40)||c.communion.customKeys!==undefined&&(!Array.isArray(c.communion.customKeys)||c.communion.customKeys.length>20||c.communion.customKeys.some(k=>!word(k))))) throw new CircleError('Проверьте подготовку к Причащению.');
     // Reject oversized/unknown payloads before persistence, then retain only the public schema.
     if (JSON.stringify(c).length>60000) throw new CircleError('Слишком большой круг.');
-    return {variants:c.variants.map(v=>({id:v.id,title:v.title.trim(),...(v.basedOn?{basedOn:v.basedOn}:{}),blocks:v.blocks.map(b=>({id:b.id,title:b.title,kind:b.kind,key:b.key,part:b.part,weekdays:b.weekdays,...(b.templateId?{templateId:b.templateId}:{}),...(b.count!==undefined?{count:b.count}:{}),...(b.mode?{mode:b.mode}:{}),...(b.unit?{unit:b.unit}:{}),...(b.schedule?{schedule:b.schedule}:{}),...(b.departed!==undefined?{departed:!!b.departed}:{}),...(b.chapter?{chapter:b.chapter}:{}),...(b.verseFrom?{verseFrom:b.verseFrom}:{}),...(b.verseTo?{verseTo:b.verseTo}:{})}))})),activeId:c.activeId,gender:c.gender,lang:c.lang,timeZone:c.timeZone,reminders:{morning:c.reminders.morning,evening:c.reminders.evening},...(c.communion?{communion:{date:c.communion.date,days:c.communion.days,...(c.communion.customKeys?{customKeys:c.communion.customKeys}:{})}}:{})};
+    return {variants:c.variants.map(v=>({id:v.id,title:v.title.trim(),...(v.basedOn?{basedOn:v.basedOn}:{}),blocks:v.blocks.map(b=>({id:b.id,title:b.title,kind:b.kind,key:b.key,part:b.part,weekdays:b.weekdays,...(b.templateId?{templateId:b.templateId}:{}),...(b.count!==undefined?{count:b.count}:{}),...(b.durationMinutes?{durationMinutes:b.durationMinutes}:{}),...(b.placement?{placement:b.placement}:{}),...(b.mode?{mode:b.mode}:{}),...(b.unit?{unit:b.unit}:{}),...(b.schedule?{schedule:b.schedule}:{}),...(b.departed!==undefined?{departed:!!b.departed}:{}),...(b.chapter?{chapter:b.chapter}:{}),...(b.verseFrom?{verseFrom:b.verseFrom}:{}),...(b.verseTo?{verseTo:b.verseTo}:{})}))})),activeId:c.activeId,...(c.readerFont?{readerFont:c.readerFont}:{}),gender:c.gender,lang:c.lang,timeZone:c.timeZone,reminders:{morning:c.reminders.morning,evening:c.reminders.evening},...(c.communion?{communion:{date:c.communion.date,days:c.communion.days,...(c.communion.customKeys?{customKeys:c.communion.customKeys}:{})}}:{})};
 }
 export interface Preset {id:string;key:string;title:string;status:string;kind?:'template'|'psalter'}
 export function availablePresets(catalog:Catalog):Preset[] {
@@ -92,8 +99,8 @@ function selectPreset(s:CircleState,cycle:CycleState,op:Operation):string {
     if(configs.some(c=>c.variants.some(v=>v.id===id&&signature(v)!==signature(variant)))){id+=':'+op.id;variant=presetVariant(t,id);}
     for(const c of configs)if(!c.variants.some(v=>v.id===id)){c.variants.push(structuredClone(variant));validateConfig(c);}
     if(t.kind==='psalter') {
-        const cursor=op.startCursor??0;if(!integer(cursor,0,59))throw new CircleError('Неверное место Псалтири.');
-        for(const b of variant.blocks)if(s.cursors[b.id]===undefined){s.cursors[b.id]=Number(cursor)-Number(cursor)%3;cycle.cursors[b.id]=s.cursors[b.id];}
+        const cursor=s.psalterCursor??op.startCursor??0;if(!integer(cursor,0,59))throw new CircleError('Неверное место Псалтири.');
+        for(const b of variant.blocks)if(s.cursors[b.id]===undefined){s.psalterCursor??=Number(cursor);s.cursors[b.id]=Number(cursor);cycle.cursors[b.id]=s.cursors[b.id];}
     }
     return id;
 }
@@ -107,10 +114,41 @@ export function createState(config: CircleConfig): CircleState { return {revisio
 export function ensureCycle(state: CircleState,key: string): CycleState {
     if (!validDate(key)) throw new CircleError('Неверная дата.');
     const config=state.pending&&key>=state.pending.effectiveCycle?state.pending.config:state.config;
-    if (!state.cycles[key]) state.cycles[key]={key,config:structuredClone(config),overrides:{},marks:{...(state.communionMarks??{})},counters:{},cursors:{...state.cursors},advanced:[]};
+    if (!state.cycles[key]) {
+        const saved=state.history?.[key],savedConfig=saved?.configRef?state.historyConfigs?.[saved.configRef]:undefined;
+        state.cycles[key]={key,config:structuredClone(savedConfig??config),overrides:{...saved?.overrides},marks:{...saved?.marks,...(state.communionMarks??{})},counters:{...saved?.counters},cursors:{...(saved?.cursors??state.cursors)},advanced:[...(saved?.advanced??[])],...(saved?.bookmark?{bookmark:saved.bookmark}:{})};
+    }
     // Keep the latest forty opened cycles; ongoing sequential cursors live separately.
-    const keys=Object.keys(state.cycles).filter(k=>k!==key).sort();for (const old of keys.slice(0,-39)) delete state.cycles[old];
+    const keys=Object.keys(state.cycles).filter(k=>k!==key).sort();for (const old of keys.slice(0,-39)) {
+        const previous=state.cycles[old];
+        const serialized=JSON.stringify(previous.config);let hash=2166136261;
+        for(let i=0;i<serialized.length;i++)hash=Math.imul(hash^serialized.charCodeAt(i),16777619)>>>0;
+        const configs=state.historyConfigs??={};let ref=String(hash),suffix=0;
+        while(configs[ref]&&JSON.stringify(configs[ref])!==serialized)ref=hash+'-'+(++suffix);
+        configs[ref]=structuredClone(previous.config);
+        (state.history??={})[old]={blocks:blocksFor(previous).map(b=>({id:b.id,title:b.title,part:b.part,done:previous.marks[b.id]===true})),configRef:ref,marks:{...previous.marks},counters:{...previous.counters},cursors:{...previous.cursors},advanced:[...previous.advanced],overrides:{...previous.overrides},...(previous.bookmark?{bookmark:previous.bookmark}:{})};
+        delete state.cycles[old];
+    }
+    const plan=state.cycles[key].config.communion;
+    const occurrences:Record<string,number>={};
+    for(const [index,template] of (plan?.customKeys??[]).entries()) {
+        const ordinal=occurrences[template]??0;occurrences[template]=ordinal+1;
+        const old=`communion:${plan!.date}:custom:${index}`,next=`communion:${plan!.date}:custom:${template}:${ordinal}`;
+        const mark=(state.communionMarks??{})[old];
+        if(typeof mark==='boolean'&&(state.communionMarks??{})[next]===undefined)(state.communionMarks??={})[next]=mark;
+    }
     Object.assign(state.cycles[key].marks,state.communionMarks??{});
+    // A preview does not reserve future sequential readings. Rebase uncompleted
+    // later cycles after an earlier reading advances, including saved v1 states.
+    const cycle=state.cycles[key];
+    for(const block of blocksFor(cycle)) {
+        if(block.kind!=='psalter'||block.mode!=='continuous'||cycle.advanced.includes(block.id))continue;
+        const cursor=state.psalterCursor??state.cursors[block.id]??0;
+        if(cycle.cursors[block.id]!==cursor) {
+            cycle.cursors[block.id]=cursor;
+            if(cycle.bookmark?.startsWith(block.id+':'))delete cycle.bookmark;
+        }
+    }
     return state.cycles[key];
 }
 export function blocksFor(cycle: CycleState): Block[] {
@@ -120,8 +158,16 @@ export function blocksFor(cycle: CycleState): Block[] {
         return (v?.blocks??[]).filter(b=>b.part===part&&b.weekdays.includes(day));
     });
 }
+export function historyEntries(state:CircleState,now=new Date()) {
+    const records={...state.history,...Object.fromEntries(Object.entries(state.cycles).map(([key,c])=>[key,{blocks:blocksFor(c).map(b=>({id:b.id,title:b.title,part:b.part,done:c.marks[b.id]===true}))}]))};
+    const first=Object.keys(records).sort()[0];
+    const result=Object.entries(records).map(([date,value])=>({date,blocks:value.blocks,unopened:false}));
+    let date=cycleAt(now,state.config.timeZone);
+    for(let n=0;first&&date>=first&&n<90;n++,date=shiftDate(date,-1))if(!records[date])result.push({date,blocks:[],unopened:true});
+    return result.sort((a,b)=>b.date.localeCompare(a.date));
+}
 function replaceCycleConfig(cycle:CycleState,config:CircleConfig) {
-    const content=(b:Block)=>JSON.stringify([b.kind,b.key,b.part,b.templateId,b.count,b.mode,b.unit,b.schedule,b.departed,b.chapter,b.verseFrom,b.verseTo]);
+    const content=(b:Block)=>JSON.stringify([b.kind,b.key,b.part,b.templateId,b.count,b.durationMinutes,b.placement,b.mode,b.unit,b.schedule,b.departed,b.chapter,b.verseFrom,b.verseTo]);
     const old=new Map(cycle.config.variants.flatMap(v=>v.blocks).map(b=>[b.id,content(b)]));
     const compatible=new Set(config.variants.flatMap(v=>v.blocks).filter(b=>old.get(b.id)===content(b)).map(b=>b.id));
     for(const id of Object.keys(cycle.marks))if(!id.startsWith('communion:')&&!compatible.has(id))delete cycle.marks[id];
@@ -129,15 +175,16 @@ function replaceCycleConfig(cycle:CycleState,config:CircleConfig) {
     // Keep advancement receipts even after a changed block, so applying today cannot reread-advance it twice.
     cycle.config=structuredClone(config);cycle.overrides={};
 }
-export type Operation = {id:string;revision:number;cycle:string;action:'config'|'override'|'mark'|'bookmark'|'counter'|'communion-mark'|'communion-plan';[key:string]:unknown};
+export type Operation = {id:string;revision:number;cycle:string;action:'config'|'override'|'mark'|'next'|'bookmark'|'counter'|'communion-mark'|'communion-plan';[key:string]:unknown};
 export function applyOperation(original: CircleState,op: Operation,now=new Date()): CircleState {
     if (!word(op.id)||!validDate(op.cycle)) throw new CircleError('Неверная операция.');
     if (original.receipts.includes(op.id)) return original;
     if (op.revision!==original.revision) throw new CircleError('Круг изменился на другом устройстве. Обновите данные; ваши изменения сохранены локально.',409);
     const s=structuredClone(original),cycle=ensureCycle(s,op.cycle);
+    for(const id of Object.keys(s.communionMarks??{}))if(/^communion:.*:custom:\d+$/.test(id))delete s.communionMarks[id];
     if(op.action==='config') {
         const config=validateConfig(op.config);const current=cycleAt(now,s.config.timeZone);
-        for(const b of config.variants.flatMap(v=>v.blocks))if(b.kind==='psalter'&&s.cursors[b.id]===undefined){s.cursors[b.id]=0;cycle.cursors[b.id]=0;}
+        for(const b of config.variants.flatMap(v=>v.blocks))if(b.kind==='psalter'&&s.cursors[b.id]===undefined){s.cursors[b.id]=s.psalterCursor??0;cycle.cursors[b.id]=s.cursors[b.id];}
         if(op.applyToday===true) {
             const target=ensureCycle(s,current);replaceCycleConfig(target,config);s.config=config;delete s.pending;
             for(const [key,snapshot] of Object.entries(s.cycles))if(key>current){replaceCycleConfig(snapshot,config);}
@@ -145,6 +192,8 @@ export function applyOperation(original: CircleState,op: Operation,now=new Date(
             const effectiveCycle=shiftDate(current,1);s.pending={effectiveCycle,config};
             for(const [key,snapshot] of Object.entries(s.cycles))if(key>=effectiveCycle){replaceCycleConfig(snapshot,config);}
         }
+        const effective=op.applyToday===true?current:shiftDate(current,1);
+        for(const date of Object.keys(s.history??{}))if(date>=effective)replaceCycleConfig(ensureCycle(s,date),config);
     } else if(op.action==='override') {
         if(!['evening','morning','day'].includes(String(op.part)))throw new CircleError('Неверная часть дня.');
         const id=op.templateId!==undefined?selectPreset(s,cycle,op):String(op.variantId);
@@ -167,11 +216,22 @@ export function applyOperation(original: CircleState,op: Operation,now=new Date(
     } else {
         const b=blocksFor(cycle).find(b=>b.id===op.blockId);if(!b)throw new CircleError('Блок отсутствует в этом дне.');
         if(op.action==='mark') {
+            if(b.kind==='psalter'&&b.mode==='continuous'&&op.expectedCursor!==undefined&&op.expectedCursor!==(cycle.cursors[b.id]??0))throw new CircleError('Место Псалтири изменилось. Обновите чтение перед отметкой.',409);
             if(typeof op.done!=='boolean')throw new CircleError('Неверная отметка.');cycle.marks[b.id]=op.done;
             if(op.done && b.kind==='psalter'&&b.mode==='continuous'&&!cycle.advanced.includes(b.id)) {
-                if((s.cursors[b.id]??0)!==(cycle.cursors[b.id]??0))throw new CircleError('Место Псалтири изменилось. Обновите круг.',409);
-                s.cursors[b.id]=((cycle.cursors[b.id]??0)+(b.unit==='statia'?1:3))%60;cycle.advanced.push(b.id);
+                if((s.psalterCursor??s.cursors[b.id]??0)!==(cycle.cursors[b.id]??0))throw new CircleError('Место Псалтири изменилось. Обновите круг.',409);
+                const cursor=cycle.cursors[b.id]??0;
+                s.psalterCursor=(b.unit==='statia'?cursor+1:(Math.floor(cursor/3)+1)*3)%60;
+                for(const config of [s.config,s.pending?.config,...Object.values(s.cycles).map(c=>c.config)])for(const block of config?.variants.flatMap(v=>v.blocks)??[])if(block.kind==='psalter')s.cursors[block.id]=s.psalterCursor;
+                cycle.advanced.push(b.id);
+                for(const date of Object.keys(s.cycles))ensureCycle(s,date);
             }
+        } else if(op.action==='next') {
+            if(b.kind!=='psalter'||b.mode!=='continuous'||!cycle.marks[b.id]||!cycle.advanced.includes(b.id))throw new CircleError('Сначала отметьте текущее чтение Псалтири.');
+            if(op.expectedCursor!==(cycle.cursors[b.id]??0))throw new CircleError('Место Псалтири изменилось. Обновите круг.',409);
+            cycle.marks[b.id]=false;cycle.advanced=cycle.advanced.filter(id=>id!==b.id);
+            cycle.cursors[b.id]=s.psalterCursor??s.cursors[b.id]??0;
+            if(cycle.bookmark?.startsWith(b.id+':'))delete cycle.bookmark;
         } else if(op.action==='counter') {
             if(!integer(op.count,0,b.key==='bogorodichnoe'?150:b.count??10000)) throw new CircleError('Неверный счётчик.');cycle.counters[b.id]=op.count;
         } else throw new CircleError('Неизвестная операция.');

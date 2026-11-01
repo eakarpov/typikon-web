@@ -91,6 +91,10 @@ if [ -z "$SVC" ] || printf '%s' "$SVC" | grep -qE '"error": ?"'; then
     exit 1
 fi
 echo "служба устава собирает"
+# The personal circle needs its own real corpus assembly, not just /services.
+CIRCLE=$(curl -fsS -m 45 "http://127.0.0.1:8767/prayer-circle/block?date=$TODAY&key=utrennie")
+printf '%s' "$CIRCLE" | python3 -c 'import json,sys;d=json.load(sys.stdin);assert d.get("rows") and not d.get("missing"),d.get("missing");print("Личный круг: текст собран, версия",d.get("version"))'
+
 
 # Сайт читает окружение при запуске, а мы его только что заменили: без
 # перезапуска он не увидит ORDO_SERVICE_URL и решит, что службы нет.

@@ -83,3 +83,41 @@ test('ready rules do not reuse an edited personal composition and unverified sou
  assert.equal(blocksFor(ensureCycle(s,'2026-11-01')).find(b=>b.part==='morning')?.key,'horologion');
  assert.throws(()=>applyOperation(s,op(1,'override',{part:'morning',templateId:'old',template:{id:'old',key:'old',title:'1636',status:'needs_collation'}}),now));
 });
+
+test('future previews follow completed reading without changing completed history',()=>{
+ const c=initialConfig();c.variants[0].blocks=[{id:'ps',title:'Псалтирь',kind:'psalter',key:'psaltir',part:'evening',weekdays:[1,2,3,4,5,6,7],mode:'continuous',unit:'kathisma'}];
+ let s=createState(c);ensureCycle(s,'2026-11-01');ensureCycle(s,'2026-11-02');ensureCycle(s,'2026-11-06');
+ s=applyOperation(s,op(0,'mark',{blockId:'ps',done:true}),now);
+ assert.equal(ensureCycle(s,'2026-11-01').cursors.ps??0,0);
+ assert.equal(ensureCycle(s,'2026-11-02').cursors.ps,3);
+ s=applyOperation(s,{...op(1,'mark',{blockId:'ps',done:true}),cycle:'2026-11-02'},now);
+ assert.equal(s.cursors.ps,6);assert.equal(ensureCycle(s,'2026-11-06').cursors.ps,6);
+});
+test('finishing a kathisma after changing unit preserves the next statia boundary',()=>{
+ const c=initialConfig();c.variants[0].blocks=[{id:'ps',title:'Псалтирь',kind:'psalter',key:'psaltir',part:'evening',weekdays:[1,2,3,4,5,6,7],mode:'continuous',unit:'kathisma'}];
+ let s=createState(c);s.cursors.ps=49;
+ s=applyOperation(s,op(0,'mark',{blockId:'ps',done:true}),now);
+ assert.equal(s.cursors.ps,51);
+});
+
+test('archived reading retains configuration and cannot advance again after receipts expire',()=>{
+ const c=initialConfig();c.variants[0].blocks=[{id:'ps',title:'Псалтирь',kind:'psalter',key:'psaltir',part:'evening',weekdays:[1,2,3,4,5,6,7],mode:'continuous',unit:'kathisma'}];
+ let s=createState(c);s=applyOperation(s,op(0,'mark',{blockId:'ps',done:true}),now);
+ for(let i=0;i<55;i++)ensureCycle(s,new Date(Date.UTC(2026,10,2+i)).toISOString().slice(0,10));
+ assert.equal(s.history?.['2026-11-01'].blocks[0].done,true);
+ s.config.variants[0].title='Новая редакция';s.receipts=[];
+ s=applyOperation(s,op(s.revision,'mark',{blockId:'ps',done:true},'op-0'),now);
+ assert.equal(s.cursors.ps,3);assert.equal(ensureCycle(s,'2026-11-01').config.variants[0].title,'Обычное правило');
+ assert.deepEqual(ensureCycle(s,'2026-11-01').advanced,['ps']);
+});
+test('one continuous Psalter position spans parts, supports more reading and rejects stale marks',()=>{
+ const c=initialConfig();c.variants[0].blocks=['evening','morning'].map((part,i)=>({id:'ps'+i,title:'Псалтирь',kind:'psalter',key:'psaltir',part:part as 'evening'|'morning',weekdays:[1,2,3,4,5,6,7],mode:'continuous',unit:'statia'}));
+ let s=createState(c);ensureCycle(s,'2026-11-05');
+ s=applyOperation(s,op(0,'mark',{blockId:'ps0',done:true,expectedCursor:0}),now);
+ assert.equal(s.psalterCursor,1);assert.equal(ensureCycle(s,'2026-11-01').cursors.ps1,1);
+ assert.throws(()=>applyOperation(s,op(1,'mark',{blockId:'ps1',done:true,expectedCursor:0}),now),/Место Псалтири/);
+ const next=op(1,'next',{blockId:'ps0',expectedCursor:0});s=applyOperation(s,next,now);
+ assert.deepEqual(applyOperation(s,next,now),s);assert.equal(s.psalterCursor,1);
+ s=applyOperation(s,op(2,'mark',{blockId:'ps0',done:true,expectedCursor:1}),now);
+ assert.equal(s.psalterCursor,2);assert.equal(ensureCycle(s,'2026-11-05').cursors.ps1,2);
+});
