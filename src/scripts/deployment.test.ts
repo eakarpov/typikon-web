@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readlinkSync, symlinkSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readlinkSync, symlinkSync, rmSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -324,4 +324,37 @@ exec bash -c "\${@: -1}"
     assert.ok(!readFileSync(args, "utf8").includes(password));
     assert.ok(!result.stdout.includes(password));
     assert.ok(!result.stderr.includes(password));
+});
+
+
+test("успешная выкладка оставляет три готовых релиза и защищает current/previous", t => {
+    const f=fixture(t);
+    const releases=join(f.deploy,"releases");
+    for (const name of ["20270101-old-a","20270102-old-b","20270103-old-c"]) {
+        mkdirSync(join(releases,name,".next"),{recursive:true});
+        writeFileSync(join(releases,name,".next/BUILD_ID"),name);
+    }
+    mkdirSync(join(releases,"20990101-failed"));
+    symlinkSync(f.source,join(releases,"shared-link"));
+    const result=f.run();
+    assert.equal(result.status,0,result.stderr);
+    const dirs=readdirSync(releases,{withFileTypes:true}).filter(d=>d.isDirectory()).map(d=>d.name);
+    assert.equal(dirs.length,3);
+    assert.ok(existsSync(f.current()));
+    assert.equal(readlinkSync(join(f.deploy,"previous")),f.old);
+    assert.ok(dirs.includes("20270103-old-c"));
+    assert.ok(!existsSync(join(releases,"20990101-failed")));
+    assert.ok(existsSync(join(f.source,"app.txt")),"общий checkout не удаляется через ссылку");
+    f.stopped();
+});
+
+test("неудачная сборка не чистит историю", t => {
+    const f=fixture(t);
+    const names=["20270101-a","20270102-b","20270103-c","20270104-d"];
+    for(const name of names)mkdirSync(join(f.deploy,"releases",name));
+    const result=f.run("deploy",{BUILD_FAIL:"1"});
+    assert.notEqual(result.status,0);
+    for(const name of names)assert.ok(existsSync(join(f.deploy,"releases",name)));
+    assert.equal(f.current(),f.old);
+    f.stopped();
 });

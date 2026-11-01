@@ -40,6 +40,27 @@ mkdir -p "$DEPLOY_ROOT/releases"
 exec 9>"$DEPLOY_ROOT/deploy.lock"
 flock -n 9 || fail 'Уже идёт другая выкладка или откат'
 
+# Keep only three complete release directories. current and previous always win over age.
+prune_releases() {
+    "$NODE_BIN" - "$DEPLOY_ROOT" <<'PRUNE_RELEASES'
+const fs = require('node:fs');
+const path = require('node:path');
+const root = process.argv[2];
+const base = fs.realpathSync(path.join(root, 'releases'));
+const refs = ['current', 'previous'].map(name => fs.realpathSync(path.join(root, name)));
+const dirs = fs.readdirSync(base, {withFileTypes:true}).filter(d => d.isDirectory()).map(d => path.join(base,d.name)).sort().reverse();
+const keep = new Set(refs.filter(dir => path.dirname(dir) === base));
+for (const dir of dirs) if (keep.size < 3 && fs.existsSync(path.join(dir,'.next','BUILD_ID'))) keep.add(dir);
+for (const dir of dirs) {
+    if (keep.has(dir)) continue;
+    if (refs.includes(dir) || path.dirname(fs.realpathSync(dir)) !== base || fs.lstatSync(dir).isSymbolicLink()) throw Error('Unsafe release path: '+dir);
+    fs.rmSync(dir,{recursive:true});
+    console.log('Удалён старый релиз: '+path.basename(dir));
+}
+console.log('Хранение релизов: '+dirs.filter(dir=>keep.has(dir)).length+' (лимит 3)');
+PRUNE_RELEASES
+}
+
 # rename заменяет саму ссылку, а не каталог за ней. Атомарно на одной ФС.
 link_to() {
     local target=$1 name=$2 temporary="$DEPLOY_ROOT/.${2}.$$"
@@ -201,5 +222,6 @@ restart
 wait_ready "$APP_PORT" "$candidate" || fail 'Новый процесс не подтвердил готовность'
 link_to "$old_current" previous
 switching=0
+prune_releases
 echo "Активен: $candidate"
 echo 'Откат: npm run release:rollback (с той же --target)'
