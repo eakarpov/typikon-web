@@ -2,6 +2,8 @@
 set -euo pipefail
 
 # Заливка новой версии Android-приложения.
+# Меняет предлагаемую эндпойнтом версию. Только по отдельному указанию владельца
+# после готовности обновления в RuStore; обычная выкладка сайта это не разрешает.
 # Использование:
 #   bash release-app.sh 1.6.0 ~/Downloads/app-release.apk
 #   bash release-app.sh --target test 1.6.0 ~/Downloads/app-release.apk
