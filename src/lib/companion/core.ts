@@ -46,7 +46,13 @@ export const selectionSignature=(s:Selection)=>JSON.stringify(Object.fromEntries
 export function searchOccurrences(service:Service,query:string){
  const q=cleanWord(query);if(!q)return [];
  return service.nodes.flatMap(n=>{
-  const lines=n.lines.filter(l=>l.audible&&l.text&&cleanWord(l.text).includes(q)).map(l=>({nodeId:n.id,lineId:l.id,title:n.title,context:l.text!.slice(0,260)}));
+  const lines=n.lines.filter(l=>l.audible&&l.text&&cleanWord(l.text).includes(q)).map(l=>({nodeId:n.id,lineId:l.id,title:n.title,context:excerpt(l.text!,query)}));
   return lines.length?lines:cleanWord(n.title).includes(q)?[{nodeId:n.id,lineId:'',title:n.title,context:n.audibleCue??''}]:[];
  });
+}
+
+export function excerpt(text:string,query:string){const normalized=cleanWord(text),q=cleanWord(query),at=normalized.indexOf(q);return text.length<260?text:(at>70?'…':'')+normalized.slice(Math.max(0,at-70),at+q.length+130)+'…';}
+export function importedSelection(service:Service):Selection {
+ const s=service.selection??{},use=s.use as {rite?:string;tradition?:string}|undefined;
+ return validateSelection(s.mode==='day'&&s.date?{mode:'day',date:s.date,service:s.service,...(s.stoyanie?{part:s.stoyanie}:{}),...(s.variant?{variant:s.variant}:{}),...(use?.rite&&use?.tradition?{ustav:use.rite+'/'+use.tradition}:{})}:{mode:'study',ordo:s.ordoId});
 }
