@@ -27,7 +27,7 @@ const loadBooks = async (): Promise<[any, any]> => {
                         bibleCode: { $arrayElemAt: ["$bibleEdition.code", 0] },
                     },
                 },
-                { $project: { bibleEdition: 0 } },
+                { $project: { name: 1, alias: 1, author: 1, description: 1, language: 1, category: 1, bibleCode: 1, workKey: 1, editionTitle: 1 } },
                 // { $sort: { order: 1 }}
                 { $sort: { name: 1 } },
             ])
@@ -39,4 +39,4 @@ const loadBooks = async (): Promise<[any, any]> => {
     }
 };
 
-export const getItems = cachedTuple(loadBooks, ["library-list"], [CacheTag.BOOKS, CacheTag.BIBLE]);
+export const getItems = cachedTuple(loadBooks, ["library-list-metadata-v2"], [CacheTag.BOOKS, CacheTag.BIBLE]);

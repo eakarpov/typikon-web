@@ -9,7 +9,7 @@ import { getBibleIndex, getChapter, neighbourBooks, resolveEditionCodes } from "
 import Chapter from "@/app/bible/[canonId]/[chapter]/Chapter";
 import { echoCountsForChapter } from "@/lib/citations";
 import { chapterPlaces } from "@/lib/places/query";
-import { SITE_URL } from "@/utils/site";
+import {pageMetadata} from "@/lib/seo/metadata";
 
 // Страница зависит и от адреса (?v=...), и от cookie языка, поэтому остаётся
 // динамической; в базу за ней при этом не ходим — выборки кэшируются в api.ts.
@@ -30,16 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const chapter = parseChapter(params.chapter);
     if (!canon || !chapter) return { title: "Библия — Уставные чтения" };
 
-    const title = `${canon.name}, глава ${chapter} — Библия — Уставные чтения`;
-    return {
-        title,
-        description: `${canon.name}, глава ${chapter}: церковнославянский и румынский тексты рядом.`,
-        openGraph: {
-            type: "website",
-            url: `${SITE_URL}/bible/${canon.id}/${chapter}`,
-            title,
-        },
-    };
+    return pageMetadata({
+        title: `${canon.name}, глава ${chapter} — Библия`,
+        description: `${canon.name}, глава ${chapter}. Текст Библии по главам и стихам, выбор изданий и параллельное чтение на разных языках.`,
+        path: `/bible/${canon.id}/${chapter}`,
+    });
 }
 
 // Соседняя глава — сначала внутри книги, а на её краю переходим в соседнюю книгу

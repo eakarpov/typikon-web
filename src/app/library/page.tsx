@@ -5,20 +5,18 @@ import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
 import {myFont} from "@/utils/font";
 import Link from "next/link";
-import { SITE_URL } from "@/utils/site";
+import {pageMetadata} from "@/lib/seo/metadata";
 
-// Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
-export const revalidate = 3600;
+// Фильтры читают URL на клиенте. В статической сборке useSearchParams скрывает
+// весь список за Suspense до JavaScript. Динамический HTML сохраняет карточки
+// и ссылки для обходчика; сама выборка books по-прежнему кэшируется на час.
+export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
     title: "Библиотека текстов",
-    description: 'Уставные чтения, объединенные в книги для полного прочтения.',
-    openGraph: {
-        title: 'Библиотека текстов',
-        description: 'Уставные чтения, объединенные в книги для полного прочтения.',
-        url: `${SITE_URL}/library/`
-    },
-}
+    description: "Библия, богослужебные книги, творения святых отцов, Пролог и жития святых. Оглавления книг, редакции и фильтры по языку, начертанию и тематике.",
+    path: "/library",
+});
 
 const Library = async () => {
     const itemsData = getItems();
@@ -27,8 +25,9 @@ const Library = async () => {
     return (
         <div className="pt-2">
             <div className={myFont.variable}>
+                <h1 className="font-serif font-bold mb-2">Библиотека текстов</h1>
                 <p className="font-serif">
-                    В данном разделе будет организован доступ к отекстованным книгам в целом по содержанию без привязки к дате.
+                    Книги для чтения целиком: Библия, богослужебные тексты, творения святых отцов, жития и справочная литература.
                 </p>
                 <p className="font-serif">
                     Часть текстов ещё не отекстована — <Link href="/texting" className="text-amber-800">помогите проекту с отекстовкой</Link>.

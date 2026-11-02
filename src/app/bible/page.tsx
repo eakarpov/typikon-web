@@ -10,22 +10,15 @@ import type { EditionView } from "@/app/bible/api";
 import { bibleScopeTitle, DEFAULT_BIBLE_SCOPE } from "@/utils/bibleScope";
 import { coverageNote } from "@/utils/bibleCoverage";
 import { absentFromCanon, bibleEditionCanonTitle } from "@/utils/bibleEditionCanon";
-import { SITE_URL } from "@/utils/site";
+import {pageMetadata} from "@/lib/seo/metadata";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-    title: "Библия — Уставные чтения",
-    description:
-        "Библия по книгам и главам: церковнославянская Елизаветинская, румынская 1688 года " +
-        "и греческая — Септуагинта с Патриаршим текстом. Издания читаются рядом, стих против стиха.",
-    openGraph: {
-        type: "website",
-        url: `${SITE_URL}/bible`,
-        title: "Библия — Уставные чтения",
-        description: "Книги Библии по главам, с параллельным чтением изданий.",
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Библия по книгам и главам",
+    description: "Библия на церковнославянском и других языках. Оглавление книг, выбор изданий и параллельное чтение стихов с согласованием нумерации.",
+    path: "/bible",
+});
 
 /** Издания по языкам, порядком самих изданий: язык появляется там, где первое его. */
 const byLanguage = (editions: EditionView[]): Array<{ lang: string; editions: EditionView[] }> => {
@@ -54,6 +47,7 @@ const Index = async ({ selected }: { selected: string }) => {
 
     return (
         <div className="pt-2 space-y-4">
+            <h1 className="font-serif font-bold">Библия по книгам и главам</h1>
             <p className="font-serif">
                 Библия по книгам и главам. Издания можно читать рядом: стихи сводятся по
                 каноническому месту, а не по номеру строки, поэтому напротив славянского стиха

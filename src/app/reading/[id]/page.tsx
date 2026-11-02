@@ -8,7 +8,9 @@ import {permanentRedirect, redirect} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
-import { SITE_URL } from "@/utils/site";
+import {breadcrumbs, pageMetadata} from "@/lib/seo/metadata";
+import {contentSchema, readingTitle, readingDescription} from "@/lib/seo/content";
+import JsonLd from "@/app/components/JsonLd";
 
 type Props = {
     params: { id: string }
@@ -18,23 +20,14 @@ type Props = {
 export async function generateMetadata(
     { params }: Props,
 ): Promise<Metadata> {
-    // read route params
-    const id = params.id
-
-    // fetch data
-    const [item] = await getItem(id);
-
-    return {
-        title: item?.name?.replaceAll('́', ''),
-        alternates: { canonical: `${SITE_URL}${canonicalPath("reading", item || { id })}` },
-        description: item?.description?.replaceAll('́', '') || `Уставные чтения на день: ${item?.name?.replaceAll('́', '')}`,
-        openGraph: {
-            type: "website",
-            url: `${SITE_URL}${canonicalPath("reading", item || { id })}`,
-            title: item?.name?.replaceAll('́', ''),
-            description: item?.description?.replaceAll('́', '') || `Уставные чтения на день: ${item?.name?.replaceAll('́', '')}`,
-        },
-    }
+    const [item, error] = await getItem(params.id);
+    if (error) throw error;
+    if (!item) return { title: "Текст не найден", robots: { index: false } };
+    return pageMetadata({
+        title: readingTitle(item), description: readingDescription(item),
+        path: canonicalPath("reading", item),
+        noindex: !item.content?.trim() || item.public === false || item.bookPublic === false,
+    });
 }
 
 const ReadingItem = async ({ params: { id }, searchParams }: Props) => {
@@ -47,7 +40,9 @@ const ReadingItem = async ({ params: { id }, searchParams }: Props) => {
 
     setMeta();
     const result = await getItem(id);
-    const [item, , shouldRedirect] = result;
+    const [item, error, shouldRedirect] = result;
+    if (error) throw error;
+    if (!item) notFound();
     if (item && shouldRedirect) redirect(withSearch(canonicalPath("reading", item), searchParams));
     const fragment = searchParams.statia === undefined ? null : selectedStatia(item?.content || '', searchParams.statia);
     if(searchParams.statia !== undefined && !fragment)notFound();
@@ -55,6 +50,15 @@ const ReadingItem = async ({ params: { id }, searchParams }: Props) => {
 
     return (
       <div className={myFont.variable}>
+          {item.content?.trim() && item.public !== false && item.bookPublic !== false && <>
+              <JsonLd data={contentSchema("reading", item, readingDescription(item))} />
+              <JsonLd data={breadcrumbs([
+                  {name: "Главная", path: "/"}, {name: "Библиотека", path: "/library"},
+                  ...(item.bookId && item.bookName ? [{name: item.bookName, path: `/library/${item.bookAlias || item.bookId}`}] : []),
+                  {name: item.name || "Чтение", path: canonicalPath("reading", item)},
+              ])} />
+          </>}
+
           <Suspense fallback={<div>Loading...</div>}>
               <Content itemPromise={itemPromise} showAccents={accents === "1"} statia={fragment?.statia} />
           </Suspense>

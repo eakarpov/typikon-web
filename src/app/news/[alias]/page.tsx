@@ -1,3 +1,6 @@
+import JsonLd from "@/app/components/JsonLd";
+import {breadcrumbs, pageMetadata, seoText, isoDate} from "@/lib/seo/metadata";
+import {SITE_URL} from "@/utils/site";
 import { Metadata } from "next";
 import Link from "next/link";
 import Markdown from "react-markdown";
@@ -14,13 +17,11 @@ export const revalidate = CONTENT_REVALIDATE;
 export const generateMetadata = async ({ params }: { params: { alias: string } }): Promise<Metadata> => {
     const post = await getPublished(params.alias);
 
-    if (!post) return { title: "Новость не найдена — Уставные чтения" };
-
-    return {
-        title: `${post.title} — Уставные чтения`,
-        description: post.summary || undefined,
-        openGraph: { title: post.title, description: post.summary || undefined, type: "article" },
-    };
+    if (!post) return { title: "Новость не найдена", robots: { index: false } };
+    const metadata = pageMetadata({ title: post.title, description: post.summary || post.body,
+        path: `/news/${post.alias}`, type: "article" });
+    return { ...metadata, openGraph: { ...metadata.openGraph, type: "article",
+        publishedTime: post.publishedAt || undefined, modifiedTime: post.updatedAt } };
 };
 
 const NewsItemPage = async ({ params }: { params: { alias: string } }) => {
@@ -30,6 +31,10 @@ const NewsItemPage = async ({ params }: { params: { alias: string } }) => {
 
     return (
         <article className={`${myFont.variable} flex flex-col gap-4 pt-4 pb-8 font-serif`}>
+            <JsonLd data={{ "@context": "https://schema.org", "@type": "Article", headline: post.title,
+                url: `${SITE_URL}/news/${post.alias}`, mainEntityOfPage: `${SITE_URL}/news/${post.alias}`,
+                description: seoText(post.summary || post.body), datePublished: isoDate(post.publishedAt), dateModified: isoDate(post.updatedAt), inLanguage: "ru" }} />
+            <JsonLd data={breadcrumbs([{name: "Главная", path: "/"}, {name: "Новости", path: "/news"}, {name: post.title, path: `/news/${post.alias}`}])} />
             <div className="flex flex-row gap-2 items-baseline flex-wrap text-sm text-slate-600">
                 <time dateTime={post.publishedAt ?? undefined}>{dateLabel(post.publishedAt)}</time>
                 <span>{typeLabel[post.type]}</span>

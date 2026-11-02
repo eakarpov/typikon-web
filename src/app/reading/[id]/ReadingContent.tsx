@@ -1,6 +1,7 @@
 'use client';
 import React, {memo, MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import reactStringReplace from "react-string-replace";
+import {schemaLanguage} from "@/lib/seo/metadata";
 import ReadingProgressTracker from "@/app/reading/[id]/ReadingProgressTracker";
 import {paragraphAnchor} from "@/lib/personal/progress";
 import {SAINT_MARK, PLACE_MARK, RED_MARK, FOOTNOTE_MARK, splitLinkMark} from "@/lib/markup/patterns";
@@ -528,6 +529,7 @@ const ReadingContent = ({ item }: { item: any }) => {
     return (
         <div
             id="text-reading"
+            lang={schemaLanguage(item.language || item.bookLanguage)}
             className="space-y-1 mt-2 pb-2"
             onContextMenu={onContextMenuHandler}
         >

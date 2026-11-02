@@ -2744,6 +2744,7 @@ export const openapi = () => ({
                     author: { type: ["string", "null"] },
                     translator: { type: ["string", "null"] },
                     description: { type: ["string", "null"] },
+                    category: { type: ["string", "null"], enum: ["bible", "liturgical", "patristic", "encyclopedic", "historical", "hagiographic", null], description: "Тематика книги библиотеки" },
                     textCount: { type: ["integer", "null"] },
                 },
             },

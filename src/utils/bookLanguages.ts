@@ -27,6 +27,8 @@ export const BOOK_LANGUAGES: BookLanguage[] = [
     { code: "cu_gr", label: "церковнославянский (гражданским шрифтом)", short: "цс гражд.", needsChurchFont: false },
     { code: "cu", label: "церковнославянский (уставное начертание)", short: "цс", needsChurchFont: true },
     { code: "ro_cyr", label: "румынский (кириллица)", short: "рум.", needsChurchFont: true },
+    { code: "ru_cu", label: "русский (церковное начертание)", short: "рус. цр.", needsChurchFont: true },
+    { code: "orv", label: "древнерусский (гражданская передача)", short: "др.-рус.", needsChurchFont: false },
     { code: "ru", label: "русский", short: "рус.", needsChurchFont: false },
     // Койне политоникой: придыхания, облечённое ударение, йота подписная.
     // Церковный шрифт ему не нужен — политонику держат системные шрифты, —

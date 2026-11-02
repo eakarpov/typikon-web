@@ -5,14 +5,13 @@ import {BIBLE_CANON} from "@/utils/bibleCanon";
 import {REFERENCE_VERSIFICATION} from "@/utils/bibleVersification";
 import { podobnyIndex } from "@/lib/podobny/store";
 import {reportError} from "@/lib/reportError";
-import { SITE_URL } from "@/utils/site";
+import {sitemapEntry as entry, dedupeSitemap as dedupe} from "@/lib/seo/sitemap";
+import {NEWS_DB, NEWS_COLLECTION} from "@/lib/news/posts";
 
 // Карта сайта строится из базы, а не лежит статикой в public/: раньше файл
 // генерировался внешним сервисом и с 2024 года не обновлялся, поэтому новые
 // чтения в индекс не попадали. Пересобирается раз в сутки.
 export const revalidate = 86400;
-
-const BASE_URL = SITE_URL;
 
 // Тексты в статусах "в наличии"/"пока отсутствует" — это заготовки без содержимого,
 // в индексе им делать нечего.
@@ -27,6 +26,7 @@ const STATIC_ROUTES = [
     { path: "/calendar", priority: 0.9 },
     { path: "/calendar/today", priority: 0.9 },
     { path: "/library", priority: 0.9 },
+    { path: "/news", priority: 0.6 },
     { path: "/bible", priority: 0.9 },
     { path: "/saints", priority: 0.8 },
     { path: "/places", priority: 0.7 },
@@ -102,58 +102,38 @@ const STATIC_ROUTES = [
     { path: "/contact", priority: 0.4 },
 ];
 
-const toDate = (value: any): Date => {
-    const date = value ? new Date(value) : null;
-    return date && !isNaN(date.getTime()) ? date : new Date();
-};
-
-const entry = (
-    path: string,
-    lastModified: any,
-    priority: number,
-    changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] = "monthly",
-) => ({
-    url: `${BASE_URL}${path}`,
-    lastModified: toDate(lastModified),
-    changeFrequency,
-    priority,
-});
-
-const dedupe = (items: MetadataRoute.Sitemap): MetadataRoute.Sitemap => {
-    const byUrl = new Map<string, MetadataRoute.Sitemap[number]>();
-    items.forEach((item) => {
-        const previous = byUrl.get(item.url);
-        if (!previous || toDate(previous.lastModified) < toDate(item.lastModified)) {
-            byUrl.set(item.url, item);
-        }
-    });
-    return [...byUrl.values()];
-};
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     try {
         const client = await clientPromise;
         const db = client.db("typikon");
 
-        const [texts, months, books, weeks] = await Promise.all([
+        const [texts, months, books, weeks, editions] = await Promise.all([
             db.collection("texts")
                 .find({
                     alias: { $nin: ["", null] },
                     name: { $nin: ["", null] },
                     readiness: { $in: READABLE_TEXTS },
-                }, { projection: { alias: 1, updatedAt: 1 } })
+                    public: { $ne: false },
+                    content: { $type: "string", $regex: "\\S" },
+                }, { projection: { alias: 1, updatedAt: 1, bookId: 1 } })
                 .toArray(),
             db.collection("months")
                 .find({ alias: { $nin: ["", null] } }, { projection: { alias: 1, updatedAt: 1 } })
                 .toArray(),
             db.collection("books")
-                .find({ public: { $ne: false } }, { projection: { alias: 1, updatedAt: 1 } })
+                .find({}, { projection: { alias: 1, updatedAt: 1, public: 1 } })
                 .toArray(),
             db.collection("weeks")
                 .find({ $or: [{ penticostration: true }, { triodion: true }] },
                     { projection: { days: 1, penticostration: 1, triodion: 1 } })
                 .toArray(),
+            db.collection("bible_editions").find({}, { projection: { bookId: 1, updatedAt: 1 } }).toArray(),
         ]);
+        const privateBooks = new Set(books.filter(book => book.public === false).map(book => String(book._id)));
+        const bibleBooks = new Set(editions.filter(edition => edition.bookId).map(edition => String(edition.bookId)));
+        const news = await client.db(NEWS_DB).collection(NEWS_COLLECTION)
+            .find({ status: "published", publishedAt: { $ne: null }, alias: { $type: "string", $ne: "" } }, { projection: { alias: 1, updatedAt: 1, publishedAt: 1 } })
+            .toArray().catch(error => { reportError(error, {where: "app/sitemap#news"}); return []; });
 
         // Пасхальные дни живут под /penticostarion/{alias} и /triodion/{alias},
         // неподвижный круг — под /calendar/{alias}. Разводим их, чтобы один и тот же
@@ -262,8 +242,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // список глав церковнославянского издания, лежит прямо в коде и стоит нуля
         // обращений к базе. Главы с нулём стихов пропускаем: в издании их нет
         // (в Исходе так с 37-й по 39-ю — в источнике текст без стиховой разбивки).
-        const bibleUpdatedAt = (await db.collection("bible_editions")
-            .findOne({}, { sort: { updatedAt: -1 }, projection: { updatedAt: 1 } }))?.updatedAt;
+        const bibleUpdatedAt = editions.map(edition => edition.updatedAt).filter(Boolean).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
         const bibleChapters = BIBLE_CANON.flatMap((book) =>
             (REFERENCE_VERSIFICATION[book.id] || [])
@@ -275,13 +254,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // должен быть ровно один раз.
         return dedupe([
             ...STATIC_ROUTES.map(({ path, priority }) =>
-                entry(path, new Date(), priority, "daily")),
+                entry(path, undefined, priority, "daily")),
             ...dayEntries,
-            ...texts.map((text) =>
+            ...news.map(post => entry(`/news/${post.alias}`, post.updatedAt || post.publishedAt, 0.6, "monthly")),
+            ...texts.filter(text => !privateBooks.has(String(text.bookId)) && !bibleBooks.has(String(text.bookId))).map((text) =>
                 entry(`/reading/${text.alias}`, text.updatedAt, 0.7, "yearly")),
             ...months.map((month) =>
                 entry(`/months/${month.alias}`, month.updatedAt, 0.6, "monthly")),
-            ...books.map((book) =>
+            ...books.filter(book => book.public !== false && !bibleBooks.has(String(book._id))).map((book) =>
                 entry(`/library/${book.alias || book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
             ...saints.map((saint) =>
                 entry(saint.path, saint.updatedAt, 0.6, "monthly")),
@@ -289,18 +269,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 entry(`/places/${place.slug}`, place.updatedAt, 0.5, "monthly")),
             ...bibleChapters,
             ...BIBLE_CANON.map((book) =>
-                entry(`/otzvuki/${book.id}`, new Date(), 0.5, "monthly")),
+                entry(`/otzvuki/${book.id}`, undefined, 0.5, "monthly")),
             ...names.map((name) =>
-                entry(`/imeniny/${encodeURIComponent(name.name)}`, new Date(), 0.5, "monthly")),
+                entry(`/imeniny/${encodeURIComponent(name.name)}`, undefined, 0.5, "monthly")),
             // Корпуса на сервере может не быть — тогда и подобнов в карте нет,
             // а карта строится: остальные разделы от него не зависят.
             ...(podobnyIndex() ?? []).map((unit) =>
-                entry(`/podobny/${unit.slug}`, new Date(), 0.5, "monthly")),
+                entry(`/podobny/${unit.slug}`, undefined, 0.5, "monthly")),
         ]);
     } catch (e) {
         reportError(e, { where: "app/sitemap#sitemap" });
         // Пустая карта хуже устаревшей, но лучше пятисотки на /sitemap.xml.
         return STATIC_ROUTES.map(({ path, priority }) =>
-            entry(path, new Date(), priority, "daily"));
+            entry(path, undefined, priority, "daily"));
     }
 }

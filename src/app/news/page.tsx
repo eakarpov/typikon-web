@@ -1,3 +1,4 @@
+import {pageMetadata} from "@/lib/seo/metadata";
 import { Metadata } from "next";
 import Link from "next/link";
 import Markdown from "react-markdown";
@@ -11,19 +12,28 @@ import type { NewsPostDTO } from "@/types/dto/news";
 // Лента новостей: что появилось в корпусе и что изменилось на сайте.
 export const revalidate = LIST_REVALIDATE;
 
-export const metadata: Metadata = {
-    title: "Новости — Уставные чтения",
-    description: "Что нового в корпусе уставных чтений: пополнения, изменения на сайте, выпуски приложения.",
-    alternates: { types: { "application/rss+xml": "/rss.xml" } },
+const newsPageNumber = (value?: string) => {
+    const requested = Number(value);
+    return Number.isFinite(requested) && requested > 1 ? Math.floor(requested) : 1;
 };
+
+export function generateMetadata({ searchParams }: {searchParams?: {page?: string}}): Metadata {
+    const page = newsPageNumber(searchParams?.page);
+    const path = page > 1 ? `/news?page=${page}` : "/news";
+    const metadata = pageMetadata({
+        title: page > 1 ? `Новости — страница ${page}` : "Новости",
+        description: "Что нового в корпусе уставных чтений: пополнения, изменения на сайте, выпуски приложения.",
+        path,
+    });
+    return {...metadata, alternates: {...metadata.alternates, types: {"application/rss+xml": "/rss.xml"}}};
+}
 
 // Двадцать записей на страницу: в ленте лежит вся история версий с 2023 года, и
 // вываливать её целиком незачем — за нею есть страницы.
 const PAGE_SIZE = 20;
 
 const NewsPage = async ({ searchParams }: { searchParams?: { page?: string } }) => {
-    const requested = Number(searchParams?.page);
-    const page = Number.isFinite(requested) && requested > 1 ? Math.floor(requested) : 1;
+    const page = newsPageNumber(searchParams?.page);
 
     const [items, total] = await listPublished(PAGE_SIZE, (page - 1) * PAGE_SIZE);
     const hasOlder = page * PAGE_SIZE < total;

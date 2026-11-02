@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
 import {checkRightsBack} from "@/lib/admin/back";
 import {DEFAULT_BOOK_LANGUAGE} from "@/utils/bookLanguages";
+import {BOOK_CATEGORIES} from "@/utils/libraryBooks";
 import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -18,10 +19,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(400).end();
             return;
         }
+        const editionFields: { workKey?: string; editionTitle?: string; category?: string } = {};
+        if (data.category !== undefined) {
+            if (typeof data.category !== "string" || (data.category && !Object.hasOwn(BOOK_CATEGORIES, data.category))) {
+                res.status(400).json({ error: "Неизвестная тематика книги" });
+                return;
+            }
+            editionFields.category = data.category;
+        }
+        if (data.workKey !== undefined) {
+            if (typeof data.workKey !== "string" || data.workKey.trim().length > 100
+                || (data.workKey.trim() && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.workKey.trim()))) {
+                res.status(400).json({ error: "Ключ произведения: латинские строчные буквы, цифры и дефисы, до 100 символов" });
+                return;
+            }
+            editionFields.workKey = data.workKey.trim();
+        }
+        if (data.editionTitle !== undefined) {
+            if (typeof data.editionTitle !== "string" || data.editionTitle.trim().length > 200) {
+                res.status(400).json({ error: "Название редакции должно быть строкой до 200 символов" });
+                return;
+            }
+            editionFields.editionTitle = data.editionTitle.trim();
+        }
         try {
             const client = await clientPromise;
             const db = client.db("typikon");
             await saveWithAlias(db, "books", id, data.alias, {
+                ...editionFields,
                 name: data.name,
                 description: data.description,
                 translator: data.translator,

@@ -7,6 +7,8 @@ import {useState} from "react";
 import {TextReadiness} from "@/utils/texts";
 import {BOOK_LANGUAGES, DEFAULT_BOOK_LANGUAGE} from "@/utils/bookLanguages";
 
+import {BOOK_CATEGORIES} from "@/utils/libraryBooks";
+
 const AdminEditor = ({ value }: any) => {
     const [alias, setAlias] = useState(value.alias || "");
     const [error, setError] = useState("");
@@ -18,6 +20,10 @@ const AdminEditor = ({ value }: any) => {
     const [isPublic, setIsPublic] = useState(value.public !== false);
     // Пустого языка у книги не бывает: см. @/utils/bookLanguages.
     const [language, setLanguage] = useState(value.language || DEFAULT_BOOK_LANGUAGE);
+
+    const [category, setCategory] = useState(value.category || "");
+    const [workKey, setWorkKey] = useState(value.workKey || "");
+    const [editionTitle, setEditionTitle] = useState(value.editionTitle || "");
 
     const [saved, setIsSaved] = useState(false);
 
@@ -46,6 +52,9 @@ const AdminEditor = ({ value }: any) => {
                 order: parseInt(order),
                 public: isPublic,
                 language,
+                category,
+                workKey,
+                editionTitle,
             }),
         }).then(async (res) => {
             if (!res.ok) {
@@ -131,6 +140,21 @@ const AdminEditor = ({ value }: any) => {
                     <option key={l.code} value={l.code}>{l.label}</option>
                 ))}
             </select>
+            <label htmlFor="book-category">Тематика</label>
+            <select id="book-category" className="border-2" value={category} onChange={e => setCategory(e.target.value)}>
+                <option value="">Не указана</option>
+                {category && !BOOK_CATEGORIES[category] && <option value={category}>{category}</option>}
+                {Object.entries(BOOK_CATEGORIES).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+            </select>
+            <label htmlFor="book-work-key">Ключ произведения (для параллельных редакций)</label>
+            <input id="book-work-key" className="border-2" value={workKey} onChange={e => setWorkKey(e.target.value)} />
+            <p className="text-sm text-stone-500">
+                Одинаковый ключ у редакций одного произведения: например, prolog или margarit.
+                Латинские буквы, цифры и дефисы. Пустое поле — отдельная книга.
+            </p>
+            <label htmlFor="book-edition-title">Название редакции / издания</label>
+            <input id="book-edition-title" className="border-2" value={editionTitle} onChange={e => setEditionTitle(e.target.value)} />
+            <p className="text-sm text-stone-500">Например, год издания или название редакции. Язык и начертание задаются выше.</p>
             <p onClick={onSubmitAdd} className="cursor-pointer mb-2">
                 <b>Добавить текст</b>
             </p>

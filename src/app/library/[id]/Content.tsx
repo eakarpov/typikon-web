@@ -4,7 +4,8 @@ import DneslovRoundImage from "@/lib/common/DneslovRoundImage";
 import { saintRoundels } from "@/lib/saints";
 import {UserCircleIcon} from "@heroicons/react/24/outline";
 import {TextReadiness} from "@/utils/texts";
-import {bookLanguageLabel} from "@/utils/bookLanguages";
+import {bookCategoryLabel, bookPresentation, libraryBookHref} from "@/utils/libraryBooks";
+import {getItems} from "@/app/library/api";
 
 const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
 
@@ -32,6 +33,10 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
         );
     }
 
+    const info = bookPresentation(item.language);
+    const [books] = item.workKey ? await getItems() : [null];
+    const editions = (books || []).filter((book: any) => book.workKey === item.workKey && book._id.toString() !== item.id);
+
     return (
         <div className="flex flex-col pt-2">
             <CountMeta />
@@ -46,14 +51,24 @@ const Content = async ({ itemPromise }: { itemPromise: Promise<any> }) => {
                     <strong>Переводчик: </strong>{item.translator}
                 </p>
             )}
-            {/* На странице книги язык стоит всегда, даже когда он обычный:
-                здесь он одна строка среди автора и переводчика, а не значок
-                в ряду сорока восьми, и «чего не написано» тут читается как
-                «неизвестно», а не как «как у всех». */}
-            {item.language && (
-                <p className="font-serif">
-                    <strong>Язык: </strong>{bookLanguageLabel(item.language)}
-                </p>
+            <p className="font-serif"><strong>Язык: </strong>{info.label}</p>
+            <p className="font-serif"><strong>Начертание: </strong>{info.scriptLabel}</p>
+            <p className="font-serif"><strong>Тематика: </strong>{bookCategoryLabel(item.category)}</p>
+            {item.editionTitle && <p className="font-serif"><strong>Редакция: </strong>{item.editionTitle}</p>}
+            {editions.length > 0 && (
+                <nav aria-label="Другие редакции" className="font-serif my-2">
+                    <p className="font-bold">Другие редакции:</p>
+                    <ul>
+                        {editions.map((book: any) => (
+                            <li key={book._id.toString()}>
+                                <Link className="text-red-900 hover:underline" href={libraryBookHref({ ...book, id: book._id.toString() })}>
+                                    {book.name} · {bookPresentation(book.language).label}, {bookPresentation(book.language).scriptLabel}
+                                    {book.editionTitle ? ` · ${book.editionTitle}` : ""}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
             )}
             <h2 className="font-serif">Содержание:</h2>
             <div className="pt-2">

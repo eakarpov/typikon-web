@@ -256,6 +256,7 @@ export const book = (doc: any) => ({
     // Язык, на котором книга набрана. Коды общие с корпусом typikon-rules,
     // см. @/utils/bookLanguages.
     language: doc.language || DEFAULT_BOOK_LANGUAGE,
+    category: doc.category || null,
     textCount: Array.isArray(doc.texts) ? doc.texts.length : null,
     updatedAt: iso(doc.updatedAt),
 });

@@ -28,11 +28,14 @@ const loadText = cached(async (id: string) => {
         .aggregate([
             { $match: matcher },
             { $lookup: { from: "books", localField: "bookId", foreignField: "_id",
-                pipeline: [{ $project: { alias: 1 } }], as: "_book" } },
+                pipeline: [{ $project: { alias: 1, name: 1, language: 1, public: 1 } }], as: "_book" } },
             {
                 $addFields: {
                     id: { $toString: "$_id" },
                     bookAlias: { $arrayElemAt: ["$_book.alias", 0] },
+                    bookName: { $arrayElemAt: ["$_book.name", 0] },
+                    bookLanguage: { $arrayElemAt: ["$_book.language", 0] },
+                    bookPublic: { $arrayElemAt: ["$_book.public", 0] },
                 },
             },
             { $project: { _id: 0, _book: 0 }}

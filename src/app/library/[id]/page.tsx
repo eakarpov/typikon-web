@@ -6,7 +6,9 @@ import {permanentRedirect, redirect, notFound} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
-import { SITE_URL } from "@/utils/site";
+import {breadcrumbs, pageMetadata} from "@/lib/seo/metadata";
+import {bookDescription, contentSchema} from "@/lib/seo/content";
+import JsonLd from "@/app/components/JsonLd";
 
 // Страница не читает cookies и не зависит от пользователя — держим её в ISR-кэше.
 export const revalidate = 3600;
@@ -24,29 +26,14 @@ type Props = {
 export async function generateMetadata(
     { params }: Props,
 ): Promise<Metadata> {
-    // read route params
-    const id = params.id
-
-    // fetch data
-    const [item] = await getItem(id);
-
-    if (!item) {
-        return {};
-    }
-
-    return {
-        title: item.name,
-        alternates: { canonical: `${SITE_URL}${canonicalPath("library", item)}` },
-        description: item.description ||
-            `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`,
-        openGraph: {
-            title: item.name,
-            type: "website",
-            url: `${SITE_URL}${canonicalPath("library", item)}`,
-            description: item.description ||
-                `Уставные чтения. ${item?.author ? `Автор: (${item?.author})` : ""}. Название: ${item?.name}`
-        },
-    }
+    const [item, error] = await getItem(params.id);
+    if (error) throw error;
+    if (!item) return { title: "Книга не найдена", robots: { index: false } };
+    return pageMetadata({
+        title: [item.name, item.author].filter(Boolean).join(" — "),
+        description: bookDescription(item), path: canonicalPath("library", item),
+        noindex: item.public === false,
+    });
 }
 
 const Library = async ({ params: { id }, searchParams }: Props) => {
@@ -67,6 +54,11 @@ const Library = async ({ params: { id }, searchParams }: Props) => {
 
     return (
         <div className={myFont.variable}>
+            {item.public !== false && <>
+                <JsonLd data={contentSchema("library", item, bookDescription(item))} />
+                <JsonLd data={breadcrumbs([{name: "Главная", path: "/"}, {name: "Библиотека", path: "/library"}, {name: item.name, path}])} />
+            </>}
+
             <Suspense fallback={<div>Loading...</div>}>
                 <Content itemPromise={itemPromise} />
             </Suspense>

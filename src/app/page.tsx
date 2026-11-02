@@ -1,3 +1,6 @@
+import JsonLd from "@/app/components/JsonLd";
+import {SITE_NAME, SITE_DESCRIPTION} from "@/lib/seo/metadata";
+import {SITE_URL} from "@/utils/site";
 import { Inter } from 'next/font/google';
 import {DevicePhoneMobileIcon, ArrowSmallRightIcon} from "@heroicons/react/20/solid";
 import {getCount, getLastItems} from "@/app/api";
@@ -28,6 +31,7 @@ export default function Home() {
 
     return (
       <div>
+          <JsonLd data={{ "@context": "https://schema.org", "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: SITE_NAME, description: SITE_DESCRIPTION, inLanguage: "ru" }} />
           <div className="flex flex-col pt-2 md:flex-row">
               <div className="md:w-1/4">
                 <div className={myFont.variable}>

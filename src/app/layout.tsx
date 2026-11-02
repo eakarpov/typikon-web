@@ -14,6 +14,7 @@ import Script from "next/script";
 import SessionLoader from "@/app/SessionLoader";
 import ServiceWorkerRegistrar from "@/app/ServiceWorkerRegistrar";
 import { SITE_URL } from "@/utils/site";
+import {SITE_NAME, SITE_DESCRIPTION, SOCIAL_IMAGE} from "@/lib/seo/metadata";
 import MigrationNotice from "@/app/MigrationNotice";
 
 export const viewport: Viewport = {
@@ -30,13 +31,14 @@ export const metadata: Metadata = {
     //
     // "./" разрешается относительно текущего маршрута, то есть каждая страница
     // получает свой canonical, а не общий на весь сайт. Страницы, задающие свою
-    // metadata, это наследуют: поля метаданных сливаются, и alternates ни одна из
-    // них не переопределяет.
+    // metadata, это наследуют. Если страница задаёт alternates (например, RSS),
+    // canonical нужно повторить: Next заменяет вложенный объект целиком.
     metadataBase: new URL(SITE_URL),
     alternates: { canonical: "./" },
     title: "Уставные чтения",
-    description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',
+    description: SITE_DESCRIPTION,
     keywords: "уставные чтения, устав, типикон, богослужебные указания, триодь, минея, пролог, златоуст, торжественник, учительное евангелие, толковый апостол",
+    twitter: { card: "summary", title: SITE_NAME, description: SITE_DESCRIPTION, images: [SOCIAL_IMAGE.url] },
     // iOS манифест не читает — иконку домашнего экрана берёт отсюда.
     appleWebApp: {
         capable: true,
@@ -48,9 +50,11 @@ export const metadata: Metadata = {
     },
     openGraph: {
         title: 'Уставные чтения',
-        description: 'Последование уставных чтений по Типикону для корпуса церковнославянских текстов.',
-        images: "https://www.typikon.ru/logo.png",
-        siteName: "Уставные чтения Типикона РПЦ"
+        description: SITE_DESCRIPTION,
+        images: [SOCIAL_IMAGE],
+        type: "website",
+        locale: "ru_RU",
+        siteName: SITE_NAME
     },
 }
 

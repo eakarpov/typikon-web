@@ -1,5 +1,5 @@
 import AddToCollection from '@/app/reading-collections/AddToCollection';
-import ReadingFocus from '@/app/components/ReadingFocus';
+import ReadingFocus, {ReadingFocusActions} from '@/app/components/ReadingFocus';
 import {readingParts} from '@/lib/readingParts';
 import ReadingPlanStep from '@/app/reading-plan/ReadingPlanStep';
 import { ReadinessButton } from "@/app/components/DayPart";
@@ -57,8 +57,9 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
     return (
         <div className="flex flex-col md:flex-row">
         <div id="text-reading-container" className={`reading-column ${myFont.variable} flex flex-col pt-2 flex-1`}>
+            <ReadingFocus title={item.name||"Чтение"} header={<>
             <div className="text-1xl font-bold font-serif">
-                <div className="flex flex-row items-center overflow-scroll no-pdf">
+                <div className="flex flex-wrap items-center gap-y-1 no-pdf">
                     <EditButton
                         id={item.id}
                         showButton={process.env.SHOW_ADMIN === Boolean(true).toString()}
@@ -99,6 +100,8 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
                     <TextSave text={item} canDownloadPdf={process.env.CAN_DOWNLOAD_PDF} />
                     <TextSaveLocal name={item.name} />
                     <OfflineSave label={item.name?.replaceAll("\u0301", "") || "Чтение"} />
+                    <AddToCollection textId={String(item.id)} statia={statia} compact />
+                    <ReadingFocusActions />
                 </div>
                 <div className="flex flex-row items-center no-pdf">
                     <span className="w-fit text-xs pr-2">
@@ -116,9 +119,9 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
                     )}
                 </div>
                 <div className="flex flex-row items-center">
-                    <span className="pr-2 font-serif">
+                    <h1 className="pr-2 font-serif">
                         {item.name}
-                    </span>
+                    </h1>
                 </div>
             </div>
             {item.poems && (
@@ -138,8 +141,7 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
                     ))}
                 </div>
             )}
-            <AddToCollection textId={String(item.id)} statia={statia}/>
-            <ReadingFocus title={item.name||"Чтение"}>
+            </>}>
             {!statia&&parts.length>1&&<details className="py-2"><summary className="min-h-11 cursor-pointer py-2">Читать отдельную статию</summary><ol>{parts.map((part,n)=>part.trim()&&<li key={n}><Link className="underline block min-h-11 py-2" href={`/reading/${item.alias||item.id}?statia=${n+1}`}>Статия {n+1}</Link></li>)}</ol></details>}
             {statia && <nav data-reading-nav aria-label="Статии произведения" className="flex gap-3 flex-wrap py-3">
                 {statia>1&&<Link className="underline min-h-11 p-2" href={`/reading/${item.alias||item.id}?statia=${statia-1}`}>← Предыдущая статия</Link>}
