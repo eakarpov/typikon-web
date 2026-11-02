@@ -55,11 +55,11 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
             const response=await fetch("/api/logout", {method:"POST"});
             if(!response.ok)throw Error();
         } catch {window.alert("Не удалось выйти из аккаунта. Проверьте сеть и повторите.");return;}
+        await clearPrivateSnapshots().catch(()=>undefined);
         for (const key of Object.keys(localStorage)) {
             if (key.startsWith('prayer-circle:user:') && key.includes(':preview:')) localStorage.removeItem(key);
         }
         for(const key of Object.keys(localStorage))if(key.startsWith('companion:user:'))localStorage.removeItem(key);
-        await clearPrivateSnapshots().catch(()=>undefined);
         localStorage.removeItem('companion:owner');
         window.dispatchEvent(new Event('companion-owner-changed'));
         sessionStorage.removeItem('prayer-circle-owner');
