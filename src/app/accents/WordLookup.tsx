@@ -43,8 +43,8 @@ const Rows = ({ title, note, rows }: {
     );
 };
 
-const WordLookup = () => {
-    const [value, setValue] = useState("");
+const WordLookup = ({initialValue=''}:{initialValue?:string}={}) => {
+    const [value, setValue] = useState(initialValue);
     const [answer, setAnswer] = useState<AccentAnswer | null>(null);
     const [busy, setBusy] = useState(false);
 

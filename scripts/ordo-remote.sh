@@ -95,6 +95,9 @@ echo "служба устава собирает"
 CIRCLE=$(curl -fsS -m 45 "http://127.0.0.1:8767/prayer-circle/block?date=$TODAY&key=utrennie")
 printf '%s' "$CIRCLE" | python3 -c 'import json,sys;d=json.load(sys.stdin);assert d.get("rows") and not d.get("missing"),d.get("missing");print("Личный круг: текст собран, версия",d.get("version"))'
 
+# A real Companion assembly must carry a map and source-backed notes.
+curl -fsS -m 60 "http://127.0.0.1:8767/companion/assemble?mode=day&date=$TODAY&service=vespers" | python3 -c 'import json,sys;d=json.load(sys.stdin);assert d.get("services");s=d["services"][0];assert s.get("nodes") and s["guide"].get("sourceRefs");print("Спутник: карта и справки собраны; корпус",d["corpusVersion"])'
+
 
 # Сайт читает окружение при запуске, а мы его только что заменили: без
 # перезапуска он не увидит ORDO_SERVICE_URL и решит, что службы нет.

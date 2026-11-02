@@ -1,4 +1,5 @@
 'use client';
+import {clearPrivateSnapshots} from '@/lib/companion/snapshots';
 import Link from "next/link";
 import {
     Cog6ToothIcon,
@@ -57,6 +58,10 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
         for (const key of Object.keys(localStorage)) {
             if (key.startsWith('prayer-circle:user:') && key.includes(':preview:')) localStorage.removeItem(key);
         }
+        for(const key of Object.keys(localStorage))if(key.startsWith('companion:user:'))localStorage.removeItem(key);
+        await clearPrivateSnapshots().catch(()=>undefined);
+        localStorage.removeItem('companion:owner');
+        window.dispatchEvent(new Event('companion-owner-changed'));
         sessionStorage.removeItem('prayer-circle-owner');
         localStorage.removeItem('prayer-circle-offline-owner');
         window.dispatchEvent(new Event('prayer-circle-owner-changed'));
@@ -127,6 +132,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         { href: "/akathists", label: "Акафисты" },
                         { href: "/prayers", label: "Молитвы" },
                         { href: "/prayer-circle", label: "Мой круг" },
+                        { href: "/companion", label: "Спутник богослужения" },
                         // Указатели, а не собрания: они ничего не содержат сами, а
                         // ведут в «Песнопения» — и потому стоят последними в
                         // группе, к книгам которой отсылают. Зачин — вход по

@@ -115,10 +115,10 @@ const DownloadLink = ({ date, service, common, razdelno }: {
     if (common.ustav) q.set("ustav", common.ustav);
     if (razdelno) q.set("bdenie", "0");
     return (
-        <a download href={`/api/ordo/package?${q.toString()}`}
+        <><a className="underline mr-3" href={`/companion?${q.toString()}`}>Понять эту службу</a><a download href={`/api/ordo/package?${q.toString()}`}
            className="text-[11px] font-serif text-slate-400 underline underline-offset-2">
             скачать .ordo
-        </a>
+        </a></>
     );
 };
 

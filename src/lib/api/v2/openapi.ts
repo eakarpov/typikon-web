@@ -727,6 +727,30 @@ export const openapi = () => ({
                 responses: { "200": ok("#/components/schemas/AppVersion") },
             },
         },
+        "/api/v2/companion/catalog": {
+            get: { tags: ["Чтения"], summary: "Публичные службы, уставы и справки Спутника",
+                description: "Только kind=service; версии корпуса и пояснений, источники и покрытие. Не запускает сборку всех служб.",
+                responses: { "200": {description:"Каталог служб и материалов"}, "503": errorResponse("Корпус недоступен") } },
+        },
+        "/api/v2/companion/assemble": {
+            post: { tags: ["Чтения"], summary: "Собрать Спутник выбранной службы",
+                description: "JSON: mode=day, date, service, part (ключ стояния), variant, ustav; либо mode=study и ordo. Книжная схема не является назначением на дату. Узлы, тексты по правам корпуса, объяснения, факты решений, версии и раздельное покрытие.",
+                requestBody: {required:true,content:{"application/json":{schema:{type:"object",required:["mode"],properties:{mode:{type:"string",enum:["day","study"]},date:{type:"string",format:"date"},service:{type:"string"},part:{type:"string"},variant:{type:"string"},ustav:{type:"string"},ordo:{type:"string"}}}}}},
+                responses: {"200":{description:"Последование и материалы Спутника"},"400":errorResponse("Неверные параметры"),"503":errorResponse("Сборщик недоступен")} },
+        },
+        "/api/v2/companion/package": {
+            get: { tags: ["Чтения"], summary: "Скачать .ordo со слоем Спутника",
+                description: "Параметры assemble в query. companion.json и SHA-256 в manifest.parts; старые части сохранены. Полнота раздельна.",
+                responses: {"200":{description:"Пакет .ordo",content:{"application/vnd.ordo+zip":{schema:{type:"string",format:"binary"}}}},"400":errorResponse("Неверные параметры")} },
+        },
+        "/api/v2/companion/progress": {
+            get: { tags: ["Чтения"], summary: "Личные места и материалы Спутника", security: personal,
+                description: "userId и state: revision, entries, receipts; private, no-store. Отдельно от Личного круга.",
+                responses: {"200":{description:"Личные сохранения"},"401":needsSession} },
+            post: { tags: ["Чтения"], summary: "Сохранить место или материал", security: personal,
+                description: "expectedUserId, уникальный id операции, revision, action=position|save|remove; entry с устойчивыми ID, contentHash, selection и заголовками. Для save нужен done:boolean. Повтор id не изменяет прогресс. Конфликт версии: 409.",
+                responses: {"200":{description:"Подтверждённый state"},"401":needsSession,"409":errorResponse("Версия или вход изменились")} },
+        },
         "/api/v2/prayer-circle/catalog": {
             get: { tags: ["Чтения"], summary: "Источники и варианты молитвенного круга",
                 description: "Шаблоны со статусами сверки, источники, доступные каноны, акафисты и книги Писания. Непроверенные издания не предлагаются как готовые.",
