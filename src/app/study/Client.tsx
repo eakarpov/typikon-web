@@ -50,6 +50,7 @@ function PlainSource({
   onFootnote?: (n: number) => void;
 }) {
   return (
+    <div style={{fontFamily:/[\u0460-\u052f\u2de0-\u2dff\ua640-\ua69f\u1c80-\u1c8f]/u.test(text)?"var(--cs-font, var(--font-ponomar))":undefined}}>
     <Markdown
       components={{
         a: ({ href, children }) =>
@@ -79,7 +80,7 @@ function PlainSource({
         .replace(/\{k\|([^}]+)}/g, "$1")
         .replace(/\{(\d+)}/g, " [сноска $1](#study-footnote-$1) ")
         .replace(/\{k\|/g, "")}
-    </Markdown>
+    </Markdown></div>
   );
 }
 export default function Client() {
@@ -1048,7 +1049,7 @@ export default function Client() {
                       </button>
                     )}
                     <blockquote className="border-l pl-3 max-h-40 overflow-auto">
-                      {selected?.quote}
+                      <PlainSource text={selected?.quote??""}/>
                     </blockquote>
                     <div className="flex gap-2 flex-wrap">
                       {[
@@ -2270,7 +2271,7 @@ export default function Client() {
               )}
               {!editing.editorType && (
                 <>
-                  <blockquote>{editing.target.quote}</blockquote>
+                  <blockquote><PlainSource text={editing.target.quote??""}/></blockquote>
                   <label>
                     Вид записи
                     <select
