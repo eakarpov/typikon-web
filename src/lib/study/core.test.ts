@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  relationAt,
   rangeTarget,
   blocksOf,
   fingerprint,
@@ -197,4 +198,56 @@ test("rebound exports preserve the original quotation and original address", () 
   assert.ok(text.includes("Первоначальная выписка"));
   assert.ok(text.includes("old"));
   assert.ok(text.includes("Уточнённое место"));
+});
+
+test("relations cannot borrow a different Bible book with an equal chapter number", () => {
+  const m: Material = {
+    ...source("В начале"),
+    target: { kind: "bible", id: "ioanna", edition: "cs-eliz", chapter: 1 },
+    blocks: [{ id: "v-1", hash: "h", text: "В начале", index: 0, verse: 1 }],
+  };
+  const current: any = { ...m.target, verseFrom: 1, verseTo: 5 };
+  const acts: any = {
+    kind: "bible",
+    id: "deyaniya",
+    edition: "cs-eliz",
+    chapter: 1,
+    verseFrom: 1,
+    verseTo: 3,
+  };
+  assert.equal(
+    relationAt({ from: { kind: "text", id: "homily" }, to: acts }, m, current),
+    null,
+  );
+  assert.deepEqual(
+    relationAt(
+      { from: current, to: { kind: "text", id: "homily" } },
+      m,
+      current,
+    ),
+    { side: "from", other: { kind: "text", id: "homily" } },
+  );
+  assert.equal(
+    relationAt({ from: { ...current, chapter: 2 }, to: acts }, m, current),
+    null,
+  );
+});
+test("relations match either exact fragment within a source and return the opposite address", () => {
+  const m = source("Начало\n\nКонец"),
+    a = targetAt(m, m.blocks[0]),
+    b = targetAt(m, m.blocks[1]);
+  const at = relationAt({ from: a, to: b }, m, b);
+  assert.equal(at?.side, "to");
+  assert.deepEqual(at?.other, a);
+  assert.equal(
+    relationAt(
+      {
+        from: { ...a, sourceHash: "old" },
+        to: { kind: "text", id: "another" },
+      },
+      m,
+      a,
+    ),
+    null,
+  );
 });

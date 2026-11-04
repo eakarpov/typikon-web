@@ -1413,12 +1413,15 @@ export default function Client() {
                       {related ? (
                         <>
                           <p>{related.notice}</p>
+                          {related.relationVersion !== 2 &&
+                            related.relations?.length > 0 && (
+                              <p>
+                                Связи этой сохранённой копии нужно обновить.
+                              </p>
+                            )}
                           {related.relations?.map((r: any) => {
-                            const t =
-                              r.from.kind === material.target.kind &&
-                              r.from.id === material.target.id
-                                ? r.to
-                                : r.from;
+                            const t = r.other;
+                            if (!t) return null;
                             return (
                               <div className="border p-2" key={r.id}>
                                 <strong>
@@ -1561,23 +1564,23 @@ export default function Client() {
                       {state.links
                         .filter(
                           (l) =>
-                            l.from.id === material.target.id ||
-                            l.to.id === material.target.id,
+                            targetKey(l.from) === targetKey(material.target) ||
+                            targetKey(l.to) === targetKey(material.target),
                         )
                         .map((l) => (
                           <div key={l.id}>
                             <p>{l.note || "Личное сопоставление"}</p>
                             <button
                               className={button}
-                              onClick={() =>
-                                void open(
-                                  l.from.id === material.target.id
-                                    ? l.to
-                                    : l.from,
-                                )
-                              }
+                              onClick={() => void open(l.from)}
                             >
-                              Открыть
+                              Первый фрагмент
+                            </button>
+                            <button
+                              className={button}
+                              onClick={() => void open(l.to)}
+                            >
+                              Второй фрагмент
                             </button>
                             <button
                               className={button}

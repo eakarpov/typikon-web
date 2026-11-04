@@ -22,8 +22,8 @@ export interface Block {
   index: number;
   heading?: boolean;
   verse?: number;
-  editionChapter?:number;
-  editionVerse?:number;
+  editionChapter?: number;
+  editionVerse?: number;
 }
 export interface Material {
   target: Target;
@@ -447,4 +447,44 @@ export function exportMarkdown(p: Personal) {
         : []),
     ]),
   ].join("\n\n");
+}
+
+/** Context identity is checked before chapter/verse ranges: equal numbers are not a relation. */
+export function relationAt(
+  relation: { from: Target; to: Target },
+  m: Material,
+  selected: Target,
+): { side: "from" | "to"; other: Target } | null {
+  const matches = (a: Target) => {
+    if (
+      a.kind !== m.target.kind ||
+      a.id !== m.target.id ||
+      (a.edition && a.edition !== m.target.edition) ||
+      (a.statia ?? 0) !== (m.target.statia ?? 0) ||
+      (a.chapter != null && a.chapter !== m.target.chapter) ||
+      (a.sourceHash && a.sourceHash !== m.sourceHash)
+    )
+      return false;
+    if (
+      a.verseFrom &&
+      selected.verseFrom &&
+      ((a.verseTo ?? a.verseFrom) < selected.verseFrom ||
+        a.verseFrom > (selected.verseTo ?? selected.verseFrom))
+    )
+      return false;
+    if (a.blockId && selected.blockId) {
+      const index = (id: string) => m.blocks.findIndex((b) => b.id === id),
+        a0 = index(a.blockId),
+        a1 = index(a.endBlockId ?? a.blockId),
+        s0 = index(selected.blockId),
+        s1 = index(selected.endBlockId ?? selected.blockId);
+      if (Math.min(a0, a1, s0, s1) < 0 || a1 < s0 || a0 > s1) return false;
+    }
+    return true;
+  };
+  return matches(relation.from)
+    ? { side: "from", other: relation.to }
+    : matches(relation.to)
+      ? { side: "to", other: relation.from }
+      : null;
 }

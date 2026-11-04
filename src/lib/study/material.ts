@@ -17,6 +17,7 @@ import { getTextLinks } from "@/app/reading/[id]/api";
 import { citationsOf, echoesOf, canonSortRange } from "@/lib/citations";
 import { readingParts } from "@/lib/readingParts";
 import {
+  relationAt,
   blocksOf,
   fingerprint,
   validateTarget,
@@ -197,7 +198,8 @@ export async function material(raw: Target): Promise<Material> {
       text: v.content ?? "",
       index,
       verse: v.canonVerse,
-      editionChapter:v.chapter,editionVerse:v.verse,
+      editionChapter: v.chapter,
+      editionVerse: v.verse,
     }));
     const missing = verses
       .filter((v) => !v.content?.trim())
@@ -262,22 +264,28 @@ export async function related(t: Target) {
     })
     .limit(200)
     .toArray();
-  const relations = [...editorial.relations, ...stored]
-    .filter((r) => {
-      const a =
-        r.from.kind === t.kind && r.from.id === m.target.id ? r.from : r.to;
-      return (
-        (!a.sourceHash || a.sourceHash === m.sourceHash) &&
-        (!a.edition || a.edition === m.target.edition) &&
-        (!a.chapter || a.chapter === t.chapter) &&
-        (!a.blockId || !t.blockId || a.blockId === t.blockId) &&
-        (!a.verseFrom ||
-          !t.verseFrom ||
-          (a.verseFrom <= (t.verseTo ?? t.verseFrom) &&
-            a.verseTo >= t.verseFrom))
-      );
-    })
-    .map((r) => ({ ...r, _id: undefined, id: String((r as any)._id ?? r.id) }));
+  const relations = [...editorial.relations, ...stored].flatMap((r) => {
+    const at = relationAt(r as any, m, t);
+    if (!at) return [];
+    return [
+      {
+        id: String(r.id ?? (r as any)._id),
+        kind: r.kind,
+        from: r.from,
+        to: r.to,
+        other: at.other,
+        currentSide: at.side,
+        title: r.title,
+        reason: r.reason,
+        author: r.author,
+        locator: r.locator,
+        sourceUrl: r.sourceUrl,
+        status: r.status,
+        version: r.version,
+        checkedAt: r.checkedAt,
+      },
+    ];
+  });
   let places: any[] = [],
     memory: any = null,
     echoes: any[] = [],
@@ -327,6 +335,7 @@ export async function related(t: Target) {
       citationsOf(Number(m.metadata.textItemId ?? t.id)) ?? []
     ).filter((c: any) => c.confidence === "certain");
   return {
+    relationVersion: 2,
     relations,
     memory,
     places,
