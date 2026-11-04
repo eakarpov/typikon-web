@@ -54,15 +54,28 @@ export async function writeCache(owner: string, key: string, value: unknown) {
   }
 }
 export async function clearPrivateStudy() {
-  epoch++;
+  localStorage.removeItem("study:owner");
+  window.dispatchEvent(new Event("study-owner-changed"));
   await Promise.allSettled([...writers.values()]);
+  epoch++;
   if (typeof caches !== "undefined")
     for (const name of await caches.keys())
-      if (name.startsWith("study:user:")) await caches.delete(name);
+      if (name.startsWith("study:user:")) {
+        const c = await caches.open(name),
+          key = await cacheKey("personal"),
+          response = await c.match(key);
+        const local = response ? await response.clone().json() : null;
+        const pending =
+          (Array.isArray(local?.queue) && local.queue.length > 0) ||
+          (Array.isArray(local?.conflicts) && local.conflicts.length > 0);
+        await caches.delete(name);
+        // A snapshot with unfinished work remains in its original account bucket.
+        if (pending && response)
+          await (await caches.open(name)).put(key, response);
+      }
   for (const key of Object.keys(localStorage))
     if (key.startsWith("study:user:")) localStorage.removeItem(key);
   localStorage.removeItem("study:owner");
-  window.dispatchEvent(new Event("study-owner-changed"));
 }
 export async function savedMaterials(owner: string) {
   await writers.get(owner);

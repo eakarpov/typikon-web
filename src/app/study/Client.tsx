@@ -50,37 +50,45 @@ function PlainSource({
   onFootnote?: (n: number) => void;
 }) {
   return (
-    <div style={{fontFamily:/[\u0460-\u052f\u2de0-\u2dff\ua640-\ua69f\u1c80-\u1c8f]/u.test(text)?"var(--cs-font, var(--font-ponomar))":undefined}}>
-    <Markdown
-      components={{
-        a: ({ href, children }) =>
-          href?.startsWith("#study-footnote-") ? (
-            <button
-              className="underline"
-              onClick={() => onFootnote?.(Number(href.split("-").pop()))}
-            >
-              {children}
-            </button>
-          ) : href && /^https?:|^\//.test(href) ? (
-            <a
-              className="underline"
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {children}
-            </a>
-          ) : (
-            <span>{children}</span>
-          ),
+    <div
+      style={{
+        fontFamily:
+          /[\u0460-\u052f\u2de0-\u2dff\ua640-\ua69f\u1c80-\u1c8f]/u.test(text)
+            ? "var(--cs-font, var(--font-ponomar))"
+            : undefined,
       }}
     >
-      {text
-        .replace(/\{(?:st|pl)\|([^}|]+)\|([^}]+)}/g, "$2")
-        .replace(/\{k\|([^}]+)}/g, "$1")
-        .replace(/\{(\d+)}/g, " [сноска $1](#study-footnote-$1) ")
-        .replace(/\{k\|/g, "")}
-    </Markdown></div>
+      <Markdown
+        components={{
+          a: ({ href, children }) =>
+            href?.startsWith("#study-footnote-") ? (
+              <button
+                className="underline"
+                onClick={() => onFootnote?.(Number(href.split("-").pop()))}
+              >
+                {children}
+              </button>
+            ) : href && /^https?:|^\//.test(href) ? (
+              <a
+                className="underline"
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {children}
+              </a>
+            ) : (
+              <span>{children}</span>
+            ),
+        }}
+      >
+        {text
+          .replace(/\{(?:st|pl)\|([^}|]+)\|([^}]+)}/g, "$2")
+          .replace(/\{k\|([^}]+)}/g, "$1")
+          .replace(/\{(\d+)}/g, " [сноска $1](#study-footnote-$1) ")
+          .replace(/\{k\|/g, "")}
+      </Markdown>
+    </div>
   );
 }
 export default function Client() {
@@ -107,7 +115,9 @@ export default function Client() {
     [selected, setSelected] = useState<Target | null>(null),
     [related, setRelated] = useState<any>(null),
     [panel, setPanel] = useState("related"),
-    [stack, setStack] = useState<{ target: Target; title: string }[]>([]),
+    [stack, setStack] = useState<
+      { target: Target; title: string; context?: any }[]
+    >([]),
     [editing, setEditing] = useState<any>(null),
     [notebook, setNotebook] = useState<Notebook | null>(null),
     [pickCollection, setPickCollection] = useState(false),
@@ -341,7 +351,17 @@ export default function Client() {
       );
       if (notebook && entity === "collections" && notebook.id === value.id)
         setNotebook(deleted ? null : { ...value, revision: op.revision });
-      if (entity === "positions" && !value.collectionId && readingContext) {
+      if (
+        entity === "positions" &&
+        !value.collectionId &&
+        readingContext &&
+        readingContext.collection.items.some(
+          (i) =>
+            i.id === readingContext.itemId &&
+            i.target &&
+            targetKey(i.target) === targetKey(value.target),
+        )
+      ) {
         await save(
           "positions",
           {
@@ -350,7 +370,10 @@ export default function Client() {
             title: readingContext.collection.title,
             collectionId: readingContext.collection.id,
             itemId: readingContext.itemId,
-            status: "reading",
+            status:
+              working.current.positions.find(
+                (p) => p.collectionId === readingContext.collection.id,
+              )?.status ?? "reading",
           },
           false,
           true,
@@ -458,6 +481,7 @@ export default function Client() {
           {
             title: material.title,
             target: selectedRef.current ?? material.target,
+            context: readingContext,
           },
         ]);
       const key = "material:" + targetKey(target);
@@ -472,16 +496,24 @@ export default function Client() {
       const focus = restored?.block ?? m.blocks[0];
       setSelected(
         focus
-          ? target.kind==="bible"&&target.verseFrom&&target.verseTo&&target.verseTo>target.verseFrom&&m.blocks.find(b=>b.verse===target.verseTo)
-            ? rangeTarget(m,focus.id,m.blocks.find(b=>b.verse===target.verseTo)!.id)
-          : restored && target.quote
-            ? {
-                ...target,
-                ...m.target,
-                blockId: focus.id,
-                sourceHash: m.sourceHash,
-              }
-            : targetAt(m, focus)
+          ? target.kind === "bible" &&
+            target.verseFrom &&
+            target.verseTo &&
+            target.verseTo > target.verseFrom &&
+            m.blocks.find((b) => b.verse === target.verseTo)
+            ? rangeTarget(
+                m,
+                focus.id,
+                m.blocks.find((b) => b.verse === target.verseTo)!.id,
+              )
+            : restored && target.quote
+              ? {
+                  ...target,
+                  ...m.target,
+                  blockId: focus.id,
+                  sourceHash: m.sourceHash,
+                }
+              : targetAt(m, focus)
           : m.target,
       );
       if ((target.blockId || target.quote || position) && !restored)
@@ -542,7 +574,9 @@ export default function Client() {
             title: c.title,
             collectionId: c.id,
             itemId: item.id,
-            status: "reading",
+            status:
+              working.current.positions.find((p) => p.collectionId === c.id)
+                ?.status ?? "reading",
           },
           false,
           true,
@@ -561,7 +595,37 @@ export default function Client() {
       })),
     };
   }
-  function resumePosition(p: any) {
+  function bookNotebook(b: any): Notebook {
+    return {
+      id: "book-" + b.book.id,
+      revision: 0,
+      title: b.book.title,
+      items: b.texts.map((t: any) => ({
+        id: t.id,
+        kind: "source",
+        title: t.title,
+        target: { ...t.target, edition: b.book.id },
+      })),
+    };
+  }
+  async function resumePosition(p: any) {
+    if (p.collectionId?.startsWith("book-")) {
+      try {
+        const b = await publicData(
+            "catalog?book=" + encodeURIComponent(p.collectionId.slice(5)),
+          ),
+          c = bookNotebook(b),
+          item = c.items.find((i) => i.id === p.itemId);
+        if (item) {
+          await openItem(c, item, p.target);
+          return;
+        }
+      } catch {
+        setMessage(
+          "Оглавление книги пока недоступно. Открыто сохранённое место.",
+        );
+      }
+    }
     if (p.collectionId) {
       const c =
         working.current.collections.find((c) => c.id === p.collectionId) ??
@@ -647,6 +711,15 @@ export default function Client() {
       title: material.title,
       status: status ?? existing?.status ?? "reading",
     });
+    if (status && readingContext?.collection.id.startsWith("book-"))
+      await save("positions", {
+        id: "notebook-" + readingContext.collection.id,
+        target: selected,
+        title: readingContext.collection.title,
+        collectionId: readingContext.collection.id,
+        itemId: readingContext.itemId,
+        status,
+      });
   }
   async function download(targets: Target[]) {
     setBusy(true);
@@ -732,7 +805,17 @@ export default function Client() {
     setBookLimit(100);
     setSearch("");
     try {
+      if (material)
+        setStack((v) => [
+          ...v,
+          {
+            title: material.title,
+            target: selectedRef.current ?? material.target,
+            context: readingContext,
+          },
+        ]);
       setBook(await publicData("catalog?book=" + encodeURIComponent(id)));
+      setTab("catalog");
       setMaterial(null);
     } catch (e) {
       setError((e as Error).message);
@@ -767,9 +850,9 @@ export default function Client() {
   const notes = state.records.filter(
     (r) =>
       (!search ||
-        normalize([r.note, r.originalQuote, r.target.quote, ...r.tags].join(" ")).includes(
-          normalize(search),
-        )) &&
+        normalize(
+          [r.note, r.originalQuote, r.target.quote, ...r.tags].join(" "),
+        ).includes(normalize(search))) &&
       (!tag || r.tags.includes(tag)) &&
       (!recordBook || (r.sourceBookId ?? r.target.id) === recordBook) &&
       (!onlyQuestions ||
@@ -893,6 +976,7 @@ export default function Client() {
                     onClick={() => {
                       const s = stack[stack.length - 1];
                       setStack(stack.slice(0, -1));
+                      setReadingContext(s.context ?? null);
                       void open(s.target, false);
                     }}
                   >
@@ -919,14 +1003,17 @@ export default function Client() {
                   Запомнить место
                 </button>
                 <label>
-                  Статус чтения{" "}
+                  {readingContext?.collection.id.startsWith("book-")
+                    ? "Статус книги"
+                    : "Статус чтения"}{" "}
                   <select
                     className={field}
                     value={
-                      state.positions.find(
-                        (p) =>
-                          !p.collectionId &&
-                          targetKey(p.target) === targetKey(material.target),
+                      state.positions.find((p) =>
+                        readingContext?.collection.id.startsWith("book-")
+                          ? p.collectionId === readingContext.collection.id
+                          : !p.collectionId &&
+                            targetKey(p.target) === targetKey(material.target),
                       )?.status ?? "reading"
                     }
                     onChange={(e) => void position(e.target.value)}
@@ -943,7 +1030,16 @@ export default function Client() {
                   </select>
                 </label>
               </div>
-              <button className={button} onClick={()=>document.getElementById("study-materials")?.scrollIntoView({block:"start"})}>Материалы к выбранному месту</button>
+              <button
+                className={button}
+                onClick={() =>
+                  document
+                    .getElementById("study-materials")
+                    ?.scrollIntoView({ block: "start" })
+                }
+              >
+                Материалы к выбранному месту
+              </button>
               <h2 className="text-xl">{material.title}</h2>
               <p>
                 {material.author} · {material.edition} ·{" "}
@@ -1003,8 +1099,20 @@ export default function Client() {
                     ))}
                   </article>
                 </ReadingFocus>
-                <aside id="study-materials" className="space-y-4 lg:sticky lg:top-3 lg:self-start lg:max-h-[90vh] lg:overflow-auto">
-                  <button className={button} onClick={()=>document.getElementById("study-"+selected?.blockId)?.scrollIntoView({block:"center"})}>Назад к выбранному месту</button>
+                <aside
+                  id="study-materials"
+                  className="space-y-4 lg:sticky lg:top-3 lg:self-start lg:max-h-[90vh] lg:overflow-auto"
+                >
+                  <button
+                    className={button}
+                    onClick={() =>
+                      document
+                        .getElementById("study-" + selected?.blockId)
+                        ?.scrollIntoView({ block: "center" })
+                    }
+                  >
+                    Назад к выбранному месту
+                  </button>
                   <div className="flex flex-wrap gap-2">
                     {[
                       ["related", "К этому месту"],
@@ -1049,7 +1157,7 @@ export default function Client() {
                       </button>
                     )}
                     <blockquote className="border-l pl-3 max-h-40 overflow-auto">
-                      <PlainSource text={selected?.quote??""}/>
+                      <PlainSource text={selected?.quote ?? ""} />
                     </blockquote>
                     <div className="flex gap-2 flex-wrap">
                       {[
@@ -1151,6 +1259,34 @@ export default function Client() {
                   </details>
                   {panel === "toc" && (
                     <ol>
+                      {readingContext?.collection.id.startsWith("book-") && (
+                        <>
+                          <h3>Оглавление книги</h3>
+                          {readingContext.collection.items.map((i) => (
+                            <li key={i.id}>
+                              <button
+                                className={button}
+                                onClick={() =>
+                                  void openItem(readingContext.collection, i)
+                                }
+                              >
+                                {i.title}
+                              </button>
+                            </li>
+                          ))}
+                        </>
+                      )}
+                      {!!material.metadata.bookId &&
+                        !readingContext?.collection.id.startsWith("book-") && (
+                          <button
+                            className={button}
+                            onClick={() =>
+                              void loadBook(String(material.metadata.bookId))
+                            }
+                          >
+                            Оглавление книги
+                          </button>
+                        )}
                       {material.blocks.map((b) => (
                         <li key={b.id}>
                           <button
@@ -1501,7 +1637,13 @@ export default function Client() {
                             <li key={t.id}>
                               <button
                                 className="underline py-2 text-left"
-                                onClick={() => void open(t.target)}
+                                onClick={() => {
+                                  const c = bookNotebook(book);
+                                  void openItem(
+                                    c,
+                                    c.items.find((i) => i.id === t.id)!,
+                                  );
+                                }}
                               >
                                 {t.title}
                               </button>
@@ -2271,7 +2413,9 @@ export default function Client() {
               )}
               {!editing.editorType && (
                 <>
-                  <blockquote><PlainSource text={editing.target.quote??""}/></blockquote>
+                  <blockquote>
+                    <PlainSource text={editing.target.quote ?? ""} />
+                  </blockquote>
                   <label>
                     Вид записи
                     <select
