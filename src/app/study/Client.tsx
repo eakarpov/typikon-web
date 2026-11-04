@@ -942,6 +942,7 @@ export default function Client() {
                   </select>
                 </label>
               </div>
+              <button className={button} onClick={()=>document.getElementById("study-materials")?.scrollIntoView({block:"start"})}>Материалы к выбранному месту</button>
               <h2 className="text-xl">{material.title}</h2>
               <p>
                 {material.author} · {material.edition} ·{" "}
@@ -1001,7 +1002,8 @@ export default function Client() {
                     ))}
                   </article>
                 </ReadingFocus>
-                <aside className="space-y-4 lg:sticky lg:top-3 lg:self-start">
+                <aside id="study-materials" className="space-y-4 lg:sticky lg:top-3 lg:self-start lg:max-h-[90vh] lg:overflow-auto">
+                  <button className={button} onClick={()=>document.getElementById("study-"+selected?.blockId)?.scrollIntoView({block:"center"})}>Назад к выбранному месту</button>
                   <div className="flex flex-wrap gap-2">
                     {[
                       ["related", "К этому месту"],
