@@ -22,6 +22,8 @@ export { SLOTS, VERB_SLOTS, ADJ_SLOTS };
 
 export interface Lexeme {
     name: string;
+    /** Internal source spelling for the grammar engine; canonical display stays in name. */
+    morphologyLemma?: string;
     /** Пометы словаря: «S,m,anim,persn». */
     properties?: string | null;
     scheme?: string | null;
@@ -65,7 +67,7 @@ export const decline = (lexeme: Lexeme): Declension | null => {
 
     const properties = String(lexeme.properties ?? "").split(",");
     const animate = properties.includes("anim");
-    const stems = paradigm.stems(lexeme.name);
+    const stems = paradigm.stems(lexeme.morphologyLemma ?? lexeme.name);
 
     const table = {} as Declension;
 
@@ -185,8 +187,9 @@ export const conjugate = (lexeme: Lexeme): Conjugation | null => {
     const paradigm = CONJUGATIONS[String(lexeme.scheme ?? "")];
     if (!paradigm) return null;
 
-    const reflexive = REFLEXIVE.exec(lexeme.name)?.[1] ?? "";
-    const name = reflexive ? lexeme.name.slice(0, -reflexive.length) : lexeme.name;
+    const sourceName = lexeme.morphologyLemma ?? lexeme.name;
+    const reflexive = REFLEXIVE.exec(sourceName)?.[1] ?? "";
+    const name = reflexive ? sourceName.slice(0, -reflexive.length) : sourceName;
 
     const stems = paradigm.stems(name);
     const table = {} as Conjugation;
@@ -212,7 +215,7 @@ const adjectiveCells = (cells: AdjParadigm["brev"], stems: Record<number, string
 export const declineAdjective = (lexeme: Lexeme): AdjectiveTable | null => {
     const paradigm = ADJECTIVES[String(lexeme.scheme ?? "")];
     if (!paradigm) return null;
-    return buildAdjective(paradigm, lexeme.name);
+    return buildAdjective(paradigm, lexeme.morphologyLemma ?? lexeme.name);
 };
 
 const buildAdjective = (paradigm: AdjParadigm, lemma: string): AdjectiveTable => {
@@ -276,3 +279,6 @@ const disambiguateAdjective = (
 /** Склоняет причастие по его основе — тем же прилагательным. */
 export const declineParticiple = (base: string): AdjectiveTable =>
     buildAdjective(participleParadigm(base), base);
+
+/** Required before importing canonical spellings with a separate grammar representation. */
+export const DICTIONARY_MORPHOLOGY_CAPABILITY = "dictionary-morphology-lemma-v1";

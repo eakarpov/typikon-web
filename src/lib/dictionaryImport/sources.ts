@@ -1,0 +1,20 @@
+/** Initial bibliography; codes remain stable, rights are reviewed separately. */
+export const SOURCE_CATALOG: Record<string, { title: string; url: string | null }> = {
+    article: { title: 'Структура и перекрёстные ссылки DSL', url: null },
+    gr: { title: 'А. Е. Поляков. Грамматический словарь церковнославянского языка', url: 'http://dic.feb-web.ru/slavonic/dicgram/index.htm' },
+    'чс': { title: 'Частотные данные Chu-Rus', url: 'https://cs-dict.ru/dict' },
+    'Дч': { title: 'Г. М. Дьяченко. Полный церковнославянский словарь', url: null },
+    'Дч*': { title: 'Г. М. Дьяченко. Словарь с дополнительными цитатами', url: 'http://rus-yaz.niv.ru/doc/church-slavonic-dictionary/index.htm' },
+    'Св': { title: 'А. Свирелин. Церковнославянский словарь', url: null },
+    'Сд': { title: 'О. А. Седакова. Словарь трудных слов из богослужения', url: null },
+    'СЦРЯ': { title: 'Словарь церковнославянского и русского языка, 1847', url: null },
+    'САР-1': { title: 'Словарь Академии Российской, 1789–1794', url: null },
+    'Фл': { title: 'П. Филкова. Староболгаризмы и церковнославянизмы', url: null },
+    'Алекс': { title: 'П. Алексеев. Церковный словарь', url: null },
+    'ГлтНЗ': { title: 'П. А. Гильтебрандт. Справочный и объяснительный словарь к Новому Завету', url: null },
+    od: { title: 'Комбинированный словарь orthodic_org', url: null },
+    'Ник': { title: 'Архимандрит Никифор. Библейская энциклопедия', url: null },
+    'РусXI-XVII': { title: 'Словарь русского языка XI–XVII веков', url: null },
+    'Дерив': { title: 'Справочник производных слов Chu-Rus', url: 'https://cs-dict.ru/dict' },
+    'Гео': { title: 'Географический справочник Chu-Rus', url: 'https://cs-dict.ru/dict' },
+};

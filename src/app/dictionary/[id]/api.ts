@@ -273,7 +273,7 @@ export const getItem = async (id: string): Promise<[LexemeView | null, unknown]>
         // окончания — оно не в конце строки, — и `cut` молча возвращал лемму
         // целиком: к инфинитиву приписывалось окончание, «ви́дѣти+жиши» вместо
         // «ви́дишиже», и так вся парадигма у ста пятидесяти восьми лемм.
-        const { head, clitic } = splitClitic(name);
+        const { head, clitic } = splitClitic(String(lexeme.morphologyLemma ?? name));
         const lex = { name: head, properties, scheme: view.scheme };
 
         if (pos === "noun") {

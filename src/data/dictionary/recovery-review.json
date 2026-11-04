@@ -1,0 +1,397 @@
+{
+  "formatVersion": 1,
+  "reviewDate": "2026-11-05",
+  "sourceFileSha256": "dda11fdeaa9990c074b1ab67c7c6fd6874334154c0dc0201ed4f17e7799840b4",
+  "orthographyDecisions": [
+    {
+      "externalKey": "я́блоня:",
+      "id": "917eeebe79a15603c0724012",
+      "previousName": "ꙗ́блонѧ",
+      "name": "ꙗ҆́блонѧ",
+      "status": "editorial-reviewed",
+      "note": "Заголовок восстановлен из явной леммы я́блоня:; творительный яблонею и родительный множественного яблонь согласуются с N3j. Полный церковный именительный в исходнике не выписан.",
+      "evidenceIds": [
+        "92bf12146e7c3ba44a4c5af7afb1b60e9a9922149236d11052925cede6cdcc04"
+      ]
+    },
+    {
+      "externalKey": "яви́тися+бо:",
+      "id": "d5a10993cba0f2b08f65ee4d",
+      "previousName": "ꙗви́тисѧ+бо",
+      "name": "ꙗ҆ви́тибосѧ",
+      "status": "source-attested",
+      "note": "Буквальное написание инфинитивного заголовка в ссылке исходной статьи; бо перед возвратным ся.",
+      "evidenceIds": [
+        "2ecbd37e1079cf33ca88bed7adba38cb203a84326d400399f6edee9578d86f2e"
+      ]
+    },
+    {
+      "externalKey": "яви́тися+же:",
+      "id": "4f7998e54f385fe1ad53d6d4",
+      "previousName": "ꙗви́тисѧ+же",
+      "name": "ꙗ҆ви́тисѧже",
+      "status": "editorial-reviewed",
+      "note": "В исходном заголовке ꙗ҆ви́тисѧ﹢же технический разделитель ﹢; для показа снят. Засвидетельствованные формы с иным положением же сохранены.",
+      "evidenceIds": [
+        "59c92592ebbe1034fe910f83f2de0e64ddf1d92c3be0f2a51dca722badc74ae7"
+      ]
+    },
+    {
+      "externalKey": "яви́тися+ми:",
+      "id": "18ce4b90502bbd46cd5f25d2",
+      "previousName": "ꙗви́тисѧ+ми",
+      "name": "ꙗ҆ви́тимисѧ",
+      "status": "source-attested",
+      "note": "Исходник явно помечает ꙗ҆ви́тимисѧ как inf. Ми — краткая дательная энклитическая форма азъ.",
+      "evidenceIds": [
+        "b0e325cf07bd6f38be42317c00b537df6fe5efcca6c2588f16680f710d7db15f"
+      ]
+    },
+    {
+      "externalKey": "яви́тися+ти:",
+      "id": "6f5ae8436e29f1f31280a947",
+      "previousName": "ꙗви́тисѧ+ти",
+      "name": "ꙗ҆ви́тисѧти",
+      "status": "editorial-reviewed",
+      "note": "Снят технический разделитель в исходном заголовке ꙗ҆ви́тисѧ﹢ти. Положение ти в отдельных выписанных формах не унифицируется.",
+      "evidenceIds": [
+        "2a967215ac714558b6f4684904939bf0c905e4d4e1964a9697052d40d6cc732c"
+      ]
+    },
+    {
+      "externalKey": "языкоо́гненнѡ:",
+      "id": "a254e6e5b5ed4cd8fdcabf33",
+      "previousName": "ꙗзыкоо́гненнѡ",
+      "name": "ꙗ҆зыкоѻ́гненнѡ",
+      "status": "source-attested",
+      "note": "Исходный заголовок содержит широкое ѻ; начальный юс приведён к принятой графике без изменения о/ѻ.",
+      "evidenceIds": [
+        "9a12abfc3efb5152c959cd6a6ac03ce6938d5262723f1f05ac7fc1c6cddfc19e"
+      ]
+    },
+    {
+      "externalKey": "языкоо́гненный:",
+      "id": "5f1873992b329b7bf2996186",
+      "previousName": "ꙗзыкоо́гненный",
+      "name": "ꙗ҆зыкоѻ́гненный",
+      "status": "source-attested",
+      "note": "Буквальный заголовок в исходной статье; ѻ не заменяется обычным о. Нулевая частота не выдаётся за корпусную фиксацию.",
+      "evidenceIds": [
+        "8a499f958f88e102c73ff1185b3c76ab31c97f7dc0c527005983a1ee034d96d4"
+      ]
+    },
+    {
+      "externalKey": "языкоогнеѡбра́зный:",
+      "id": "f765a486f82fbe5b83a7c087",
+      "previousName": "ꙗзыкоогнеѡбра́зный",
+      "name": "ꙗ҆зыкоѻгнеѡбра́зный",
+      "status": "source-attested",
+      "note": "Выбрано явное заголовочное написание источника с ѻ и ѡ. Другие написания форм сохранены.",
+      "evidenceIds": [
+        "e4e8280df680fb7960bab473648dcc166410871e6cc30c4258880896695c46b0"
+      ]
+    },
+    {
+      "externalKey": "язы́къ_2:",
+      "id": "ead8f984aded980549c4c0c7",
+      "previousName": "ꙗзы́къ",
+      "name": "ꙗ҆зы́къ",
+      "status": "editorial-reviewed",
+      "note": "Восстановлена общая графическая форма по связанному язы́къ:. ID омонима _2 и неодушевлённость сохранены; с одушевлённым язы́къ: не объединяется.",
+      "evidenceIds": [
+        "ffac1b8ea5f96a538c9c576bb4049d0bc82ae9cb2d4e263567c2e66d1ea8519d"
+      ]
+    },
+    {
+      "externalKey": "які́й+же:",
+      "id": "3e489c474fa10f32d061d4b3",
+      "previousName": "ꙗкі́й+же",
+      "name": "ꙗ҆кі́йже",
+      "status": "editorial-reviewed",
+      "note": "Заголовок составлен из явно указанной базовой леммы які́й: и частицы же; полная слитная именительная форма непосредственно не выписана.",
+      "evidenceIds": [
+        "25b48e3a1b23d78ae2aa521e56beabe7113edb3678fb48da74fdd47001d336f6"
+      ]
+    },
+    {
+      "externalKey": "яковы́й+же:",
+      "id": "4213c69eae50a35d1352f834",
+      "previousName": "ꙗковы́й+же",
+      "name": "ꙗ҆ковы́йже",
+      "status": "source-attested",
+      "note": "Прямой заголовок источника. Формы яково́же, якова́же и якова̑же остаются отдельными свидетельствами.",
+      "evidenceIds": [
+        "f92b42fd8f2a13511fae0089ba39bf2cc67811d5020b2c30fe6cc1bdd54b4136"
+      ]
+    },
+    {
+      "externalKey": "яковы́й+либо:",
+      "id": "ddf2830ab8a43c3119e8fea4",
+      "previousName": "ꙗковы́й+либо",
+      "name": "ꙗ҆ковы́йлибо",
+      "status": "source-attested",
+      "note": "Прямой заголовок источника. Вариант формы с любо сохранён, не исправляется автоматически на либо.",
+      "evidenceIds": [
+        "9b869aa76851894795ca9a95b5384aa23add012149d5e40f4a2bef8fa3e00d53"
+      ]
+    }
+  ],
+  "schemeDecisions": [
+    {
+      "id": "917eeebe79a15603c0724012",
+      "externalKey": "я́блоня:",
+      "scheme": "N3j",
+      "morphologyLemma": "я́блоня",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 2,
+        "matchedForms": 2,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "33162f445579cca6340dca3e64a9eae2b535fa712cce4f7390f1295e6f62a112",
+          "72cee1ca2ea92d2ef467a5a98290533662c9c1a7b4f809d486319fe90cd6abc3"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d76b06",
+          "68399a217310e32be5d7721d",
+          "68399a217310e32be5d7614c"
+        ]
+      }
+    },
+    {
+      "id": "deb03d0a96e78597a1de594c",
+      "externalKey": "яви́тель:",
+      "scheme": "N1j",
+      "morphologyLemma": "яви́тель",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 2,
+        "matchedForms": 2,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "551ba0adc267a44428340bfd59c8798c1ebb7dfd1c2c85553fe0f5230f221cdf",
+          "4247cc2fbaacdf1f0b9ea43fb6768721e611d1883d9b8034f6d89b320de61086"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d788d7",
+          "68399a217310e32be5d7bff9",
+          "68399a217310e32be5d7c904"
+        ]
+      }
+    },
+    {
+      "id": "22adb09c3c01328a349e5877",
+      "externalKey": "я́вствовати:",
+      "scheme": "V12ov",
+      "morphologyLemma": "я́вствовати",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 2,
+        "matchedForms": 2,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "2d516ba8cb38a07e52ddcaa9ec6ae2c3aa1bf2afde6d85604b997726991c0ed6",
+          "6019596d6d8563f5ced6b45e9109f871bbbc743f5e466dc013ae9b46297c3438"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d76510",
+          "68399a217310e32be5d76511",
+          "68399a217310e32be5d767ea"
+        ]
+      }
+    },
+    {
+      "id": "df158a6df3bd3f4bf393138d",
+      "externalKey": "ягня́:",
+      "scheme": "N5et",
+      "morphologyLemma": "ягня́",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 2,
+        "matchedForms": 2,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "93ad9746b2f0c107466783ab1c101967fbc013a29fb3607cc56ba915fbc86fa3",
+          "8eb36b6cb56fe5c0f90717a03112ab5236ac63a388b92e0fa99e1cb0d64f2aed"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d75fc7",
+          "68399a217310e32be5d768b4"
+        ]
+      }
+    },
+    {
+      "id": "21532a398b0ce11d92b7a332",
+      "externalKey": "я́дъ:",
+      "scheme": "N1t",
+      "morphologyLemma": "я́дъ",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 5,
+        "matchedForms": 5,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "44904135f1f325a1776454ee763ef48a8b5b7f87f9f8a21bb32eea8efb6626d9",
+          "a551c968929c35e46b6f3e91921dfb0c318fd7d754911af6aba08eca609cf503",
+          "dc027564b5f90101eec5c51379ede346740882bc73e20eb760f9b0f8a8cf67ac",
+          "c0f78c90e5b5008b6daa18bc46ab277816c788859fab93928710595f0a6a0daf",
+          "b2acfec72549df3696cd58313b2b0cfa2120426222f1b7ead1460e9db4f9eec2"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d7a6a5",
+          "68399a217310e32be5d7c542",
+          "68399a217310e32be5d75f0c"
+        ]
+      }
+    },
+    {
+      "id": "c181f7caac4af9f260a1bf8d",
+      "externalKey": "я́дь:",
+      "scheme": "N41",
+      "morphologyLemma": "я́дь",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 3,
+        "matchedForms": 3,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "d6329076abf725b21f72392509f8fc4534a93e7359d8895540a26a61d68795d9",
+          "76a66548e9eddd4d27eface14254055742adee995671064d77f32c82032a2811",
+          "fc214165ef704857cda87e6dcb648703182587f88c1cb559965a43e8e5a4366a"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d768e3",
+          "68399a217310e32be5d7c0ca",
+          "68399a217310e32be5d7d523"
+        ]
+      }
+    },
+    {
+      "id": "a884dee09a8ea022c83d33be",
+      "externalKey": "я́зва:",
+      "scheme": "N3t",
+      "morphologyLemma": "я́зва",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 9,
+        "matchedForms": 9,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "3fdcb081acc51c155a7a29bbf83009567049f5d1279d1c3877d2d0d109f32151",
+          "eeac61ec0f780f91c0dfa2cb343ad2ba29a51cc6c1e28be6b7062dd31a9cc05a",
+          "f41607d4ccf969b504c870c927d563aa0d03e248acb2d6fd91872c9a91ffb53a",
+          "effe076104cebb2b5a9c9fb160649228454823c16f2ad5a80c4c779cb881b285",
+          "c38ce862b21a2e8a5b632203d2117020d5c0f6d51d82ef5740a81f68d1b0078e",
+          "44df17feeee4422ac1f7fd690fade93163ea01abc9c8b03f16cbc4fbfd94f281",
+          "d0f68d8a08fe4a64a3b659f3f77641b0fedf7a8ea84e89ecebff7e87d57b43df",
+          "cf0e3909ad598649528223839041fea9c6f80367cf36adda908f8827ea0e15cd",
+          "c182f0575f6784a1525e1ae6a87e995d236d96bf4b0c1049c4ae79925689b300"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d79124",
+          "68399a217310e32be5d7de70",
+          "68399a217310e32be5d75f12"
+        ]
+      }
+    },
+    {
+      "id": "be28da547aad83e8eddd6fc6",
+      "externalKey": "язы́чникъ:",
+      "scheme": "N1k",
+      "morphologyLemma": "язы́чникъ",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 5,
+        "matchedForms": 5,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "2dfe4d985cb00bba1ff213ab69969f08b7faf30925791d2d9c1368bfc1b26cae",
+          "fd12aa6004e4aa6c6bddb1c14177bc15d57cf74073b6c36b77951128508f6064",
+          "e0863e74f50cdc59f56bc689ad39e4f0defeb1146f8135c4985d0b3a5f1bf236",
+          "654d796a2ce65c5b2580c460ec06400395c05479b0563c2dc9d224bde17eac19",
+          "01ccd1d80b10ec18e03e544315d71724965f7931af5578ddea504941cb2fa726"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d77a1d",
+          "68399a217310e32be5d7899c",
+          "68399a217310e32be5d7d7c5"
+        ]
+      }
+    },
+    {
+      "id": "163e2533feb4fe1f4521cbc8",
+      "externalKey": "яросла́вль:",
+      "scheme": "N1j",
+      "morphologyLemma": "яросла́вль",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 2,
+        "matchedForms": 2,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "c28211e1570e58376d863e58f4359d3d8481cb5d48ccb9e62c9e0c588d91d6c8",
+          "f904995d2a6d4b0f9d664a1edccfe935b8f894d66f37ceab92e1637be9d0335a"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d7ae9c",
+          "68399a217310e32be5d7ae9d",
+          "68399a217310e32be5d780ce"
+        ]
+      }
+    },
+    {
+      "id": "2f50b568e8740b09d6161875",
+      "externalKey": "я́рый:",
+      "scheme": "A1t",
+      "morphologyLemma": "я́рый",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 5,
+        "matchedForms": 5,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "509a8286773194a0abcee5258a05ced2bf41515c6ccbc88c15c622162d4c5cd7",
+          "511c922ba9df2025834b5c2c70c096d4ce46bffa23bbe24bde2465e98e2a14b9",
+          "64281803a8b25aecca73ee6a48e8438cc9fa74496aa791ed300e96b78d714a11",
+          "7bb6a2996a77f7012135299a6c1222b9193659f0e1f0f23c13cceaa1159fb05e",
+          "ce90d99d6d0cbd8555c6e6b0163e93bc712e42b1dcf061b409e4cfeaaa1524e6"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d761b2",
+          "68399a217310e32be5d764ed",
+          "68399a217310e32be5d7664e"
+        ]
+      }
+    },
+    {
+      "id": "4badeaab661c766a11d3fe46",
+      "externalKey": "я́тры:",
+      "scheme": "N5ov",
+      "morphologyLemma": "я́тры",
+      "evidence": {
+        "origin": "reconstructed",
+        "originalSourceCode": false,
+        "checkedForms": 2,
+        "matchedForms": 2,
+        "accentChecked": false,
+        "sourceEntryIds": [
+          "b4a20ad8f442f46737e7cabb7cfd4a825886e5236d03701ad7e8f7bc2d1c623e",
+          "e7ef0164a2504674b207919e2039e19ddd4af106a67e1acd9420d9da1defcdda"
+        ],
+        "analogueIds": [
+          "68399a217310e32be5d7c766"
+        ]
+      }
+    }
+  ]
+}
