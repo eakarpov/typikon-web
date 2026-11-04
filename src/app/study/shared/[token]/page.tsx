@@ -30,8 +30,8 @@ export default async function Page({ params }: { params: { token: string } }) {
                 {i.record.originalQuote ?? i.record.target.quote}
               </blockquote>
               <p>{i.record.note}</p>
-              <Link className="underline" href={href(i.record.target)}>
-                К месту в источнике
+              <Link className="underline" href={href(i.record.originalTarget??i.record.target)}>
+                К исходному месту выписки
               </Link>
             </>
           )}
