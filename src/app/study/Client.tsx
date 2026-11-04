@@ -766,7 +766,7 @@ export default function Client() {
   const notes = state.records.filter(
     (r) =>
       (!search ||
-        normalize([r.note, r.target.quote, ...r.tags].join(" ")).includes(
+        normalize([r.note, r.originalQuote, r.target.quote, ...r.tags].join(" ")).includes(
           normalize(search),
         )) &&
       (!tag || r.tags.includes(tag)) &&
