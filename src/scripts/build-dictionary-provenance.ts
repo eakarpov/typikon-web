@@ -1,7 +1,7 @@
 /** Local, append-free build. Never connects to MongoDB and never modifies its inputs. */
 import Database from 'better-sqlite3';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { hashFile } from '@/lib/dictionaryImport/files';
 import { parse } from 'csv-parse/sync';
 import { createProvenance, provenanceWriter, provenanceId, lexemeTargetId, formTargetId, schemeTargetId, matchLegacy, type CsvWitness, type ProvenanceEvidence } from '@/lib/dictionaryImport/provenance';
 import { fingerprint, stable, validatePlanId, type DictionaryImportPlan } from '@/lib/dictionaryImport/plan';
@@ -10,7 +10,7 @@ import type { LegacyLexeme, RecoveryLexeme, DslEntry } from '@/lib/dictionaryImp
 const arg=(name:string):string=>{const i=process.argv.indexOf(name);if(i<0||!process.argv[i+1]||process.argv[i+1].startsWith('--'))throw new Error(`Required ${name}`);return process.argv[i+1];};
 const paths={snapshot:arg('--snapshot'),csv:arg('--csv'),staging:arg('--staging'),recovery:arg('--recovery'),review:arg('--review'),plan:arg('--plan')};
 const out=arg('--out');if(existsSync(out))throw new Error('Refusing to overwrite an existing provenance artifact');
-const hash=(file:string):string=>createHash('sha256').update(readFileSync(file)).digest('hex');
+const hash=hashFile;
 const hashes=Object.fromEntries(Object.entries(paths).map(([k,v])=>[k,hash(v)]));
 const plan=JSON.parse(readFileSync(paths.plan,'utf8')) as DictionaryImportPlan;validatePlanId(plan);
 const legacy=JSON.parse(readFileSync(paths.snapshot,'utf8')) as LegacyLexeme[];

@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { hashFile } from '@/lib/dictionaryImport/files';
 import Database from 'better-sqlite3';
 import { buildPlan } from '@/lib/dictionaryImport/plan';
 import { lemmaHeader, lemmaProperties } from '@/lib/dictionaryImport/core';
@@ -7,7 +7,7 @@ import type { DslEntry, LegacyLexeme, RecoveryLexeme } from '@/lib/dictionaryImp
 const arg=(name:string):string=>{const i=process.argv.indexOf(name);if(i<0||!process.argv[i+1])throw new Error(`Required ${name}`);return process.argv[i+1];};
 const staging=arg('--staging'),snapshot=arg('--snapshot'),recovery=arg('--recovery'),out=arg('--out');
 if(existsSync(out))throw new Error('Refusing to overwrite an existing plan');
-const hash=(file:string):string=>createHash('sha256').update(readFileSync(file)).digest('hex');
+const hash=hashFile;
 const db=new Database(staging,{readonly:true,fileMustExist:true});
 try {
  const meta=Object.fromEntries((db.prepare('SELECT key,value FROM metadata').all() as {key:string;value:string}[]).map(r=>[r.key,r.value]));

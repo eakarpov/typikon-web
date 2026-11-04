@@ -1,7 +1,7 @@
 /** Dry-run by default. Canonical lexems are insert-only, including on resume. */
 import { MongoClient, ObjectId, BSON, type AnyBulkWriteOperation } from 'mongodb';
 import Database from 'better-sqlite3';
-import { createHash } from 'node:crypto';
+import { hashFile } from '@/lib/dictionaryImport/files';
 import { readFileSync, writeFileSync, mkdirSync, createWriteStream } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { Readable } from 'node:stream';
@@ -20,7 +20,7 @@ interface RunDoc {_id:string;status:string;planId:string;backupDir?:string;backu
 const tables:Record<string,string>={sources:'dictionarySources',entries:'dictionarySourceEntries',locations:'dictionarySourceLocations',
     fragments:'dictionarySourceFragments',grammar:'dictionaryGrammarEvidence',source_references:'dictionaryReferences',
     frequencies:'dictionaryFrequencyEvidence',unresolved_grammar:'dictionaryUnresolvedGrammar'};
-const sha=(file:string):string=>createHash('sha256').update(readFileSync(file)).digest('hex');
+const sha=hashFile;
 async function main():Promise<void>{
     const plan=JSON.parse(readFileSync(required('--plan'),'utf8')) as DictionaryImportPlan;validatePlanId(plan);
     if(plan.formatVersion!==1||plan.targetDatabase!=='typikon-csl')throw new Error('Unsupported plan target or version');
