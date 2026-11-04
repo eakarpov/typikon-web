@@ -1,6 +1,7 @@
 /** Dry-run by default. Canonical lexems are insert-only, including on resume. */
 import { MongoClient, ObjectId, BSON, type AnyBulkWriteOperation } from 'mongodb';
 import Database from 'better-sqlite3';
+import { sqlitePage } from '@/lib/dictionaryImport/sqlite';
 import { hashFile } from '@/lib/dictionaryImport/files';
 import { readFileSync, writeFileSync, mkdirSync, createWriteStream } from 'node:fs';
 import { resolve, join } from 'node:path';
@@ -69,7 +70,7 @@ async function main():Promise<void>{
         else await runs.updateOne({_id:plan.id,planId:plan.id},{$set:{status:'running',phase:'evidence'},$addToSet:{backupDirs:backupDir}});
         journalStarted=true;
         const sourceDoc=(table:string,row:Record<string,unknown>):SourceDoc=>{
-            const payload={...row};delete payload.rowid;
+            const payload={...row};delete payload.rowid;delete payload._cursor;
             if(typeof payload.headers==='string')payload.headers=JSON.parse(payload.headers) as unknown;
             if(typeof payload.subcorpora==='string')payload.subcorpora=JSON.parse(payload.subcorpora) as unknown;
             const id=typeof row.id==='string'?row.id:table==='sources'?`chu-rus:${String(row.code)}`:
@@ -78,12 +79,13 @@ async function main():Promise<void>{
         };
         // Every evidence operation uses setOnInsert. Existing editorial fields are never assigned.
         for(const [table,name] of Object.entries(tables)){
-            const collection=db.collection<SourceDoc>(name);let last=0;
-            const batch=stagingDb.prepare(`SELECT rowid,* FROM ${table} WHERE rowid>? ORDER BY rowid LIMIT 1000`);
-            for(;;){const rows=batch.all(last) as Record<string,unknown>[];if(!rows.length)break;
+            const collection=db.collection<SourceDoc>(name);let last=0,visited=0;
+            const batch=(after:number):Record<string,unknown>[]=>sqlitePage(stagingDb,table,after);
+            for(;;){const rows=batch(last);if(!rows.length)break;
                 const ops:AnyBulkWriteOperation<SourceDoc>[]=rows.map(row=>{const doc=sourceDoc(table,row);return {updateOne:{filter:{_id:doc._id},update:{$setOnInsert:doc},upsert:true}};});
-                await collection.bulkWrite(ops,{ordered:true});last=Number(rows[rows.length-1].rowid);
+                await collection.bulkWrite(ops,{ordered:true});visited+=rows.length;last=Number(rows[rows.length-1]._cursor);
             }
+            if(visited!==(stagingDb.prepare(`SELECT count(*) n FROM ${table}`).get() as {n:number}).n)throw new Error(`Incomplete source pagination: ${table}`);
             await runs.updateOne({_id:plan.id,planId:plan.id},{$set:{phase:name}});
         }
         const links=db.collection<SourceDoc>('dictionarySourceLinks');
@@ -99,16 +101,17 @@ async function main():Promise<void>{
         await db.collection<SourceDoc>('dictionarySourceVersions').updateOne({_id:version._id},{$setOnInsert:version}, {upsert:true});
         // Sidecar graph is insert-only too. IDs do not depend on mutable article contents.
         if(provenanceDb)for(const [table,name] of Object.entries(PROVENANCE_COLLECTIONS)){
-            const collection=db.collection<SourceDoc>(name);let last=0;
-            const query=provenanceDb.prepare(`SELECT rowid,id,payload FROM ${table} WHERE rowid>? ORDER BY rowid LIMIT 1000`);
-            for(;;){const rows=query.all(last) as {rowid:number;id:string;payload:string}[];if(!rows.length)break;
+            const collection=db.collection<SourceDoc>(name);let last=0,visited=0;
+            const query=(after:number):Record<string,unknown>[]=>sqlitePage(provenanceDb,table,after);
+            for(;;){const rows=query(last) as {_cursor:number;id:string;payload:string}[];if(!rows.length)break;
                 const docs=rows.map(row=>({_id:row.id,payloadHash:digest(stable(JSON.parse(row.payload))),sourceVersionId:provenanceSha!,payload:JSON.parse(row.payload) as Record<string,unknown>}));
                 const existing=await collection.find({_id:{$in:docs.map(d=>d._id)}}).toArray();
                 const expected=new Map(docs.map(d=>[d._id,d.payloadHash]));
                 if(existing.some(d=>d.payloadHash!==expected.get(d._id)))throw new Error(`Provenance ID conflict in ${name}; preserve local data and rebuild the plan`);
                 await collection.bulkWrite(docs.map(doc=>({updateOne:{filter:{_id:doc._id},update:{$setOnInsert:doc},upsert:true}})),{ordered:true});
-                last=rows[rows.length-1].rowid;
+                visited+=rows.length;last=rows[rows.length-1]._cursor;
             }
+            if(visited!==(provenanceDb.prepare(`SELECT count(*) n FROM ${table}`).get() as {n:number}).n)throw new Error(`Incomplete provenance pagination: ${table}`);
             await runs.updateOne({_id:plan.id,planId:plan.id},{$set:{phase:name}});
         }
         // Recheck immediately before canonical insertion; external edits require a fresh plan.
