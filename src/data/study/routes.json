@@ -23,7 +23,8 @@
           },
           "comment": "Начните с наставления о сокровенной молитве и слов молитвы Господней.",
           "source": "Елизаветинская Библия: Мф 6:5–13",
-          "sourceUrl": "https://www.typikon.info/bible/matfeya/6#v5"
+          "sourceUrl": "https://www.typikon.info/bible/matfeya/6#v5",
+          "id": "source-42330d79714f045576c9"
         },
         {
           "title": "Молитва мытаря",
@@ -37,7 +38,8 @@
           },
           "comment": "Сопоставьте многословную уверенность в себе и краткую просьбу о милости.",
           "source": "Елизаветинская Библия: Лк 18:9–14",
-          "sourceUrl": "https://www.typikon.info/bible/luki/18#v9"
+          "sourceUrl": "https://www.typikon.info/bible/luki/18#v9",
+          "id": "source-e0f146c7bbf1454cc14a"
         },
         {
           "title": "Лествица: что называется молитвой",
@@ -53,7 +55,8 @@
           },
           "comment": "Определение молитвы у Иоанна Лествичника. Это авторское аскетическое объяснение, а не перевод евангельского текста.",
           "source": "Лествица — Слово 28. О священней и матери добродетелей, блаженней молитве: и о умнем в ней и чувственнем предстоянии, фрагмент 2",
-          "sourceUrl": "https://www.typikon.info/reading/695ac532c8b9c9425def3a4e"
+          "sourceUrl": "https://www.typikon.info/reading/695ac532c8b9c9425def3a4e",
+          "id": "source-9828b07b1bab4c92fb8e"
         },
         {
           "title": "Простота обращения",
@@ -69,7 +72,8 @@
           },
           "comment": "Краткий образ молитвы мытаря связывает предыдущее чтение с аскетическим наставлением.",
           "source": "Лествица — Слово 28. О священней и матери добродетелей, блаженней молитве: и о умнем в ней и чувственнем предстоянии, фрагмент 6",
-          "sourceUrl": "https://www.typikon.info/reading/695ac532c8b9c9425def3a4e"
+          "sourceUrl": "https://www.typikon.info/reading/695ac532c8b9c9425def3a4e",
+          "id": "source-cd92c6417173e654d241"
         },
         {
           "title": "Благодарение, исповедание и просьба",
@@ -85,7 +89,8 @@
           },
           "comment": "Обратите внимание на последовательность молитвенного обращения; отрывок описывает монашеское наставление.",
           "source": "Лествица — Слово 28. О священней и матери добродетелей, блаженней молитве: и о умнем в ней и чувственнем предстоянии, фрагмент 8",
-          "sourceUrl": "https://www.typikon.info/reading/695ac532c8b9c9425def3a4e"
+          "sourceUrl": "https://www.typikon.info/reading/695ac532c8b9c9425def3a4e",
+          "id": "source-2ee2558e4652101db211"
         },
         {
           "title": "Лествица: внимание в псалмопении",
@@ -101,7 +106,8 @@
           },
           "comment": "Сопоставьте личное обращение и участие в общем псалмопении. Практические указания относятся к исходной монашеской среде.",
           "source": "Лествица — Слово 19. О сне и молитве, и еже о дружине псалмопению, фрагмент 5",
-          "sourceUrl": "https://www.typikon.info/reading/69582aeec8b9c9425def3a3c"
+          "sourceUrl": "https://www.typikon.info/reading/69582aeec8b9c9425def3a3c",
+          "id": "source-378b7afd9d86b0fdc89e"
         }
       ]
     },
@@ -127,7 +133,8 @@
           },
           "comment": "Прочитайте рассказ до принятия сына отцом; при необходимости откройте всю главу для продолжения притчи.",
           "source": "Елизаветинская Библия: Лк 15:11–24",
-          "sourceUrl": "https://www.typikon.info/bible/luki/15#v11"
+          "sourceUrl": "https://www.typikon.info/bible/luki/15#v11",
+          "id": "source-e19d4975c26422496d2b"
         },
         {
           "title": "Молитва о помиловании",
@@ -141,7 +148,8 @@
           },
           "comment": "Псалом даёт язык личного обращения. Используется славянская нумерация выбранного издания.",
           "source": "Елизаветинская Библия: Пс 50:3–12",
-          "sourceUrl": "https://www.typikon.info/bible/psaltir/50#v3"
+          "sourceUrl": "https://www.typikon.info/bible/psaltir/50#v3",
+          "id": "source-7c7e334a3e7eaf2fd301"
         },
         {
           "title": "Лествица: покаяние как начало новой жизни",
@@ -157,7 +165,8 @@
           },
           "comment": "Определения автора читаются в монашеском контексте. Описания подвигов далее в книге не являются назначением личного правила.",
           "source": "Лествица — Слово 5. О покаянии попеченне и явственне, в немже и житие святых онех осужденник и о темнице., фрагмент 2",
-          "sourceUrl": "https://www.typikon.info/reading/6956c835c8b9c9425def3a20"
+          "sourceUrl": "https://www.typikon.info/reading/6956c835c8b9c9425def3a20",
+          "id": "source-d420f572504736f383c7"
         },
         {
           "title": "Пролог: Мария Египетская",
@@ -173,7 +182,8 @@
           },
           "comment": "Житийное повествование показывает поворот жизни. Это отдельный жанр, а не построчное толкование притчи.",
           "source": "Пролог (апрель) — Ме́сяца апре́ля, в 1 день. Па́мять преподо́бныя ма́тере на́шея Мари́и Еги́птяныни, фрагмент 1",
-          "sourceUrl": "https://www.typikon.info/reading/6619aba31cd50c4ab8550ef1"
+          "sourceUrl": "https://www.typikon.info/reading/6619aba31cd50c4ab8550ef1",
+          "id": "source-701c5a3b199556a51d28"
         },
         {
           "title": "Зачем притча читается перед постом",
@@ -189,7 +199,8 @@
           },
           "comment": "Синаксарь объясняет место притчи в Триоди и её обращение к человеку, впадающему в отчаяние.",
           "source": "Синаксари Постной Триоди — Синаксарь в неделю о блудном сыне, фрагмент 1",
-          "sourceUrl": "https://www.typikon.info/reading/67b0fe0159e97267fa52fdce"
+          "sourceUrl": "https://www.typikon.info/reading/67b0fe0159e97267fa52fdce",
+          "id": "source-6a6cccf8594fcd2bdca4"
         },
         {
           "title": "«Объятия Отча»",
@@ -203,7 +214,8 @@
           },
           "comment": "Песнопение переводит образ притчи в личное молитвенное обращение. Связь тематическая; не все строки являются дословной цитатой.",
           "source": "Триодь постная — Неделя о блудном сыне",
-          "sourceUrl": "https://www.typikon.info/chants/88918"
+          "sourceUrl": "https://www.typikon.info/chants/88918",
+          "id": "source-6ceec8801d97aa1282fa"
         }
       ]
     },
@@ -229,7 +241,8 @@
           },
           "comment": "Евангельский пролог задаёт язык разговора о жизни и свете. Далее можно открыть авторское объяснение этого места.",
           "source": "Елизаветинская Библия: Ин 1:1–5",
-          "sourceUrl": "https://www.typikon.info/bible/ioanna/1#v1"
+          "sourceUrl": "https://www.typikon.info/bible/ioanna/1#v1",
+          "id": "source-e0a98451c6512905f494"
         },
         {
           "title": "Златоуст: «В начале бе»",
@@ -245,7 +258,8 @@
           },
           "comment": "Во втором слове на Иоанна автор объясняет выражение «В начале бе». Сопоставление относится к Ин 1:1.",
           "source": "Беседы на Евангелие от Иоанна — Слово второе, фрагмент 28",
-          "sourceUrl": "https://www.typikon.info/reading/63ef3d0a8bf7f42e3df77df4"
+          "sourceUrl": "https://www.typikon.info/reading/63ef3d0a8bf7f42e3df77df4",
+          "id": "source-b502503b3c7ea254dc46"
         },
         {
           "title": "Христос являет Себя живым",
@@ -259,7 +273,8 @@
           },
           "comment": "Деяния начинают повествование свидетельством о явлениях после страдания.",
           "source": "Елизаветинская Библия: Деян 1:1–3",
-          "sourceUrl": "https://www.typikon.info/bible/deyaniya/1#v1"
+          "sourceUrl": "https://www.typikon.info/bible/deyaniya/1#v1",
+          "id": "source-7fdf6c838737c7bd535c"
         },
         {
           "title": "Толковый апостол: свидетельство после Воскресения",
@@ -275,7 +290,8 @@
           },
           "comment": "Отрывок сборника сохраняет авторскую атрибуцию, напечатанную в тексте. Это толкование Деян 1:2–3.",
           "source": "Толковый апостол — Зачало 1, фрагмент 5",
-          "sourceUrl": "https://www.typikon.info/reading/63f50ec53f71d33cda1d9f3d"
+          "sourceUrl": "https://www.typikon.info/reading/63f50ec53f71d33cda1d9f3d",
+          "id": "source-4d3fafd5f34a3eababc1"
         },
         {
           "title": "Огласительное слово на Пасху",
@@ -291,7 +307,8 @@
           },
           "comment": "Пасхальная проповедь обращается к людям с разным опытом поста. Прочитайте полный текст, чтобы сохранить ход обращения.",
           "source": "Другие слова Иоанна Златоуста — Сло́во огласи́тельное Иоа́нна Златоу́стого на Святую Пасху, фрагмент 1",
-          "sourceUrl": "https://www.typikon.info/reading/63cffe68111f4300dcdb4fbc"
+          "sourceUrl": "https://www.typikon.info/reading/63cffe68111f4300dcdb4fbc",
+          "id": "source-18004a6d33933bd830da"
         },
         {
           "title": "Пасхальный синаксарь",
@@ -307,7 +324,8 @@
           },
           "comment": "Сопоставьте повествование с объяснением праздника в богослужебной книге.",
           "source": "Синаксари Цветной Триоди — Синакса́рь, во святу́ю и вели́кую Неде́лю Па́схи., фрагмент 1",
-          "sourceUrl": "https://www.typikon.info/reading/63cfd29a8c865b674c8ad551"
+          "sourceUrl": "https://www.typikon.info/reading/63cfd29a8c865b674c8ad551",
+          "id": "source-aa676d2b9de2b40a5975"
         },
         {
           "title": "Тропарь Пасхи",
@@ -321,7 +339,8 @@
           },
           "comment": "Краткое исповедание Воскресения завершает сопоставление библейского свидетельства и богослужебного текста.",
           "source": "Триодь цветная — Пасха. Светлое Христово Воскресение",
-          "sourceUrl": "https://www.typikon.info/chants/89159"
+          "sourceUrl": "https://www.typikon.info/chants/89159",
+          "id": "source-b411a72309e804272802"
         },
         {
           "title": "«Воскресения день»",
@@ -335,7 +354,8 @@
           },
           "comment": "Завершите чтением призыва к взаимному прощению в свете Воскресения.",
           "source": "Триодь цветная — Пасха. Светлое Христово Воскресение",
-          "sourceUrl": "https://www.typikon.info/chants/89213"
+          "sourceUrl": "https://www.typikon.info/chants/89213",
+          "id": "source-527628388567a892def5"
         }
       ]
     }

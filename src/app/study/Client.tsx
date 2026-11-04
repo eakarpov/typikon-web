@@ -555,7 +555,7 @@ export default function Client() {
       title: r.title,
       items: r.items.map((i: any, n: number) => ({
         ...i,
-        id: "step-" + n,
+        id: i.id ?? "step-" + n,
         kind: "source",
       })),
     };
