@@ -19,7 +19,7 @@ export const getUserNotesForText = async (userId: string, textId: string) => {
     const client = await clientPromise;
     const db = client.db("typikon-users");
     const notes = await db.collection("userNotes")
-        .find({userId, textId})
+        .find({userId, textId, deleted: {$ne: true}})
         .sort({createdAt: 1})
         .toArray();
     return notes.map((n) => ({...n, id: n._id.toString(), _id: undefined}));
@@ -32,7 +32,7 @@ export const getAllUserNotes = async (userId: string) => {
     const client = await clientPromise;
     const db = client.db("typikon-users");
     const notes = await db.collection("userNotes")
-        .find({userId})
+        .find({userId, deleted: {$ne: true}})
         .sort({updatedAt: -1})
         .toArray();
 
@@ -58,7 +58,7 @@ export const updateUserNote = async (userId: string, noteId: string, note: strin
     const db = client.db("typikon-users");
     const result = await db.collection("userNotes").updateOne(
         {_id: new ObjectId(noteId), userId},
-        {$set: {note, updatedAt: new Date()}},
+        {$set: {note, updatedAt: new Date()}, $inc: {revision: 1}},
     );
     return result.matchedCount > 0;
 };

@@ -5,6 +5,7 @@ export interface PlanUnit {
     key: string;
     title: string;
     href: string;
+    studyTarget?: import('@/lib/study/core').Target;
     textId?: string;
     statia?: number;
     slot?: string;
@@ -13,7 +14,7 @@ export interface PlanUnit {
 export interface ReadingPlan {
     id: string;
     revision: number;
-    kind: 'book' | 'lectionary';
+    kind: 'book' | 'lectionary' | 'collection';
     title: string;
     status: 'active' | 'paused' | 'completed';
     cursor: number;
@@ -29,7 +30,7 @@ export const nextDate = (date: string) => new Date(Date.parse(date + 'T00:00:00Z
 export function advancePlan(plan: ReadingPlan, length: number): ReadingPlan {
     if (plan.status !== 'active')
         throw new PlanError('Сначала возобновите план.');
-    if (plan.kind === 'book') {
+    if (plan.kind === 'book' || plan.kind === 'collection') {
         const cursor = Math.min(plan.cursor + 1, length);
         return { ...plan, revision: plan.revision + 1, cursor, status: cursor >= length ? 'completed' : 'active' };
     }

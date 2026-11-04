@@ -9,7 +9,7 @@ type Doc = ReadingCollection & {
 };
 const db = async () => (await clientPromise).db('typikon-users');
 const own = async () => (await db()).collection<Doc>('readingCollections');
-export async function listCollections(userId: string) { return (await (await own()).find({ userId }, { projection: { _id: 0, userId: 0 } }).sort({ title: 1 }).limit(100).toArray()) as ReadingCollection[]; }
+export async function listCollections(userId: string) { return (await (await own()).find({ userId, deleted: { $ne: true } }, { projection: { _id: 0, userId: 0 } }).sort({ title: 1 }).limit(100).toArray()) as ReadingCollection[]; }
 export async function resolveCollectionItems(refs: ReadingRef[]): Promise<CollectionItem[]> {
     const corpus = (await clientPromise).db('typikon');
     const rows = await corpus.collection('texts').find({ _id: { $in: refs.map(r => new ObjectId(r.textId)) } }, { projection: { name: 1, alias: 1, content: 1, bookId: 1 } }).toArray();
@@ -46,6 +46,7 @@ export async function editCollection(userId: string, b: Record<string, unknown>)
         await (await db()).collection('readingCollectionShares').deleteMany({ collectionId: row.id, userId });
         return row.id;
     }
+    if (b.action === 'publish' && (row as any).studyVersion) throw new CollectionError('Опубликуйте эту подборку через «Моё чтение», выбрав состав копии.');
     if (b.action === 'publish') {
         if (!row.items.length)
             throw new CollectionError('Добавьте хотя бы одно чтение.');
@@ -62,6 +63,7 @@ export async function editCollection(userId: string, b: Record<string, unknown>)
         await (await db()).collection('readingCollectionShares').deleteMany({ collectionId: row.id, userId });
         return row.id;
     }
+    if ((row as any).studyVersion && !['delete','unpublish'].includes(String(b.action))) throw new CollectionError('Откройте эту подборку в разделе «Моё чтение», чтобы сохранить её отрывки и записи.');
     const refs = b.action === 'append' ? collectionRefs([...row.items, ...collectionRefs([b.item])]) : collectionRefs(b.items);
     const items = await resolveCollectionItems(refs), title = b.title === undefined ? row.title : collectionTitle(b.title);
     const r = await col.updateOne({ _id: row.id, userId, revision: row.revision }, { $set: { title, items }, $inc: { revision: 1 } });

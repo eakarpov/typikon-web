@@ -1,3 +1,4 @@
+import {studyPaths,studySchemas} from '@/lib/study/openapi';
 import { ERROR_CODES, LICENSE_ID, LICENSE_URL } from "@/lib/api/v2/http";
 import { DEFAULT_LIMIT, MAX_LIMIT } from "@/lib/api/v2/params";
 import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
@@ -130,6 +131,7 @@ export const openapi = () => ({
         },
     ],
     paths: {
+        ...studyPaths(personal),
         "/api/v2": {
             get: {
                 tags: ["Справочники"],
@@ -1626,6 +1628,7 @@ export const openapi = () => ({
             },
         },
         schemas: {
+            ...studySchemas,
             PrayerCircleConfig: { type:"object",required:["variants","activeId","gender","lang","timeZone","reminders"], properties:{
                 variants:{type:"array",minItems:1,maxItems:32,items:{type:"object",required:["id","title","blocks"],properties:{id:{type:"string"},title:{type:"string"},basedOn:{type:"string"},blocks:{type:"array",maxItems:60,items:{$ref:"#/components/schemas/PrayerCircleBlock"}}}}},
                 activeId:{type:"string"},gender:{type:"string",enum:["m","f"]},lang:{type:"string",enum:["cu","cu_gr"]},timeZone:{type:"string"},reminders:{type:"object",properties:{morning:{type:"boolean"},evening:{type:"boolean"}}},communion:{type:"object",properties:{date:{type:"string",format:"date"},days:{type:"integer",minimum:0,maximum:40},customKeys:{type:"array",items:{type:"string"}}}}
@@ -2393,6 +2396,7 @@ export const openapi = () => ({
                     {
                         type: "object",
                         properties: {
+                            fragments: {type:"object",description:"Версия, отпечаток исходного текста и устойчивые адреса блоков",properties:{version:{type:"integer"},sourceHash:{type:"string"},blocks:{type:"array",items:{type:"object",properties:{id:{type:"string"},hash:{type:"string"},index:{type:"integer"}}}}}},
                             content: { type: "string", description: "Тело текста. Абзацы разделены двумя переводами строки" },
                             start: { type: ["string", "null"], description: "Строка-затравка, как напечатана книгой" },
                             startPhrase: { type: ["string", "null"] },
@@ -2690,6 +2694,7 @@ export const openapi = () => ({
                 type: "object",
                 properties: {
                     id: { type: "string" },
+                    fragment: {type:"object",description:"Канонический адрес стиха, конкретное издание и отпечаток исходного текста"},
                     canonRef: { type: "string", example: "daniila.3.24" },
                     chapter: { type: "integer", description: "Каноническая нумерация" },
                     verse: { type: "integer", description: "Каноническая нумерация" },
@@ -2741,6 +2746,9 @@ export const openapi = () => ({
                     id: { type: "string" },
                     alias: { type: ["string", "null"], description: "Текущий адрес книги; ID остаётся постоянным" },
                     name: { type: "string" },
+                    workKey:{type:["string","null"],description:"Явная связь редакций произведения"},
+                    editionTitle:{type:["string","null"]},
+                    language:{type:["string","null"]},
                     author: { type: ["string", "null"] },
                     translator: { type: ["string", "null"] },
                     description: { type: ["string", "null"] },

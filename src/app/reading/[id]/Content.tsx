@@ -57,6 +57,7 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
     return (
         <div className="flex flex-col md:flex-row">
         <div id="text-reading-container" className={`reading-column ${myFont.variable} flex flex-col pt-2 flex-1`}>
+            <Link className="underline block py-3" href={"/study?target="+encodeURIComponent(JSON.stringify({kind:"text",id:item.id}))}>Читать с выписками, вопросами и связанными материалами</Link>
             <ReadingFocus title={item.name||"Чтение"} header={<>
             <div className="text-1xl font-bold font-serif">
                 <div className="flex flex-wrap items-center gap-y-1 no-pdf">

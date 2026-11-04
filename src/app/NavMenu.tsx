@@ -1,4 +1,5 @@
 'use client';
+import {clearPrivateStudy} from '@/lib/study/cache';
 import {clearPrivateSnapshots} from '@/lib/companion/snapshots';
 import Link from "next/link";
 import {
@@ -56,6 +57,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
             if(!response.ok)throw Error();
         } catch {window.alert("Не удалось выйти из аккаунта. Проверьте сеть и повторите.");return;}
         await clearPrivateSnapshots().catch(()=>undefined);
+        await clearPrivateStudy().catch(()=>undefined);
         for (const key of Object.keys(localStorage)) {
             if (key.startsWith('prayer-circle:user:') && key.includes(':preview:')) localStorage.removeItem(key);
         }

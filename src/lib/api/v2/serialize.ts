@@ -1,3 +1,4 @@
+import {blocksOf,fingerprint} from '@/lib/study/core';
 import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
 import { continuousReadingView } from "@/lib/continuousReading";
 import { liturgicalText } from "@/lib/liturgicalText";
@@ -220,6 +221,7 @@ export const textDetail = (doc: any, coverage: { need: number; has: number } | n
     ...textSummary(doc, roundelUrl),
     accents: coverage ? { need: coverage.need, has: coverage.has } : null,
     content: doc.content ?? "",
+    fragments: {version:1,sourceHash:fingerprint(doc.content??""),blocks:blocksOf(doc.content??"").map(({id,hash,index})=>({id,hash,index}))},
     start: doc.start || null,
     startPhrase: doc.startPhrase || null,
     initialPriestExclamation: doc.initialPriestExclamation || null,
@@ -256,6 +258,8 @@ export const book = (doc: any) => ({
     // Язык, на котором книга набрана. Коды общие с корпусом typikon-rules,
     // см. @/utils/bookLanguages.
     language: doc.language || DEFAULT_BOOK_LANGUAGE,
+    workKey: doc.workKey || null,
+    editionTitle: doc.editionTitle || null,
     category: doc.category || null,
     textCount: Array.isArray(doc.texts) ? doc.texts.length : null,
     updatedAt: iso(doc.updatedAt),
@@ -444,6 +448,7 @@ export const bibleEdition = (doc: any) => ({
 export const bibleVerse = (doc: any) => ({
     id: id(doc._id ?? doc.id),
     canonRef: doc.canonRef,
+    fragment: {kind:"bible",editionId:id(doc.editionId),canonId:doc.canonId??null,chapter:doc.canonChapter??doc.chapter,verse:doc.canonVerse??doc.verse,blockId:"v-"+(doc.canonVerse??doc.verse),textHash:fingerprint(doc.content??"")},
     chapter: doc.canonChapter ?? doc.chapter,
     verse: doc.canonVerse ?? doc.verse,
     // Как этот же стих пронумерован в самом издании.

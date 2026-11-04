@@ -10,7 +10,10 @@ export async function mobileReadingPlan(userId: string) {
         return null;
     const unit = plan.status === 'completed' ? null : plan.current;
     let content: string | null = null, footnotes: string[] = [], markdown = false, csSource = false;
-    if (unit?.textId) {
+    if (unit?.studyTarget) {
+        try { const fragment=await (await import('@/lib/study/material')).readingFragment(unit.studyTarget); content=fragment.content;footnotes=fragment.footnotes;markdown=fragment.markdown;csSource=fragment.csSource; } catch { content=null; }
+    }
+    else if (unit?.textId) {
         const db = (await clientPromise).db('typikon');
         const t = await db.collection('texts').findOne({ _id: new ObjectId(unit.textId) });
         const hidden = t?.bookId ? await db.collection('books').findOne({ _id: t.bookId, public: false }) : null;

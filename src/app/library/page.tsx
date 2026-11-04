@@ -23,7 +23,7 @@ const Library = async () => {
     setMeta();
 
     return (
-        <div className="pt-2">
+        <div className="pt-2"><nav aria-label="Разделы библиотеки" className="flex gap-4 py-3"><Link href="/study">Каталог</Link><Link href="/study?tab=mine">Моё чтение</Link><Link href="/study?tab=topics">Изучить тему</Link></nav>
             <div className={myFont.variable}>
                 <h1 className="font-serif font-bold mb-2">Библиотека текстов</h1>
                 <p className="font-serif">

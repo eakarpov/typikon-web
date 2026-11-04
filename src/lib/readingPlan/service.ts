@@ -17,7 +17,7 @@ export async function planOptions() {
         .map(b => ({ id: String(b._id), name: String(b.name) }));
 }
 export async function planUnits(plan: ReadingPlan): Promise<PlanUnit[]> {
-    if (plan.kind === 'book')
+    if (plan.kind === 'book' || plan.kind === 'collection')
         return plan.units;
     const db = (await clientPromise).db('typikon');
     const { triodicDay } = await getMovableDay(plan.date);
