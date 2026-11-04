@@ -151,7 +151,7 @@ export async function mutate(userId: string, b: any) {
     });
   if (!old && b.revision !== 0) throw Error("conflict");
   if (old?.deleted && !b.restore) throw Error("Запись удалена.");
-  if (kind === "records") {
+  if (kind === "records" && !b.deleted) {
     value.originalTarget =
       old?.originalTarget ??
       old?.target ??
@@ -161,11 +161,12 @@ export async function mutate(userId: string, b: any) {
             id: String(old.textId).split("#")[0],
             quote: old.selection?.phrase ?? "",
           }
-        : value.target);
+        : (value.originalTarget ?? value.target));
     value.originalQuote =
       old?.originalQuote ??
       old?.target?.quote ??
       old?.selection?.phrase ??
+      value.originalQuote ??
       value.target.quote;
     const legacy =
       old &&

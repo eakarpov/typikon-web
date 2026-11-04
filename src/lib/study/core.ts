@@ -488,3 +488,14 @@ export function relationAt(
       ? { side: "to", other: relation.from }
       : null;
 }
+
+/** An explicit correction replaces a rejected operation, while retryable opIds stay intact. */
+export function queueOperation(queue: any[], op: any) {
+  return [
+    ...queue.filter(
+      (p) =>
+        !(p.refused && p.entity === op.entity && p.value.id === op.value.id),
+    ),
+    op,
+  ];
+}

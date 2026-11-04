@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  queueOperation,
   relationAt,
   rangeTarget,
   blocksOf,
@@ -249,5 +250,28 @@ test("relations match either exact fragment within a source and return the oppos
       a,
     ),
     null,
+  );
+});
+
+test("a manual correction replaces a rejected save without changing retryable operation IDs", () => {
+  const a = {
+      entity: "records",
+      value: { id: "note" },
+      opId: "bad",
+      refused: true,
+    },
+    b = { entity: "records", value: { id: "other" }, opId: "retry" },
+    c = {
+      entity: "records",
+      value: { id: "note", note: "corrected" },
+      opId: "new",
+    };
+  assert.deepEqual(
+    queueOperation([a, b], c).map((p) => p.opId),
+    ["retry", "new"],
+  );
+  assert.deepEqual(
+    queueOperation([{ ...a, refused: false }, b], c).map((p) => p.opId),
+    ["bad", "retry", "new"],
   );
 });

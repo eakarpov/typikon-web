@@ -12,6 +12,7 @@ import ReadingFocus from "@/app/components/ReadingFocus";
 import { savePage } from "@/lib/offline";
 import { readCache, writeCache, savedMaterials } from "@/lib/study/cache";
 import {
+  queueOperation,
   emptyPersonal,
   exportMarkdown,
   href,
@@ -340,7 +341,8 @@ export default function Client() {
         opId: crypto.randomUUID(),
         deleted,
       };
-      if (active.current !== "guest") queue.current.push(op);
+      if (active.current !== "guest")
+        queue.current = queueOperation(queue.current, op);
       commit(
         updateEntity(
           working.current,
@@ -410,6 +412,19 @@ export default function Client() {
               "Есть конфликт правок. В «Моём чтении» доступны обе версии.",
             );
             continue;
+          }
+          if ((e as any).status === 400 && gen === generation.current) {
+            op.refused = true;
+            const corrected = queue.current.some(
+              (p) =>
+                p.opId !== op.opId &&
+                p.entity === op.entity &&
+                p.value.id === op.value.id,
+            );
+            if (corrected)
+              queue.current = queue.current.filter((p) => p.opId !== op.opId);
+            commit(working.current);
+            if (corrected) continue;
           }
           throw e;
         }

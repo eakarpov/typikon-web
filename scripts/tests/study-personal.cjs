@@ -179,6 +179,12 @@ const { MongoClient, ObjectId } = require("mongodb");
     });
     assert.equal(r.status, 400);
     console.log("Invalid source quotations cannot acquire a checked binding");
+  r=await req('v2/study/change',{entity:'records',value:bad,revision:0,deleted:true,opId:'delete-refused-'+userA,expectedUserId:userA});assert.equal(r.status,200,JSON.stringify(r.data));
+  const material=await req('v2/study/material',{target}),m=material.data,b0=m.blocks[0],snapshotId=new ObjectId().toString();
+  r=await req('v2/study/change',{entity:'records',value:{id:snapshotId,kind:'note',note:'Thought retained',target:{...m.target,blockId:b0.id,sourceHash:m.sourceHash,quote:b0.text},originalQuote:'Original private snapshot',originalTarget:{...target,sourceHash:'previous'}},revision:0,opId:'snapshot-'+snapshotId,expectedUserId:userA});
+  assert.equal(r.status,200,JSON.stringify(r.data));assert.equal(r.data.value.originalQuote,'Original private snapshot');assert.equal(r.data.value.originalTarget.sourceHash,'previous');
+  console.log('Rejected local source saves can be deleted and corrected snapshots retain their original quotation');
+
     r = await req("v2/study/publish", {
       id: cid,
       revision: 1,
