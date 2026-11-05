@@ -1,0 +1,198 @@
+{
+  "reviewNote": "Этимологические ссылки проверены как буквальные свидетельства в указанных статьях; отношение наследования не устанавливается. Синонимические связи сверены по приведённым значениям источников. Нумерация сверена с исходной статьёй после исключения номеров библейских ссылок. Ненумерованные блоки не считаются единым значением: связи привязаны к отдельным фрагментам явно выраженных эквивалентов.",
+  "relations": [
+    {
+      "id": "68399a217310e32be5d79326:2cad83ee90852c0e57ce9fdf96b08f466e83773768645f3bd17b403475f9b1fb",
+      "type": "synonym",
+      "status": "verified",
+      "targetId": "83c57033a3441f450c765bc9",
+      "targetName": "ꙗ҆зы́къ",
+      "anchorId": "6d51aec1584830aafbe233e03eedb263031d1f3da5cd6ee9705e7c2fc9ce8ce4",
+      "anchorText": "Народъ, племя",
+      "targetAnchorId": "1c38a6c930a3270c00aadf1c215693deb9f4c83d0cf9791461de98c56b13d536",
+      "basis": "Сверены указанные значения в источниках; связь относится только к приведённому значению.",
+      "provider": "source-comparison",
+      "conceptIds": [
+        "100046-N"
+      ],
+      "targetAnchorText": "народ, племя: Рука Твоя языки (народы) потреби (Пс. 43, 3). Расточи языки хотящия бранем (Пс. 67, 34);",
+      "providerVersion": "dda11fdeaa9990c074b1ab67c7c6fd6874334154c0dc0201ed4f17e7799840b4"
+    },
+    {
+      "id": "83c57033a3441f450c765bc9:b48bcf8b903859ac7766776343d9ca7266d89658769520fc093d8e7fa9622b21",
+      "type": "synonym",
+      "status": "verified",
+      "targetId": "68399a217310e32be5d79326",
+      "targetName": "лю́дъ",
+      "anchorId": "1c38a6c930a3270c00aadf1c215693deb9f4c83d0cf9791461de98c56b13d536",
+      "anchorText": "народ, племя: Рука Твоя языки (народы) потреби (Пс. 43, 3). Расточи языки хотящия бранем (Пс. 67, 34);",
+      "targetAnchorId": "6d51aec1584830aafbe233e03eedb263031d1f3da5cd6ee9705e7c2fc9ce8ce4",
+      "basis": "Сверены указанные значения в источниках; связь относится только к приведённому значению.",
+      "provider": "source-comparison",
+      "conceptIds": [
+        "100046-N"
+      ],
+      "targetAnchorText": "Народъ, племя",
+      "providerVersion": "dda11fdeaa9990c074b1ab67c7c6fd6874334154c0dc0201ed4f17e7799840b4"
+    },
+    {
+      "id": "68399a217310e32be5d7c873:2170e2de5b75cff62841c8ce8b12136419e69014bc93ea916fedea667606a333",
+      "type": "synonym",
+      "status": "verified",
+      "targetId": "68399a217310e32be5d7e3a1",
+      "targetName": "ю́зникъ",
+      "anchorId": "ceb071f633f569d7667099f0f0424d74acd32c811f009e7a8092c1513a510398",
+      "anchorText": "узник, колодник",
+      "targetAnchorId": "b6dd85f6efff9f80c3db0123c2b09365a563ee73576d8cd6a261a9563726d15f",
+      "basis": "Сверены указанные значения в источниках; связь относится только к приведённому значению.",
+      "provider": "source-comparison",
+      "conceptIds": [
+        "10030-N"
+      ],
+      "targetAnchorText": "Узникъ, колодникъ скованный",
+      "providerVersion": "dda11fdeaa9990c074b1ab67c7c6fd6874334154c0dc0201ed4f17e7799840b4"
+    },
+    {
+      "id": "68399a217310e32be5d7e3a1:ba86202e68e9b261ebf718210b37560cec0e95e9b84bd34035b1be410ce72164",
+      "type": "synonym",
+      "status": "verified",
+      "targetId": "68399a217310e32be5d7c873",
+      "targetName": "свѧ́зень",
+      "anchorId": "b6dd85f6efff9f80c3db0123c2b09365a563ee73576d8cd6a261a9563726d15f",
+      "anchorText": "Узникъ, колодникъ скованный",
+      "targetAnchorId": "ceb071f633f569d7667099f0f0424d74acd32c811f009e7a8092c1513a510398",
+      "basis": "Сверены указанные значения в источниках; связь относится только к приведённому значению.",
+      "provider": "source-comparison",
+      "conceptIds": [
+        "10030-N"
+      ],
+      "targetAnchorText": "узник, колодник",
+      "providerVersion": "dda11fdeaa9990c074b1ab67c7c6fd6874334154c0dc0201ed4f17e7799840b4"
+    },
+    {
+      "id": "68399a217310e32be5d7c542:d62c3ba0c83811eeb49d462fc66d55e50337e923a61750e702fdcb618b9f67e4",
+      "type": "synonym",
+      "status": "verified",
+      "targetId": "68399a217310e32be5d7e277",
+      "targetName": "чи́нъ",
+      "anchorId": "0a18c27ec53ddacbc4b24d234e9bee97e1e76a94a3627166f93fff78c0593353",
+      "anchorText": "Церк. ▸ Череда, порядокъ. ◂ Рядъ утреннимъ воскреснымъ Евангеліямъ.",
+      "targetAnchorId": "ed7e935d1537f339f451e0bc602c87beb59fae88f57a8dd30d62b3f1b5afd618",
+      "basis": "Сверены указанные значения в источниках; связь относится только к приведённому значению.",
+      "provider": "source-comparison",
+      "conceptIds": [
+        "10161-N"
+      ],
+      "targetAnchorText": "порядок",
+      "providerVersion": "dda11fdeaa9990c074b1ab67c7c6fd6874334154c0dc0201ed4f17e7799840b4"
+    },
+    {
+      "id": "68399a217310e32be5d7e277:01aae88cb7c7164b37d77505031be817e46f7963ec54c0e708fa33f5d0dea75e",
+      "type": "synonym",
+      "status": "verified",
+      "targetId": "68399a217310e32be5d7c542",
+      "targetName": "рѧ́дъ",
+      "anchorId": "ed7e935d1537f339f451e0bc602c87beb59fae88f57a8dd30d62b3f1b5afd618",
+      "anchorText": "порядок",
+      "targetAnchorId": "0a18c27ec53ddacbc4b24d234e9bee97e1e76a94a3627166f93fff78c0593353",
+      "basis": "Сверены указанные значения в источниках; связь относится только к приведённому значению.",
+      "provider": "source-comparison",
+      "conceptIds": [
+        "10161-N"
+      ],
+      "targetAnchorText": "Церк. ▸ Череда, порядокъ. ◂ Рядъ утреннимъ воскреснымъ Евангеліямъ.",
+      "providerVersion": "dda11fdeaa9990c074b1ab67c7c6fd6874334154c0dc0201ed4f17e7799840b4"
+    }
+  ],
+  "etymologies": {
+    "68399a217310e32be5d7e170": [
+      {
+        "articleId": 20,
+        "lemma": "cĕlitelь",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: русск., русск.-цслав. целитель 'исцелитель, врачеватель' (Гр. Наз. XI в.), 'лекарство' (Изб. 1073 г.) (Срезневский I, 1449). — Русск. целитель 'врач, лекарь' (Даль3 IV, 1",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/pslf-c.htm",
+        "status": "verified",
+        "bodySha256": "0c086f635b94a4ad64f77a463e3a7bed827a7e9e7a5a3461c5661c6691a76652"
+      }
+    ],
+    "68399a217310e32be5d7e182": [
+      {
+        "articleId": 23,
+        "lemma": "cĕlostь",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: русск., русск.-цслав. целость (Срезневский III, 1455), русск. целость ж. р. 'состояние, качество целого' (Даль8 IV, 1271), укр. цШсть, род. п. -лости, ж. р. 'целость' (Г",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/pslf-c.htm",
+        "status": "verified",
+        "bodySha256": "dbda3a8609b025582a71c0cb098660df95c09a703a089049d69a7c5e01db2433"
+      }
+    ],
+    "68399a217310e32be5d7e14e": [
+      {
+        "articleId": 66,
+        "lemma": "cęta",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: русск., русск.-цслав. цата, цшьа 'мелкая монета' (Остр. ев. и др.), 'монета (деньги)' (Никон Панд, сл.), 'украшение' (Ип. л. под 1175 г. и др.) (Срезневский III, 1434",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/pslf-c.htm",
+        "status": "verified",
+        "bodySha256": "ecd0720124d9344f541a771255905cee9e423bf33edf9cdea00b38c189752fc3"
+      }
+    ],
+    "68399a217310e32be5d77e24": [
+      {
+        "articleId": 90,
+        "lemma": "edinica / *edbnica",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: ам же), русск.-цслав. единица (единица числомъ TOV evtxov dpiftfiov. Георг. Ам. 227, Срезневский I, 811), укр. одинйця ж. р. 'единица', 'единственная дочь' (Гринченко II",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/essja-e/pslf-e.htm",
+        "status": "verified",
+        "bodySha256": "d557b9bf7bf540c5c013491a5a56fcc834e5f4846aa947e1a449124cc59f98fe"
+      }
+    ],
+    "68399a217310e32be5d77e46": [
+      {
+        "articleId": 91,
+        "lemma": "edinošьdy / *edbnašьdy",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: , 556), русск.-цслав. единожды 'в один раз' (Стеф. Новг. 1347 г., Срезневский I, 812), русск. однажды, нареч. 'один раз; некогда, когда-то' (Даль3 II, 1675), также одинож",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/essja-e/pslf-e.htm",
+        "status": "verified",
+        "bodySha256": "3b0c0a6f02a4e2acc5086ef65b19775780304a49f2ad5d695b9b9236295a4756"
+      }
+    ],
+    "68399a217310e32be5d77eb0": [
+      {
+        "articleId": 93,
+        "lemma": "edinъ / *edьnъ",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: 6—618), русск.-цслав. единъ, \\единъ 'один' (Изб. 1073 г. 244; Мин. 1096 г. сент. 59 и др.), 'некоторый' (Остр, ев.; Кир. Тур. 29), 'одинокий' (Сл. плк. Игор.) (Срезнев",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/essja-e/pslf-e.htm",
+        "status": "verified",
+        "bodySha256": "99ecc4bb57985b7c51df0b0dc2b7e10e42cf21259a137967f0559d29a1804dc8"
+      }
+    ],
+    "68399a217310e32be5d785c7": [
+      {
+        "articleId": 256,
+        "lemma": "i ba *i bo",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: русск., русск.-цслав. ибо 'ибо, так как' (Мф. XIV. 70; Остр, ев.; Жит. Кондр. XI в.), 'хотя' (Гр. Наз. XI в.) (Срезневский I, 1018), русск. ибо, с. 'потому что' (Дал",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/pslf-i.htm",
+        "status": "verified",
+        "bodySha256": "8d4992d2720bff8d46693932b51875e54616ba86de0a72973cf3d805844b87d8"
+      }
+    ],
+    "68399a217310e32be5d78926": [
+      {
+        "articleId": 257,
+        "lemma": "i li",
+        "relation": "attested-in",
+        "evidence": "В этимологической статье приведено свидетельство: русск., русск.-цслав. или 'если, если же' (Р. Прав. Яр. по Ак. сп., по Син. сп.; Новг. I л. под 1255 и мн. др.), 'не . . . ли, неужели' (Ефр. Крм. Там. 2; Гр. Наз. X",
+        "sourceUrl": "https://www.proto-slavic.ru/dic-trubachev/pslf-i.htm",
+        "status": "verified",
+        "bodySha256": "fc3a75ed65d081ad7ed8cd26ba371d290d37335fbb6f2f4ba497e9c436f09c82"
+      }
+    ]
+  },
+  "rejectedRelationIds": []
+}
