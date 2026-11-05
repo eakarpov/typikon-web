@@ -380,7 +380,7 @@ export const csSchemas = {
               "enum": [
                 "lemma",
                 "stored-form",
-              "source-variant",
+                "source-variant",
                 "generated-form",
                 "translation",
                 "explanation"
@@ -392,7 +392,10 @@ export const csSchemas = {
             "grammar": {
               "type": "string"
             },
-            "exact": {"type":"boolean","description":"Точное совпадение поискового ключа; false при префиксном совпадении."},
+            "exact": {
+              "type": "boolean",
+              "description": "Точное совпадение поискового ключа; false при префиксном совпадении."
+            },
             "rank": {
               "type": "integer"
             }
@@ -499,6 +502,12 @@ export const csSchemas = {
           "type": "object",
           "properties": {}
         }
+      },
+      "examples": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CsExample"
+        }
       }
     },
     "required": [
@@ -570,6 +579,12 @@ export const csSchemas = {
           "type": "object",
           "properties": {}
         }
+      },
+      "examples": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CsExample"
+        }
       }
     },
     "required": [
@@ -580,6 +595,59 @@ export const csSchemas = {
       "version",
       "paragraphs",
       "anchors"
+    ]
+  },
+  "CsExample": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "quote": {
+        "type": "string"
+      },
+      "citation": {
+        "type": "string"
+      },
+      "sourceId": {
+        "type": "string"
+      },
+      "sourceTitle": {
+        "type": "string"
+      },
+      "sourceVersion": {
+        "type": "string"
+      },
+      "anchorId": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "script": {
+        "type": "string",
+        "enum": [
+          "church",
+          "source"
+        ]
+      },
+      "basis": {
+        "type": "string",
+        "enum": [
+          "styled-citation"
+        ]
+      }
+    },
+    "required": [
+      "id",
+      "quote",
+      "citation",
+      "sourceId",
+      "sourceTitle",
+      "sourceVersion",
+      "anchorId",
+      "script",
+      "basis"
     ]
   }
 };

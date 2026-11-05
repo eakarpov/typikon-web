@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import {sourceExamples} from './examples';
 import type { Article, SourceEntry, SearchResult, SearchItem, Direction } from './types';
 import { civilKey } from '@/lib/cslav/core';
 import { russianKey } from './dsl';
@@ -26,8 +27,8 @@ export function createPublication(db:Database.Database):void{
 export class DictionaryPublication{
  readonly version:string;
  constructor(readonly db:Database.Database){const m=Object.fromEntries((db.prepare('SELECT key,value FROM metadata').all() as {key:string;value:string}[]).map(r=>[r.key,r.value]));if(m.state!=='complete'||m.format!=='cs-publication-v1'||m.scopeChecked!=='1')throw Error('Dictionary publication is incomplete');this.version=m.version;}
- article(id:string):Article|null {const r=this.db.prepare('SELECT payload FROM articles WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const a=JSON.parse(r.payload) as Article;for(const f of a.extra)f.grammar=readableAnalysis(f.grammar);return a;}
- source(id:string):SourceEntry|null {const r=this.db.prepare('SELECT payload FROM sources WHERE id=?').get(id) as {payload:string}|undefined;return r?JSON.parse(r.payload) as SourceEntry:null;}
+ article(id:string):Article|null {const r=this.db.prepare('SELECT payload FROM articles WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const a=JSON.parse(r.payload) as Article;for(const f of a.extra)f.grammar=readableAnalysis(f.grammar);if(a.examples===undefined){a.examples=a.sources.filter(r=>r.mappingStatus==='verified').flatMap(r=>this.source(r.id)?.examples??[]);}return a;}
+ source(id:string):SourceEntry|null {const r=this.db.prepare('SELECT payload FROM sources WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const s=JSON.parse(r.payload) as SourceEntry;s.examples??=sourceExamples(s);return s;}
  search(query:string,direction:Direction,cursor=0,limit=20):SearchResult{
   const key=direction==='cu-ru'?civilKey(query):russianKey(query);if(!key||[...key].length>120)throw Error('Invalid query');
   const prefix=[...key].length>1,upper=key+'\uffff';let rows:SearchItem[];
