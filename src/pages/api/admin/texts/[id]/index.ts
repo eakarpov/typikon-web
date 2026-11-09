@@ -1,3 +1,4 @@
+import { validTextLinks } from "@/lib/textLinks";
 import { AliasError, saveWithAlias } from "@/lib/contentAliases";
 import { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from "@/lib/mongodb";
@@ -29,6 +30,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 res.status(400).json({ error: `Святой «${data.saintId}» в каталоге не найден` });
                 return;
             }
+            let links, russianLinks;
+            try { links = validTextLinks(data.link); russianLinks = validTextLinks(data.ruLink); }
+            catch (error) { res.status(400).json({ error: (error as Error).message }); return; }
             await saveWithAlias(db, "texts", id, data.alias, {
                 name: data.name,
                 footnotes: data.footnotes,
@@ -44,8 +48,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 // ними ломает разбиение и в вебе, и в приложении.
                 content: normalizeParagraphs(data.content),
                 updatedAt: new Date(),
-                ruLink: data.ruLink,
-                link: data.link,
+                ruLink: russianLinks,
+                link: links,
                 translator: data.translator,
                 author: data.author,
                 poems: data.poems,

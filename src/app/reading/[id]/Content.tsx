@@ -1,3 +1,4 @@
+import TextLinkList from "@/app/components/TextLinkList";
 import AddToCollection from '@/app/reading-collections/AddToCollection';
 import ReadingFocus, {ReadingFocusActions} from '@/app/components/ReadingFocus';
 import {readingParts} from '@/lib/readingParts';
@@ -66,22 +67,8 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
                         showButton={process.env.SHOW_ADMIN === Boolean(true).toString()}
                         isDevelopment={process.env.NODE_ENV === "development"}
                     />
-                    {item.ruLink && (
-                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
-                            <a href={item.ruLink} target="_blank" rel="noreferrer">
-                                Русский текст&nbsp;
-                            </a>
-                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                        </span>
-                    )}
-                    {item.link && (
-                        <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
-                            <a href={item.link} target="_blank" rel="noreferrer">
-                                Скан текста&nbsp;
-                            </a>
-                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                        </span>
-                    )}
+                    <TextLinkList value={item.ruLink} label="Русский текст" />
+                    <TextLinkList value={item.link} label="ЦС текст / скан" />
                     {item.bookId && (
                         <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
                             <Link href={`/library/${item.bookAlias || item.bookId}`}>

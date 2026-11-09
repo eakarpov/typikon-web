@@ -42,11 +42,23 @@ export async function encrypt(payload: any, expiresAt: Date) {
 }
 
 async function readSessionToken(token: string | undefined) {
-    return resolveSessionToken(token, encodedKey, async (id) => {
+    const active = await resolveSessionToken(token, encodedKey, async (id) => {
         const client = await clientPromise;
         return client.db("typikon-users").collection<StoredSession>("sessions")
             .findOne({ _id: new ObjectId(id) });
     });
+    if (!active) return null;
+    const seen = active.session.lastSeenAt;
+    const now = new Date();
+    // Authenticated API calls also count as activity, including mobile clients.
+    // Throttle writes for readers that make many requests on one page.
+    if (!(seen instanceof Date) || +now - +seen >= 30_000) {
+        const result = await (await clientPromise).db("typikon-users").collection("sessions").updateOne({
+            _id: active.session._id, id: active.session.id, expiresAt: { $gt: now },
+        }, { $set: { lastSeenAt: now } });
+        if (!result.matchedCount) return null;
+    }
+    return active;
 }
 
 /** Только payload действующей сессии; одной подписи JWT недостаточно. */
@@ -102,6 +114,7 @@ export const createNewSession = async (
             ip,
             provider: type,
             createdAt: now,
+            lastSeenAt: now,
             auth: {
                 [key]: {
                     state,

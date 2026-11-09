@@ -277,3 +277,11 @@ test("житие из вложенных событий Днеслова не т
     assert.equal(life?.memoes[1].title, "Преставление");
     assert.equal(life?.memoes[1].happenedAt, "400");
 });
+
+test("text link lists are additive while existing URL fields remain scalar", () => {
+    const value = textDetail({ link: ["https://a.org", "https://b.org"], ruLink: "https://ru.org" });
+    assert.equal(value.scanUrl, "https://a.org");
+    assert.deepEqual(value.scanUrls, ["https://a.org", "https://b.org"]);
+    assert.equal(value.russianUrl, "https://ru.org");
+    assert.deepEqual(value.russianUrls, ["https://ru.org"]);
+});

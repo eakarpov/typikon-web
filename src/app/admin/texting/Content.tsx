@@ -1,3 +1,4 @@
+import TextLinkList from "@/app/components/TextLinkList";
 import Link from "next/link";
 import ApproveItem from "@/app/admin/texting/ApproveItem";
 import RejectItem from "@/app/admin/texting/RejectItem";
@@ -25,16 +26,7 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<[any[], any]> }
                         <Link href={`/reading/${item.textId}`} className="font-bold">
                             {item.text?.name || item.textId}
                         </Link>
-                        {item.text?.link && (
-                            <a
-                                href={item.text.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="pl-2 text-amber-800"
-                            >
-                                Скан
-                            </a>
-                        )}
+                        <TextLinkList value={item.text?.link} label="Скан" />
                     </div>
                     <div className="text-stone-500 text-sm">
                         Пользователь: {item.userId}

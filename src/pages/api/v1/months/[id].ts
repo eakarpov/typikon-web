@@ -1,3 +1,4 @@
+import { legacyTextLinks } from "@/lib/textLinks";
 import {NextApiRequest, NextApiResponse} from "next";
 import {getItem} from "@/app/months/[id]/api";
 
@@ -13,6 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(400).end();
             return;
         }
-        return res.status(200).json(month);
+        return res.status(200).json(legacyTextLinks(month));
     }
 }

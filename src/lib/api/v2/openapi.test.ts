@@ -23,12 +23,40 @@ const refs = (node: unknown, out: string[] = []): string[] => {
     return out;
 };
 
-test("всякая ссылка на схему ведёт в существующую схему", () => {
-    const schemas = document.components.schemas;
-    const broken = [...new Set(refs(document))]
-        .filter(ref => !(ref.startsWith("#/components/schemas/") && ref.slice(21) in schemas));
+// A $ref is a JSON Pointer, not just a schema name. It can name a nested
+// schema, e.g. CsArticle/properties/relations. Decode fragment and ~0/~1
+// escapes and check each own property so missing paths still fail the test.
+const hasSchemaRef = (root: unknown, ref: string): boolean => {
+    let pointer: string;
+    try { pointer = decodeURIComponent(ref); } catch { return false; }
+    if (!pointer.startsWith("#/components/schemas/")) return false;
+    let value: unknown = root;
+    for (const raw of pointer.slice(2).split("/")) {
+        if (/~(?:[^01]|$)/.test(raw)) return false;
+        const key = raw.replace(/~[01]/g, escape => escape === "~1" ? "/" : "~");
+        if (!value || typeof value !== "object" || !Object.hasOwn(value, key)) return false;
+        value = (value as Record<string, unknown>)[key];
+    }
+    return true;
+};
 
+test("всякая ссылка на схему ведёт в существующую схему", () => {
+    const broken = [...new Set(refs(document))].filter(ref => !hasSchemaRef(document, ref));
     assert.deepEqual(broken, []);
+});
+
+test("ссылки на вложенные схемы, экранирование и отсутствующие пути проверяются по JSON Pointer", () => {
+    const fixture = { components: { schemas: {
+        Article: { properties: { relations: { type: "array" } } },
+        "A/B~C": { type: "string" },
+    } } };
+    assert.equal(hasSchemaRef(fixture, "#/components/schemas/Article"), true);
+    assert.equal(hasSchemaRef(fixture, "#/components/schemas/Article/properties/relations"), true);
+    assert.equal(hasSchemaRef(fixture, "#/components/schemas/A~1B~0C"), true);
+    assert.equal(hasSchemaRef(fixture, "#/components/schemas/A%7E1B%7E0C"), true);
+    for (const ref of ["#/components/schemas/Missing", "#/components/schemas/Article/properties/missing",
+        "#/components/schemas/toString", "#/components/schemas/A~2B", "#/components/schemas/%ZZ",
+        "https://example.org/schema"]) assert.equal(hasSchemaRef(fixture, ref), false, ref);
 });
 
 test("схемы безопасности названы теми же именами, какими на них ссылаются", () => {

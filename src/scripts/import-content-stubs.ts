@@ -12,6 +12,7 @@
 //
 // Запуск: npx tsx src/scripts/import-content-stubs.ts        (реальная запись)
 //         DRY_RUN=1 npx tsx src/scripts/import-content-stubs.ts  (только подсчёт, без записи)
+import { textLinks } from "@/lib/textLinks";
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
@@ -263,8 +264,8 @@ const main = async () => {
                 description: item.description || "",
                 start: "",
                 fileId: null,
-                link: null,
-                ruLink: item.ruLink || null,
+                link: [],
+                ruLink: textLinks(item.ruLink),
                 bookId: book._id,
                 footnotes: [],
                 author: item.author || "",

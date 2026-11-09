@@ -1,3 +1,4 @@
+import { legacyTextLinks } from "@/lib/textLinks";
 import {NextApiRequest, NextApiResponse} from "next";
 import {getItems} from "@/app/rest-readings/api";
 
@@ -8,6 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(400).end();
             return;
         }
-        res.status(200).json(weeks);
+        res.status(200).json(legacyTextLinks(weeks));
     }
 }

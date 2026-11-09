@@ -22,6 +22,7 @@
 // Запуск:
 //   npm run corpus:dump                     # в data-dump/
 //   npm run corpus:dump -- --out путь       # в другое место
+import { textLinks } from "@/lib/textLinks";
 import "@/scripts/lib/env";
 import { createHash } from "node:crypto";
 import { copyFileSync, createWriteStream, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -484,8 +485,7 @@ const run = async () => {
         const links = (await db.collection("texts")
             .find({ bookId: { $in: fatherBookObjectIds } }, { projection: { _id: 0, link: 1 } })
             .toArray())
-            .map((doc) => doc.link)
-            .filter((link): link is string => typeof link === "string" && link.length > 0);
+            .flatMap((doc) => textLinks(doc.link));
 
         const cursor = db.collection("sources").find({}).sort({ _id: 1 });
         for await (const source of cursor) {

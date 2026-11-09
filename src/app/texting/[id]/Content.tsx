@@ -1,3 +1,5 @@
+import TextLinkList from "@/app/components/TextLinkList";
+import { textLinks } from "@/lib/textLinks";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 import {ReadinessButton} from "@/app/components/DayPart";
 import {cookies} from "next/headers";
@@ -57,13 +59,8 @@ const Content = async ({ itemPromise, id }: { itemPromise: Promise<[any, any]>, 
                 <span className="w-fit text-xs pr-2">
                     <ReadinessButton value={item.readiness} />
                 </span>
-                {item.link ? (
-                    <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
-                        <a href={item.link} target="_blank" rel="noreferrer">
-                            Скан текста&nbsp;
-                        </a>
-                        <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                    </span>
+                {textLinks(item.link).length ? (
+                    <TextLinkList value={item.link} label="Скан текста" />
                 ) : (
                     <span className="text-stone-400 text-sm">
                         Скан не добавлен

@@ -172,6 +172,8 @@ const SPECS: Spec[] = [
       why: "вход через Яндекс" },
     { db: "typikon-users", collection: "sessions", key: { expiresAt: 1 },
       why: "поиск протухших сессий" },
+    { db: "typikon-users", collection: "sessions", key: { lastSeenAt: 1, expiresAt: 1, id: 1 },
+      why: "пользователи онлайн: активность за 5 минут, действующий вход и уникальный пользователь" },
     { db: "typikon-users", collection: "sessions", key: { id: 1, expiresAt: 1 },
       why: "при входе удаляем истёкшие сессии пользователя, сохраняя активные устройства" },
     { db: "typikon-users", collection: "textingProposals", key: { userId: 1, textId: 1, status: 1 },

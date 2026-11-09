@@ -1,4 +1,6 @@
 'use client';
+import Works from "./Works";
+import type { SaintWork } from "@/lib/saintWorks";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {DneslovKind} from "@/utils/texts";
 import Link from "next/link";
@@ -179,8 +181,9 @@ enum COLLECTION_TYPE {
     AUTHOR,
 }
 
-const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [], memories = [], dedications = [], places = [], relics = [] }: {
+const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [], memories = [], dedications = [], places = [], relics = [], works = [] }: {
     id: string,
+    works?: SaintWork[],
     card?: SaintCard,
     item: any,
     items: any[],
@@ -416,6 +419,7 @@ const SaintPage = ({ id, card, item, items, mentions, linkedNoble, akathists = [
                     ))}
                 </div>
             </div>
+            <Works items={works} />
             {/* Вкладки — кнопки, а не div с onClick: иначе переключить подборку нельзя ни
                 с клавиатуры, ни скринридером, а раздел как раз про доступность чтений. */}
             <div

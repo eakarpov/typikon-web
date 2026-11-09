@@ -1,3 +1,4 @@
+import { textLinks } from "@/lib/textLinks";
 import {blocksOf,fingerprint} from '@/lib/study/core';
 import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
 import { continuousReadingView } from "@/lib/continuousReading";
@@ -229,8 +230,10 @@ export const textDetail = (doc: any, coverage: { need: number; has: number } | n
     footnotes: doc.footnotes ?? [],
     quotes: doc.quotes ?? [],
     // Ссылки на скан и русский перевод — чужие материалы, поэтому именно ссылки.
-    scanUrl: doc.link || null,
-    russianUrl: doc.ruLink || null,
+    scanUrl: textLinks(doc.link)[0] || null,
+    scanUrls: textLinks(doc.link),
+    russianUrl: textLinks(doc.ruLink)[0] || null,
+    russianUrls: textLinks(doc.ruLink),
     images: doc.images?.filter(Boolean) ?? [],
     note: doc.info || null,
     dneslovType: doc.dneslovType || null,

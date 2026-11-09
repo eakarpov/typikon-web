@@ -9,6 +9,7 @@
 // Идемпотентно: только $set, безопасно перезапускать; не трогает link, если он уже совпадает.
 // Запуск: npx tsx src/scripts/assign-scan-links.ts
 //         DRY_RUN=1 npx tsx src/scripts/assign-scan-links.ts
+import { textLinks } from "@/lib/textLinks";
 import "@/scripts/lib/env";
 import clientPromise from "@/lib/mongodb";
 import * as fs from "fs";
@@ -92,10 +93,11 @@ const main = async () => {
                 const idx = typeof t.bookIndex === "number" ? t.bookIndex : Infinity;
                 url = rule.ranges.find(r => idx <= r.maxIndex)?.url;
             }
-            if (!url || t.link === url) continue; // уже проставлено или нечего ставить
+            if (!url || textLinks(t.link).includes(url)) continue; // уже проставлено или нечего ставить
 
             if (!DRY_RUN) {
-                await textsCol.updateOne({ _id: t._id }, { $set: { link: url } });
+                const result = await textsCol.updateOne({ _id: t._id, link: t.link === undefined ? { $exists: false } : { $eq: t.link } }, { $set: { link: [...textLinks(t.link), url] } });
+                if (!result.matchedCount) { console.warn(`Ссылки ${t._id} изменились параллельно — пропуск`); continue; }
             }
             updatedInBook += 1;
         }

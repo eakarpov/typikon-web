@@ -1,4 +1,5 @@
 "use client";
+import TextLinkList from "@/app/components/TextLinkList";
 import Comparison, { type ComparisonData } from "./Comparison";
 import { showHighlights } from "./highlights";
 import { bookLanguageLabel } from "@/utils/bookLanguages";
@@ -1328,16 +1329,8 @@ export default function Client() {
                         {material.author} · {material.edition}
                       </p>
                       <p>Язык: {bookLanguageLabel(material.language)}</p>
-                      {material.source && /^https?:/.test(material.source) && (
-                        <a
-                          className="underline"
-                          href={material.source}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Источник / скан
-                        </a>
-                      )}
+                      <TextLinkList value={material.metadata.sourceUrls ?? material.source} label="Источник / скан" />
+                      <TextLinkList value={material.metadata.russianUrls ?? material.metadata.russianUrl} label="Русский текст" />
                       <p>{String(material.metadata.description ?? "")}</p>
                       <p>
                         Состояние текста:{" "}

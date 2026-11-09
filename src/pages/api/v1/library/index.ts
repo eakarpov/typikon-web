@@ -1,3 +1,4 @@
+import { legacyTextLinks } from "@/lib/textLinks";
 import {NextApiRequest, NextApiResponse} from "next";
 import getItems from "@/pages/api/v1/library/service";
 
@@ -8,6 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(400).end();
             return;
         }
-        res.status(200).json(books);
+        res.status(200).json(legacyTextLinks(books));
     }
 }

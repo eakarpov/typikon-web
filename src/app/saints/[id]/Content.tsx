@@ -1,3 +1,5 @@
+import { rulesDb } from "@/lib/rulesDb";
+import { saintWorks } from "@/lib/saintWorks";
 import React from "react";
 import SaintPage from "@/app/saints/[id]/SaintPage";
 import { akathistsOfSaint } from "@/lib/akathists";
@@ -50,6 +52,8 @@ const Content = async ({ id, itemPromise, facts, dneslovIds = [], memoryIds = []
 
     // Акафисты этому святому — из корпуса песнопений, синхронно: он лежит в
     // файле SQLite рядом с приложением, и ждать его нечего.
+    const corpus = rulesDb();
+    const works = corpus ? saintWorks(corpus, [...memoryIds, ...saintMemories.map(m => m.memoryId)], dneslovIds.length ? dneslovIds : [id], { includeText: true }).items : [];
     const akathists = akathistsOfSaint(dneslovIds.length ? dneslovIds : [id], memoryIds);
 
     // Подписи и даты считаются здесь, на сервере: ниже клиентский компонент, и
@@ -83,6 +87,7 @@ const Content = async ({ id, itemPromise, facts, dneslovIds = [], memoryIds = []
     return (
         <SaintPage
             id={id}
+            works={works}
             card={card}
             item={memory}
             items={items || []}

@@ -1,5 +1,7 @@
 "use client";
 
+import LinkListEditor from "../LinkListEditor";
+import { textLinks } from "@/lib/textLinks";
 import GenerateAlias from "@/app/admin/GenerateAlias";
 import {
     DneslovKind,
@@ -68,8 +70,8 @@ const AdminEditor = ({ value }: any) => {
     const [contentType, setContentType] = useState<TextContentType>(
         value.contentType || TextContentType.PARAGRAPHS
     );
-    const [link, setLink] = useState(value.link || "");
-    const [ruLink, setRuLink] = useState(value.ruLink || "");
+    const [link, setLink] = useState<string[]>(textLinks(value.link));
+    const [ruLink, setRuLink] = useState<string[]>(textLinks(value.ruLink));
     const [author, setAuthor] = useState(value.author || "");
     const [translator, setTranslator] = useState(value.translator || "");
     const [alias, setAlias] = useState(value.alias || "");
@@ -521,22 +523,8 @@ const AdminEditor = ({ value }: any) => {
                 value={description}
                 onChange={e => setDescription(e.target.value)}
             />
-            <label>
-                Ссылка на русский текст
-            </label>
-            <input
-                className="border-2"
-                value={ruLink}
-                onChange={e => setRuLink(e.target.value)}
-            />
-            <label>
-                Ссылка на церковнославянский текст/скан
-            </label>
-            <input
-                className="border-2"
-                value={link}
-                onChange={e => setLink(e.target.value)}
-            />
+            <LinkListEditor label="Ссылки на русский текст" values={ruLink} onChange={setRuLink} />
+            <LinkListEditor label="Ссылки на церковнославянский текст / скан" values={link} onChange={setLink} />
             <label>
                 Начальная фраза
             </label>

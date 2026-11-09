@@ -1,3 +1,4 @@
+import { textLinks } from "@/lib/textLinks";
 import { chapterPlaces, textPlaces } from "@/lib/places/query";
 import { bookLanguageLabel } from "@/utils/bookLanguages";
 import { bookCategoryLabel } from "@/utils/libraryBooks";
@@ -166,7 +167,7 @@ export async function material(raw: Target): Promise<Material> {
       author: text.author ?? book?.author,
       edition: book?.editionTitle ?? book?.name,
       language: text.language ?? book?.language ?? "cu_gr",
-      source: text.link ?? undefined,
+      source: textLinks(text.link)[0],
       sourceHash: fingerprint(content),
       blocks: blocksOf(content),
       footnotes,
@@ -174,7 +175,9 @@ export async function material(raw: Target): Promise<Material> {
         bookId: String(text.bookId ?? ""),
         workKey: book?.workKey,
         readiness: text.readiness,
-        russianUrl: text.ruLink,
+        russianUrl: textLinks(text.ruLink)[0],
+        russianUrls: textLinks(text.ruLink),
+        sourceUrls: textLinks(text.link),
         description: book?.description,
         quotes: text.quotes ?? [],
         footnoteBase,

@@ -1,3 +1,4 @@
+import { legacyTextLinks } from "@/lib/textLinks";
 import {NextApiRequest, NextApiResponse} from "next";
 import {getItem} from "@/pages/api/v1/calendar/[date]/service";
 
@@ -16,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return;
         }
         res.status(200).json({
-            data: books || null
+            data: legacyTextLinks(books) || null
         });
     }
 }

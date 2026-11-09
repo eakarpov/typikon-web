@@ -1,3 +1,4 @@
+import { textLinks } from "@/lib/textLinks";
 import { getDneslovMemory, getDneslovImage, DneslovEvent } from "@/scripts/lib/dneslov";
 import { extractHeroFromHeuristic, HeroName } from "@/scripts/lib/heroName";
 import { expandOrderAbbreviation } from "@/scripts/lib/orderAbbreviations";
@@ -13,7 +14,7 @@ interface DaySongText {
     _id: string;
     name: string;
     alias: string;
-    ruLink?: string | null;
+    ruLink?: string | string[] | null;
     dneslovId?: string | null;
     dneslovEventId?: string | null;
     poems?: string | null;
@@ -199,7 +200,7 @@ export const buildChannelPost = async ({
         body,
         [
             `<a href="${SITE}/reading/${text.alias}">${label}</a> ${SOURCE_NOTE}`,
-            text.ruLink ? `<a href="${text.ruLink}">Русский текст</a>` : "",
+            textLinks(text.ruLink).map((url, i) => `<a href="${escapeHtml(url)}">Русский текст${i ? ` ${i + 1}` : ""}</a>`).join(" · "),
             `<a href="${SITE}/calendar/${dayAlias}">Чтения на день</a>`,
             hashtags.join(" "),
             `<a href="${HELP_LINK}">Помочь проекту</a>`,

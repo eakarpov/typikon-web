@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {verifySession} from "@/lib/authorize/authorization";
+import {getSession} from "@/lib/authorize/sessions";
 import {getItem} from "@/app/profile/api";
 
 // Сессия читается отдельным запросом с клиента, а не в корневом layout:
@@ -7,7 +7,8 @@ import {getItem} from "@/app/profile/api";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-    const session = await verifySession();
+    const active = await getSession();
+    const session = active ? { isAuth: true, userId: active.id, expiresAt: active.expiresAt } : { isAuth: false };
 
     if (!session.isAuth) {
         const response = NextResponse.json({ isAuth: false }, {

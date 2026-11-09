@@ -57,3 +57,12 @@ test('service reader resolves references, keeps book order and provides canon li
         assert.ok(!service.rows.some((r:any)=>r.text.includes('Чуж')));
     }finally{db.close();}
 });
+
+test('web can request full troparion and kontakion without changing the default mobile payload',()=>{
+    const db=corpus();try{
+        const web=saintWorks(db,['a'],[],{includeText:true});
+        assert.equal(web.items.find(w=>w.genre==='troparion')?.text,'Тропарь');
+        assert.equal(web.items.find(w=>w.genre==='kontakion')?.text,'Кондак');
+        assert.equal(saintWorks(db,['a'],[]).items.find(w=>w.genre==='troparion')?.text,undefined);
+    }finally{db.close();}
+});

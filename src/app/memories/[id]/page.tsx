@@ -1,3 +1,5 @@
+import ServiceReading from "./ServiceReading";
+import { csFontVariables } from "@/utils/font";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -19,7 +21,7 @@ import { SITE_URL } from "@/utils/site";
 // Показать один «правильный» знак значило бы спрятать разногласие, а оно и
 // есть самое ценное сведение: по нему видно, на чём стоит вывод.
 
-type Props = { params: { id: string } };
+type Props = { params: { id: string }; searchParams?: { lang?: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const memory = await getMemory(params.id);
@@ -74,7 +76,7 @@ const Sign = ({ sign }: { sign: NonNullable<Memory["sign"]> }) => {
     );
 };
 
-const MemoryPage = async ({ params }: Props) => {
+const MemoryPage = async ({ params, searchParams }: Props) => {
     setMeta();
     const memory = await getMemory(params.id);
     if (!memory) notFound();
@@ -83,7 +85,7 @@ const MemoryPage = async ({ params }: Props) => {
     const cycle = memory.feastCycle;
 
     return (
-        <div className={myFont.variable} style={{ maxWidth: "48rem", margin: "0 auto", padding: "1rem" }}>
+        <div className={`${myFont.variable} ${csFontVariables}`} style={{ maxWidth: "48rem", margin: "0 auto", padding: "1rem" }}>
             <div style={{ marginBottom: ".5rem" }}>
                 <Link href="/memories">← Реестр памятей</Link>
             </div>
@@ -127,6 +129,7 @@ const MemoryPage = async ({ params }: Props) => {
                 Сведения о службе взяты из разбора богослужебных книг и Типикона.
                 {!saint && " Святой этой памяти пока не сопоставлен."}
             </div>
+        <ServiceReading id={params.id} language={searchParams?.lang} />
         </div>
     );
 };

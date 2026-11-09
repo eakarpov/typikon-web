@@ -2,6 +2,7 @@
 import {restoreBrowserReadingSettings} from "@/lib/settings/reading";
 import {clearPrivateStudy} from '@/lib/study/cache';
 import {clearPrivateSnapshots} from '@/lib/companion/snapshots';
+import StatusBadges from "@/app/admin/StatusBadges";
 import Link from "next/link";
 import {
     Cog6ToothIcon,
@@ -198,12 +199,15 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                     isDevelopment={isDevelopment}
                     showButton={showAdmin === Boolean(true).toString()}
                     Component={() => (
+                        <span className="inline-flex items-center gap-2">
                         <Link
                             href="/admin"
                             className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/admin`) && `text-red-600`}`}
                         >
                             Админка
                         </Link>
+                        <StatusBadges />
+                        </span>
                     )}
                 />
                 {/* Отсюда начинается служебная половина: она прижата вправо,

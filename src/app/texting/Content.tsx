@@ -1,3 +1,4 @@
+import TextLinkList from "@/app/components/TextLinkList";
 import Link from "next/link";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 import {ReadinessButton} from "@/app/components/DayPart";
@@ -58,14 +59,7 @@ const Content = async ({ itemsPromise }: IContent) => {
                         </p>
                     )}
                     <div className="flex flex-row items-center">
-                        {item.link && (
-                            <span className="pr-4 text-amber-800 cursor-pointer flex flex-row items-center">
-                                <a href={item.link} target="_blank" rel="noreferrer">
-                                    Скан текста&nbsp;
-                                </a>
-                                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                            </span>
-                        )}
+                        <TextLinkList value={item.link} label="Скан текста" />
                         <Link
                             href={`/texting/${item.id}`}
                             className="cursor-pointer font-serif text-amber-800"

@@ -1,3 +1,4 @@
+import TextLinkList from "@/app/components/TextLinkList";
 import {fullTitle, isFootnoteBook, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
 import TextPart from "@/app/components/TextPart";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
@@ -158,14 +159,8 @@ const DayPart = ({
                     <div key={item.text._id.toString()}>
                         <p className="text-1xl font-bold">
                             <span className="flex flex-row items-center">
-                                {item.text.ruLink && (
-                                    <span className="pr-2 text-amber-800 cursor-pointer flex flex-row items-center">
-                                        <a href={item.text.ruLink} target="_blank" rel="noreferrer">
-                                            Русский текст&nbsp;
-                                        </a>
-                                        <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                                    </span>
-                                )}
+                                <TextLinkList value={item.text.ruLink} label="Русский текст" />
+                                <TextLinkList value={item.text.link} label="ЦС текст / скан" />
                                 <span className="w-fit text-xs pr-2">
                                     <ReadinessButton value={item.text.readiness} />
                                 </span>

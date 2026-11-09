@@ -1,3 +1,4 @@
+import { textLinks } from "@/lib/textLinks";
 import { Suspense } from "react";
 import Link from "next/link";
 import { CalendarIcon, UserCircleIcon } from "@heroicons/react/24/outline";
@@ -30,7 +31,7 @@ const TextLinksContent = async ({ item }: { item: any }) => {
     const [links, [day], source, places] = await Promise.all([
         getTextLinks(item),
         getDayByText(item.id),
-        getTextSource(item.link || null),
+        getTextSource(textLinks(item.link)[0] || null),
         textPlaces(String(item.id), item.content || "", item.alias || undefined),
     ]);
     // Статья энциклопедии о месте ведёт на его страницу отдельной строкой: это не

@@ -178,10 +178,10 @@ async function main() {
         description: "",
         start: "",
         fileId: null,
-        link: null,
+        link: [],
         // Не ссылка на Викитеку: страница чтения показывает ruLink как «Русский текст»,
         // то есть перевод, а статья и так русская. Источник назван в описании книги.
-        ruLink: null,
+        ruLink: [],
         bookId,
         bookIndex: p.bookIndex,
         footnotes: [],

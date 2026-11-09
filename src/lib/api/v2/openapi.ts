@@ -2407,6 +2407,8 @@ export const openapi = () => ({
                             poems: { type: ["string", "null"] },
                             footnotes: { type: "array", items: { type: "object" } },
                             quotes: { type: "array", items: { type: "object" } },
+                            scanUrls: { type: "array", items: { type: "string", format: "uri" }, description: "Все ссылки на ЦС текст / скан" },
+                            russianUrls: { type: "array", items: { type: "string", format: "uri" }, description: "Все ссылки на русский текст" },
                             scanUrl: { type: ["string", "null"], description: "Ссылка на скан оригинала — чужой материал" },
                             russianUrl: { type: ["string", "null"], description: "Ссылка на русский перевод — чужой материал" },
                             images: { type: "array", items: { type: "object" } },

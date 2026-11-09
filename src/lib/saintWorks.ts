@@ -3,14 +3,14 @@ import { BOOK_LABELS, SERVICE_LABELS, CANON_ROLE_LABELS, MARKER_LABELS } from '@
 // No name or date matching: neither can identify a saint unambiguously.
 export interface SaintWork {
     id: string; genre: string; reader: string; title: string;
-    subtitle: string | null; language: string | null;
+    subtitle: string | null; language: string | null; text?: string;
 }
 const marks = (n: number) => Array(n).fill('?').join(',');
 const resolved = 'COALESCE(ci.text, f.text, other.text)';
 const contentJoin = `LEFT JOIN fixed_texts f ON f.text_id=ci.ref_text_id
     LEFT JOIN content_items other ON other.item_id=ci.ref_item_id`;
 
-export function saintWorks(db: any, memoryIds: string[], externalIds: string[]) {
+export function saintWorks(db: any, memoryIds: string[], externalIds: string[], options: { includeText?: boolean } = {}) {
     const requested = [...new Set(memoryIds.filter(Boolean))];
     const external = [...new Set(externalIds.filter(Boolean))];
     if (!requested.length && !external.length) return { items: [] as SaintWork[], memoryIds: [] as string[] };
@@ -36,7 +36,7 @@ export function saintWorks(db: any, memoryIds: string[], externalIds: string[]) 
         const genre=genres[row.content_unit];
         const key=JSON.stringify([genre,row.language,row.tone,row.marker,text]);
         if(seen.has(key))continue;seen.add(key);
-        items.push({id:String(row.item_id),genre,reader:'chant',title:text.replace(/\s+/g,' ').slice(0,110),subtitle:[subtitle(labels.get(row.memory_id),row.tone),MARKER_LABELS[row.marker]??row.marker].filter(Boolean).join(' · ')||null,language:row.language});
+        items.push({id:String(row.item_id),genre,reader:'chant',title:text.replace(/\s+/g,' ').slice(0,110),subtitle:[subtitle(labels.get(row.memory_id),row.tone),MARKER_LABELS[row.marker]??row.marker].filter(Boolean).join(' · ')||null,language:row.language,...(options.includeText ? {text} : {})});
     }
     for(const c of db.prepare(`SELECT canon_id,memory_id,language,tone,service,role FROM canons
         WHERE memory_id IN (${marks(ids.length)}) AND EXISTS (SELECT 1 FROM content_items ci WHERE ci.canon_id=canons.canon_id) ORDER BY memory_id,rowid`).all(...ids)) {
