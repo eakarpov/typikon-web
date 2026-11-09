@@ -27,6 +27,7 @@ export function createPublication(db:Database.Database):void{
 export class DictionaryPublication{
  readonly version:string;
  constructor(readonly db:Database.Database){const m=Object.fromEntries((db.prepare('SELECT key,value FROM metadata').all() as {key:string;value:string}[]).map(r=>[r.key,r.value]));if(m.state!=='complete'||m.format!=='cs-publication-v1'||m.scopeChecked!=='1')throw Error('Dictionary publication is incomplete');this.version=m.version;}
+ relationView(id:string):Pick<Article,'id'|'name'|'pos'|'relations'>|null {const r=this.db.prepare('SELECT payload FROM articles WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const a=JSON.parse(r.payload) as Article;return {id:a.id,name:a.name,pos:a.pos,relations:a.relations};}
  article(id:string):Article|null {const r=this.db.prepare('SELECT payload FROM articles WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const a=JSON.parse(r.payload) as Article;for(const f of a.extra)f.grammar=readableAnalysis(f.grammar);if(a.examples===undefined){a.examples=a.sources.filter(r=>r.mappingStatus==='verified').flatMap(r=>this.source(r.id)?.examples??[]);}return a;}
  source(id:string):SourceEntry|null {const r=this.db.prepare('SELECT payload FROM sources WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const s=JSON.parse(r.payload) as SourceEntry;s.examples??=sourceExamples(s);return s;}
  search(query:string,direction:Direction,cursor=0,limit=20):SearchResult{

@@ -1,0 +1,8 @@
+.root [data-bible-verse]:target,
+.highlight {
+  background-color: rgba(251, 191, 36, .28);
+  border-radius: .2rem;
+  scroll-margin-top: 6rem;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}

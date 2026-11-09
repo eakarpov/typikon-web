@@ -17,7 +17,7 @@ export async function csSearch(request:Request):Promise<Response>{
 }
 export async function csArticle(request:Request,id:string):Promise<Response>{
  const blocked=limit(request,'detail');if(blocked)return blocked;if(!/^[a-f0-9]{24}$/.test(id))return csResponse({error:{code:'bad_request',message:'Неверный ID'}},400);
- try{const p=dictionaryPublication(),item=p.article(id);return item?csResponse({...item,version:p.version}):csResponse({error:{code:'not_found',message:'Статья не найдена'}},404);}catch{return csResponse({error:{code:'unavailable',message:'Словарь временно недоступен'}},503);}
+ try{const p=dictionaryPublication(),item=new URL(request.url).searchParams.get('view')==='relations'?p.relationView(id):p.article(id);return item?csResponse({...item,version:p.version}):csResponse({error:{code:'not_found',message:'Статья не найдена'}},404);}catch{return csResponse({error:{code:'unavailable',message:'Словарь временно недоступен'}},503);}
 }
 export async function csSource(request:Request,id:string):Promise<Response>{
  const blocked=limit(request,'detail');if(blocked)return blocked;if(!/^[a-f0-9]{64}$/.test(id))return csResponse({error:{code:'bad_request',message:'Неверный ID источника'}},400);

@@ -96,6 +96,7 @@ export const csPaths = {
       "summary": "Словарная статья, формы и связи",
       "security": [],
       "parameters": [
+        {"name":"view","in":"query","description":"relations: только лексема и смысловые связи, без таблиц форм и объяснений","schema":{"type":"string","enum":["relations"]}},
         {
           "name": "id",
           "in": "path",
@@ -112,7 +113,7 @@ export const csPaths = {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CsArticle"
+                "oneOf": [{"$ref": "#/components/schemas/CsArticle"}, {"$ref": "#/components/schemas/CsRelationView"}]
               }
             }
           }
@@ -425,6 +426,7 @@ export const csSchemas = {
       "nextCursor"
     ]
   },
+  "CsRelationView": {"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"pos":{"type":"string"},"version":{"type":"string"},"relations":{"$ref":"#/components/schemas/CsArticle/properties/relations"}},"required":["id","name","pos","version","relations"]},
   "CsArticle": {
     "type": "object",
     "properties": {

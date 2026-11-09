@@ -1,3 +1,5 @@
+import VerseFocus from './VerseFocus';
+import verseStyles from './VerseFocus.module.css';
 import Link from "next/link";
 import { csFontVariables } from "@/utils/font";
 import { needsChurchFont } from "@/utils/bookLanguages";
@@ -73,7 +75,7 @@ const SingleColumn = ({ data, edition, echoes }: {
                     const cell = row.cells[0];
                     if (!cell) return null;
                     return (
-                        <span key={row.canonRef} id={`v${row.number}`}>
+                        <span key={row.canonRef} id={`v${row.number}`} data-bible-verse={row.number}>
                             <sup className="text-red-600 font-bold">{row.number}</sup>
                             <Echoes canonId={data.canonId} chapter={data.chapter}
                                     verse={row.number} count={echoes[row.number]} />{" "}
@@ -136,7 +138,7 @@ const ParallelColumns = ({ data, echoes }: {
             </thead>
             <tbody>
                 {data.rows.map((row) => (
-                    <tr key={row.canonRef} id={`v${row.number}`} className="align-top">
+                    <tr key={row.canonRef} id={`v${row.number}`} data-bible-verse={row.number} className="align-top">
                         <td className="text-red-600 font-bold font-serif text-sm pt-1 whitespace-nowrap">
                             {row.number}
                             <Echoes canonId={data.canonId} chapter={data.chapter}
@@ -242,7 +244,8 @@ const Chapter = ({
     /** Места, названные в главе (канонический счёт); пусто — блока нет. */
     places?: ChapterPlace[];
 }) => (
-    <div className="pt-2 space-y-3">
+    <div id="bible-chapter" className={`${verseStyles.root} pt-2 space-y-3`}>
+        <VerseFocus chapterKey={`${data.canonId}/${data.chapter}/${codes}/${data.base}`} />
         <div className="font-serif text-sm">
             <Link href="/bible" className="text-red-900">← к Библии</Link>
         </div>

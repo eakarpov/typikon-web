@@ -73,3 +73,11 @@ test('separate equivalent fragments never combine disjoint passages into a meani
 test('search analyses prefer human labels over duplicate original tags',()=>{assert.equal(readableAnalysis('sg,gen/dat/loc / единственное число · родительный / единственное число · дательный / единственное число · местный'),'единственное число · родительный / единственное число · дательный / единственное число · местный');});
 
 test('noun Nom slot is not mistaken for a neuter gender marker',()=>{assert.equal(slotLabel('sgNom'),'единственное число · именительный');assert.equal(slotLabel('sgNGen'),'единственное число · средний род · родительный');assert.equal(slotLabel('sgFNom'),'единственное число · женский род · именительный');});
+
+test('relation view preserves meaning evidence and statuses without loading examples or forms',()=>{
+ const {db,p}=fixture();
+ const old=JSON.parse((db.prepare('SELECT payload FROM articles WHERE id=?').get('a') as {payload:string}).payload);
+ const relations=[{id:'edge',type:'synonym',status:'proposed',anchorText:'meaning',targetId:'b',targetName:'other'}];
+ db.prepare('UPDATE articles SET payload=? WHERE id=?').run(JSON.stringify({...old,relations,paradigms:[{large:'forms'}],sources:[{id:'missing',mappingStatus:'verified'}]}),'a');
+ assert.deepEqual(p.relationView('a'),{id:old.id,name:old.name,pos:old.pos,relations});assert.equal(p.relationView('unknown'),null);db.close();
+});
