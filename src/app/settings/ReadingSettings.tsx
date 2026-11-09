@@ -1,7 +1,10 @@
 'use client';
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState, useRef} from "react";
 import {
     applyValue,
+    applyReadingValues,
+    readingSource,
+    READING_SOURCE_KEY,
     clearStored,
     COLOR_SCHEMES,
     defaultValues,
@@ -12,6 +15,8 @@ import {
     SETTING,
     storeValue,
 } from "@/lib/settings/reading";
+import {useAppSelector} from "@/lib/hooks";
+import {sanitizeReadingValues} from "@/lib/settings/account";
 import {myFont} from "@/utils/font";
 
 // Образец — начало «Похвального слова на Пасху» из собрания: с ударениями и
@@ -64,15 +69,72 @@ const ReadingSettings = () => {
     // здесь только приводим в соответствие подписи и нажатые кнопки.
     const [values, setValues] = useState<ReadingValues>(defaultValues);
 
+    const [source, setSource] = useState<"browser" | "account">("browser");
+    const [message, setMessage] = useState("");
+    const [busy, setBusy] = useState(false);
+    const isAuthorized = useAppSelector(state => state.auth.isAuthorized);
+    const current = useRef(defaultValues());
+    const saveQueue = useRef(Promise.resolve());
+
     useEffect(() => {
-        setValues(readStored());
+        current.current = sanitizeReadingValues(readStored());
+        setValues(current.current);
+        setSource(readingSource());
     }, []);
 
-    const onPick = useCallback((setting: ReadingSetting, value: string) => {
-        setValues((old) => ({ ...old, [setting.id]: value }));
-        applyValue(setting, value);
-        storeValue(setting, value);
+    const saveAccount = useCallback((next: ReadingValues) => {
+        setMessage("Сохраняю…");
+        try { localStorage.setItem("typikon-account-reading", JSON.stringify(next)); } catch {}
+        // Requests are serialized so an earlier colour change cannot overwrite a later one.
+        saveQueue.current = saveQueue.current.then(async () => {
+            const res = await fetch("/api/reading-settings", {
+                method: "PUT", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ values: next }),
+            });
+            if (!res.ok) throw new Error("Не удалось сохранить настройки в учётке");
+            setMessage("Сохранено в учётке");
+        }).catch(() => setMessage("Настройки не сохранены в учётке. Нажмите «Повторить сохранение»."));
     }, []);
+
+    const changeSource = async (nextSource: "browser" | "account") => {
+        setBusy(true);
+        setMessage("");
+        try {
+            let next: ReadingValues;
+            if (nextSource === "account") {
+                const res = await fetch("/api/reading-settings", { cache: "no-store" });
+                if (!res.ok) throw new Error("Для настроек учётки нужно войти");
+                const data = await res.json();
+                next = sanitizeReadingValues(data.values || current.current);
+                if (!data.values) {
+                    const saved = await fetch("/api/reading-settings", {
+                        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ values: next }),
+                    });
+                    if (!saved.ok) throw new Error("Не удалось сохранить настройки в учётке");
+                }
+                localStorage.setItem("typikon-account-reading", JSON.stringify(next));
+            } else {
+                localStorage.setItem(READING_SOURCE_KEY, "browser");
+                next = sanitizeReadingValues(readStored());
+            }
+            localStorage.setItem(READING_SOURCE_KEY, nextSource);
+            setSource(nextSource);
+            current.current = next;
+            setValues(next);
+            applyReadingValues(next);
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "Не удалось загрузить настройки");
+        } finally { setBusy(false); }
+    };
+
+    const onPick = useCallback((setting: ReadingSetting, value: string) => {
+        const next = { ...current.current, [setting.id]: value };
+        current.current = next;
+        setValues(next);
+        applyValue(setting, value);
+        if (readingSource() === "account") saveAccount(next);
+        else storeValue(setting, value);
+    }, [saveAccount]);
 
     const onScheme = useCallback((background: string, foreground: string) => {
         onPick(SETTING.background, background);
@@ -80,17 +142,32 @@ const ReadingSettings = () => {
     }, [onPick]);
 
     const onReset = useCallback(() => {
-        clearStored();
-        setValues(defaultValues());
-    }, []);
+        const next = defaultValues();
+        if (readingSource() === "account") saveAccount(next);
+        else clearStored();
+        current.current = next;
+        setValues(next);
+        applyReadingValues(next);
+    }, [saveAccount]);
 
     const choices = READING_SETTINGS.filter((setting) => setting.options);
 
     return (
         <div className={`${myFont.variable} flex flex-col gap-5 mt-3`}>
             <p className="font-serif text-slate-500">
-                Настройки хранятся в этом браузере и применяются сразу, входить для этого не нужно.
+                Выберите, где хранить настройки. Настройки браузера сохраняются отдельно.
+                При первом включении учётки в неё копируются текущие значения.
             </p>
+
+            <label className="font-serif">
+                Настройки отображения: {" "}
+                <select value={source} disabled={busy} onChange={e => void changeSource(e.target.value as "browser" | "account")}>
+                    <option value="browser">Из браузера</option>
+                    <option value="account" disabled={!isAuthorized}>Из учётки{!isAuthorized ? " (нужен вход)" : ""}</option>
+                </select>
+            </label>
+            {message && <p role="status">{message}</p>}
+            {source === "account" && <button type="button" className="font-serif underline w-fit" onClick={() => saveAccount(current.current)}>Повторить сохранение</button>}
 
             {choices.map((setting) => (
                 <Choice key={setting.id} setting={setting} value={values[setting.id]} onPick={onPick} />

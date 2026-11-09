@@ -29,7 +29,7 @@ export function aliasPatch(current: Document, input: unknown) {
 }
 
 export const canonicalPath = (section: "library" | "reading", doc: { alias?: string; id?: string; _id?: unknown }) =>
-    `/${section}/${doc.alias || doc.id || String(doc._id)}`;
+    doc.alias ? `/${section}/${doc.alias}` : `/${section}/id/${doc.id || String(doc._id)}`;
 
 export function withSearch(path: string, search: Record<string, string | string[] | undefined>) {
     const url = new URL(path, "https://typikon.invalid");

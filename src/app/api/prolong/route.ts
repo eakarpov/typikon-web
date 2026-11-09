@@ -16,7 +16,9 @@ export async function POST() {
     if (!expiresAt) {
         // Сессии нет, она кончилась или упёрлась в предел от начала входа.
         // Для страницы это значит «пора показать вход», а не «повтори запрос».
-        return new NextResponse(null, { status: 401 });
+        const response = new NextResponse(null, { status: 401, headers: { "Cache-Control": "no-store" } });
+        response.cookies.delete("session");
+        return response;
     }
 
     return NextResponse.json({ expiresAt }, {

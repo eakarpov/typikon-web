@@ -17,7 +17,7 @@ const SessionLoader = () => {
             .then((data) => {
                 if (cancelled) return;
                 if (!data?.isAuth) {
-                    dispatch(AuthSlice.actions.SetResolved());
+                    dispatch(AuthSlice.actions.Logout());
                     return;
                 }
                 dispatch(AuthSlice.actions.SetAuthorized({

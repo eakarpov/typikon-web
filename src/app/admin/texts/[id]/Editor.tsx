@@ -1,5 +1,6 @@
 "use client";
 
+import GenerateAlias from "@/app/admin/GenerateAlias";
 import {
     DneslovKind,
     footNotesToArray,
@@ -493,6 +494,7 @@ const AdminEditor = ({ value }: any) => {
                         value={alias}
                         onChange={e => setAlias(e.target.value)}
                     />
+                    <GenerateAlias collection="texts" id={value.id} name={name} onGenerated={setAlias} />
                     <div
                         className="cursor-pointer"
                         onClick={onBufferClick}

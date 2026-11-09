@@ -41,6 +41,25 @@ const AuthorizeChecker = () => {
     }, [dispatch]);
 
     useEffect(() => {
+        if (!isAuthorized) return;
+        const check = async () => {
+            try {
+                const response = await fetch("/api/session", { cache: "no-store" });
+                if (response.ok && !(await response.json()).isAuth) dispatch(AuthSlice.actions.Logout());
+            } catch { /* Повторим после восстановления связи. */ }
+        };
+        const onVisible = () => { if (document.visibilityState === "visible") void check(); };
+        const timer = setInterval(onVisible, 60_000);
+        document.addEventListener("visibilitychange", onVisible);
+        window.addEventListener("focus", onVisible);
+        return () => {
+            clearInterval(timer);
+            document.removeEventListener("visibilitychange", onVisible);
+            window.removeEventListener("focus", onVisible);
+        };
+    }, [isAuthorized, dispatch]);
+
+    useEffect(() => {
         if (!isAuthorized || !expiresAt) return;
 
         const left = +(new Date(expiresAt)) - Date.now();

@@ -45,7 +45,7 @@ const MACHINE = [
     "/offline",
 ];
 
-const DISALLOW = [...PRIVATE, ...EXPENSIVE, ...MACHINE];
+const DISALLOW = [...PRIVATE, ...EXPENSIVE, ...MACHINE, "/reading/id/", "/library/id/"];
 
 /**
  * Обходчики, которые собирают корпуса для обучения и ничего не приводят взамен:

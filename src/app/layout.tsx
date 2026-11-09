@@ -74,7 +74,7 @@ export default function RootLayout({
     // само по себе ничего не стоит: браузер скачивает лишь то семейство,
     // которым что-то набрано.
     return (
-    <html lang="ru" className={csFontVariables}>
+    <html lang="ru" className={csFontVariables} suppressHydrationWarning>
       <head>
           {/*
             * Настройки чтения раскладываются по CSS-переменным до первой отрисовки.

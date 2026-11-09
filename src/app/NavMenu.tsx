@@ -1,4 +1,5 @@
 'use client';
+import {restoreBrowserReadingSettings} from "@/lib/settings/reading";
 import {clearPrivateStudy} from '@/lib/study/cache';
 import {clearPrivateSnapshots} from '@/lib/companion/snapshots';
 import Link from "next/link";
@@ -67,6 +68,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
         sessionStorage.removeItem('prayer-circle-owner');
         localStorage.removeItem('prayer-circle-offline-owner');
         window.dispatchEvent(new Event('prayer-circle-owner-changed'));
+        restoreBrowserReadingSettings();
         dispatch(AuthSlice.actions.Logout());
         router.push("/");
     }, []);

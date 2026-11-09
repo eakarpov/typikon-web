@@ -85,6 +85,7 @@ export const createNewSession = async (
     const key = AUTH_KEY[type];
     if (!key) return 0;
 
+    const previous = await getSession();
     const now = new Date();
     const expiresAt = new Date(now.getTime() + SESSION_WINDOW_SEC * 1000);
 
@@ -114,6 +115,15 @@ export const createNewSession = async (
 
     const session = await encrypt({ sessionId, expiresAt, userId: id }, expiresAt);
     await setSessionCookie(session, expiresAt);
+    // Другие устройства остаются в системе. Убираем истёкшие записи этого
+    // пользователя и прежний вход текущего браузера после успешного нового.
+    await db.collection("sessions").deleteMany({
+        id,
+        $or: [
+            { expiresAt: { $lte: now } },
+            ...(previous?.id === id ? [{ _id: previous._id }] : []),
+        ],
+    });
     return expiresAt;
 };
 

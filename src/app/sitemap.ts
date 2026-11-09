@@ -261,7 +261,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 entry(`/reading/${text.alias}`, text.updatedAt, 0.7, "yearly")),
             ...months.map((month) =>
                 entry(`/months/${month.alias}`, month.updatedAt, 0.6, "monthly")),
-            ...books.filter(book => book.public !== false && !bibleBooks.has(String(book._id))).map((book) =>
+            ...books.filter(book => book.alias && book.public !== false && !bibleBooks.has(String(book._id))).map((book) =>
                 entry(`/library/${book.alias || book._id.toString()}`, book.updatedAt, 0.6, "monthly")),
             ...saints.map((saint) =>
                 entry(saint.path, saint.updatedAt, 0.6, "monthly")),

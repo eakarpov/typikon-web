@@ -10,9 +10,11 @@ export async function GET() {
     const session = await verifySession();
 
     if (!session.isAuth) {
-        return NextResponse.json({ isAuth: false }, {
+        const response = NextResponse.json({ isAuth: false }, {
             headers: { "Cache-Control": "no-store" },
         });
+        response.cookies.delete("session");
+        return response;
     }
 
     const [user] = await getItem(session.userId as string);

@@ -26,7 +26,7 @@ test("ID и прежние алиасы разрешаются без измен
     assert.deepEqual(aliasMatcher(String(id)), { _id: id });
     assert.deepEqual(aliasMatcher("old-name"), { $or: [{ alias: "old-name" }, { aliases: "old-name" }] });
     assert.equal(canonicalPath("library", { _id: id, alias: "book" }), "/library/book");
-    assert.equal(canonicalPath("reading", { id: String(id) }), `/reading/${id}`);
+    assert.equal(canonicalPath("reading", { id: String(id) }), `/reading/id/${id}`);
 });
 
 test("канонический переход сохраняет параметры, повторы и выбор ударений", () => {

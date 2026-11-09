@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import PostItem from "@/app/admin/channel-posts/PostItem";
+import GeneratePosts from "./GeneratePosts";
 import NewPostForm from "@/app/admin/channel-posts/NewPostForm";
 import { ChannelPostDTO } from "@/types/dto/channelPost";
 
@@ -163,6 +164,7 @@ const Tabs = ({ drafts, archive }: { drafts: ChannelPostDTO[]; archive: ChannelP
 
             {tab === "work" ? (
                 <div className="flex flex-col gap-4">
+                    <GeneratePosts />
                     <NewPostForm />
                     {drafts.length === 0 && (
                         <p>

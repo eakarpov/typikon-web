@@ -1,5 +1,6 @@
 "use client";
 
+import GenerateAlias from "@/app/admin/GenerateAlias";
 import Link from "next/link";
 import { revalidateTags } from "@/lib/admin/revalidate";
 import { CacheTag } from "@/lib/cache";
@@ -77,7 +78,7 @@ const AdminEditor = ({ value }: any) => {
             {error && <p role="alert" className="text-red-800">{error}</p>}
             <label htmlFor="book-alias">Адрес книги</label>
             <input id="book-alias" className="border-2" value={alias} onChange={e => setAlias(e.target.value)} />
-            <p className="text-sm text-stone-500">При смене адреса прежние ссылки сохраняются.</p>
+            <GenerateAlias collection="books" id={value.id} name={name} category={category} onGenerated={setAlias} />
             <label>
                 Название
             </label>

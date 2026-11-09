@@ -210,3 +210,9 @@ html[data-reading-focus="true"] .reading-column { max-width: var(--reading-measu
 .reading-column section > div > .text-lg, .reading-column section p.text-lg {
     font-size: var(--reading-font-size); line-height: var(--reading-line-height);
 }
+
+/* lang=cu describes the language, but Old Standard's CSL locl substitutes
+   archaic forms of ordinary а/е. Civil transcription keeps Russian glyphs. */
+.reading-text.font-serif {
+    font-feature-settings: "locl" 0;
+}

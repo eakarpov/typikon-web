@@ -165,6 +165,12 @@ export const readStored = (): ReadingValues => {
     const values = defaultValues();
     if (typeof window === "undefined") return values;
 
+    try {
+        if (readingSource() === "account") {
+            const account = JSON.parse(localStorage.getItem("typikon-account-reading") || "null");
+            if (account) return { ...values, ...account };
+        }
+    } catch { /* Browser values remain available. */ }
     READING_SETTINGS.forEach((setting) => {
         try {
             const stored = window.localStorage.getItem(setting.key);
@@ -208,4 +214,26 @@ const BOOT_PAIRS = READING_SETTINGS.map((setting) => [setting.key, setting.cssVa
 
 export const settingsBootScript =
     `(function(){try{var p=${JSON.stringify(BOOT_PAIRS)},r=document.documentElement,i,v;` +
-    `for(i=0;i<p.length;i++){v=localStorage.getItem(p[i][0]);if(v)r.style.setProperty(p[i][1],v);}}catch(e){}})();`;
+    `for(i=0;i<p.length;i++){v=localStorage.getItem(p[i][0]);if(v)r.style.setProperty(p[i][1],v);}` +
+    `if(localStorage.getItem('typikon-reading-source')==='account'){` +
+    `var a=null;try{a=JSON.parse(localStorage.getItem('typikon-account-reading')||'null');}catch(e){}var q=${JSON.stringify(READING_SETTINGS.map(s => [s.id, s.cssVar]))};` +
+    `if(a)for(i=0;i<q.length;i++)if(a[q[i][0]])r.style.setProperty(q[i][1],a[q[i][0]]);` +
+    `document.write('<script src="/api/reading-settings/boot"><\\/script>');}}catch(e){}})();`;
+
+export const READING_SOURCE_KEY = "typikon-reading-source";
+export function readingSource(): "browser" | "account" {
+    try { return localStorage.getItem(READING_SOURCE_KEY) === "account" ? "account" : "browser"; }
+    catch { return "browser"; }
+}
+
+export function applyReadingValues(values: ReadingValues) {
+    for (const setting of READING_SETTINGS) applyValue(setting, values[setting.id] || setting.fallback);
+}
+
+export function restoreBrowserReadingSettings() {
+    try {
+        localStorage.setItem(READING_SOURCE_KEY, "browser");
+        localStorage.removeItem("typikon-account-reading");
+    } catch {}
+    applyReadingValues(readStored());
+}
