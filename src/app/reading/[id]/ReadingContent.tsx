@@ -1,4 +1,5 @@
 'use client';
+import NoteSharing from "@/app/components/NoteSharing";
 import React, {memo, MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import reactStringReplace from "react-string-replace";
 import {schemaLanguage} from "@/lib/seo/metadata";
@@ -660,6 +661,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                 <div className="flex flex-col">
                     <button onClick={closeNoteModal}>Закрыть</button>
                     <h2>{activeNote ? "Заметка" : "Новая заметка"}</h2>
+                    {activeNote && <NoteSharing id={activeNote.id}/>}
                     {(() => {
                         const effectiveSelection = activeNote ? activeNote.selection : selection;
                         if (!effectiveSelection) {

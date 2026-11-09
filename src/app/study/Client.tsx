@@ -1,4 +1,5 @@
 "use client";
+import NoteSharing from "@/app/components/NoteSharing";
 import TextLinkList from "@/app/components/TextLinkList";
 import Comparison, { type ComparisonData } from "./Comparison";
 import { showHighlights } from "./highlights";
@@ -1369,6 +1370,7 @@ export default function Client() {
                               />
                             </blockquote>
                             <p>{r.note}</p>
+                      {owner !== "guest" && <NoteSharing id={r.id}/>}
                             <button
                               className={button}
                               onClick={() =>
@@ -2247,6 +2249,7 @@ export default function Client() {
                         />
                       </blockquote>
                       <p>{r.note}</p>
+                      {owner !== "guest" && <NoteSharing id={r.id}/>}
                       <p>{r.tags.join(", ")}</p>
                       {r.unresolved && (
                         <p>

@@ -84,7 +84,7 @@ export async function personal(userId: string): Promise<Personal> {
   for (const [kind, col] of Object.entries(stores)) {
     const rows = await d
       .collection(col)
-      .find({ userId, deleted: { $ne: true } })
+      .find({ userId, deleted: { $ne: true }, ...(kind === "records" ? {companion: {$exists: false}} : {}) })
       .sort({ updatedAt: -1 })
       .toArray();
     out[kind] = rows.map((r) => external(kind, r));
@@ -231,7 +231,8 @@ export async function mutate(userId: string, b: any) {
       old.revision === undefined
         ? { revision: { $exists: false } }
         : { revision: old.revision };
-    const r = await col.replaceOne({ _id: old._id, userId, ...version }, next);
+    const publicationVersion = kind === "records" ? (old.sharingRevision === undefined ? {sharingRevision: {$exists:false}} : {sharingRevision: old.sharingRevision}) : {};
+    const r = await col.replaceOne({ _id: old._id, userId, ...version, ...publicationVersion }, next);
     if (!r.matchedCount) throw Error("conflict");
   } else {
     next._id =

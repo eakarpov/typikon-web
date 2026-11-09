@@ -62,5 +62,26 @@ export function sourceEntry(id:string,entryId:string,code:string,title:string|nu
    anchors.push({id:hash([id,'fragment',excerpt].join('\0')),sourceId:id,sourceVersion:version,text:excerpt,translation:fragmentTranslation,number:null,status:'source-fragment'});
   }
  }
+ // These sources use plain equivalent lists rather than СЦРЯ's ▸…◂ markers.
+ // Add addressable fragments without changing existing sense IDs or treating
+ // quotations and phrase headings as translations of the whole lexeme.
+ const extra:string[]=[];
+ if(code==='od'&&!/[‹›]/.test(text)){
+  for(const part of text.split(/(?:^|[;,]\s*|\s+)\d{1,2}\.\s+/)){
+   const gloss=part.trim().replace(/[.。]$/,'');
+   if(/^[\p{Script=Cyrillic}\p{M} ,;—-]+$/u.test(gloss))extra.push(gloss);
+  }
+ }
+ if(code==='ГлтНЗ'){
+  // The Russian list follows the parenthesized Greek/Latin equivalents;
+  // the first full stop starts a Scripture reference or an example.
+  for(const m of text.matchAll(/(?:^|\n)[^\n]*?\([^()\n]*\)\s*–\s*([^.!?:（(\n]+)/g))extra.push(m[1]);
+ }
+ for(const candidate of extra){
+  const translation=equivalent([candidate]);if(!translation)continue;
+  const excerpt=candidate.trim().replace(/[.。]$/,'');
+  const anchorId=hash([id,'fragment',excerpt].join('\0'));
+  if(!anchors.some(a=>a.id===anchorId))anchors.push({id:anchorId,sourceId:id,sourceVersion:version,text:excerpt,translation,number:null,status:'source-fragment'});
+ }
  return {id,entryId,sourceCode:code,title:title??`Источник ${code} (не установлен)`,bibliographyStatus:title?'identified':'unknown',version,paragraphs,text,anchors};
 }

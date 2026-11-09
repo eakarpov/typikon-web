@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         ? await getUserNotesForText(session.id, textId)
         : await getAllUserNotes(session.id);
 
-    return NextResponse.json(notes, {status: 200});
+    return NextResponse.json(notes, {status: 200, headers: {"Cache-Control":"private, no-store", "Vary":"Cookie"}});
 }
 
 export async function POST(request: NextRequest) {
