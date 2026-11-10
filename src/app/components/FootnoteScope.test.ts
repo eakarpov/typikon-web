@@ -19,3 +19,12 @@ test("reader uses consecutive visible numbers with stable IDs, shared links and 
     assert.match(html, /1 Встречается раньше/);
     assert.match(html, /2 Первая сохранённая/);
 });
+
+test("nullable poems and footnotes from API previews do not break reading or empty text cards", () => {
+    assert.equal(renderToStaticMarkup(React.createElement(FootnoteScope,
+        { content: null, poems: null, footnotes: null }, React.createElement(FootnoteList, { footnotes: null }))), "");
+    const notes = ["", "Пояснение"];
+    const html = renderToStaticMarkup(React.createElement(FootnoteScope, { content: "Текст{2}", poems: null, footnotes: notes },
+        React.createElement(TextMarkup, { text: "Текст{2}", footnotes: notes })));
+    assert.match(html, /href="#footnotes-2"[^>]*>\[1\]/);
+});
