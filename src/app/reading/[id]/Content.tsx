@@ -1,3 +1,4 @@
+import Poems from "@/app/components/Poems";
 import TextLinkList from "@/app/components/TextLinkList";
 import AddToCollection from '@/app/reading-collections/AddToCollection';
 import ReadingFocus, {ReadingFocusActions} from '@/app/components/ReadingFocus';
@@ -112,23 +113,8 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
                     </h1>
                 </div>
             </div>
-            {item.poems && (
-                <div className="space-y-1 mt-2">
-                    <p className="font-serif">
-                        <b>Стихи́:</b>
-                    </p>
-                    {item.poems?.split("\n").map((verse: string) => (
-                        <p
-                            key={verse}
-                            className="whitespace-pre-wrap font-serif first-letter:text-red-600"
-                        >
-                            <i>
-                                {verse}
-                            </i>
-                        </p>
-                    ))}
-                </div>
-            )}
+            <Poems value={item.poems} footnotes={item.footnotes} markdown={item.newUi} />
+
             </>}>
             {!statia&&parts.length>1&&<details className="py-2"><summary className="min-h-11 cursor-pointer py-2">Читать отдельную статию</summary><ol>{parts.map((part,n)=>part.trim()&&<li key={n}><Link className="underline block min-h-11 py-2" href={`/reading/${item.alias||item.id}?statia=${n+1}`}>Статия {n+1}</Link></li>)}</ol></details>}
             {statia && <nav data-reading-nav aria-label="Статии произведения" className="flex gap-3 flex-wrap py-3">

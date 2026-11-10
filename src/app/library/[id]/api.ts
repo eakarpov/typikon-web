@@ -3,6 +3,18 @@ import clientPromise from "@/lib/mongodb";
 import {cachedTuple, CacheTag} from "@/lib/cache";
 import {reportError} from "@/lib/reportError";
 
+// Resolve canonical addresses without loading thousands of table-of-contents rows.
+export const getSummary = cachedTuple(async (id: string): Promise<[any, any]> => {
+    try {
+        const client = await clientPromise;
+        const book = await client.db("typikon").collection("books").findOne(aliasMatcher(id), { projection: { texts: 0 } });
+        return [book ? { ...book, id: book._id.toString() } : null, null];
+    } catch (error) {
+        reportError(error, { where: "app/library/[id]/api#getSummary" });
+        return [null, error];
+    }
+}, ["library-book-summary"], [CacheTag.BOOKS]);
+
 const loadBook = async (id: string): Promise<[any, any]> => {
     try {
         const client = await clientPromise;

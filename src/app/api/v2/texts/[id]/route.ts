@@ -38,6 +38,9 @@ const randomText = async () => {
         // Только то, что действительно можно читать: заготовки без содержимого не берём.
         { $match: { readiness: { $in: ["ready", "correcting", "texted"] }, content: { $nin: ["", null] } } },
         { $sample: { size: 1 } },
+        { $lookup: { from: "books", localField: "bookId", foreignField: "_id", pipeline: [{ $project: { alias: 1 } }], as: "parentBook" } },
+        { $set: { bookAlias: { $arrayElemAt: ["$parentBook.alias", 0] } } },
+        { $unset: "parentBook" },
     ]).toArray();
 
     return docs[0] ?? null;

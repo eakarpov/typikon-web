@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import Encyclopedia from "@/app/dictionary/Encyclopedia";
 import React from "react";
 import Link from "next/link";
 import type { Form, LexemeView, ParticipleView } from "@/app/dictionary/[id]/api";
@@ -204,6 +206,8 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<[LexemeView | n
                 <h1 className="font-serif font-bold text-2xl">{item.name}</h1>
                 <p className="font-serif text-slate-600">{marks}</p>
             </div>
+
+            <Suspense fallback={null}><Encyclopedia word={item.name} /></Suspense>
 
             {item.known ? (
                 <>

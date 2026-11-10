@@ -1,8 +1,7 @@
 'use client';
 import {BookOpenIcon, DocumentTextIcon} from "@heroicons/react/24/outline";
-import reactStringReplace from "react-string-replace";
-import {RED_MARK, FOOTNOTE_MARK} from "@/lib/markup/patterns";
-import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
+import TextMarkup from "@/app/components/TextMarkup";
+import Poems from "@/app/components/Poems";
 import Link from "next/link";
 import {useEffect, useState} from "react";
 
@@ -29,12 +28,13 @@ const ContentRandom = () => {
                 <p className="text-1xl font-bold">
                     <span className="flex flex-row items-center">
                         <Link
-                            href={`/library/${item.bookId.toString()}`}
+                            href={`/library/${item.bookAlias || item.bookId}`}
+                            aria-label="Открыть книгу"
                         >
                             <BookOpenIcon className="w-6 h-6" />
                         </Link>
                         {/* По alias, если он есть: страница чтения иначе сама перенаправит. */}
-                        <Link href={`/reading/${item.alias || item.id}`}>
+                        <Link href={`/reading/${item.alias || item.id}`} aria-label="Открыть текст">
                             <DocumentTextIcon className="w-6 h-6" />
                         </Link>
                         <span className="pr-2 font-serif">
@@ -42,48 +42,12 @@ const ContentRandom = () => {
                         </span>
                     </span>
                 </p>
-                {item.poems && (
-                    <div className="space-y-1 mt-2">
-                        <p className="font-serif">
-                            <b>Стихи́:</b>
-                        </p>
-                        {item.poems?.split("\n").map((verse: string) => (
-                            <p
-                                key={verse}
-                                className="whitespace-pre-wrap font-serif first-letter:text-red-600"
-                            >
-                                <i>
-                                    {verse}
-                                </i>
-                            </p>
-                        ))}
-                    </div>
-                )}
+                <Poems value={item.poems} footnotes={item.footnotes} markdown={item.newUi} />
                 <div className="space-y-1 mt-2">
-                    {item.content.substring(0, 1000)?.split("\n\n").map((paragraph: string) => (
-                        <p
-                            key={paragraph}
-                            className={`whitespace-pre-wrap text-justify text-lg ${
-                                item.csSource ? 'font-sans-serif' : 'font-serif'
-                            } first-letter:text-red-600
-                            `}
-                        >
-
-                            {reactStringReplace(
-                                reactStringReplace(
-                                    paragraph,
-                                    FOOTNOTE_MARK,
-                                    (footnote, i, offset) => <FootnoteLinkNew key={`footnote-${i}-${offset}`} footnotes={item.footnotes} value={footnote} />,
-                                ),
-                                RED_MARK,
-                                (red, i, offset) => (
-                                    <span key={`red-${i}-${offset}`} className="text-red-600">
-                                        {red}
-                                    </span>
-                                )
-                            )}{item.content.length > 1000 && `...`}
-                        </p>
-                    ))}
+                    <div className={`whitespace-pre-wrap text-justify text-lg ${item.csSource ? 'font-sans-serif' : 'font-serif'}`}>
+                        <TextMarkup text={item.content.substring(0, 1000)} footnotes={item.footnotes} markdown={item.newUi} />
+                        {item.content.length > 1000 && "…"}
+                    </div>
                 </div>
             </div>
         </div>

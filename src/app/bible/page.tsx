@@ -48,6 +48,7 @@ const Index = async ({ selected }: { selected: string }) => {
     return (
         <div className="pt-2 space-y-4">
             <h1 className="font-serif font-bold">Библия по книгам и главам</h1>
+            <Link className="underline font-serif" href="/pericopes">Зачала Нового Завета</Link>
             <p className="font-serif">
                 Библия по книгам и главам. Издания можно читать рядом: стихи сводятся по
                 каноническому месту, а не по номеру строки, поэтому напротив славянского стиха

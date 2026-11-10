@@ -1,4 +1,5 @@
 'use client';
+import { dictionaryHref } from "@/lib/dictionaryWord";
 import NoteSharing from "@/app/components/NoteSharing";
 import React, {memo, MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import reactStringReplace from "react-string-replace";
@@ -545,6 +546,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                 }}
             >
                 <ul>
+                    {selection && dictionaryHref(selection.phrase) && <li><a href={dictionaryHref(selection.phrase)!}>Найти в словаре</a></li>}
                     <li onClick={onSendError}>Сообщить об ошибке</li>
                     <li onClick={onAddNote}>Добавить заметку</li>
                 </ul>
@@ -709,7 +711,7 @@ const ReadingContent = ({ item }: { item: any }) => {
                 <div
                     className="context-menu"
                     style={{
-                        height: '50px',
+                        minHeight: '50px',
                         top: '80%',
                         position: 'fixed',
                         left: '10%',
@@ -720,7 +722,8 @@ const ReadingContent = ({ item }: { item: any }) => {
                     }}
                 >
                     <ul>
-                        <li onClick={onSendError}>Сообщить об ошибке</li>
+                        {selection && dictionaryHref(selection.phrase) && <li><a href={dictionaryHref(selection.phrase)!}>Найти в словаре</a></li>}
+                    <li onClick={onSendError}>Сообщить об ошибке</li>
                         <li onClick={onAddNote}>Добавить заметку</li>
                     </ul>
                 </div>

@@ -13,7 +13,7 @@ import { baseYearLabel, kindLabel, memoryDaysOf, orderLabel } from "@/lib/saintF
 // по забывчивости: чтобы оно попало в ответ, его надо добавить сюда осознанно.
 //
 // Не отдаём никогда: adminInfo (заметки редактора), searchName/searchContent
-// (служебные копии текста), textingPriority (очередь отекстовки), newUi, fileId.
+// (служебные копии текста), textingPriority (очередь отекстовки), fileId.
 
 import type { NewsPostDTO } from "@/types/dto/news";
 import { pericopeVersification } from "@/utils/versification";
@@ -240,6 +240,8 @@ export const textDetail = (doc: any, coverage: { need: number; has: number } | n
     dneslovEventId: doc.dneslovEventId || null,
     mentionIds: doc.mentionIds ?? [],
     csSource: Boolean(doc.csSource),
+    newUi: Boolean(doc.newUi),
+    bookAlias: doc.bookAlias || null,
     createdAt: iso(doc.createdAt),
 });
 

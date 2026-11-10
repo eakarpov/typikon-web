@@ -1,4 +1,6 @@
 'use client';
+import TextMarkup from "@/app/components/TextMarkup";
+import Poems from "@/app/components/Poems";
 import ContinuousReading from "@/app/components/ContinuousReading";
 import {isFootnoteBook, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
 import {BookOpenIcon} from "@heroicons/react/24/outline";
@@ -7,14 +9,14 @@ import React from "react";
 import ReadingAssignmentHeader, { ReadingAssignmentNote } from "./ReadingAssignmentHeader";
 import { readingParts } from "@/lib/readingParts";
 import reactStringReplace from "react-string-replace";
-import {SAINT_MARK, PLACE_MARK, RED_MARK, FOOTNOTE_MARK, splitLinkMark} from "@/lib/markup/patterns";
-import FootnoteLinkNew from "@/app/components/FootnoteLinkNew";
+import {SAINT_MARK, PLACE_MARK, splitLinkMark} from "@/lib/markup/patterns";
 import {bibleLanguageSubstitution} from "@/utils/bibleLanguage";
 
 export interface IReadDayPart {
     value: any;
     valueName: TextType;
     paschal?: boolean;
+    readingOnly?: boolean;
 }
 
 export const ReadinessButton = ({ value }: { value: TextReadiness }) => {
@@ -164,6 +166,7 @@ const EndPart = ({ part }: { part: TextType }) => {
 const DayPartReading = ({
     value,
     valueName,
+    readingOnly = false,
     paschal,
 }: IReadDayPart) => {
     const getContent = (item: any) => {
@@ -277,10 +280,10 @@ const DayPartReading = ({
 
     return value?.items && (
             <section className="min-w-0 space-y-2" id={valueName}>
-                <h2 className="text-1xl font-bold font-serif text-red-600">
+                {!readingOnly && <h2 className="text-1xl font-bold font-serif text-red-600">
                     {valueTitle(valueName)}:
-                </h2>
-                <StartPart part={valueName} firstText={value.items[0]} />
+                </h2>}
+                {!readingOnly && <StartPart part={valueName} firstText={value.items[0]} />}
                 {value.items?.map((item: any, index: number) => item.pericope ? renderPericopeItem(item, index) : item.continuousReading ? (
                     <ContinuousReading key={`continuous-${index}`} value={item.continuousReading} />
                 ) : item.text ? (
@@ -296,68 +299,14 @@ const DayPartReading = ({
                                 {item.text?.startPhrase || item.text?.name}
                             </p>
                         )}
-                        {item.text?.poems && (
-                            <div className="space-y-1 mt-2">
-                                <p className="font-serif">
-                                    <b>Стихи́:</b>
-                                </p>
-                                {item.text.poems.split("\n").map((verse: string) => (
-                                    <p
-                                        key={verse}
-                                        className="whitespace-pre-wrap font-serif first-letter:text-red-600"
-                                    >
-                                        <i>
-                                            {verse}
-                                        </i>
-                                    </p>
-                                ))}
-                            </div>
-                        )}
+                        <Poems value={item.text.poems} footnotes={item.text.footnotes} markdown={item.text.newUi} />
                         <div className="space-y-1 mt-2">
-                            {getContent(item)?.split("\n\n").map((paragraph: string, j: number) => (
-                                <p
-                                    key={paragraph}
-                                    className={
-                                        `whitespace-pre-wrap text-justify text-lg ${
-                                            item.text.csSource ? "font-sans-serif" : "font-serif"
-                                        } first-letter:text-red-600`
-                                    }
-                                >
-                                    {reactStringReplace(
-                                        reactStringReplace(
-                                            reactStringReplace(
-                                                reactStringReplace(
-                                                    paragraph,
-                                                    SAINT_MARK,
-                                                    (results, i, offset) => <Link
-                                                        key={`saint-${i}-${offset}`}
-                                                        href={`/saints/${splitLinkMark(results).id}`}
-                                                        className="text-blue-800"
-                                                    >
-                                                        {splitLinkMark(results).label}
-                                                    </Link>,
-                                                ),
-                                                PLACE_MARK,
-                                                (results, i, offset) => <Link
-                                                    key={`place-${i}-${offset}`}
-                                                    href={`/places/${splitLinkMark(results).id}`}
-                                                    className="text-blue-800"
-                                                >
-                                                    {splitLinkMark(results).label}
-                                                </Link>,
-                                            ),
-                                            FOOTNOTE_MARK,
-                                            (footnote, i, offset) => <FootnoteLinkNew key={`footnote-${i}-${offset}`} footnotes={item.text.footnotes} value={footnote} />,
-                                        ),
-                                        RED_MARK,
-                                        (red, i, offset) => (
-                                            <span key={`red-${i}-${offset}`} className="text-red-600">
-                                                {red}
-                                            </span>
-                                        )
-                                    )}
-                                </p>
-                            ))}
+                            {getContent(item)?.split("\n\n").map((paragraph: string, j: number) => {
+                                const Container = item.text.newUi ? "div" : "p";
+                                return <Container key={j} className={`whitespace-pre-wrap text-justify text-lg ${item.text.csSource ? "font-sans-serif" : "font-serif"} first-letter:text-red-600`}>
+                                    <TextMarkup text={paragraph} footnotes={item.text.footnotes} markdown={item.text.newUi} />
+                                </Container>;
+                            })}
                         </div>
                         {item.text.footnotes?.length > 0 && (
                             <div className="font-serif">
@@ -380,7 +329,7 @@ const DayPartReading = ({
                         <strong>{valueTitle(valueName)} календарное чтение (Пролог, похвальное слово святому)</strong> - смотри соответствующий день в календарных чтениях
                     </div>
                 ))}
-                <EndPart part={valueName} />
+                {!readingOnly && <EndPart part={valueName} />}
             </section>
     );
 };

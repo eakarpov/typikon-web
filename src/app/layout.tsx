@@ -1,3 +1,4 @@
+import DictionaryLookup from "@/app/components/DictionaryLookup";
 import MyTempleProvider from '@/app/components/MyTempleProvider';
 import NetworkStatus from '@/app/components/NetworkStatus';
 import '../styles/globals.css';
@@ -88,6 +89,7 @@ export default function RootLayout({
       <body>
           <CommonMeta />
           <NetworkStatus />
+          <DictionaryLookup />
           <noscript>
               <div>
                   <img src="https://mc.yandex.ru/watch/92252601" style={{ position: "absolute", left: "-9999px" }} alt="" />

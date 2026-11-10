@@ -27,6 +27,8 @@ export default function ReadingAssignmentHeader({ text, statia, cite }: { text: 
         || (text.book?.name ? `Чтение из книги «${text.book.name}»` : "Чтение");
     const part = readingStatia(text.content ?? "", statia);
     const address = text.alias || text.id || text._id;
+    const selected = Number(statia ?? 1);
+    const suffix = Number.isInteger(selected) && selected > 1 ? `?statia=${selected}` : "";
     return <header className="min-w-0 space-y-1 font-serif">
         <h3 className="break-words text-lg font-semibold text-stone-900">{title}</h3>
         {text.book?.name && <p className="break-words text-sm text-stone-600">
@@ -34,7 +36,7 @@ export default function ReadingAssignmentHeader({ text, statia, cite }: { text: 
         </p>}
         {part && <p className="text-sm font-semibold text-red-700">{part}</p>}
         <div className="flex flex-wrap items-start gap-x-3">
-            {address && <Link href={`/reading/${encodeURIComponent(String(address))}`}
+            {address && <Link href={`/reading/${encodeURIComponent(String(address))}${suffix}`}
                 aria-label={`Открыть полный текст: ${title}`}
                 className="inline-flex min-h-11 items-center gap-2 rounded px-2 py-3 text-sm text-amber-900 underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800">
                 <BookOpenIcon aria-hidden="true" className="h-5 w-5 shrink-0" />Полный текст

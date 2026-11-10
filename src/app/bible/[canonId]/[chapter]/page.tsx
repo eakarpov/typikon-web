@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { getPublicPericopes } from "@/lib/publicPericopes";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
@@ -82,9 +84,16 @@ const ChapterPage = async ({ params, searchParams }: Props) => {
     // Места главы — в каноническом счёте стихов. В счёте базового издания номера
     // другие, и ссылка на стих вела бы не туда, поэтому там блока нет.
     const places = data.base ? [] : await chapterPlaces(params.canonId, chapter);
+    const pericopes = data.base ? [] : (await getPublicPericopes()).filter(p => p.bookSlug === params.canonId
+        && p.ranges.some(range => range.chapterFrom <= chapter && range.chapterTo >= chapter));
 
     return (
         <div className={myFont.variable}>
+            {pericopes.length > 0 && <details className="font-serif py-3">
+                <summary className="cursor-pointer py-2">Зачала в этой главе ({pericopes.length})</summary>
+                <ul>{pericopes.map(p => <li key={p.id}><Link className="underline inline-block py-2" href={`/pericopes/${p.id}`}>{p.label}</Link></li>)}</ul>
+                <Link className="underline" href={`/pericopes?book=${params.canonId}`}>Все зачала книги</Link>
+            </details>}
             <Chapter
                 data={data}
                 codes={codes}

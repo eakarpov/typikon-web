@@ -1,7 +1,7 @@
 import { canonicalPath, withSearch } from "@/lib/contentAliases";
 import Content from "@/app/library/[id]/Content";
 import {Suspense} from "react";
-import {getBibleEditionCode, getItem} from "@/app/library/[id]/api";
+import {getBibleEditionCode, getItem, getSummary} from "@/app/library/[id]/api";
 import {permanentRedirect, redirect, notFound} from "next/navigation";
 import {myFont} from "@/utils/font";
 import {setMeta} from "@/lib/meta";
@@ -18,7 +18,7 @@ type Props = {
 export async function generateMetadata(
     { params }: Props,
 ): Promise<Metadata> {
-    const [item, error] = await getItem(params.id);
+    const [item, error] = await getSummary(params.id);
     if (error) throw error;
     if (!item) return { title: "Книга не найдена", robots: { index: false } };
     return pageMetadata({
@@ -32,6 +32,12 @@ const Library = async ({ params: { id }, searchParams, idRoute = false }: Props 
     // Оглавление издания Библии — по канону, и живёт оно в своём разделе.
     const [bibleCode] = await getBibleEditionCode(id);
     if (bibleCode) permanentRedirect(withSearch(`/bible?v=${bibleCode}`, searchParams));
+
+    const [summary, summaryError] = await getSummary(id);
+    if (summaryError) throw summaryError;
+    if (!summary) notFound();
+    const canonical = canonicalPath("library", summary);
+    if (canonical !== (idRoute ? `/library/id/${id}` : `/library/${id}`)) redirect(withSearch(canonical, searchParams));
 
     const result = await getItem(id);
     const [item, error] = result;

@@ -1,3 +1,4 @@
+import { compileInlineFootnotes } from "@/lib/markup/inlineFootnotes";
 import { validTextLinks } from "@/lib/textLinks";
 import { AliasError, saveWithAlias } from "@/lib/contentAliases";
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -18,7 +19,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     if (req.method === 'POST') {
         if (!(await checkRightsBack(req, res))) return;
-        const data = req.body;
+        const data = { ...req.body };
+        try {
+            Object.assign(data, compileInlineFootnotes(data.content ?? "", data.poems ?? "", data.footnotes ?? []));
+        } catch (error) {
+            res.status(400).json({ error: (error as Error).message });
+            return;
+        }
         const id = req.query.id as string;
         try {
             const client = await clientPromise;
@@ -89,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 reportError(e, { where: "pages/api/admin/texts/[id]/index#syncTextSaints", source: "api" });
             }
 
-            res.status(200).end();
+            res.status(200).json({ content: normalizeParagraphs(data.content), poems: data.poems, footnotes: data.footnotes });
         } catch (e) {
             if (e instanceof AliasError) { res.status(e.status).json({ error: e.message }); return; }
             reportError(e, { where: "pages/api/admin/texts/[id]/index#handler", source: "api" });

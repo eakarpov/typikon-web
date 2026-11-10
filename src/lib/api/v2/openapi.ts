@@ -1,5 +1,6 @@
 import {csPaths,csSchemas} from '@/lib/csDictionary/openapi';
 import {studyPaths,studySchemas} from '@/lib/study/openapi';
+import {notePaths, noteSchemas} from '@/lib/notes/openapi';
 import { ERROR_CODES, LICENSE_ID, LICENSE_URL } from "@/lib/api/v2/http";
 import { DEFAULT_LIMIT, MAX_LIMIT } from "@/lib/api/v2/params";
 import { ANONYMOUS_ALLOWANCE, TIERS } from "@/lib/api/v2/tokens";
@@ -133,6 +134,7 @@ export const openapi = () => ({
     ],
     paths: {
         ...studyPaths(personal),
+        ...notePaths(personal),
         ...csPaths,
         "/api/v2": {
             get: {
@@ -1631,6 +1633,7 @@ export const openapi = () => ({
         },
         schemas: {
             ...studySchemas,
+            ...noteSchemas,
             ...csSchemas,
             PrayerCircleConfig: { type:"object",required:["variants","activeId","gender","lang","timeZone","reminders"], properties:{
                 variants:{type:"array",minItems:1,maxItems:32,items:{type:"object",required:["id","title","blocks"],properties:{id:{type:"string"},title:{type:"string"},basedOn:{type:"string"},blocks:{type:"array",maxItems:60,items:{$ref:"#/components/schemas/PrayerCircleBlock"}}}}},
@@ -2417,6 +2420,8 @@ export const openapi = () => ({
                             dneslovEventId: { type: ["string", "null"] },
                             mentionIds: { type: "array", items: { type: "string" } },
                             csSource: { type: "boolean", description: "Набран ли текст церковнославянской графикой" },
+                            newUi: { type: "boolean", description: "Отображать тело и стихи как Markdown с метатегами корпуса" },
+                            bookAlias: { type: ["string", "null"], description: "Канонический адрес книги, если загружен вместе с текстом" },
                             createdAt: { type: ["string", "null"], format: "date-time" },
                             accents: {
                                 type: ["object", "null"],

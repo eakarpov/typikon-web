@@ -19,7 +19,7 @@ test("название, книга и выбранная статия видны
     assert.match(html, /<h3[^>]*>Поучение на праздник<\/h3>/);
     assert.match(html, /Евангелие учительное/);
     assert.match(html, /Статия 2 из 2/);
-    assert.match(html, /href="\/reading\/slovo-na-prazdnik"/);
+    assert.match(html, /href="\/reading\/slovo-na-prazdnik\?statia=2"/);
     assert.match(html, /aria-label="Открыть полный текст: Поучение на праздник"/);
     assert.match(html, /<details[^>]*><summary/);
     assert.doesNotMatch(html, /<details[^>]*\bopen(?:=|\s|>)/);

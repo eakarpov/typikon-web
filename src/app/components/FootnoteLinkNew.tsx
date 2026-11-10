@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 import { isFootnoteBook } from "@/utils/texts";
 import { footnoteHref } from "@/lib/bible/footnoteRef";

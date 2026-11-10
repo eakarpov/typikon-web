@@ -156,3 +156,26 @@ test("всякая ручка v2 описана в схеме", () => {
 
     assert.deepEqual(undocumented, []);
 });
+
+test("заметки требуют владельца при редактировании, а опубликованные ссылки открываются без входа", () => {
+    for (const route of ["/api/v2/notes/sharing", "/api/v2/companion/notes"]) {
+        for (const method of ["get", "post"]) {
+            const operation = document.paths[route][method];
+            assert.deepEqual(operation.security, [{ apiKey: [], cookieAuth: [] }]);
+            assert.match(operation.responses["401"].description, /session_required/);
+        }
+        assert.ok(document.paths[route].post.responses["409"]);
+    }
+    for (const [route, schema] of [
+        ["/api/v2/notes/shared/{token}", "SharedUserNote"],
+        ["/api/v2/companion/notes/shared/{token}", "SharedCompanionNote"],
+    ]) {
+        const operation = document.paths[route].get;
+        assert.deepEqual(operation.security, []);
+        assert.equal(operation.responses["200"].content["application/json"].schema.$ref, `#/components/schemas/${schema}`);
+        assert.ok(operation.responses["404"]);
+        assert.ok(operation.responses["503"]);
+        const fields = document.components.schemas[schema].properties.note.properties;
+        for (const privateField of ["userId", "id", "shareToken", "sessionKey"]) assert.ok(!(privateField in fields));
+    }
+});

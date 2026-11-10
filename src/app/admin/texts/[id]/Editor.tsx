@@ -290,6 +290,10 @@ const AdminEditor = ({ value }: any) => {
                 alert(body?.error || `Не сохранено: сервер ответил ${main.value.status}`);
                 return;
             }
+            const saved = await main.value.json();
+            setContent(saved.content);
+            setPoems(saved.poems);
+            setFootnotes(saved.footnotes.map((note: string, i: number) => `${i + 1} ${note}`).join("\n"));
             // Публичные страницы и выборки кэшируются — сбрасываем теги,
             // иначе правка появилась бы на сайте только по таймауту.
             await revalidateTexts();
@@ -548,16 +552,19 @@ const AdminEditor = ({ value }: any) => {
                     </label>
                     <textarea
                         className="border-2"
+                        placeholder="Блоки стихов разделяйте пустой строкой. Метатеги поддерживаются."
                         value={poems}
                         onChange={e => setPoems(e.target.value)}
                     />
                 </div>
                 <div className="flex flex-col pr-4 w-1/3">
                     <label>
-                        Сноски
+                        Существующие сноски (номера сохраняются)
                     </label>
+                    <p className="text-sm">Новую сноску пишите в тексте или стихах: <code>{"{fn|Текст сноски}"}</code>. Номер появится при сохранении.</p>
                     <textarea
                         className="border-2"
+                        title="Новую сноску пишите прямо в тексте или стихах: {fn|Текст сноски}. Номер назначится при сохранении."
                         value={footnotes}
                         onChange={e => setFootnotes(e.target.value)}
                     />
