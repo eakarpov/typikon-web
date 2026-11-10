@@ -4,16 +4,47 @@ export interface FootnoteInsertion { field: FootnoteField; offset: number; sourc
 export type FootnoteTarget = { kind: "number"; number: number }
     | { kind: "inline"; field: FootnoteField; start: number; raw: string };
 
-export function insertFootnote(doc: FootnoteDocument, location: FootnoteInsertion, value: string): FootnoteDocument {
+function insertMarker(doc: FootnoteDocument, location: FootnoteInsertion, marker: string): FootnoteDocument {
     const source = doc[location.field];
     if (source !== location.source) throw new Error("Текст изменился. Закройте окно и установите курсор заново.");
     if (!Number.isInteger(location.offset) || location.offset < 0 || location.offset > source.length) throw new Error("Установите курсор в тексте или стихах.");
     const before = source.slice(0, location.offset);
     if (before.lastIndexOf("{") > before.lastIndexOf("}")) throw new Error("Поставьте курсор вне метки разметки, чтобы вставить сноску.");
+    return { ...doc, [location.field]: before + marker + source.slice(location.offset) };
+}
+
+export function insertFootnote(doc: FootnoteDocument, location: FootnoteInsertion, value: string): FootnoteDocument {
     const note = value.trim();
     if (!note) throw new Error("Введите текст сноски.");
     if (/[{}]/.test(note)) throw new Error("В новой сноске нельзя использовать фигурные скобки.");
-    return { ...doc, [location.field]: before + `{fn|${note}}` + source.slice(location.offset) };
+    return insertMarker(doc, location, `{fn|${note}}`);
+}
+
+export function insertFootnoteReference(doc: FootnoteDocument, location: FootnoteInsertion, target: FootnoteTarget): FootnoteDocument {
+    const note = footnoteText(doc, target);
+    if (!note.trim()) throw new Error("Выбранная сноска удалена или не содержит пояснения. Выберите другую.");
+    const key = footnoteKey(doc, target);
+    // Saved notes are referenced by their exact ID, even when two notes have identical text.
+    // Unsaved inline notes compile to a shared ID when the document is saved.
+    const marker = target.kind === "number" || !key.startsWith("new:") ? `{${key}}` : `{fn|${note}}`;
+    return insertMarker(doc, location, marker);
+}
+
+export interface FootnoteChoice { key: string; target: FootnoteTarget; text: string }
+
+export function footnoteChoices(doc: FootnoteDocument): FootnoteChoice[] {
+    const choices = new Map<string, FootnoteChoice>();
+    doc.footnotes.forEach((text, i) => {
+        if (text.trim()) choices.set(String(i + 1), { key: String(i + 1), target: { kind: "number", number: i + 1 }, text });
+    });
+    for (const field of ["poems", "content"] as const) {
+        for (const marker of footnoteMarkers(doc[field], field)) {
+            const text = footnoteText(doc, marker.target);
+            const key = footnoteKey(doc, marker.target);
+            if (text.trim() && !choices.has(key)) choices.set(key, { key, target: marker.target, text });
+        }
+    }
+    return [...choices.values()];
 }
 
 export function footnoteMarkers(source: string, field: FootnoteField) {

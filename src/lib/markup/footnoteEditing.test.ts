@@ -1,10 +1,45 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deleteFootnote, editFootnote, insertFootnote, footnoteMarkers, footnoteReferenceCount, type FootnoteDocument } from "./footnoteEditing";
+import { deleteFootnote, editFootnote, insertFootnote, insertFootnoteReference, footnoteChoices, footnoteMarkers, footnoteReferenceCount, type FootnoteDocument } from "./footnoteEditing";
 import { footnoteKey, footnoteNumbers, orderedFootnotes } from "./footnoteNumbers";
 import { compileInlineFootnotes } from "./inlineFootnotes";
 
 const document = (): FootnoteDocument => ({ content: "А{3} Б{1} В{3}", poems: "Стих{2}", footnotes: ["Первое", "В стихах", "Повтор"] });
+
+test("existing-note insertion reuses the exact saved ID, preserves duplicate texts and shares future edits", () => {
+    const doc = { content: "Текст{1}", poems: "Стих", footnotes: ["Одинаковый текст", "", "Одинаковый текст"] };
+    const inserted = insertFootnoteReference(doc, { field: "poems", source: doc.poems, offset: 4 }, { kind: "number", number: 3 });
+    assert.equal(inserted.poems, "Стих{3}");
+    assert.strictEqual(inserted.footnotes, doc.footnotes);
+    assert.deepEqual(compileInlineFootnotes(inserted.content, inserted.poems, inserted.footnotes), inserted);
+    const edited = editFootnote(inserted, { kind: "number", number: 3 }, "Изменение общего пояснения");
+    assert.deepEqual(edited.footnotes, ["Одинаковый текст", "", "Изменение общего пояснения"]);
+    assert.equal(edited.poems, "Стих{3}");
+    assert.deepEqual(footnoteNumbers(inserted), { "3": 1, "1": 2 });
+});
+
+test("choices include unreferenced saved notes and unsaved notes once, excluding deleted slots", () => {
+    const doc = { content: "{1} {fn|Новая} {fn|Новая}", poems: "{fn|Сохранённая}", footnotes: ["Сохранённая", "", "Без меток"] };
+    const choices = footnoteChoices(doc);
+    assert.deepEqual(choices.map(choice => [choice.key, choice.text]), [["1", "Сохранённая"], ["3", "Без меток"], ["new:Новая", "Новая"]]);
+    const selected = choices.find(choice => choice.key === "new:Новая")!;
+    const inserted = insertFootnoteReference(doc, { field: "poems", offset: doc.poems.length, source: doc.poems }, selected.target);
+    const saved = compileInlineFootnotes(inserted.content, inserted.poems, inserted.footnotes);
+    assert.equal(saved.footnotes.length, 4);
+    assert.equal(saved.content, "{1} {4} {4}");
+    assert.equal(saved.poems, "{1}{4}");
+    assert.equal(footnoteReferenceCount(saved, 4), 3);
+    assert.equal(saved.footnotes[1], "");
+});
+
+test("existing-note insertion rejects deleted notes, invalid positions and stale source without altering text", () => {
+    const doc = { content: "Текст {k|красный}", poems: "", footnotes: ["Пояснение", ""] };
+    for (const number of [0, 2, 3]) assert.throws(() => insertFootnoteReference(doc, { field: "content", source: doc.content, offset: 0 }, { kind: "number", number }));
+    assert.throws(() => insertFootnoteReference(doc, { field: "content", source: "Старый текст", offset: 0 }, { kind: "number", number: 1 }), /Текст изменился/);
+    assert.throws(() => insertFootnoteReference(doc, { field: "content", source: doc.content, offset: 10 }, { kind: "number", number: 1 }));
+    assert.equal(doc.content, "Текст {k|красный}");
+    assert.deepEqual(doc.footnotes, ["Пояснение", ""]);
+});
 
 test("inserting at the cursor keeps surrounding text and existing footnote IDs intact", () => {
     const doc = { ...document(), content: "До слова после{3}" };
