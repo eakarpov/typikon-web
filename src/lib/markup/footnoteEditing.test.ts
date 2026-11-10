@@ -1,0 +1,84 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { deleteFootnote, editFootnote, footnoteMarkers, footnoteReferenceCount, type FootnoteDocument } from "./footnoteEditing";
+import { footnoteKey, footnoteNumbers, orderedFootnotes } from "./footnoteNumbers";
+import { compileInlineFootnotes } from "./inlineFootnotes";
+
+const document = (): FootnoteDocument => ({ content: "А{3} Б{1} В{3}", poems: "Стих{2}", footnotes: ["Первое", "В стихах", "Повтор"] });
+
+test("editing a shared note changes all its occurrences without changing stable source IDs", () => {
+    const original = document();
+    const edited = editFootnote(original, { kind: "number", number: 3 }, "Новое пояснение\nПродолжение");
+    assert.equal(footnoteReferenceCount(edited, 3), 2);
+    assert.equal(edited.content, original.content);
+    assert.equal(edited.footnotes[2], "Новое пояснение\nПродолжение");
+    assert.equal(original.footnotes[2], "Повтор");
+    assert.deepEqual(compileInlineFootnotes(edited.content, edited.poems, edited.footnotes), edited);
+});
+
+test("delete removes every reference in body and poems while preserving other IDs and text", () => {
+    const original = { ...document(), content: "А{2} Б{12} В{2}", footnotes: Array.from({length: 12}, (_, i) => `Сноска ${i + 1}`) };
+    const deleted = deleteFootnote(original, { kind: "number", number: 2 });
+    assert.equal(deleted.content, "А Б{12} В");
+    assert.equal(deleted.poems, "Стих");
+    assert.equal(deleted.footnotes.length, 12);
+    assert.equal(deleted.footnotes[1], "");
+    assert.equal(deleted.footnotes[11], "Сноска 12");
+    assert.equal(original.footnotes[1], "Сноска 2");
+    const saved = compileInlineFootnotes(`${deleted.content} {fn|Новая}`, deleted.poems, deleted.footnotes);
+    assert.equal(saved.content, "А Б{12} В {13}");
+    assert.equal(saved.footnotes[1], "");
+});
+
+test("visible labels follow poems then body, deduplicate shared references, and keep stable anchors", () => {
+    const original = document();
+    const numbers = footnoteNumbers(original);
+    assert.deepEqual(numbers, { "2": 1, "3": 2, "1": 3 });
+    assert.deepEqual(orderedFootnotes(original.footnotes, numbers).map(n => [n.id, n.number]), [[2, 1], [3, 2], [1, 3]]);
+    const deleted = deleteFootnote(original, { kind: "number", number: 2 });
+    assert.deepEqual(footnoteNumbers(deleted), { "3": 1, "1": 2 });
+    assert.equal(deleted.content, original.content);
+    assert.deepEqual(footnoteNumbers({ ...original, content: "{1} {3}", poems: "" }), { "1": 1, "3": 2, "2": 3 });
+});
+
+test("unsaved repeated inline notes share editing and deletion; stale locations never replace unrelated text", () => {
+    const original = { ...document(), content: "А{fn|Новая} Б{fn|Новая}" };
+    const markers = footnoteMarkers(original.content, "content");
+    const edited = editFootnote(original, markers[1].target, "Другая");
+    assert.equal(edited.content, "А{fn|Другая} Б{fn|Другая}");
+    assert.equal(deleteFootnote(original, markers[0].target).content, "А Б");
+    assert.throws(() => editFootnote({ ...original, content: "Изменённый текст" }, markers[1].target, "Правка"), /Текст изменился/);
+    assert.throws(() => editFootnote(original, markers[0].target, "{k|Нельзя}"));
+    assert.throws(() => editFootnote(original, { kind: "number", number: 1 }, " "));
+});
+
+test("inline labels agree with persisted labels after compilation and never reuse a deleted ID", () => {
+    const doc = { content: "{fn|Новая} {2} {fn|Новая} {fn|Старая}", poems: "", footnotes: ["", "Старая"] };
+    const before = footnoteNumbers(doc);
+    const keys = footnoteMarkers(doc.content, "content").map(m => before[footnoteKey(doc, m.target)]);
+    const saved = compileInlineFootnotes(doc.content, doc.poems, doc.footnotes);
+    const after = footnoteNumbers(saved);
+    assert.deepEqual(keys, [1, 2, 1, 2]);
+    assert.deepEqual(footnoteMarkers(saved.content, "content").map(m => after[footnoteKey(saved, m.target)]), keys);
+    assert.equal(saved.content, "{3} {2} {3} {2}");
+});
+
+test("an unsaved inline reference to an existing note follows shared edits and cannot resurrect deletion", () => {
+    const doc = { content: "А{1} Б{fn|Старая}", poems: "Стих{fn|Старая}", footnotes: ["Старая", "Другая"] };
+    assert.equal(footnoteReferenceCount(doc, 1), 3);
+    const edited = editFootnote(doc, { kind: "number", number: 1 }, "Исправленная");
+    assert.equal(edited.content, "А{1} Б{1}");
+    assert.equal(edited.poems, "Стих{1}");
+    assert.equal(edited.footnotes[0], "Исправленная");
+    const marker = footnoteMarkers(doc.poems, "poems")[0];
+    const deleted = deleteFootnote(doc, marker.target);
+    assert.deepEqual(deleted, { content: "А Б", poems: "Стих", footnotes: ["", "Другая"] });
+    assert.deepEqual(compileInlineFootnotes(deleted.content, deleted.poems, deleted.footnotes), deleted);
+});
+
+test("empty deleted slots are hidden; biblical citations do not consume ordinary endnote numbers", () => {
+    const doc = { content: "{3} {2}", poems: "", footnotes: ["", "Пояснение", "Ин. 1:1"] };
+    assert.deepEqual(footnoteNumbers(doc), { "2": 1 });
+    assert.deepEqual(orderedFootnotes(doc.footnotes, footnoteNumbers(doc)), [{ id: 2, text: "Пояснение", number: 1 }]);
+    assert.deepEqual(footnoteNumbers(doc, true), { "3": 1, "2": 2 });
+});

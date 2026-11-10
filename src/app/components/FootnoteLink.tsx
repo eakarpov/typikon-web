@@ -1,4 +1,6 @@
+"use client";
 import {isFootnoteBook} from "@/utils/texts";
+import { useFootnoteNumbers } from "./FootnoteScope";
 
 export interface IFootnoteLink {
     value: string;
@@ -7,6 +9,7 @@ export interface IFootnoteLink {
 
 // TODO: Устаревший компонент
 const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
+    const numbers = useFootnoteNumbers();
     const [letter, ...rest] = value.split("");
     const note = rest.join("");
     const footnote = footnotes[parseInt(note, 10) - 1];
@@ -34,7 +37,7 @@ const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
                 href={`#footnotes-${note}`}
                 className="text-xs text-stone-500 cursor-pointer"
             >
-                {note}
+                {numbers?.[note] ?? note}
             </a>
         </span>
     );

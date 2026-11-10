@@ -1,8 +1,9 @@
 'use client';
+import FootnoteScope, { FootnoteList } from "@/app/components/FootnoteScope";
 import TextMarkup from "@/app/components/TextMarkup";
 import Poems from "@/app/components/Poems";
 import ContinuousReading from "@/app/components/ContinuousReading";
-import {isFootnoteBook, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
+import {printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
 import {BookOpenIcon} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import React from "react";
@@ -287,7 +288,8 @@ const DayPartReading = ({
                 {value.items?.map((item: any, index: number) => item.pericope ? renderPericopeItem(item, index) : item.continuousReading ? (
                     <ContinuousReading key={`continuous-${index}`} value={item.continuousReading} />
                 ) : item.text ? (
-                    <div key={`${item.text._id}-${index}`} className="min-w-0 space-y-2">
+                    <FootnoteScope key={`${item.text._id}-${index}`} content={getContent(item)} poems={item.text.poems} footnotes={item.text.footnotes}>
+                    <div className="min-w-0 space-y-2">
                         <ReadingAssignmentHeader text={item.text} statia={item.statia} cite={item.cite} />
                         {item.description && (
                             <p className="font-serif text-red-600">
@@ -308,22 +310,9 @@ const DayPartReading = ({
                                 </Container>;
                             })}
                         </div>
-                        {item.text.footnotes?.length > 0 && (
-                            <div className="font-serif">
-                                <p>
-                                    <strong>Сноски:</strong>
-                                </p>
-                                {item.text.footnotes?.map((footnote: string, index: number) => {
-                                    const { isBook } = isFootnoteBook(footnote);
-                                    return isBook ? null : (
-                                        <p key={footnote} id={`footnotes-${index + 1}`}>
-                                            {index + 1} {footnote}
-                                        </p>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        <FootnoteList footnotes={item.text.footnotes} />
                     </div>
+                    </FootnoteScope>
                 ) : paschal && !item.paschal && (
                     <div>
                         <strong>{valueTitle(valueName)} календарное чтение (Пролог, похвальное слово святому)</strong> - смотри соответствующий день в календарных чтениях

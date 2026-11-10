@@ -1,4 +1,6 @@
+"use client";
 import React from "react";
+import { useFootnoteNumbers } from "./FootnoteScope";
 import Link from "next/link";
 import { isFootnoteBook } from "@/utils/texts";
 import { footnoteHref } from "@/lib/bible/footnoteRef";
@@ -18,6 +20,7 @@ export interface IFootnoteLink {
  * сокращения книг, которых наши издания не содержат.
  */
 const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
+    const numbers = useFootnoteNumbers();
     const footnote = footnotes[parseInt(value, 10) - 1];
     const { isBook, book, probablePlace } = isFootnoteBook(footnote);
     const href = footnoteHref(footnote);
@@ -46,7 +49,7 @@ const FootnoteLink = ({ value, footnotes }: IFootnoteLink) => {
     ) : (
         <span>
             <a href={`#footnotes-${value}`} className="text-xs text-red-900 cursor-pointer">
-                [{value}]
+                [{numbers?.[value] ?? value}]
             </a>
         </span>
     );

@@ -1,7 +1,8 @@
 'use client';
+import FootnoteScope, {FootnoteList} from '@/app/components/FootnoteScope';
+import TextMarkup from '@/app/components/TextMarkup';
 import { useEffect,useRef,useState } from 'react';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
 import Editor from './Editor';
 import {containsReading} from '@/lib/prayerCircle/matching';
 import {savePage,listSaved} from '@/lib/offline';
@@ -12,9 +13,10 @@ interface Preview {bookmarkMissing?:boolean;bookmark?:string|null;cycle:string;r
 interface Saved {state:CircleState;queue:Operation[]}
 function safe<T>(key:string):T|null {try{return JSON.parse(localStorage.getItem(key)??'null');}catch{return null;}}
 function PrayerText({row}:{row:Row}) {
-    if(row.markdown)return <ReactMarkdown>{row.text}</ReactMarkdown>;
-    const pieces=row.text.split(/(\{k\|[^}]*\})/g);
-    return <div className="whitespace-pre-wrap">{pieces.map((p,i)=>p.startsWith('{k|')?<span className="text-red-700 dark:text-red-400 italic" key={i}>{p.slice(3,-1)}</span>:<span key={i}>{p}</span>)}{row.footnotes?.length?<details><summary>Примечания</summary>{row.footnotes.map((n,i)=><p key={i}>{i+1}. {n}</p>)}</details>:null}</div>;
+    return <FootnoteScope content={row.text} footnotes={row.footnotes}>
+        <div className="whitespace-pre-wrap"><TextMarkup text={row.text} footnotes={row.footnotes} markdown={row.markdown} /></div>
+        <FootnoteList footnotes={row.footnotes} />
+    </FootnoteScope>;
 }
 function matchingPreparation(preview:Preview,blockId:string) {
  const read=preview.rows.filter(r=>r.blockId===blockId);

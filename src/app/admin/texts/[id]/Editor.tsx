@@ -1,11 +1,11 @@
 "use client";
 
+import useFootnoteEditor from "./useFootnoteEditor";
 import LinkListEditor from "../LinkListEditor";
 import { textLinks } from "@/lib/textLinks";
 import GenerateAlias from "@/app/admin/GenerateAlias";
 import {
     DneslovKind,
-    footNotesToArray,
     printDneslovKind,
     printTextContentType,
     printTextKind,
@@ -15,7 +15,7 @@ import {
     TextReadiness
 } from "@/utils/texts";
 import React, {KeyboardEventHandler, useCallback, useEffect, useMemo, useState} from "react";
-import Markdown from "react-markdown";
+import TextMarkup from "@/app/components/TextMarkup";
 import Modal from "react-modal";
 import "./highlight.css";
 import {revalidateTexts} from "@/lib/admin/revalidate";
@@ -54,9 +54,7 @@ const getMentionIds = (content: string) => {
 };
 
 const AdminEditor = ({ value }: any) => {
-    const [footnotes, setFootnotes] = useState(
-        value.footnotes?.map((e: string, i: number) => `${i + 1} ${e}`).join('\n') || ""
-    );
+    const [footnotes, setFootnotes] = useState<string[]>(value.footnotes ?? []);
     const [name, setName] = useState(value.name || "");
     const [start, setStart] = useState(value.start || "");
     const [bookIndex, setBookIndex] = useState(value.bookIndex || 0);
@@ -92,6 +90,13 @@ const AdminEditor = ({ value }: any) => {
     const [saintId, setSaintId] = useState(value.saintId || "");
 
     const [saved, setIsSaved] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const footnoteEditor = useFootnoteEditor({ content, poems, footnotes }, next => {
+        setContent(next.content);
+        setPoems(next.poems);
+        setFootnotes(next.footnotes);
+        setIsSaved(false);
+    }, isSaving);
 
     const [viewUi, setViewUi] = useState(false);
 
@@ -226,14 +231,9 @@ const AdminEditor = ({ value }: any) => {
     }, [alias]);
 
     const onSubmit = () => {
+        if (isSaving || footnoteEditor.isOpen) return;
         setIsSaved(false);
-        const fNotes = footNotesToArray(footnotes);
-        // Проверка на непришедшую сноску. Сейчас сработать не может:
-        // footNotesToArray собирает строки и пустых значений не отдаёт, — но
-        // тип у неё Nullable<string>[], и проверка написана по типу.
-        if (fNotes.some((note) => note == null)) {
-            alert("Error with footnotes");
-        }
+        setIsSaving(true);
         const mainProcess = fetch(`/api/admin/texts/${value.id}`, {
             method: "POST",
             headers: {
@@ -250,7 +250,7 @@ const AdminEditor = ({ value }: any) => {
                 textingPriority: textingPriority === "" ? null : textingPriority,
                 author,
                 translator,
-                footnotes: fNotes,
+                footnotes,
                 ruLink,
                 link,
                 alias,
@@ -293,12 +293,12 @@ const AdminEditor = ({ value }: any) => {
             const saved = await main.value.json();
             setContent(saved.content);
             setPoems(saved.poems);
-            setFootnotes(saved.footnotes.map((note: string, i: number) => `${i + 1} ${note}`).join("\n"));
+            setFootnotes(saved.footnotes);
             // Публичные страницы и выборки кэшируются — сбрасываем теги,
             // иначе правка появилась бы на сайте только по таймауту.
             await revalidateTexts();
             setIsSaved(true);
-        });
+        }).finally(() => setIsSaving(false));
     };
 
     const onMouseDown: KeyboardEventHandler = useCallback((e) => {
@@ -313,7 +313,7 @@ const AdminEditor = ({ value }: any) => {
         return () => {
             document.removeEventListener("keydown", onMouseDown as unknown as EventListener);
         };
-    }, []);
+    }, [onMouseDown]);
 
     useEffect(() => {
         Modal.setAppElement('#text-editor');
@@ -334,8 +334,8 @@ const AdminEditor = ({ value }: any) => {
 
     return (
         <div id="text-editor" className="flex flex-col">
-            <button onClick={onSubmit}>
-                {saved ? "Сохранено!" : "Сохранить"}
+            <button onClick={onSubmit} disabled={isSaving}>
+                {isSaving ? "Сохраняем…" : saved ? "Сохранено!" : "Сохранить"}
             </button>
             <label>
                 Название
@@ -553,20 +553,10 @@ const AdminEditor = ({ value }: any) => {
                     <textarea
                         className="border-2"
                         placeholder="Блоки стихов разделяйте пустой строкой. Метатеги поддерживаются."
+                        aria-label="Стихи"
+                        {...footnoteEditor.sourceProps("poems")}
                         value={poems}
-                        onChange={e => setPoems(e.target.value)}
-                    />
-                </div>
-                <div className="flex flex-col pr-4 w-1/3">
-                    <label>
-                        Существующие сноски (номера сохраняются)
-                    </label>
-                    <p className="text-sm">Новую сноску пишите в тексте или стихах: <code>{"{fn|Текст сноски}"}</code>. Номер появится при сохранении.</p>
-                    <textarea
-                        className="border-2"
-                        title="Новую сноску пишите прямо в тексте или стихах: {fn|Текст сноски}. Номер назначится при сохранении."
-                        value={footnotes}
-                        onChange={e => setFootnotes(e.target.value)}
+                        onChange={e => { setPoems(e.target.value); setIsSaved(false); }}
                     />
                 </div>
                 <div className="flex flex-col w-1/3">
@@ -580,6 +570,8 @@ const AdminEditor = ({ value }: any) => {
                     />
                 </div>
             </div>
+            {footnoteEditor.controls}
+            {footnoteEditor.preview("poems")}
             <div className="flex flex-row">
                 <div className="flex flex-row pr-4">
                     <label>
@@ -596,7 +588,7 @@ const AdminEditor = ({ value }: any) => {
                     <label>
                         Новый UI (Markdown)
                     </label>
-                    <input type="checkbox" value={newUi} onChange={e => setNewUi(!newUi)} />
+                    <input type="checkbox" checked={newUi} onChange={e => setNewUi(!newUi)} />
                 </div>
                 {newUi && (
                     <>
@@ -626,15 +618,15 @@ const AdminEditor = ({ value }: any) => {
                     <label><b>Содержимое</b></label>
                     {viewUi ? (
                         <div>
-                            <Markdown>
-                                {content}
-                            </Markdown>
+                            <TextMarkup text={content} footnotes={footnotes} markdown renderFootnote={footnoteEditor.renderNumber} />
                         </div>
                     ) : (
                         <textarea
                             className="border-2 h-48"
+                            aria-label="Содержимое"
+                            {...footnoteEditor.sourceProps("content")}
                             value={content}
-                            onChange={e => setContent(e.target.value)}
+                            onChange={e => { setContent(e.target.value); setIsSaved(false); }}
                         />
                     )}
                 </>
@@ -645,11 +637,14 @@ const AdminEditor = ({ value }: any) => {
                     </label>
                     <textarea
                         className="border-2 h-48"
-                        value={content}
-                        onChange={e => setContent(e.target.value)}
+                        aria-label="Содержимое"
+                            {...footnoteEditor.sourceProps("content")}
+                            value={content}
+                        onChange={e => { setContent(e.target.value); setIsSaved(false); }}
                     />
                 </>
             )}
+            {footnoteEditor.preview("content")}
             <div className="flex flex-row">
                 <div className="flex flex-col pr-4 w-1/3">
                     <label>
@@ -722,27 +717,29 @@ const AdminEditor = ({ value }: any) => {
                             <label>
                                 Новый UI (Markdown)
                             </label>
-                            <input type="checkbox" value={newUi} onChange={e => setNewUi(!newUi)} />
+                            <input type="checkbox" checked={newUi} onChange={e => setNewUi(!newUi)} />
                         </div>
                     </div>
                     {newUi ? (
                         <div className="flex flex-row">
                             <textarea
                                 className="border-2 h-48 w-1/2"
-                                value={content}
-                                onChange={e => setContent(e.target.value)}
+                                aria-label="Содержимое"
+                            {...footnoteEditor.sourceProps("content")}
+                            value={content}
+                                onChange={e => { setContent(e.target.value); setIsSaved(false); }}
                             />
                             <div className="w-1/2">
-                                <Markdown>
-                                    {content}
-                                </Markdown>
+                                <TextMarkup text={content} footnotes={footnotes} markdown renderFootnote={footnoteEditor.renderNumber} />
                             </div>
                         </div>
                     ) : (
                         <textarea
                             className="border-2 h-48"
+                            aria-label="Содержимое"
+                            {...footnoteEditor.sourceProps("content")}
                             value={content}
-                            onChange={e => setContent(e.target.value)}
+                            onChange={e => { setContent(e.target.value); setIsSaved(false); }}
                         />
                     )}
                     {quotes && (

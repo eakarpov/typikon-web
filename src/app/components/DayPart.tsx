@@ -1,5 +1,6 @@
+import FootnoteScope, { FootnoteList } from "@/app/components/FootnoteScope";
 import TextLinkList from "@/app/components/TextLinkList";
-import {fullTitle, isFootnoteBook, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
+import {fullTitle, printTextReadiness, TextReadiness, TextType, valueTitle} from "@/utils/texts";
 import TextPart from "@/app/components/TextPart";
 import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
 
@@ -156,7 +157,8 @@ const DayPart = ({
                 </p>
                 <StartPart part={valueName} />
                 {value.items?.map((item: any) => item.text ? (
-                    <div key={item.text._id.toString()}>
+                    <FootnoteScope key={item.text._id.toString()} content={item.text.content} poems={item.text.poems} footnotes={item.text.footnotes}>
+                    <div>
                         <p className="text-1xl font-bold">
                             <span className="flex flex-row items-center">
                                 <TextLinkList value={item.text.ruLink} label="Русский текст" />
@@ -224,22 +226,9 @@ const DayPart = ({
                                 </p>
                             ))}
                         </div>
-                        {item.text.footnotes?.length > 0 && (
-                            <div className="font-serif">
-                                <p>
-                                    <strong>Сноски:</strong>
-                                </p>
-                                {item.text.footnotes?.map((footnote: string, index: number) => {
-                                    const { isBook } = isFootnoteBook(footnote);
-                                    return isBook ? null : (
-                                        <p key={footnote} id={`footnotes-${index + 1}`}>
-                                            {index + 1} {footnote}
-                                        </p>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        <FootnoteList footnotes={item.text.footnotes} />
                     </div>
+                    </FootnoteScope>
                 ) : paschal && !item.paschal && (
                     <div>
                         <strong>{valueTitle(valueName)} календарное чтение (Пролог, похвальное слово святому)</strong> - смотри соответствующий день в календарных чтениях

@@ -1,3 +1,4 @@
+import FootnoteScope, { FootnoteList } from "@/app/components/FootnoteScope";
 import Poems from "@/app/components/Poems";
 import TextLinkList from "@/app/components/TextLinkList";
 import AddToCollection from '@/app/reading-collections/AddToCollection';
@@ -5,7 +6,6 @@ import ReadingFocus, {ReadingFocusActions} from '@/app/components/ReadingFocus';
 import {readingParts} from '@/lib/readingParts';
 import ReadingPlanStep from '@/app/reading-plan/ReadingPlanStep';
 import { ReadinessButton } from "@/app/components/DayPart";
-import {isFootnoteBook} from "@/utils/texts";
 import {ArrowTopRightOnSquareIcon, BookOpenIcon, MapPinIcon} from "@heroicons/react/24/outline";
 import {textPlaces} from "@/lib/places/query";
 import TextImages from "@/app/reading/TextImages";
@@ -57,6 +57,7 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
     }
 
     return (
+        <FootnoteScope content={item.content} poems={item.poems} footnotes={item.footnotes}>
         <div className="flex flex-col md:flex-row">
         <div id="text-reading-container" className={`reading-column ${myFont.variable} flex flex-col pt-2 flex-1`}>
             <Link className="underline block py-3" href={"/study?target="+encodeURIComponent(JSON.stringify({kind:"text",id:item.id}))}>Читать с выписками, вопросами и связанными материалами</Link>
@@ -135,21 +136,7 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
                     </p>
                 </div>
             )}
-            {item.footnotes?.length > 0 && (
-                <div className="font-serif">
-                    <p>
-                        <strong>Сноски:</strong>
-                    </p>
-                    {item.footnotes?.map((footnote: string, index: number) => {
-                        const { isBook } = isFootnoteBook(footnote);
-                        return isBook ? null : (
-                            <p key={`footnote-${index}`} id={`footnotes-${index + 1}`}>
-                                {index + 1} {footnote}
-                            </p>
-                        );
-                    })}
-                </div>
-            )}
+            <FootnoteList footnotes={item.footnotes} />
             <TextLinks item={item} />
         </div>
         {!!item.images?.length && (
@@ -163,6 +150,7 @@ const Content = async ({ itemPromise, showAccents = false, statia }: { itemPromi
             />
         )}
         </div>
+        </FootnoteScope>
     );
 };
 

@@ -1,4 +1,6 @@
 "use client";
+import FootnoteScope, { useFootnoteNumbers } from "@/app/components/FootnoteScope";
+import { footnoteNumbers, orderedFootnotes } from "@/lib/markup/footnoteNumbers";
 import NoteSharing from "@/app/components/NoteSharing";
 import TextLinkList from "@/app/components/TextLinkList";
 import Comparison, { type ComparisonData } from "./Comparison";
@@ -6,7 +8,7 @@ import { showHighlights } from "./highlights";
 import { bookLanguageLabel } from "@/utils/bookLanguages";
 import { bookCategoryLabel } from "@/utils/libraryBooks";
 import { BIBLE_CANON } from "@/utils/bibleCanon";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Markdown from "react-markdown";
@@ -52,6 +54,7 @@ function PlainSource({
   text: string;
   onFootnote?: (n: number) => void;
 }) {
+  const numbers = useFootnoteNumbers();
   return (
     <div
       style={{
@@ -88,7 +91,7 @@ function PlainSource({
         {text
           .replace(/\{(?:st|pl)\|([^}|]+)\|([^}]+)}/g, "$2")
           .replace(/\{k\|([^}]+)}/g, "$1")
-          .replace(/\{(\d+)}/g, " [сноска $1](#study-footnote-$1) ")
+          .replace(/\{(\d+)}/g, (_, id: string) => ` [сноска ${numbers?.[id] ?? id}](#study-footnote-${id}) `)
           .replace(/\{k\|/g, "")}
       </Markdown>
     </div>
@@ -886,7 +889,12 @@ export default function Client() {
   const selectedBlock = material?.blocks.find(
     (b) => b.id === selected?.blockId,
   );
+  const numberingContent = useMemo(() => material?.blocks.map(block => block.text).join("\n\n") ?? "", [material]);
+  const numberingNotes = useMemo(() => material?.footnotes ?? [], [material]);
+  const numbers = useMemo(() => Number(material?.metadata.footnoteBase ?? 1) === 1
+    ? footnoteNumbers({ content: numberingContent, poems: "", footnotes: numberingNotes }, true) : {}, [material, numberingContent, numberingNotes]);
   return (
+    <FootnoteScope content={numberingContent} footnotes={numberingNotes} numberCitations numbering={numbers}>
     <main
       className={`${myFont.variable} ${csFontVariables} max-w-7xl mx-auto p-3 space-y-4`}
     >
@@ -1339,10 +1347,10 @@ export default function Client() {
                           material.metadata.readiness ?? "по данным издания",
                         )}
                       </p>
-                      {material.footnotes.map((f, i) => (
-                        <details id={"study-footnote-" + (i + 1)} key={i}>
-                          <summary>Сноска {i + 1}</summary>
-                          <PlainSource text={f} />
+                      {orderedFootnotes(material.footnotes, Object.keys(numbers).length ? numbers : Object.fromEntries(material.footnotes.map((_, i) => [String(i + 1), i + 1]))).map(note => (
+                        <details id={"study-footnote-" + note.id} key={note.id}>
+                          <summary>Сноска {note.number}</summary>
+                          <PlainSource text={note.text} />
                           <button
                             className={button}
                             onClick={() =>
@@ -2381,7 +2389,7 @@ export default function Client() {
               aria-label="Сноска"
               className="fixed inset-6 md:inset-x-1/4 z-50 overflow-auto bg-white text-black border shadow-xl p-5"
             >
-              <h2>Сноска {footnote}</h2>
+              <h2>Сноска {numbers[String(footnote)] ?? footnote}</h2>
               <PlainSource
                 text={
                   material.footnotes[
@@ -2746,6 +2754,7 @@ export default function Client() {
         </>
       )}
     </main>
+    </FootnoteScope>
   );
 }
 function BibleEntry({
