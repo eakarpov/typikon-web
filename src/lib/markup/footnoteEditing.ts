@@ -1,7 +1,20 @@
 export interface FootnoteDocument { content: string; poems: string; footnotes: string[] }
 export type FootnoteField = "content" | "poems";
+export interface FootnoteInsertion { field: FootnoteField; offset: number; source: string }
 export type FootnoteTarget = { kind: "number"; number: number }
     | { kind: "inline"; field: FootnoteField; start: number; raw: string };
+
+export function insertFootnote(doc: FootnoteDocument, location: FootnoteInsertion, value: string): FootnoteDocument {
+    const source = doc[location.field];
+    if (source !== location.source) throw new Error("Текст изменился. Закройте окно и установите курсор заново.");
+    if (!Number.isInteger(location.offset) || location.offset < 0 || location.offset > source.length) throw new Error("Установите курсор в тексте или стихах.");
+    const before = source.slice(0, location.offset);
+    if (before.lastIndexOf("{") > before.lastIndexOf("}")) throw new Error("Поставьте курсор вне метки разметки, чтобы вставить сноску.");
+    const note = value.trim();
+    if (!note) throw new Error("Введите текст сноски.");
+    if (/[{}]/.test(note)) throw new Error("В новой сноске нельзя использовать фигурные скобки.");
+    return { ...doc, [location.field]: before + `{fn|${note}}` + source.slice(location.offset) };
+}
 
 export function footnoteMarkers(source: string, field: FootnoteField) {
     return [...source.matchAll(/\{fn\|[^{}]*\}|\{\d+\}/g)].map(match => ({

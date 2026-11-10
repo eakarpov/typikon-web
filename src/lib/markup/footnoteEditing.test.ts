@@ -1,10 +1,42 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deleteFootnote, editFootnote, footnoteMarkers, footnoteReferenceCount, type FootnoteDocument } from "./footnoteEditing";
+import { deleteFootnote, editFootnote, insertFootnote, footnoteMarkers, footnoteReferenceCount, type FootnoteDocument } from "./footnoteEditing";
 import { footnoteKey, footnoteNumbers, orderedFootnotes } from "./footnoteNumbers";
 import { compileInlineFootnotes } from "./inlineFootnotes";
 
 const document = (): FootnoteDocument => ({ content: "А{3} Б{1} В{3}", poems: "Стих{2}", footnotes: ["Первое", "В стихах", "Повтор"] });
+
+test("inserting at the cursor keeps surrounding text and existing footnote IDs intact", () => {
+    const doc = { ...document(), content: "До слова после{3}" };
+    const inserted = insertFootnote(doc, { field: "content", offset: 8, source: doc.content }, "  Пояснение  ");
+    assert.equal(inserted.content, "До слова{fn|Пояснение} после{3}");
+    assert.equal(inserted.poems, doc.poems);
+    assert.strictEqual(inserted.footnotes, doc.footnotes);
+    assert.equal(doc.content, "До слова после{3}");
+    const saved = compileInlineFootnotes(inserted.content, inserted.poems, inserted.footnotes);
+    assert.equal(saved.content, "До слова{4} после{3}");
+    assert.deepEqual(saved.footnotes, [...doc.footnotes, "Пояснение"]);
+});
+
+test("insertion supports the start, end, poems, Unicode cursor offsets and multiple lines", () => {
+    const doc = { content: "", poems: "😀 Сти́х\n\nЕщё стих", footnotes: [] };
+    assert.equal(insertFootnote(doc, { field: "content", offset: 0, source: "" }, "Первая").content, "{fn|Первая}");
+    const offset = doc.poems.indexOf("\n");
+    assert.equal(insertFootnote(doc, { field: "poems", offset, source: doc.poems }, "Один\nДва").poems,
+        "😀 Сти́х{fn|Один\nДва}\n\nЕщё стих");
+    assert.equal(insertFootnote(doc, { field: "poems", offset: doc.poems.length, source: doc.poems }, "Конец").poems,
+        doc.poems + "{fn|Конец}");
+});
+
+test("insertion rejects stale positions, invalid notes and positions inside existing corpus tags", () => {
+    const doc = { content: "Текст {k|красный} {1}", poems: "", footnotes: ["Старая"] };
+    const at = (offset: number, value = "Новая", source = doc.content) => insertFootnote(doc, { field: "content", offset, source }, value);
+    for (const offset of [-1, 1.5, doc.content.length + 1, 10, doc.content.indexOf("{1}") + 1]) assert.throws(() => at(offset));
+    assert.throws(() => at(0, "Новая", "Предыдущий текст"), /Текст изменился/);
+    for (const value of [" ", "{k|Вложенная}"]) assert.throws(() => at(0, value));
+    assert.ok(at(doc.content.indexOf("{1}")).content.includes("{fn|Новая}{1}"));
+    assert.ok(at(doc.content.length).content.endsWith("{1}{fn|Новая}"));
+});
 
 test("editing a shared note changes all its occurrences without changing stable source IDs", () => {
     const original = document();

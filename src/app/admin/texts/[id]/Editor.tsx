@@ -558,6 +558,7 @@ const AdminEditor = ({ value }: any) => {
                         value={poems}
                         onChange={e => { setPoems(e.target.value); setIsSaved(false); }}
                     />
+                    {footnoteEditor.insertButton("poems")}
                 </div>
                 <div className="flex flex-col w-1/3">
                     <label>
@@ -616,6 +617,7 @@ const AdminEditor = ({ value }: any) => {
             {newUi ? (
                 <>
                     <label><b>Содержимое</b></label>
+                    <div className="py-2">{footnoteEditor.insertButton("content")}</div>
                     {viewUi ? (
                         <div>
                             <TextMarkup text={content} footnotes={footnotes} markdown renderFootnote={footnoteEditor.renderNumber} />
@@ -635,6 +637,7 @@ const AdminEditor = ({ value }: any) => {
                     <label>
                         Содержимое
                     </label>
+                    <div className="py-2">{footnoteEditor.insertButton("content")}</div>
                     <textarea
                         className="border-2 h-48"
                         aria-label="Содержимое"
@@ -720,6 +723,7 @@ const AdminEditor = ({ value }: any) => {
                             <input type="checkbox" checked={newUi} onChange={e => setNewUi(!newUi)} />
                         </div>
                     </div>
+                    <div className="py-2">{footnoteEditor.insertButton("content")}</div>
                     {newUi ? (
                         <div className="flex flex-row">
                             <textarea
