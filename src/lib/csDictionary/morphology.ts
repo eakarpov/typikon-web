@@ -1,10 +1,7 @@
+import { endingSegmenter } from './endingSegments';
 import { buildLegacyView, type DictionaryRecord } from './legacyView';
-import { PARADIGMS } from '@/lib/morphology/paradigms';
-import { ADJECTIVES } from '@/lib/morphology/adjectives';
-import { CONJUGATIONS } from '@/lib/morphology/conjugations';
 import { toChurchSlavonic } from '@/lib/morphology/orthography';
 import {analyses,nounSlots} from '@/lib/morphology/tags';
-import { splitClitic } from '@/lib/morphology/stems';
 import { civilKey } from '@/lib/cslav/core';
 import type { Paradigm, Segment } from './types';
 const number=(s:string):string=>s.startsWith('sg')?'единственное число':s.startsWith('pl')?'множественное число':s.startsWith('du')?'двойственное число':'';
@@ -34,24 +31,24 @@ export function segmentsFor(value:string,stems:string[],clitic=''):Segment[]|nul
 }
 export function paradigmsFor(row:DictionaryRecord,id:string):{known:boolean;paradigms:Paradigm[];extra:{value:string;properties:string}[]}{
  const view=buildLegacyView(row,id),out:Paradigm[]=[];
- const source=row.morphologyLemma??row.name??'',parts=splitClitic(source);const reflexive=/(с[яѧ])$/.exec(parts.head)?.[1]??'';
- const engine=PARADIGMS[row.scheme??'']??ADJECTIVES[row.scheme??'']??CONJUGATIONS[row.scheme??''];
- let stems:string[]=[];try{stems=engine?Object.values(engine.stems(reflexive?parts.head.slice(0,-reflexive.length):parts.head)):[];}catch{/* Unsupported source stays whole. */}
- const clitic=toChurchSlavonic(reflexive)+parts.clitic;
- const push=(kind:string,title:string,table:Record<string,{value:string;stored:boolean}[]>,allowSegments=true):void=>{
-  out.push({kind,title,slots:Object.entries(table).map(([slot,forms])=>({id:slot,label:slotLabel(slot),forms:forms.map(f=>({value:toChurchSlavonic(f.value),origin:f.stored?'stored' as const:'generated' as const,grammar:slot,segments:allowSegments&&view.known?segmentsFor(toChurchSlavonic(f.value),stems,clitic):null}))})).filter(s=>s.forms.length)});
+ const segment = endingSegmenter(row);
+ const push=(kind:string,title:string,table:Record<string,{value:string;stored:boolean}[]>,participleBase?:string):void=>{
+  out.push({kind,title,slots:Object.entries(table).map(([slot,forms])=>({id:slot,label:slotLabel(slot),forms:forms.map(f=>{
+   const value=toChurchSlavonic(f.value);
+   return {value,origin:f.stored?'stored' as const:'generated' as const,grammar:slot,segments:segment(kind,slot,value,participleBase).segments};
+  })})).filter(s=>s.forms.length)});
  };
  if(view.noun)push('noun','Склонение',view.noun);
  if(view.adjective){push('adjective-brev','Краткие формы',view.adjective.brev);push('adjective-plen','Полные формы',view.adjective.plen);}
  if(view.verb)push('verb','Спряжение',view.verb);
- for(const p of view.participles??[]){push('participle-brev',p.title+' · краткие',p.table.brev,false);push('participle-plen',p.title+' · полные',p.table.plen,false);}
+ for(const p of view.participles??[]){push('participle-brev',p.title+' · краткие',p.table.brev,p.base);push('participle-plen',p.title+' · полные',p.table.plen,p.base);}
  let extra=view.extra;
  if(['SPRO','NUM','NUMR'].includes((row.properties??'').split(',')[0])){
   const slots=new Map<string,{value:string;stored:boolean}[]>();const used=new Set<string>();
   for(const f of row.forms??[])for(const a of analyses(f.properties??''))for(const slot of nounSlots(a)){
    if(!f.value)continue;const list=slots.get(slot)??[];if(!list.some(x=>x.value===f.value))list.push({value:f.value,stored:true});slots.set(slot,list);used.add(f.value+'|'+(f.properties??''));
   }
-  if(slots.size)push('stored-case-forms',(row.properties??'').startsWith('SPRO')?'Формы местоимения':'Падежные формы числительного',Object.fromEntries(slots),false);
+  if(slots.size)push('stored-case-forms',(row.properties??'').startsWith('SPRO')?'Формы местоимения':'Падежные формы числительного',Object.fromEntries(slots));
   extra=extra.filter(f=>!used.has(f.value+'|'+f.properties));
  }
  return {known:view.known,paradigms:out,extra};

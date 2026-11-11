@@ -97,7 +97,7 @@ const collect = <K extends string>(map: Map<K, string[]>, slot: K, value: string
 // Причастия — не строка в спряжении, а своя парадигма: они склоняются
 // прилагательным, и в словаре их выписано 37 550 форм против 26 тысяч всех личных.
 // Вываливать их перечнем в одну ячейку значит показать кашу вместо парадигмы.
-const PARTICIPLE_TITLES: [VerbSlot, string][] = [
+export const PARTICIPLE_TITLES: [VerbSlot, string][] = [
     ["partPresAct", "Причастие настоящего действительное"],
     ["partPresPass", "Причастие настоящего страдательное"],
     ["partPastAct", "Причастие прошедшего действительное"],
@@ -105,7 +105,7 @@ const PARTICIPLE_TITLES: [VerbSlot, string][] = [
 ];
 
 /** Основа причастия: отрезаем окончание исходной формы, оставляя «а҆́лчꙋщ-». */
-const participleStem = (form: string) => form.replace(/(ый|ій|ая|ое|ъ|ь|а|о|е|и|я|ѧ|ꙗ)$/, "");
+export const participleStem = (form: string) => form.replace(/(ый|ій|ая|ое|ъ|ь|а|о|е|и|я|ѧ|ꙗ)$/, "");
 
 const participles = (
     forms: StoredForm[],
