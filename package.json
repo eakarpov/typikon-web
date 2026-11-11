@@ -129,6 +129,7 @@
     "@reduxjs/toolkit": "^2.5.1",
     "@znamenica/kruczie": "1.0.0",
     "abcjs": "^6.7.0",
+    "ajv": "6.12.6",
     "better-sqlite3": "^12.10.0",
     "d3": "^7.9.0",
     "date-easter": "^1.0.2",

@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import {validateMorphemeCard,legacyMorphemeCard} from './morphemeCard';
 import {createHash} from 'node:crypto';
 import {resolve,dirname,join} from 'node:path';
 
@@ -20,9 +21,14 @@ export class MorphemePublication {
   return row?JSON.parse(row.payload) as Payload:null;
  }
  word(id:string):Payload|null{return this.payload('words',id);}
- card(id:string):Payload|null{return this.payload('morphemes',id);}
+ card(id:string,schema:1|2=1):Payload|null{
+  const card=this.payload('morphemes',id);if(!card)return null;
+  if(card.schemaVersion!==2){if(schema===2)throw new MorphemeError(409,'schema_unavailable_for_publication','Эта версия базы не поддерживает новую карточку. Откройте морфему из карточки слова заново.');return card;}
+  validateMorphemeCard(card,(target)=>!!this.db.prepare('SELECT 1 FROM morphemes WHERE id=?').get(target));
+  return schema===2?card:legacyMorphemeCard(card);
+ }
  words(id:string,size:number,cursor:string|null):Payload|null {
-  if(!this.card(id))return null;
+  if(!this.db.prepare('SELECT 1 FROM morphemes WHERE id=?').get(id))return null;
   let after=['',''];
   if(cursor!==null){
    try{

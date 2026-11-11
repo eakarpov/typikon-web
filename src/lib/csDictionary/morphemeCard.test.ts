@@ -1,0 +1,12 @@
+import {it} from 'node:test';
+import assert from 'node:assert/strict';
+import {validateMorphemeCard,legacyMorphemeCard} from './morphemeCard';
+const fixture=()=>({id:'root:X',title:'x',kind:'root',gloss:'',status:'proposed',version:'a'.repeat(64),statistics:{lexemes:0,forms:0},allomorphs:[{id:'x',surface:'а́б',note:'',status:'proposed'}],schemaVersion:2,sources:[{id:'s',title:'Source',publicationYear:2002,kind:'unclassified'}],composition:{state:'partial',models:[],notes:[]},etymology:{state:'partial',nodes:['a','b','c'].map(id=>({id,label:id,form:id,reconstruction:null,formType:'attested',meaning:null,language:null,variety:null,period:null,status:'proposed',note:'',evidence:[],target:null})),relations:[{id:'r',fromNodeIds:['a','b'],toNodeId:'c',type:'origin',label:'origin',status:'proposed',note:'',evidence:[]}],chains:[{id:'c',title:'Chain',status:'proposed',relationIds:['r'],focusNodeId:'c',note:'',evidence:[]}],notes:[]}});
+it('keeps explicit joint inputs, unknown dating and proposed claims',()=>{const c=fixture();validateMorphemeCard(c);assert.deepEqual(c.etymology.relations[0].fromNodeIds,['a','b']);assert.equal(c.etymology.nodes[0].period,null);});
+it('rejects missing sources, orphan relations, cycles and unsupported approval',()=>{
+ const noSource=fixture();noSource.etymology.relations[0].status='approved';assert.throws(()=>validateMorphemeCard(noSource),/evidence/);
+ const orphan=fixture();orphan.etymology.chains=[];assert.throws(()=>validateMorphemeCard(orphan),/Orphan/);
+ const cycle=fixture();cycle.etymology.relations.push({...cycle.etymology.relations[0],id:'back',fromNodeIds:['c'],toNodeId:'a'});cycle.etymology.chains[0].relationIds.push('back');assert.throws(()=>validateMorphemeCard(cycle),/cycle/);
+ const self=fixture();self.etymology.relations[0].toNodeId='a';assert.throws(()=>validateMorphemeCard(self),/target/);
+});
+it('legacy adapter preserves descriptions without inventing graph edges',()=>{const c=fixture();c.etymology.nodes=[];c.etymology.relations=[];c.etymology.chains=[];(c.etymology.notes as any[]).push({id:'n',title:'Old note',text:'Original accent а́',reconstruction:'*x',status:'disputed',evidence:[{sourceId:'s',locator:'p.3',quote:null,supports:''}],target:null});validateMorphemeCard(c);const old=legacyMorphemeCard(c);assert.equal(old.history[0].note,'Original accent а́');assert.equal(old.history[0].status,'disputed');assert.ok(!('etymology' in old));assert.equal(c.etymology.relations.length,0);});

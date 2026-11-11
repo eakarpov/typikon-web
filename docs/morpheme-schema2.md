@@ -1,0 +1,11 @@
+# Morpheme card schema=2
+
+GET `/api/v2/cs/morphemes/{id}?version=<publication>&schema=2` returns canonical composition models, historical notes, explicitly curated graphs and their evidence. It does not construct graph edges from prose. The stored JSON is checked against `src/lib/csDictionary/morphemeCard.schema.json` and semantic invariants (targets, graph cycles, evidence, exact grapheme coverage). Schema=2 on a retained old publication returns 409 `schema_unavailable_for_publication`.
+
+Schema=1 (also the request without schema) is deprecated. The operation itself remains useful. Its OpenAPI schemas/fields are marked deprecated in the application contract. The response carries `X-Morpheme-Schema-Deprecated: true` and a successor Link, including on 304. Only `legacyMorphemeCard` renders canonical notes as the old fields. Word morpheme analyses and paginated word listing are unchanged.
+
+Set `CS_MORPHEME_SCHEMA1_SUNSET` to an ISO timestamp at the first public release of the schema=2 application: deadline = release + 90 days. No date is invented from a test build. The handler returns 410 `schema_retired` for old requests once this date is reached. At that release remove the adapter, old-publication schema=1 reading branch and obsolete DTO/test fixtures. Keep the explicit retired-schema guard. Retirement is an actual code-deletion task, not an indefinitely supported second implementation.
+
+The initial schema=2 data migration preserves 208 cards, all word analyses and memberships, 44 historical descriptions and 16 explicit component models. There are no formally curated chains in the source: nodes/relations/chains remain empty. Unknown source classifications are `unclassified`, unknown years/languages/recensions stay null. Current API prose is not research verification.
+
+Offline publication audit: `node --import tsx src/scripts/validate-morpheme-schema2.ts BASE.sqlite CANDIDATE.sqlite`. It checks every canonical card and the exact legacy text round trip. Application repository holds the immutable data migration CLI and full UI/API design. Schema=2 publication activation and API runtime deployment must happen together, after an isolated API probe, retaining the prior files for rollback. No Android update endpoint or public APK is changed by this release.
