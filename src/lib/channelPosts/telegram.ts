@@ -5,6 +5,7 @@
 // проверяет тело на свою: глобальную он не узнаёт и отправляет строкой
 // «[object FormData]» — семнадцать байт вместо картинки, причём молча, с
 // успешным ответом на том конце.
+import { photoCaption } from "./photoCaption";
 import { createHash } from "node:crypto";
 import type { TelegramDelivery } from "@/types/dto/channelPost";
 import { Agent, ProxyAgent, fetch as undiciFetch, FormData, RequestInfo, RequestInit } from "undici";
@@ -13,6 +14,7 @@ export interface TelegramPostInput {
     text: string;
     imageUrl?: string | null;
     telegramDelivery?: TelegramDelivery | null;
+    sourceTextId?: string | null;
 }
 
 // Если api.telegram.org недоступен напрямую (блокировка у хостера/региона) — два способа обхода,
@@ -146,7 +148,7 @@ const request = async (fetchTelegram: Fetch, botToken: string, method: string, i
 };
 
 export interface TelegramSendOptions {
-    // Сохраняем прогресс до следующего сообщения, чтобы повтор после сбоя не дублировал фото.
+    // Сохраняем результат, чтобы повтор отправки не дублировал опубликованный пост.
     saveDelivery?: (delivery: TelegramDelivery) => Promise<void>;
     fetch?: Fetch;
 }
@@ -172,41 +174,38 @@ export const sendChannelPostToTelegram = async (
     });
     if (delivery.complete) return { message_id: delivery.messageId };
 
-    if (imageUrl && !delivery.photoMessageId) {
-        const image = await downloadImage(imageUrl, fetchTelegram);
-        const sendPhoto = (caption?: string) => {
+    if (imageUrl) {
+        const caption = photoCaption(post);
+        let photo;
+        if (delivery.photoMessageId) {
+            // Незавершённые отправки прежнего формата уже могли создать фото без подписи.
+            // Дополняем именно его, не создавая второго сообщения.
+            try {
+                photo = await call("editMessageCaption", {
+                    chat_id: chatId, message_id: delivery.photoMessageId, caption, parse_mode: "HTML",
+                });
+            } catch (e) {
+                if (!(e instanceof TelegramError) || e.code !== 400 || !/message is not modified/i.test(e.description)) throw e;
+                photo = { message_id: delivery.photoMessageId };
+            }
+        } else {
+            const image = await downloadImage(imageUrl, fetchTelegram);
             const form = new FormData();
             form.set("chat_id", chatId);
-            if (caption !== undefined) {
-                form.set("caption", caption);
-                form.set("parse_mode", "HTML");
-            }
+            form.set("caption", caption);
+            form.set("parse_mode", "HTML");
             form.set("photo", image.blob, image.filename);
-            return request(fetchTelegram, botToken, "sendPhoto", { body: form });
-        };
-        let photo;
-        try {
-            photo = await sendPhoto(post.text);
-        } catch (e) {
-            // Только явный отказ из-за длины: первый запрос точно не создал сообщения.
-            // При таймауте повторять sendPhoto опасно — Telegram мог уже принять фото.
-            if (!(e instanceof TelegramError) || e.code !== 400 || !/caption is too long/i.test(e.description)) throw e;
-            photo = await sendPhoto();
-            await save({ ...delivery, photoMessageId: photo.message_id, complete: false });
+            photo = await request(fetchTelegram, botToken, "sendPhoto", { body: form });
         }
-        if (!delivery.photoMessageId) {
-            await save({ ...delivery, photoMessageId: photo.message_id, messageId: photo.message_id, complete: true });
-            return photo;
-        }
+        await save({ ...delivery, photoMessageId: photo.message_id, messageId: photo.message_id, complete: true });
+        return photo;
     }
 
-    // Для длинной подписи — полный текст ответом к фотографии, без обрезки HTML.
     const message = await call("sendMessage", {
         chat_id: chatId,
         text: post.text,
         parse_mode: "HTML",
         disable_web_page_preview: true,
-        ...(delivery.photoMessageId ? { reply_parameters: { message_id: delivery.photoMessageId } } : {}),
     });
     await save({ ...delivery, messageId: message.message_id, complete: true });
     return message;

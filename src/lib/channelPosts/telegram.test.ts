@@ -26,6 +26,7 @@ test("пробелы по краям снимаются, пустое остаё
 import {sendChannelPostToTelegram, TelegramSendOptions} from "./telegram";
 import type {TelegramDelivery} from "@/types/dto/channelPost";
 import {FormData, Response} from "undici";
+import {visibleLength} from "./postText";
 
 type Step = (url: string, body: unknown) => Response | Promise<Response>;
 const ok = (id: number) => Response.json({ok: true, result: {message_id: id}});
@@ -61,59 +62,48 @@ test("короткий пост отправляет фотографию фай
     net.done();
 });
 
-test("длинная подпись сохраняет фото и отправляет полный текст ответом к нему", async () => {
+test("длинный пост отправляется одним фото с сокращённой подписью и ссылкой", async () => {
     const text = `<b>${"Длинный текст &amp; ".repeat(100)}</b>`;
     const saved: TelegramDelivery[] = [];
     const net = network(
         () => image(),
-        () => rejected("Bad Request: message caption is too long"),
         (url, body) => {
             assert.ok(url.endsWith("/sendPhoto"));
             assert.ok(body instanceof FormData);
-            assert.equal(body.has("caption"), false);
+            const caption = String(body.get("caption"));
+            assert.ok(visibleLength(caption) <= 1024);
+            assert.match(caption, /<\/b>…/);
+            assert.match(caption, /reading\/63c9638ce99d9f4d9010c598/);
+            assert.match(caption, /Читать полностью на сайте/);
             return ok(20);
         },
-        (url, body) => {
-            assert.ok(url.endsWith("/sendMessage"));
-            assert.equal(saved.length, 1); // прогресс сохранён до отправки текста
-            const data = JSON.parse(body as string);
-            assert.equal(data.text, text);
-            assert.deepEqual(data.reply_parameters, {message_id: 20});
-            return ok(21);
-        },
     );
-    await sendChannelPostToTelegram({...post, text}, "test-token", "channel", {...net, saveDelivery: async d => { saved.push(d); }});
-    assert.equal(saved[0].complete, false);
-    assert.equal(saved[1].complete, true);
-    assert.equal(saved[1].messageId, 21);
+    const input = {...post, text, sourceTextId: "63c9638ce99d9f4d9010c598"};
+    await sendChannelPostToTelegram(input, "test-token", "channel", {...net, saveDelivery: async d => { saved.push(d); }});
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0].complete, true);
+    assert.equal(input.text, text);
     net.done();
+    const complete = network();
+    await sendChannelPostToTelegram({...input, telegramDelivery: saved[0]}, "test-token", "channel", complete);
+    complete.done();
 });
 
-test("повтор после сбоя текста не скачивает и не дублирует уже отправленное фото", async () => {
+test("незавершённая отправка прежнего формата дополняет фото подписью без второго поста", async () => {
     let progress: TelegramDelivery | undefined;
-    const first = network(
-        () => image(),
-        () => rejected("Bad Request: message caption is too long"),
-        () => ok(30),
-        () => rejected("Too Many Requests", 429),
-    );
-    await assert.rejects(sendChannelPostToTelegram(post, "test-token", "channel", {
-        ...first, saveDelivery: async d => { progress = d; },
-    }), /Too Many Requests/);
+    const first = network(() => image(), () => ok(30));
+    await sendChannelPostToTelegram(post, "test-token", "channel", {
+        ...first, saveDelivery: async d => { progress = {...d, complete: false, messageId: undefined}; },
+    });
     first.done();
-    assert.equal(progress?.photoMessageId, 30);
     const retry = network((url, body) => {
-        assert.ok(url.endsWith("/sendMessage"));
-        assert.deepEqual(JSON.parse(body as string).reply_parameters, {message_id: 30});
-        return ok(31);
+        assert.ok(url.endsWith("/editMessageCaption"));
+        assert.equal(JSON.parse(body as string).message_id, 30);
+        assert.equal(JSON.parse(body as string).caption, post.text);
+        return ok(30);
     });
-    await sendChannelPostToTelegram({...post, telegramDelivery: progress}, "test-token", "channel", {
-        ...retry, saveDelivery: async d => { progress = d; },
-    });
+    await sendChannelPostToTelegram({...post, telegramDelivery: progress}, "test-token", "channel", retry);
     retry.done();
-    const complete = network();
-    await sendChannelPostToTelegram({...post, telegramDelivery: progress}, "test-token", "channel", complete);
-    complete.done();
 });
 
 test("ошибка фото в Telegram не приводит к незаметной публикации одного текста", async () => {
@@ -158,10 +148,9 @@ test("пост без картинки отправляется одним те�
     net.done();
 });
 
-test("если сохранение прогресса не удалось, следующий текст не отправляется", async () => {
+test("ошибка сохранения результата не приводит к публикации отдельного текста", async () => {
     const net = network(
         () => image(),
-        () => rejected("Bad Request: message caption is too long"),
         () => ok(60),
     );
     await assert.rejects(sendChannelPostToTelegram(post, "test-token", "channel", {
@@ -173,5 +162,11 @@ test("если сохранение прогресса не удалось, сл
 test("слишком большая фотография не заменяется текстовым постом", async () => {
     const net = network(() => new Response(new Uint8Array(10 * 1024 * 1024 + 1)));
     await assert.rejects(sendChannelPostToTelegram(post, "test-token", "channel", net), /10 МБ/);
+    net.done();
+});
+
+test("длинный ручной пост без источника не отправляет фото без ссылки", async () => {
+    const net = network();
+    await assert.rejects(sendChannelPostToTelegram({...post, text: "слово ".repeat(400)}, "test-token", "channel", net), /добавьте ссылку/);
     net.done();
 });
