@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { ObjectId } from "mongodb";
 import { channelPostsDb } from "@/lib/channelPosts/db";
 import { checkRightsBack } from "@/lib/admin/back";
+import {checkAndSaveChannelPost} from "@/lib/channelPosts/checkPost";
 import {reportError} from "@/lib/reportError";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -44,7 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             };
 
             const inserted = await db.collection("channelPosts").insertOne(doc);
-            res.status(200).json({ id: inserted.insertedId.toString() });
+            const telegramCheck = await checkAndSaveChannelPost(db, {...doc, _id: inserted.insertedId});
+            res.status(200).json({ id: inserted.insertedId.toString(), telegramCheck });
             return;
         }
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChannelPostDTO } from "@/types/dto/channelPost";
+import { ChannelPostDTO, TelegramPostCheck } from "@/types/dto/channelPost";
 import { SITE_URL } from "@/utils/site";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -28,6 +28,8 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
     const [hashtags, setHashtags] = useState((item.hashtags || []).join(" "));
     const [status, setStatus] = useState(item.status);
     const [vkEnabled, setVkEnabled] = useState(!!item.targets?.vk);
+    const [checking, setChecking] = useState(false);
+    const [checkResult, setCheckResult] = useState<TelegramPostCheck | null>(item.telegramCheck || null);
     const [saving, setSaving] = useState(false);
     const [deleted, setDeleted] = useState(false);
     const [sending, setSending] = useState(false);
@@ -42,6 +44,7 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
                 body: JSON.stringify(fields),
             });
             if (!res.ok) throw new Error("Не удалось сохранить пост. Отправка отменена.");
+            if (fields.text !== undefined || fields.imageUrl !== undefined) setCheckResult(null);
             return true;
         } catch (e) {
             setSendError(e instanceof Error ? e.message : "Не удалось сохранить пост");
@@ -64,6 +67,22 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
         const next = !vkEnabled;
         setVkEnabled(next);
         await save({ targets: { telegram: true, vk: next } });
+    };
+
+    const onCheck = async () => {
+        setChecking(true);
+        setSendError(null);
+        try {
+            if (!(await save({text, imageUrl, hashtags: hashtags.split(/\s+/).filter(Boolean)}))) return;
+            const res = await fetch(`/api/admin/channel-posts/${item.id}/check`, {method: "POST"});
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Ошибка ${res.status}`);
+            setCheckResult(data);
+        } catch (e) {
+            setCheckResult({status: "failed", checkedAt: new Date().toISOString(), error: e instanceof Error ? e.message : "Проверка не удалась"});
+        } finally {
+            setChecking(false);
+        }
     };
 
     const onSendNow = async () => {
@@ -165,14 +184,18 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
                     <textarea
                         className="border p-2 font-serif"
                         rows={10}
+                        aria-label="Текст поста"
+                        disabled={checking || sending}
                         value={text}
-                        onChange={(e) => setText(e.target.value)}
+                        onChange={(e) => {setText(e.target.value); setCheckResult(null);}}
                     />
                     <input
                         className="border p-1"
                         placeholder="URL картинки"
+                        aria-label="URL картинки"
+                        disabled={checking || sending}
                         value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
+                        onChange={(e) => {setImageUrl(e.target.value); setCheckResult(null);}}
                     />
                     <input
                         className="border p-1"
@@ -183,19 +206,40 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
                 </div>
             </div>
 
-            <div className="flex flex-row items-center gap-2">
-                <button className="border px-2 py-1" disabled={saving} onClick={onSave}>
+            <div className="rounded border p-2 text-sm" role="status" aria-live="polite">
+                {checking ? <p>Проверяем без отправки в Telegram…</p> : checkResult ? (
+                    <>
+                        <p className={checkResult.status === "passed" ? "text-green-800 font-semibold" : "text-red-700 font-semibold"}>
+                            {checkResult.status === "passed" ? "Предварительная проверка пройдена" : "Ошибка предварительной проверки"}
+                        </p>
+                        {checkResult.error && <p>{checkResult.error}</p>}
+                        {checkResult.status === "passed" && <p>
+                            {checkResult.photo ? `Фото: ${checkResult.photo.width} × ${checkResult.photo.height}, ${checkResult.photo.format.toUpperCase()}, ${Math.ceil(checkResult.photo.bytes / 1024)} КБ.` : "Без фотографии — будет отправлен текст."}
+                            {` Текст: ${checkResult.textLength} знаков.`}
+                            {checkResult.shortened && " Подпись будет сокращена со ссылкой на полный текст."}
+                            {" Права бота проверены."}
+                        </p>}
+                        <p className="text-slate-500">Проверено {new Date(checkResult.checkedAt).toLocaleString("ru-RU", {timeZone: "Europe/Moscow"})} МСК.</p>
+                    </>
+                ) : <p>Пост ещё не проверен или изменён после проверки.</p>}
+                <p className="text-slate-500">Проверка ничего не публикует и не меняет расписание. Окончательное принятие фото Telegram подтвердит при отправке.</p>
+            </div>
+            <div className="flex flex-row flex-wrap items-center gap-2">
+                <button className="border px-2 py-1 bg-sky-50" disabled={checking || sending || saving} onClick={onCheck}>
+                    {checking ? "Проверяем…" : "Проверить без отправки"}
+                </button>
+                <button className="border px-2 py-1" disabled={saving || checking || sending} onClick={onSave}>
                     Сохранить
                 </button>
-                <button className="border px-2 py-1" onClick={onToggleReady}>
+                <button className="border px-2 py-1" disabled={checking || sending || saving} onClick={onToggleReady}>
                     {status === "ready" ? "Вернуть в черновики" : "Готово к отправке"}
                 </button>
-                <button className="border px-2 py-1 text-red-700" disabled={saving} onClick={onDelete}>
+                <button className="border px-2 py-1 text-red-700" disabled={saving || checking || sending} onClick={onDelete}>
                     Удалить
                 </button>
                 <button
                     className="border px-2 py-1 bg-amber-100"
-                    disabled={sending}
+                    disabled={sending || checking || saving}
                     onClick={onSendNow}
                 >
                     {sending ? "Отправляю…" : "Отправить сейчас"}

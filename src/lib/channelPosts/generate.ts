@@ -1,3 +1,4 @@
+import {checkAndSaveChannelPost} from "./checkPost";
 import { generationOptions } from "./generationOptions";
 export { generationOptions } from "./generationOptions";
 import { Db, ObjectId } from "mongodb";
@@ -81,7 +82,7 @@ const generateForDate = async (db: Db, deliveryDate: Date) => {
 
         const built = await buildChannelPost({ day, item, dayAlias: alias });
 
-        await db.collection("channelPosts").insertOne({
+        const post = {
             dayAlias: alias,
             date: deliveryDate,
             slot,
@@ -91,7 +92,9 @@ const generateForDate = async (db: Db, deliveryDate: Date) => {
             targets: { telegram: true, vk: false },
             createdAt: new Date(),
             updatedAt: new Date(),
-        });
+        };
+        const inserted = await db.collection("channelPosts").insertOne(post);
+        await checkAndSaveChannelPost(db, {...post, _id: inserted.insertedId});
 
         created++;
         console.log(`Черновик создан: ${alias} / ${slot} / ${built.sourceTextName}`);

@@ -34,9 +34,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (data[field] !== undefined) update[field] = data[field];
         }
 
+        const invalidatesCheck = data.text !== undefined || data.imageUrl !== undefined;
         await db
             .collection("channelPosts")
-            .updateOne({ _id: new ObjectId(id) }, { $set: update });
+            .updateOne({ _id: new ObjectId(id) }, {
+                $set: update,
+                ...(invalidatesCheck ? { $unset: { telegramCheck: "" } } : {}),
+            });
         res.status(200).end();
     } catch (e) {
         reportError(e, { where: "pages/api/admin/channel-posts/[id]#handler", source: "api" });

@@ -5,6 +5,8 @@
 // проверяет тело на свою: глобальную он не узнаёт и отправляет строкой
 // «[object FormData]» — семнадцать байт вместо картинки, причём молча, с
 // успешным ответом на том конце.
+import { checkTelegramPhoto, checkTelegramText } from "./checkContent";
+import type { TelegramPostCheck } from "@/types/dto/channelPost";
 import { photoCaption } from "./photoCaption";
 import { createHash } from "node:crypto";
 import type { TelegramDelivery } from "@/types/dto/channelPost";
@@ -209,4 +211,36 @@ export const sendChannelPostToTelegram = async (
     });
     await save({ ...delivery, messageId: message.message_id, complete: true });
     return message;
+};
+
+/** Только загрузка файла и читающие методы Bot API, без публикации и редактирования. */
+export const checkChannelPostForTelegram = async (
+    post: TelegramPostInput,
+    botToken: string | undefined,
+    channelId: string | undefined,
+    options: Pick<TelegramSendOptions, "fetch"> = {},
+): Promise<TelegramPostCheck> => {
+    const checkedAt = new Date().toISOString();
+    try {
+        const content = checkTelegramText(post);
+        const fetchTelegram = options.fetch || undiciFetch;
+        const image = post.imageUrl?.trim() ? await downloadImage(post.imageUrl.trim(), fetchTelegram) : null;
+        const photo = image ? checkTelegramPhoto(new Uint8Array(await image.blob.arrayBuffer())) : undefined;
+        if (!botToken || !channelId?.trim()) throw new Error("Не заданы TELEGRAM_BOT_TOKEN / TELEGRAM_CHANNEL_ID");
+        const read = (method: "getMe" | "getChat" | "getChatMember", body: Record<string, unknown>) =>
+            request(fetchTelegram, botToken, method, {
+                headers: {"Content-Type": "application/json"}, body: JSON.stringify(body),
+                signal: AbortSignal.timeout(15_000),
+            });
+        const me = await read("getMe", {});
+        const chat = await read("getChat", {chat_id: normalizeChatId(channelId)});
+        if (chat.type !== "channel") throw new Error("TELEGRAM_CHANNEL_ID должен указывать на канал");
+        const member = await read("getChatMember", {chat_id: chat.id, user_id: me.id});
+        if (member.status !== "creator" && !(member.status === "administrator" && member.can_post_messages === true)) {
+            throw new Error("У бота нет права публиковать сообщения в этом канале");
+        }
+        return {status: "passed", checkedAt, ...content, ...(photo ? {photo} : {})};
+    } catch (e) {
+        return {status: "failed", checkedAt, error: e instanceof Error ? e.message : String(e)};
+    }
 };

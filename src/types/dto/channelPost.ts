@@ -1,3 +1,12 @@
+export interface TelegramPostCheck {
+    status: "passed" | "failed";
+    checkedAt: string;
+    error?: string;
+    textLength?: number;
+    shortened?: boolean;
+    photo?: {width: number; height: number; format: string; bytes: number};
+}
+
 export interface TelegramDelivery {
     fingerprint: string;
     photoMessageId?: number;
@@ -35,4 +44,5 @@ export interface ChannelPostDTO {
     publishedAt?: string | null;
     publishError?: string | null;
     telegramDelivery?: TelegramDelivery | null;
+    telegramCheck?: TelegramPostCheck | null;
 }

@@ -18,12 +18,14 @@ const NewPostForm = () => {
     const [slot, setSlot] = useState<"morning" | "evening">("morning");
     const [scheduledAt, setScheduledAt] = useState(toDatetimeLocalValue(new Date()));
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const onSubmit = async () => {
         if (!text.trim()) return;
         setSaving(true);
+        setError(null);
         try {
-            await fetch("/api/admin/channel-posts", {
+            const res = await fetch("/api/admin/channel-posts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -35,12 +37,15 @@ const NewPostForm = () => {
                     scheduledAt: new Date(scheduledAt).toISOString(),
                 }),
             });
+            if (!res.ok) throw new Error("Не удалось создать пост");
             setText("");
             setImageUrl("");
             setHashtags("");
             setDayAlias("");
             setOpen(false);
             router.refresh();
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Не удалось создать пост");
         } finally {
             setSaving(false);
         }
@@ -106,9 +111,10 @@ const NewPostForm = () => {
                     onChange={(e) => setScheduledAt(e.target.value)}
                 />
             </div>
+            {error && <p className="text-red-700" role="alert">{error}</p>}
             <div className="flex flex-row gap-2">
                 <button className="border px-2 py-1" disabled={saving || !text.trim()} onClick={onSubmit}>
-                    Создать черновик
+                    {saving ? "Создаём и проверяем…" : "Создать черновик"}
                 </button>
                 <button className="border px-2 py-1" onClick={() => setOpen(false)}>
                     Отмена
