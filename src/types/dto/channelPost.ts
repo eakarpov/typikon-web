@@ -1,3 +1,10 @@
+export interface TelegramDelivery {
+    fingerprint: string;
+    photoMessageId?: number;
+    messageId?: number;
+    complete: boolean;
+}
+
 export type ChannelPostSlot = "morning" | "evening";
 export type ChannelPostStatus = "draft" | "ready" | "published" | "skipped" | "failed";
 export type ChannelPostNameSource = "dneslov" | "heuristic" | "none";
@@ -27,4 +34,5 @@ export interface ChannelPostDTO {
     updatedAt: string;
     publishedAt?: string | null;
     publishError?: string | null;
+    telegramDelivery?: TelegramDelivery | null;
 }

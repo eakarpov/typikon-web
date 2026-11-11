@@ -31,16 +31,21 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
     const [saving, setSaving] = useState(false);
     const [deleted, setDeleted] = useState(false);
     const [sending, setSending] = useState(false);
-    const [sendError, setSendError] = useState<string | null>(null);
+    const [sendError, setSendError] = useState<string | null>(item.publishError || null);
 
     const save = async (fields: Record<string, unknown>) => {
         setSaving(true);
         try {
-            await fetch(`/api/admin/channel-posts/${item.id}`, {
+            const res = await fetch(`/api/admin/channel-posts/${item.id}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(fields),
             });
+            if (!res.ok) throw new Error("Не удалось сохранить пост. Отправка отменена.");
+            return true;
+        } catch (e) {
+            setSendError(e instanceof Error ? e.message : "Не удалось сохранить пост");
+            return false;
         } finally {
             setSaving(false);
         }
@@ -67,7 +72,7 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
         setSendError(null);
         try {
             // сохраняем текущие правки, чтобы отправилось то, что видно на экране, а не старая версия
-            await save({ text, imageUrl, hashtags: hashtags.split(/\s+/).filter(Boolean) });
+            if (!(await save({ text, imageUrl, hashtags: hashtags.split(/\s+/).filter(Boolean) }))) return;
             const res = await fetch(`/api/admin/channel-posts/${item.id}/send`, { method: "POST" });
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
@@ -76,6 +81,8 @@ const PostItem = ({ item }: { item: ChannelPostDTO }) => {
             }
             setStatus("published");
             router.refresh();
+        } catch (e) {
+            setSendError(e instanceof Error ? e.message : "Ошибка отправки");
         } finally {
             setSending(false);
         }

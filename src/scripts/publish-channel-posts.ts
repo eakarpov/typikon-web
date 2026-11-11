@@ -54,7 +54,11 @@ const main = async () => {
     for (const post of duePosts) {
         try {
             if (post.targets?.telegram !== false) {
-                await sendChannelPostToTelegram(post, BOT_TOKEN!, CHANNEL_ID!);
+                await sendChannelPostToTelegram(post, BOT_TOKEN!, CHANNEL_ID!, {
+                    saveDelivery: async (telegramDelivery) => {
+                        await db.collection("channelPosts").updateOne({ _id: post._id }, { $set: { telegramDelivery } });
+                    },
+                });
             }
             if (post.targets?.vk) {
                 await publishToVk(post);

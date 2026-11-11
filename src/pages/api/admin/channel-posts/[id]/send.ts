@@ -37,7 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return;
         }
 
-        await sendChannelPostToTelegram(post as any, botToken, channelId);
+        await sendChannelPostToTelegram(post as any, botToken, channelId, {
+            saveDelivery: async (telegramDelivery) => {
+                await db.collection("channelPosts").updateOne({ _id: post._id }, { $set: { telegramDelivery } });
+            },
+        });
 
         await db.collection("channelPosts").updateOne(
             { _id: new ObjectId(id) },
