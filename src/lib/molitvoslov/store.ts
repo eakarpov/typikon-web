@@ -202,7 +202,7 @@ export const namedPrayerTexts = (
 
 export interface PosledovanieResult {
     lang: PrayerLang;
-    rows: BuiltPosledovanieRow[];
+    rows: (BuiltPosledovanieRow & { sourceTextId?: string })[];
 }
 
 /**
@@ -228,8 +228,9 @@ export const posledovanieTexts = (
         text: row.text,
         textF: row.text_f,
     }));
+    const sorted = inputs.slice().sort((a,b) => a.seq-b.seq);
     return {
         lang: used,
-        rows: buildPosledovanieRows(inputs, gender),
+        rows: buildPosledovanieRows(sorted, gender).map((row,index) => ({ ...row, sourceTextId: sorted[index].id })),
     };
 };

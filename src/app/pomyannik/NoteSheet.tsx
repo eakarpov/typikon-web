@@ -9,6 +9,7 @@ import { capitalize, rankChurchGenitive, rankGenitive } from "@/app/pomyannik/la
 
 export interface SheetName {
     rank: Rank | null;
+    marks?: Rank[];
     sex: Sex;
     /** Имя в том виде, в каком оно ляжет на лист. */
     text: string;
@@ -43,8 +44,7 @@ const Cross = () => (
 );
 
 const Name = ({ name }: { name: SheetName }) => {
-    const church = rankChurchGenitive(name.rank, name.sex);
-    const civil = rankGenitive(name.rank, name.sex);
+    const marks = name.marks ?? (name.rank ? [name.rank] : []);
     return (
         <li>
             {/* ПОМЕТА СТРОЧНАЯ, ИМЯ — С ПРОПИСНОЙ. С прописной пишут имя
@@ -52,10 +52,10 @@ const Name = ({ name }: { name: SheetName }) => {
                 они так и стоят. Славянским письмом помета идёт, если оно
                 засвидетельствовано книгой; иначе гражданкой, и страница
                 говорит об этом словами */}
-            {church ? `${church} ` : null}
-            {!church && civil
-                ? <span className="font-serif text-base">{civil} </span>
-                : null}
+            {marks.map((rank,index) => {
+                const church=rankChurchGenitive(rank,name.sex), civil=rankGenitive(rank,name.sex);
+                return <React.Fragment key={index}>{church ? `${church} ` : civil ? <span className="font-serif text-base">{civil} </span> : null}</React.Fragment>;
+            })}
             {capitalize(name.text)}
         </li>
     );

@@ -1,4 +1,4 @@
-import { effectiveRank } from "@/lib/pomyannik/marks";
+import { effectiveRank, effectiveRanks, statusRank, temporaryRank, effectiveMark, TEMPORARY_RANKS } from "@/lib/pomyannik/marks";
 import { textLinks } from "@/lib/textLinks";
 import {blocksOf,fingerprint} from '@/lib/study/core';
 import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
@@ -815,6 +815,7 @@ export const pomyannikPerson = (doc: any) => ({
     kind: doc.kind ?? "living",
     sex: doc.sex ?? null,
     rank: doc.rank ?? null,
+    statusRank: statusRank(doc), mark: temporaryRank(doc), activeMark: effectiveMark(doc), activeRanks: effectiveRanks(doc),
     activeRank: effectiveRank(doc),
     rankUntil: doc.rankUntil ?? null,
     relation: doc.relation ?? null,
@@ -870,6 +871,7 @@ export const memorialDay = (day: any) => ({
  */
 export const rankInfo = (rank: any) => ({
     key: rank.key,
+    category: TEMPORARY_RANKS.includes(rank.key) ? "temporary" : "status",
     label: rank.label,
     genitive: rank.genitive,
     cs: rank.cs ?? null,
@@ -907,6 +909,7 @@ export const noteName = (name: any) => ({
     slavonicSource: name.slavonicSource ?? null,
     kind: name.kind,
     rank: name.rank ?? null,
+    marks: name.marks ?? (name.rank ? [name.rank] : []),
     sex: name.sex ?? null,
 });
 

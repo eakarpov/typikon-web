@@ -21,7 +21,7 @@ export type Rank =
     // священные и монашеские
     | "ierey" | "protoierey" | "ieromonah" | "igumen" | "arhimandrit"
     | "diakon" | "protodiakon" | "monah" | "shimonah" | "inok"
-    | "poslushnik" | "arhierey";
+    | "poslushnik" | "arhierey" | "novoprestavlennyy";
 
 export interface RankInfo {
     key: Rank;
@@ -57,6 +57,7 @@ export interface RankInfo {
  * нужно ИМЕНАМ, которых тысячи, — там оно и работает (см. slavonic.ts).
  */
 export const RANKS: RankInfo[] = [
+    { key: "novoprestavlennyy", label: "новопреставленный", genitive: "новопреставленного", cs: null, feminine: { label: "новопреставленная", genitive: "новопреставленной", cs: null }, only: "departed" },
     { key: "mladenets", label: "младенец", genitive: "младенца", cs: "младе́нца",
       feminine: { label: "младенца", genitive: "младенцы", cs: "младе́нцы" } },
     { key: "otrok", label: "отрок", genitive: "отрока", cs: "ѻ҆́трока" },
@@ -148,6 +149,8 @@ export interface PomyannikPerson {
     kind: PersonKind;
     sex: Sex;
     rank: Rank | null;
+    /** Временная помета независимо от чина; отсутствие — старый формат. */
+    mark?: Rank | null;
     /** Временная помета действует по эту дату включительно. */
     rankUntil?: string | null;
     /** «мама», «крёстный» — для хозяина помянника, в записку не идёт. */

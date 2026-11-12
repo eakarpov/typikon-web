@@ -1,10 +1,10 @@
 import { personalDate, fullDate } from "./dates";
-import { TEMPORARY_RANKS } from "./marks";
+import { TEMPORARY_RANKS, statusRank, temporaryRank } from "./marks";
 import { MAX_PERSONS, RANK_BY_KEY, type PomyannikPerson, type NameDay } from "./types";
 
 export const MAX_BACKUP_MB = 64;
 export const MAX_BACKUP_BYTES = MAX_BACKUP_MB * 1024 * 1024;
-export type BackupPerson = Pick<PomyannikPerson, "name" | "churchName" | "kind" | "sex" | "rank" | "rankUntil" | "relation" | "born" | "baptized" | "died" | "nameDay" | "sorokoust" | "groups"> & { signature: string | null };
+export type BackupPerson = Pick<PomyannikPerson, "name" | "churchName" | "kind" | "sex" | "rank" | "mark" | "rankUntil" | "relation" | "born" | "baptized" | "died" | "nameDay" | "sorokoust" | "groups"> & { signature: string | null };
 export interface PomyannikBackup {
     format: "typikon-pomyannik";
     version: 2;
@@ -50,8 +50,9 @@ export const backupPerson = (raw: unknown): BackupPerson => {
     if (!name?.trim() || !/[\p{L}]/u.test(name)) throw new BackupError("Не указано имя.");
     if (value.kind !== "living" && value.kind !== "departed") throw new BackupError("Не указан раздел помянника.");
     if (value.sex != null && value.sex !== "m" && value.sex !== "f") throw new BackupError("Некорректный род.");
+    if (value.mark != null && !TEMPORARY_RANKS.includes(value.mark as PomyannikPerson["rank"] & string)) throw new BackupError("Неизвестная временная помета.");
     if (value.rank != null && (typeof value.rank !== "string" || !Object.hasOwn(RANK_BY_KEY, value.rank))) throw new BackupError("Неизвестный чин или помета.");
-    if (value.rankUntil != null && (!value.rank || !TEMPORARY_RANKS.some(rank => rank === value.rank))) throw new BackupError("Срок задан для постоянного чина.");
+    if (value.rankUntil != null && (!(value.mark ?? value.rank) || !TEMPORARY_RANKS.some(rank => rank === (value.mark ?? value.rank)))) throw new BackupError("Срок задан для постоянного чина.");
     const groups = value.groups ?? [];
     if (!Array.isArray(groups) || groups.length > 10 || groups.some(g => !text(g, 40)?.trim())) throw new BackupError("Некорректные группы.");
     const died = date(value.died);
@@ -65,6 +66,7 @@ export const backupPerson = (raw: unknown): BackupPerson => {
     }
     return {
         name, churchName: text(value.churchName, 60), kind: value.kind, sex: value.sex ?? null,
+        ...(value.mark !== undefined ? { mark: value.mark as PomyannikPerson["rank"] } : {}),
         rank: value.rank ?? null, rankUntil: date(value.rankUntil, true), relation: text(value.relation, 60), signature: text(value.signature, 120),
         born: date(value.born), baptized: date(value.baptized), died,
         nameDay: nameDay(value.nameDay), sorokoust, groups: [...groups],
@@ -87,13 +89,14 @@ export const parseBackup = (raw: unknown): PomyannikBackup => {
 
 /** Совпадения считаются с кратностью: две одинаковые карточки не превращаются в одну. */
 export const planRestore = (current: PomyannikPerson[], incoming: BackupPerson[]) => {
+    const identity = (raw: unknown) => {const p=backupPerson(raw);const {rank:_rank,mark:_mark,...rest}=p;return JSON.stringify({...rest, rank:statusRank(p),mark:temporaryRank(p)});};
     const counts = new Map<string, number>();
     for (const person of current) {
-        const key = JSON.stringify(backupPerson(person));
+        const key = identity(person);
         counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     const additions = incoming.filter(person => {
-        const key = JSON.stringify(backupPerson(person));
+        const key = identity(person);
         const count = counts.get(key) ?? 0;
         if (!count) return true;
         counts.set(key, count - 1);

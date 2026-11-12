@@ -2,13 +2,13 @@
 import { duplicateCandidates, personsWithDuplicates } from "@/lib/pomyannik/duplicates";
 import DuplicateHints from "./DuplicateHints";
 import { expiredRank } from "@/lib/pomyannik/marks";
-import { effectiveRank } from "@/lib/pomyannik/marks";
+import { effectiveRanks } from "@/lib/pomyannik/marks";
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { movePerson, personMatches } from "@/lib/pomyannik/organization";
 import { MAX_BATCH, MAX_PERSONS, type PomyannikPerson, type PersonKind } from "@/lib/pomyannik/types";
-import { displayName, humanDate, rankLabel } from "@/app/pomyannik/labels";
+import { displayName, humanDate, rankLabel, rankChurchGenitive, rankGenitive } from "@/app/pomyannik/labels";
 
 // РАЗВОРОТ ПОМЯННИКА: слева о здравии, справа о упокоении. Так он разграфлён на
 // бумаге, и переучивать человека, у которого этот разворот перед глазами
@@ -26,9 +26,11 @@ const TITLE: Record<PersonKind, string> = {
     departed: "О упокоении",
 };
 
+type Forms = Record<string,{genitive:string;source:string}>;
 const Column = ({
-    kind, persons, onAdd, onRemove, busy, showSignatures, arranging, onMove, allPersons, filterKey,
+    kind, persons, onAdd, onRemove, busy, showSignatures, arranging, onMove, allPersons, filterKey, churchView, forms,
 }: {
+    churchView:boolean; forms:Forms;
     kind: PersonKind;
     persons: PomyannikPerson[];
     onAdd: (kind: PersonKind, name: string) => Promise<boolean>;
@@ -88,12 +90,7 @@ const Column = ({
                         <div className="min-w-0 break-words">
                             <Link href={`/pomyannik/${person.id}`}
                                   className="text-slate-800 hover:text-red-900 hover:underline">
-                                {rankLabel(effectiveRank(person), person.sex) && (
-                                    <span className="text-slate-500">
-                                        {rankLabel(effectiveRank(person), person.sex)}{" "}
-                                    </span>
-                                )}
-                                {displayName(person)}
+                                {churchView ? <span className="font-sans-serif text-2xl">{effectiveRanks(person).map(r=>rankChurchGenitive(r,person.sex)??rankGenitive(r,person.sex)).join(" ")} {forms[person.churchName||person.name]?.genitive??person.churchName??person.name}</span> : <>{effectiveRanks(person).map(r=>rankLabel(r,person.sex)).join(" ")} {displayName(person)}</>}
                             </Link>
                             {showSignatures && person.signature && (
                                 <div className="text-slate-500 text-xs">{person.signature}</div>
@@ -163,8 +160,8 @@ const Column = ({
     );
 };
 
-const Book = ({ initial, names, showSignatures: initialShowSignatures }: {
-    initial: PomyannikPerson[]; names: string[]; showSignatures: boolean;
+const Book = ({ initial, names, forms = {}, showSignatures: initialShowSignatures }: {
+    initial: PomyannikPerson[]; names: string[]; showSignatures: boolean; forms?:Forms;
 }) => {
     const router = useRouter();
     const [persons, setPersons] = React.useState(initial);
@@ -173,6 +170,7 @@ const Book = ({ initial, names, showSignatures: initialShowSignatures }: {
     const [query, setQuery] = React.useState("");
     const [group, setGroup] = React.useState("");
     const [arranging, setArranging] = React.useState(false);
+    const [churchView,setChurchView] = React.useState(false);
     const [showSignatures, setShowSignatures] = React.useState(initialShowSignatures);
     React.useEffect(() => { setPersons(initial); }, [initial]);
     const groups = Array.from(new Set(persons.flatMap(person => person.groups ?? [])))
@@ -278,6 +276,7 @@ const Book = ({ initial, names, showSignatures: initialShowSignatures }: {
                     onClick={() => { setQuery(""); setGroup(""); }}>Сбросить фильтры</button>}
             </div>
             <div className="flex flex-wrap items-center gap-4 font-serif text-sm">
+                <label className="flex gap-2 items-center"><input type="checkbox" checked={churchView} onChange={e=>setChurchView(e.target.checked)} />Просмотр церковнославянским письмом</label>
                 <details className="font-serif text-sm">
                     <summary className="cursor-pointer">Настройки помянника</summary>
                     <div className="flex flex-col gap-2 mt-2">
@@ -295,14 +294,15 @@ const Book = ({ initial, names, showSignatures: initialShowSignatures }: {
                 </button>
                 {hasFilter && <span role="status" className="text-slate-500">Найдено: {filtered.length} из {persons.length}</span>}
             </div>
+            {churchView && <p className="font-serif text-xs text-slate-500">Имена в родительном падеже. Для имён вне словаря падеж не проверен; пометы без подтверждённой ЦС формы даны гражданским письмом.</p>}
             {duplicates.length > 0 && <details className="font-serif text-sm"><summary className="cursor-pointer text-amber-800">Похожие записи: {duplicates.length}</summary><DuplicateHints persons={duplicates} /></details>}
             {arranging && <p className="font-serif text-xs text-slate-500">Перемещайте имена стрелками внутри раздела. Порядок сохраняется после каждого перемещения.</p>}
             {hasFilter && <p className="font-serif text-xs text-slate-500">Для изменения порядка сбросьте фильтры.{group && ` Новые имена попадут в группу «${group}».`}</p>}
             <div className="flex flex-col sm:flex-row gap-8" aria-busy={busy}>
                 <Column kind="living" persons={of("living")} onAdd={add} onRemove={remove} busy={busy}
-                    showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}`} />
+                    churchView={churchView} forms={forms} showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}`} />
                 <Column kind="departed" persons={of("departed")} onAdd={add} onRemove={remove} busy={busy}
-                    showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}`} />
+                    churchView={churchView} forms={forms} showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}`} />
             </div>
             {/* Падеж объясняем ЗДЕСЬ, где имена и стоят: в помяннике они в
                 именительном, а склоняются только в записке, и человек, не

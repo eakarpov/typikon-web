@@ -1,7 +1,7 @@
 import { namedPrayerTexts, NAMED_STYLES, type PrayerLang } from '@/lib/molitvoslov/store';
 import { renderNamedPrayer, type NamedPerson, type PrayerGender } from '@/lib/molitvoslov/named';
 import { slavonicNames } from './slavonic';
-import { effectiveRank } from './marks';
+import { effectiveRank, effectiveRanks } from './marks';
 import { getBookSettings, listPersons } from './service';
 import { defaultCommemorations, selectCommemorationPersons, type CommemorationPlace, type CommemorationSettings } from './commemoration';
 import type { PomyannikPerson, PersonKind } from './types';
@@ -16,7 +16,7 @@ export const selectedNamedPersons = async (context:CommemorationContext,place:Co
     const selected=selectCommemorationPersons(context.persons,place,context.settings[place]);
     const forms=await slavonicNames(selected.map(p=>p.churchName||p.name));
     const result:Record<PersonKind,NamedPerson[]>={living:[],departed:[]};
-    for(const person of selected) result[person.kind].push({name:forms[person.churchName||person.name]?.genitive??person.churchName??person.name,rank:effectiveRank(person),sex:person.sex});
+    for(const person of selected) result[person.kind].push({name:forms[person.churchName||person.name]?.genitive??person.churchName??person.name,rank:effectiveRank(person),marks:effectiveRanks(person),sex:person.sex});
     return result;
 };
 export async function commemorationPrayers(context:CommemorationContext,place:CommemorationPlace,lang:PrayerLang,gender:PrayerGender) {

@@ -24,6 +24,7 @@ export interface NamedPerson {
     /** Родительный падеж церковнославянским письмом («їѡа́нна»). */
     name: string;
     rank?: Rank | null;
+    marks?: Rank[];
     sex?: Sex;
 }
 
@@ -81,8 +82,7 @@ const personLabel = (person: NamedPerson, gender: PrayerGender): string => {
     const name = String(person.name ?? "").trim();
     if (!name) return "";
     const capitalized = name.charAt(0).toLocaleUpperCase("ru") + name.slice(1);
-    if (!person.rank) return capitalized;
-    const rank = rankGenitive(person.rank, person.sex ?? null, gender);
+    const rank = (person.marks ?? (person.rank ? [person.rank] : [])).map(r => rankGenitive(r, person.sex ?? null, gender)).filter(Boolean).join(" ");
     return rank ? `${rank} ${capitalized}` : capitalized;
 };
 

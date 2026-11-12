@@ -1,4 +1,4 @@
-import { effectiveRank } from "@/lib/pomyannik/marks";
+import { effectiveRanks } from "@/lib/pomyannik/marks";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -69,7 +69,7 @@ const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
                 <p className="mt-2 font-serif text-slate-800">
                     В записке:{" "}
                     <span className="font-sans-serif text-lg">
-                        {[rankGenitive(effectiveRank(person), person.sex), slavonic.genitive]
+                        {[effectiveRanks(person).map(r => rankGenitive(r,person.sex)).join(" "), slavonic.genitive]
                             .filter(Boolean).join(" ")}
                     </span>
                 </p>

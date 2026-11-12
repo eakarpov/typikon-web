@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { readSessionPayload } from "@/lib/authorize/sessions";
-import { myFont } from "@/utils/font";
+import { slavonicNames } from "@/lib/pomyannik/slavonic";
+import { myFont, csFont } from "@/utils/font";
 import { allNames } from "@/lib/imeniny/store";
 import { getBookSettings, listPersons } from "@/lib/pomyannik/service";
 import { upcoming } from "@/lib/pomyannik/reckoning";
@@ -48,10 +49,11 @@ const PomyannikPage = async () => {
     }
 
     const [persons, names, settings] = await Promise.all([listPersons(userId), allNames(), getBookSettings(userId)]);
+    const forms = await slavonicNames(persons.map(p=>p.churchName||p.name));
     const events = upcoming(persons, undefined, DAYS);
 
     return (
-        <div className={`${myFont.variable} pt-2 flex flex-col gap-6`}>
+        <div className={`${myFont.variable} ${csFont.variable} pt-2 flex flex-col gap-6`}>
             <div className="max-w-2xl">
                 <h1 className="font-bold font-serif">Помянник</h1>
                 <p className="font-serif text-slate-800 mt-2">
@@ -85,7 +87,7 @@ const PomyannikPage = async () => {
                 <Link href="/pomyannik/print" className="text-red-900 underline">Печать личного помянника</Link>
             </nav>
 
-            <Book initial={persons} names={names.map(n => n.name)} showSignatures={settings.showSignatures} />
+            <Book forms={forms} initial={persons} names={names.map(n => n.name)} showSignatures={settings.showSignatures} />
 
             <nav className="flex flex-wrap gap-4 font-serif text-sm border-t pt-3">
                 <Link href="/pomyannik/vvod" className="text-red-900 hover:underline">

@@ -49,7 +49,7 @@ const Inbox = ({ initial }: { initial: Zapiska[] }) => {
                     .map(section => ({
                         section,
                         list: note.names.filter(n => n.kind === section).map((n): SheetName => ({
-                            rank: n.rank, sex: n.sex,
+                            rank: n.rank, marks:n.marks, sex: n.sex,
                             text: n.slavonic || n.churchName || n.name,
                             declined: n.slavonicSource === "lexicon",
                         })),

@@ -1,6 +1,6 @@
 'use client';
 import { personalDate, fullDate, dateParts } from "@/lib/pomyannik/dates";
-import { TEMPORARY_RANKS, expiredRank } from "@/lib/pomyannik/marks";
+import { TEMPORARY_RANKS, statusRank, temporaryRank, expiredRank } from "@/lib/pomyannik/marks";
 import { duplicateCandidates } from "@/lib/pomyannik/duplicates";
 import DateField from "../DateField";
 import DuplicateHints from "../DuplicateHints";
@@ -37,7 +37,7 @@ const Card = ({ person, nameDays, groups = [], persons = [] }: {
     person: PomyannikPerson; nameDays: NameDayOption[]; groups?: string[]; persons?: PomyannikPerson[];
 }) => {
     const router = useRouter();
-    const [draft, setDraft] = React.useState(person);
+    const [draft, setDraft] = React.useState({...person, rank:statusRank(person), mark:temporaryRank(person)});
     const [groupText, setGroupText] = React.useState((person.groups ?? []).join(", "));
     const [busy, setBusy] = React.useState(false);
     const [saved, setSaved] = React.useState(false);
@@ -140,11 +140,11 @@ const Card = ({ person, nameDays, groups = [], persons = [] }: {
                         <option value="departed">о упокоении</option>
                     </select>
                 </Row>
-                <Row label="чин или помета">
+                <Row label="чин / статус">
                     <select className={FIELD} value={draft.rank ?? ""}
-                            onChange={e => { set("rank", (e.target.value || null) as Rank | null); set("rankUntil", null); }}>
+                            onChange={e => { set("rank", (e.target.value || null) as Rank | null); }}>
                         <option value="">—</option>
-                        {ranks.map(rank => (
+                        {ranks.filter(r => !TEMPORARY_RANKS.includes(r.key)).map(rank => (
                             <option key={rank.key} value={rank.key}>
                                 {rankLabel(rank.key, draft.sex)}
                             </option>
@@ -152,7 +152,13 @@ const Card = ({ person, nameDays, groups = [], persons = [] }: {
                     </select>
                 </Row>
 
-                {draft.rank && TEMPORARY_RANKS.includes(draft.rank) && <Row label="помета действует по" hint="включительно; пусто — без срока">
+                <Row label="временная помета" hint="добавляется к чину независимо">
+                    <select className={FIELD} value={draft.mark ?? ""} onChange={e => {set("mark", (e.target.value || null) as Rank | null); set("rankUntil", null);}}>
+                        <option value="">—</option>
+                        {ranks.filter(r => TEMPORARY_RANKS.includes(r.key)).map(r => <option key={r.key} value={r.key}>{rankLabel(r.key,draft.sex)}</option>)}
+                    </select>
+                </Row>
+                {draft.mark && <Row label="помета действует по" hint="включительно; пусто — без срока">
                     <input type="date" className={FIELD} value={draft.rankUntil ?? ""} onChange={e => set("rankUntil", e.target.value || null)} />
                 </Row>}
                 <Row label="род" hint="от него зависит форма пометы">
@@ -172,7 +178,7 @@ const Card = ({ person, nameDays, groups = [], persons = [] }: {
 
             {expiredRank(draft) && <div className="text-amber-800 text-sm" role="status">
                 Срок пометы истёк {humanDate(draft.rankUntil)}. Она больше не выводится при чтении и в новых записках. Продлите срок выше или уберите помету.
-                <button type="button" className="underline ml-2" onClick={() => { set("rank", null); set("rankUntil", null); }}>Убрать помету</button>
+                <button type="button" className="underline ml-2" onClick={() => { set("mark", null); set("rankUntil", null); }}>Убрать помету</button>
             </div>}
             <DuplicateHints persons={duplicateCandidates(draft, persons)} />
 

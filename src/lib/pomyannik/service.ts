@@ -83,7 +83,8 @@ const clean = (input: PersonInput) => {
     for (const key of ["born", "baptized", "died"] as const) {
         if (input[key] && !personalDate(input[key])) throw new PersonDataError("Некорректная дата: укажите точную дату, только год или день и месяц без года.");
     }
-    if (input.rankUntil && (!fullDate(input.rankUntil) || !input.rank || !TEMPORARY_RANKS.includes(input.rank))) throw new PersonDataError("Срок можно задать только для временной пометы и полной датой.");
+    if (input.mark != null && !TEMPORARY_RANKS.includes(input.mark)) throw new PersonDataError("Неизвестная временная помета.");
+    if (input.rankUntil && (!fullDate(input.rankUntil) || !(input.mark ?? input.rank) || !TEMPORARY_RANKS.includes((input.mark ?? input.rank)!))) throw new PersonDataError("Срок можно задать только для временной пометы и полной датой.");
     const name = normalizeName(String(input.name ?? "")).slice(0, 60);
     const key = nameKey(name);
     if (!key) return null;
@@ -111,7 +112,8 @@ const clean = (input: PersonInput) => {
         // родом у всех. Ошибётся она на Никите и Илии, и правится одним щелчком.
         sex: input.sex === "m" || input.sex === "f" ? input.sex : guessSex(name),
         rank,
-        rankUntil: rank && TEMPORARY_RANKS.includes(rank) ? fullDate(input.rankUntil) : null,
+        ...(input.mark !== undefined ? { mark: input.mark && TEMPORARY_RANKS.includes(input.mark) ? input.mark : null } : {}),
+        rankUntil: (input.mark ?? rank) && TEMPORARY_RANKS.includes((input.mark ?? rank)!) ? fullDate(input.rankUntil) : null,
         relation: input.relation ? String(input.relation).trim().slice(0, 60) || null : null,
         signature: cleanSignature(input.signature),
         born: personalDate(input.born),

@@ -1,5 +1,5 @@
 'use client';
-import { effectiveRank } from "@/lib/pomyannik/marks";
+import { effectiveRank, effectiveRanks } from "@/lib/pomyannik/marks";
 import React from "react";
 import Link from "next/link";
 import type { PomyannikPerson, NoteKind } from "@/lib/pomyannik/types";
@@ -97,7 +97,7 @@ const Zapiska = ({ persons, slavonic, to }: {
         .map(section => ({
             section,
             list: chosen.filter(p => p.kind === section).map((p): SheetName => ({
-                rank: effectiveRank(p), sex: p.sex,
+                rank: effectiveRank(p), marks:effectiveRanks(p), sex: p.sex,
                 text: formOf(p)?.genitive ?? nameOf(p),
                 declined: formOf(p)?.source === "lexicon",
             })),
@@ -127,8 +127,7 @@ const Zapiska = ({ persons, slavonic, to }: {
     };
 
     const civilRanks = [...new Set(chosen
-        .filter(p => effectiveRank(p) && !rankChurchGenitive(effectiveRank(p), p.sex))
-        .map(p => rankGenitive(effectiveRank(p), p.sex)))];
+        .flatMap(p => effectiveRanks(p).filter(r=>!rankChurchGenitive(r,p.sex)).map(r=>rankGenitive(r,p.sex))))];
 
     return (
         <div className="flex flex-col gap-5">

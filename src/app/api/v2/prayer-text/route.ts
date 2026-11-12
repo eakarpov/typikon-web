@@ -9,7 +9,7 @@ import {
 } from "@/lib/molitvoslov/store";
 import { listPersons } from "@/lib/pomyannik/service";
 import { slavonicNames } from "@/lib/pomyannik/slavonic";
-import { effectiveRank } from "@/lib/pomyannik/marks";
+import { effectiveRank, effectiveRanks } from "@/lib/pomyannik/marks";
 import { isCommemorationPlace } from "@/lib/pomyannik/commemoration";
 import { loadCommemorationContext, commemorationPrayers } from "@/lib/pomyannik/commemorationPrayers";
 import { reportError } from "@/lib/reportError";
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
         const forms = await slavonicNames(chosen.map(p => p.churchName || p.name));
         const persons: NamedPerson[] = chosen.map(p => {
             const form = forms[p.churchName || p.name];
-            return { name: form?.genitive ?? p.name, rank: effectiveRank(p), sex: p.sex };
+            return { name: form?.genitive ?? p.name, rank: effectiveRank(p), marks: effectiveRanks(p), sex: p.sex };
         });
 
         return respondPrivate({
