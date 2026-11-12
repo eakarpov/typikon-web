@@ -61,12 +61,15 @@ const razdelnoOf = (params: SearchParams, hasVigil: boolean) =>
 const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) => {
     const date = dateOf(searchParams);
     const ustav = first(searchParams.ustav) || undefined;
+    const memories=all(searchParams.memories).filter(id=>id.length<=200).slice(0,20);
+    const serviceSign=first(searchParams.service_sign);
+    const prestoly=all(searchParams.prestoly).slice(0,20).map(raw=>{const [memoryId,kind,label]=raw.split('|');return {memoryId,kind,label};});
     const transfers = all(searchParams.perenos)
         .map(parseTransfer).filter((t): t is OrdoTransfer => t !== null);
 
     const [options, day] = await Promise.all([
         ordoOptions(),
-        ordoDay(date, { ustav, transfers }),
+        ordoDay(date, { ustav, transfers,memories,serviceSign,prestoly }),
     ]);
 
     // key — чтобы при переходе на другой день сетка открылась его месяцем
@@ -91,7 +94,7 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
     const common: ServicesCommon = {
         ustav,
         variant: variant?.key,
-        transfers,
+        transfers,memories,serviceSign,prestoly,
         lang: first(searchParams.lang),
         parallel: first(searchParams.parallel),
         psalms: first(searchParams.psalms),
@@ -101,6 +104,10 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
         const q = new URLSearchParams({ date });
         if (variant) q.set("variant", variant.key);
         if (ustav) q.set("ustav", ustav);
+        for(const id of memories)q.append("memories",id);
+        if(serviceSign)q.set("service_sign",serviceSign);
+        for(const p of prestoly)q.append('prestoly',[p.memoryId,p.kind??'',p.label??''].join('|'));
+        for(const t of transfers)q.append("perenos",t.primary?t.memoryId+":primary":t.memoryId);
         if (razdelno) q.set("bdenie", "0");
         return `/api/ordo/package?${q.toString()}`;
     })();

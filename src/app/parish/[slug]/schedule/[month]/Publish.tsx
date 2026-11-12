@@ -1,23 +1,16 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import {useParishWrite} from "./useParishWrite";
+import {parishMutation} from "@/lib/parish/client";
 
 // «Этот месяц готов» — и обратно. Кнопка видна только тому, кто ведёт храм.
-export const Publish = ({ slug, month, published, drifted }: {
-    slug: string; month: string; published: string | null; drifted: string[];
+export const Publish = ({ slug, month, published, drifted, periodType="month" }: {
+    periodType?:"week"|"month";slug: string; month: string; published: string | null; drifted: string[];
 }) => {
     const router = useRouter();
-    const [pending, start] = useTransition();
-    const [error, setError] = useState<string | null>(null);
-
-    const call = (unpublish: boolean) => start(async () => {
-        setError(null);
-        const r = await fetch(`/api/parish/${slug}/publish`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ month, unpublish }),
-        });
-        if (!r.ok) setError((await r.json().catch(() => ({}))).error ?? "не вышло");
+    const {pending,error,run}=useParishWrite();
+    const call=(unpublish:boolean)=>run(async()=>{
+        await parishMutation(`/api/parish/${slug}/publish`,"POST",{month,unpublish});
         router.refresh();
     });
 
@@ -31,7 +24,7 @@ export const Publish = ({ slug, month, published, drifted }: {
                     прихожане видят этот лист.{" "}
                     <button type="button" disabled={pending} onClick={() => call(false)}
                             style={{ color: "#1c5a8a" }}>
-                        обновить лист
+                        Обновить опубликованный лист
                     </button>
                     {" · "}
                     <button type="button" disabled={pending} onClick={() => call(true)}
@@ -58,7 +51,7 @@ export const Publish = ({ slug, month, published, drifted }: {
                     <b>Черновик.</b> Прихожане видят его с оговоркой, что это проект.{" "}
                     <button type="button" disabled={pending} onClick={() => call(false)}
                             style={{ color: "#1c5a8a" }}>
-                        этот месяц готов
+                        {periodType==="week"?"Опубликовать расписание на неделю":"Опубликовать расписание на месяц"}
                     </button>
                 </>
             )}

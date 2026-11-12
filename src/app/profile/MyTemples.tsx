@@ -25,6 +25,8 @@ const MyTemples = async ({ userId }: { userId: string }) => {
                         </Link>
                         {t?.place ? <span style={{ color: "#888" }}> · {t.place as string}</span> : null}
                         {" · "}
+                        <Link href={`/parish/${m.templeSlug}?edit=1`} style={{fontSize:".9rem"}}>Редактировать расписание</Link>
+                        {" · "}
                         <Link href={`/parish/${m.templeSlug}/admins`}
                               style={{ fontSize: ".9rem" }}>кто ведёт</Link>
                     </p>

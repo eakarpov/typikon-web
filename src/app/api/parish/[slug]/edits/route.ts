@@ -1,3 +1,5 @@
+import {SERVICE_CHOICES} from "@/lib/parish/dayConfig";
+import {schedulePeriod} from "@/lib/parish/period";
 import { NextRequest, NextResponse } from "next/server";
 import { dropEdit, saveEdit, type EditOp } from "@/lib/parish/edits";
 import { rightsOn, touchAdmin } from "@/lib/parish/access";
@@ -7,7 +9,7 @@ import type { Part } from "@/lib/parish/types";
 // администратору вообще: расписание висит на стенде, и менять его вправе
 // приход, а не всякий, кто открыл страницу.
 
-const OPS: EditOp[] = ["time", "title", "cancel", "add"];
+const OPS: EditOp[] = ["time", "title", "cancel", "add", "compose"];
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
     const { slug } = await ctx.params;
@@ -24,6 +26,12 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
         return NextResponse.json({ error: "не хватает полей" }, { status: 400 });
     }
 
+    const period=schedulePeriod(String(body.month));
+    if(!period||typeof body.date!=="string"||!period.dates.includes(body.date))return NextResponse.json({error:"Дата не входит в выбранный период расписания"},{status:400});
+
+    if(!['utro','vecher','noch','den'].includes(body.part)||body.value?.time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(body.value.time))return NextResponse.json({error:'Проверьте время и часть суток'},{status:400});
+    if(['compose','add'].includes(body.op)&&(!Array.isArray(body.value?.services)||!body.value.services.length||body.value.services.length>20||body.value.services.some((key:unknown)=>!SERVICE_CHOICES.some(s=>s[0]===key))))return NextResponse.json({error:'Выберите службы из списка'},{status:400});
+    if(body.value?.part&&!['utro','vecher','noch','den'].includes(body.value.part))return NextResponse.json({error:'Неизвестная часть суток'},{status:400});
     const id = await saveEdit({
         parishSlug: slug,
         month: String(body.month),
@@ -50,6 +58,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ slug
     }
     const id = new URL(request.url).searchParams.get("id");
     if (!id) return NextResponse.json({ error: "нет id" }, { status: 400 });
-    await dropEdit(id);
+    const removed=await dropEdit(slug,id);
+    if(!removed.deletedCount)return NextResponse.json({error:"Правка в этом храме не найдена"},{status:404});
     return NextResponse.json({ ok: true });
 }

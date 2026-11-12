@@ -81,7 +81,7 @@ export const publishedMonths = async (parishSlug: string) =>
  */
 export const driftedDays = (snapshot: ParishDay[], fresh: ParishDay[]): string[] => {
     const key = (d: ParishDay) =>
-        d.gatherings.map(g => `${g.time ?? "—"} ${g.title}`).join(" | ");
+        JSON.stringify([d.sign,d.serviceMemories,d.serviceSign,d.serviceVariant,d.gatherings.map(g => [g.time,g.title,!!g.cancelled])]);
     const byDate = new Map(fresh.map(d => [d.date, key(d)]));
     return snapshot
         .filter(d => byDate.has(d.date) && byDate.get(d.date) !== key(d))

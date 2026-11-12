@@ -3,7 +3,7 @@ import type { PomyannikGroup } from "@/lib/pomyannik/groups";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PomyannikPerson } from "@/lib/pomyannik/types";
-import { readingPersons, type ReadingPlace } from "@/lib/pomyannik/reader";
+import { readingPersons, readingWindow, type ReadingPlace } from "@/lib/pomyannik/reader";
 import ReadingControls from "../ReadingControls";
 import PersonalName from "../PersonalName";
 const BUTTON = "border rounded px-4 py-2 bg-slate-50 hover:bg-slate-100 disabled:opacity-50";
@@ -33,7 +33,7 @@ export default function Reader({ persons, availableGroups, place, showSignatures
     const list = readingPersons(persons, group, kind);
     const index = list.findIndex(person => person.id === personId);
     const at = index >= 0 ? index : 0;
-    const current = list[at];
+    const {previous,current,next}=readingWindow(list,at);
     const missing = Boolean(personId && index < 0);
 
     const save = async (person: PomyannikPerson, nextGroup = group, nextKind = kind) => {
@@ -65,8 +65,10 @@ export default function Reader({ persons, availableGroups, place, showSignatures
         {missing && <p role="status" className="text-amber-800">Сохранённого имени больше нет в выбранном списке. Начните чтение сначала или выберите другую группу.</p>}
         {!current ? <p>В этом списке нет имён.</p> : <>
             <p className="text-center text-slate-600">{current.kind === "living" ? "О здравии" : "О упокоении"} · {at + 1} из {list.length}</p>
-            <div aria-live="polite" aria-atomic="true" className="text-center rounded border border-slate-200 py-10 px-4 break-words leading-relaxed" style={{ fontSize: size }}>
-                <PersonalName person={current} signatures={signatures} relations={relations} dates={dates} />
+            <div className="text-center rounded border border-slate-200 py-6 px-4 break-words leading-relaxed space-y-5">
+                {previous&&<div role="group" aria-label="Предыдущее имя" className="text-slate-400 [&_div]:text-slate-400" style={{fontSize:Math.round(size*.65)}}><PersonalName person={previous} signatures={signatures} relations={relations} dates={dates}/></div>}
+                <div role="group" aria-label="Текущее имя" aria-live="polite" aria-atomic="true" style={{fontSize:size}}><PersonalName person={current} signatures={signatures} relations={relations} dates={dates}/></div>
+                {next&&<div role="group" aria-label="Следующее имя" className="text-slate-400 [&_div]:text-slate-400" style={{fontSize:Math.round(size*.65)}}><PersonalName person={next} signatures={signatures} relations={relations} dates={dates}/></div>}
             </div>
             <div className="grid grid-cols-2 gap-3">
                 <button className={BUTTON} disabled={busy || at === 0} onClick={() => go(at - 1)}>Назад</button>

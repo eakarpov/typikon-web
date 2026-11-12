@@ -1,6 +1,10 @@
 "use client";
+import {SERVICE_CHOICES,serviceLabel,serviceSelection} from "@/lib/parish/dayConfig";
+import {PART_LABELS,type Part} from "@/lib/parish/types";
+import {parishMutation} from "@/lib/parish/client";
+import {useParishWrite} from "./useParishWrite";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import type { Gathering } from "@/lib/parish/types";
 
 // Правка прямо в сетке месяца, а не в отдельной админке.
@@ -9,12 +13,7 @@ import type { Gathering } from "@/lib/parish/types";
 // имеет смысл только рядом с соседними часами того же дня. Уводить его на
 // отдельный экран значило бы просить держать месяц в голове.
 
-const post = (slug: string, body: unknown) =>
-    fetch(`/api/parish/${slug}/edits`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-    });
+const post = (slug:string,body:unknown)=>parishMutation(`/api/parish/${slug}/edits`,'POST',body);
 
 export interface DayMarks {
     sign: string; dayVariant: string; weekday: string;
@@ -25,9 +24,12 @@ export const EditGathering = ({ slug, month, g, day }: {
     slug: string; month: string; g: Gathering; day?: DayMarks;
 }) => {
     const router = useRouter();
-    const [pending, start] = useTransition();
+    const {pending,error,run:start}=useParishWrite();
     const [time, setTime] = useState(g.time ?? "");
     const [open, setOpen] = useState(false);
+    const [compose,setCompose]=useState(false);
+    const [services,setServices]=useState(g.services.map(s=>s.key==='liturgy'||s.key==='vespers'&&s.label.startsWith('Литургия')?(s.label.includes('Василия')?'liturgy-basil':s.label.includes('Преждеосвященных')?'liturgy-presanctified':'liturgy-chrysostom'):s.key));
+    const [part,setPart]=useState<Part>(g.part);
     const [promote, setPromote] = useState(false);
     const [scope, setScope] = useState("dayVariant");
 
@@ -39,6 +41,7 @@ export const EditGathering = ({ slug, month, g, day }: {
                 // и узнаешь, что устав с тех пор передумал
                 baseline: { time: g.time, title: g.title },
             });
+            setOpen(false);
             router.refresh();
         });
 
@@ -60,7 +63,7 @@ export const EditGathering = ({ slug, month, g, day }: {
     const promoteNow = () => start(async () => {
         const chosen = SCOPES.find(s => s[0] === scope);
         if (!chosen) return;
-        await post(slug, {
+        await parishMutation(`/api/parish/${slug}/settings`,"POST",{
             promote: {
                 key: `svoyo-${scope}-${g.part}`,
                 label: `${g.title} — ${chosen[1]}`,
@@ -73,6 +76,14 @@ export const EditGathering = ({ slug, month, g, day }: {
         router.refresh();
     });
 
+    if(compose)return <span className="block border rounded p-2 my-2 text-sm whitespace-normal">
+        <ServicePicker value={services} onChange={setServices}/>
+        <label>Время <input type="time" value={time} onChange={e=>setTime(e.target.value)} /></label>
+        <PartPicker value={part} onChange={setPart}/>
+        <button type="button" disabled={pending||!services.length} className="underline mr-3" onClick={()=>start(async()=>{await post(slug,{month,date:g.civil,part:g.part,gatheringKey:g.key,op:'compose',value:{services,time,part},baseline:{}});setCompose(false);router.refresh();})}>Сохранить состав</button>
+        <button type="button" disabled={pending} onClick={()=>setCompose(false)}>Отмена</button>
+        {error&&<span role="alert" className="block text-red-800">{error}</span>}
+    </span>;
     if (promote && day) {
         return (
             <span style={{ marginLeft: ".5rem", fontSize: ".8rem" }}>
@@ -82,6 +93,7 @@ export const EditGathering = ({ slug, month, g, day }: {
                 </select>
                 <button type="button" disabled={pending} onClick={promoteNow}
                         style={{ marginLeft: ".3rem", color: "#1c5a8a" }}>завести правило</button>
+                {error&&<span role="alert" className="text-red-800 whitespace-normal">{error}</span>}
                 <button type="button" onClick={() => setPromote(false)}
                         style={{ marginLeft: ".3rem", color: "#999" }}>отмена</button>
             </span>
@@ -89,7 +101,8 @@ export const EditGathering = ({ slug, month, g, day }: {
     }
 
     return (
-        <span style={{ marginLeft: ".5rem", fontSize: ".8rem", whiteSpace: "nowrap" }}>
+        <span style={{ marginLeft: ".5rem", fontSize: ".8rem", whiteSpace: "normal" }}>
+            {error&&<span role="alert" className="block text-red-800">{error}</span>}
             {open ? (
                 <>
                     <input
@@ -97,7 +110,7 @@ export const EditGathering = ({ slug, month, g, day }: {
                         style={{ border: "1px solid #ccc", padding: "0 .2rem", width: "6rem" }}
                     />
                     <button type="button" disabled={pending}
-                            onClick={() => { save("time", { time }); setOpen(false); }}
+                            onClick={() => { void save("time", { time }); }}
                             style={{ marginLeft: ".3rem", color: "#1c5a8a" }}>
                         поставить
                     </button>
@@ -110,8 +123,9 @@ export const EditGathering = ({ slug, month, g, day }: {
                 <>
                     <button type="button" onClick={() => setOpen(true)}
                             style={{ color: "#1c5a8a" }}>
-                        час
+                        Изменить время
                     </button>
+                    <button type="button" className="ml-2 underline" onClick={()=>setCompose(true)}>Состав служб</button>
                     {!g.cancelled && (
                         <button type="button" disabled={pending}
                                 onClick={() => save("cancel", {})}
@@ -138,18 +152,20 @@ export const AddGathering = ({ slug, month, date }: {
     slug: string; month: string; date: string;
 }) => {
     const router = useRouter();
-    const [pending, start] = useTransition();
+    const {pending,error,run:start}=useParishWrite();
     const [open, setOpen] = useState(false);
-    const [title, setTitle] = useState("Молебен");
+    const [services,setServices]=useState<string[]>(["moleben"]);
+    const [part,setPart]=useState<Part>("utro");
+    const title=services.map(key=>serviceLabel(key,"bez-znaka")).join(". ");
     const [time, setTime] = useState("");
 
     const save = () => start(async () => {
         await post(slug, {
-            month, date, part: "utro", op: "add",
+            month, date, part, op: "add",
             // Собственное собрание от устава не зависит и осиротеть не может:
             // ключ ему даётся свой, по дате и названию
-            gatheringKey: `${date}:svoyo:${title.replace(/\s+/g, "-").toLowerCase()}`,
-            value: { time, title, services: [title] },
+            gatheringKey: `${date}:svoyo:${part}:${crypto.randomUUID()}`,
+            value: { time, title, services },
             baseline: {},
             note: "добавлено руками",
         });
@@ -161,18 +177,18 @@ export const AddGathering = ({ slug, month, date }: {
         return (
             <button type="button" onClick={() => setOpen(true)}
                     style={{ fontSize: ".78rem", color: "#1c5a8a" }}>
-                + своё
+                Добавить богослужение
             </button>
         );
     }
     return (
         <div style={{ fontSize: ".8rem", marginTop: ".2rem" }}>
+            {error&&<p role="alert" className="text-red-800">{error}</p>}
             <input type="time" value={time} onChange={e => setTime(e.target.value)}
                    style={{ border: "1px solid #ccc", width: "6rem" }} />
-            <input value={title} onChange={e => setTitle(e.target.value)}
-                   placeholder="Молебен, панихида, соборование…"
-                   style={{ border: "1px solid #ccc", marginLeft: ".3rem", width: "12rem" }} />
-            <button type="button" disabled={pending} onClick={save}
+            <PartPicker value={part} onChange={setPart}/>
+            <ServicePicker value={services} onChange={setServices}/>
+            <button type="button" disabled={pending||!services.length} onClick={save}
                     style={{ marginLeft: ".3rem", color: "#1c5a8a" }}>добавить</button>
             <button type="button" onClick={() => setOpen(false)}
                     style={{ marginLeft: ".3rem", color: "#999" }}>отмена</button>
@@ -182,15 +198,21 @@ export const AddGathering = ({ slug, month, date }: {
 
 export const DropEdit = ({ slug, id }: { slug: string; id: string }) => {
     const router = useRouter();
-    const [pending, start] = useTransition();
+    const {pending,error,run:start}=useParishWrite();
     return (
-        <button type="button" disabled={pending} style={{ color: "#8a1c1c" }}
+        <span>{error&&<span role="alert" className="text-red-800">{error} </span>}<button type="button" disabled={pending} style={{ color: "#8a1c1c" }}
                 onClick={() => start(async () => {
-                    await fetch(`/api/parish/${slug}/edits?id=${encodeURIComponent(id)}`,
-                                { method: "DELETE" });
+                    await parishMutation(`/api/parish/${slug}/edits?id=${encodeURIComponent(id)}`,"DELETE");
                     router.refresh();
                 })}>
             вернуть уставное
-        </button>
+        </button></span>
     );
 };
+
+function PartPicker({value,onChange}:{value:Part;onChange:(value:Part)=>void}){
+ return <label className="inline-block m-2">Часть суток <select className="border rounded p-1" value={value} onChange={e=>onChange(e.target.value as Part)}>{Object.entries(PART_LABELS).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>;
+}
+function ServicePicker({value,onChange}:{value:string[];onChange:(value:string[])=>void}){
+ return <fieldset className="grid gap-1 my-2"><legend>Службы (часы можно указать отдельно)</legend>{SERVICE_CHOICES.map(([key,label])=><label key={key} className="flex gap-2 items-baseline"><input type="checkbox" checked={value.includes(key)} onChange={e=>onChange(serviceSelection(value,key,e.target.checked))}/>{label}</label>)}</fieldset>;
+}

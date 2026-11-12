@@ -9,6 +9,7 @@
 // назначить час и заголовок. Иначе не выйдет: перенос утрени на вечер меняет
 // СОСТАВ вечернего собрания, и назначать ему имя до переноса было бы рано.
 
+import {serviceLabel} from "./dayConfig";
 import type { OrdoDay, OrdoVariant } from "@/lib/ordo";
 import { isDvunadesyaty, isPrestolny } from "./engine";
 import { resolveRules } from "./rules";
@@ -69,13 +70,13 @@ const titleOf = (services: GatheringService[]): string => {
 // «Вечерня» там, где приход придёт на Литургию. Имя берётся у канвы, потому
 // что именно она и говорит, что это за служба.
 const BY_ORDO: [string, string][] = [
-    ["liturgy-presanctified", "Литургия Преждеосвященных Даров"],
-    ["liturgy-basil", "Литургия Василия Великого"],
-    ["liturgy-chrysostom", "Литургия"],
+    ["liturgy-presanctified", "Литургия Преждеосвященных Даров (!)"],
+    ["liturgy-basil", "Литургия Василия Великого (!)"],
+    ["liturgy-chrysostom", "Литургия Иоанна Златоустаго"],
 ];
 
 const labelOf = (key: string, label: string, ordoId?: string | null): string => {
-    if (key === "vespers" && ordoId) {
+    if ((key === "vespers"||key === "liturgy") && ordoId) {
         const hit = BY_ORDO.find(([suffix]) => ordoId.endsWith(suffix));
         if (hit) return hit[1];
     }
@@ -92,6 +93,7 @@ interface Placed {
     part: Part;
     service: GatheringService;
     /** Церковный день, которому служба принадлежит. */
+    serviceSign?:string;
     ownerDate: string;
     ownerLabel: string;
     order: number;
@@ -151,9 +153,9 @@ const placeDay = (ctx: DayContext, settings: ParishSettings): Placed[] => {
             const civil = m ? shift(stoyanie.civil, m.dayOffset ?? 0) : stoyanie.civil;
             const part = m ? m.to : (stoyanie.part as Part);
             out.push({
-                civil, part, ownerDate: day.date, ownerLabel,
+                civil, part, ownerDate: day.date, ownerLabel, serviceSign:variant.sign,
                 order: CIRCLE.indexOf(s.key) < 0 ? 99 : CIRCLE.indexOf(s.key),
-                service: serviceOf(s.key, s.label, s.ordoId),
+                service: serviceOf(s.key, ['vespers','matins','vsenoshchnoe'].includes(s.key)&&['bez-znaka','shesterichnaya','slavoslovie','polieley','bdenie','velikoe-bdenie'].includes(variant.sign)&&!(s.ordoId??'').includes('liturgy')?serviceLabel(s.key,variant.sign):s.label, s.ordoId),
                 why: m
                     ? [...why, {
                         kind: "parish", ruleKey: m.rule.key,
@@ -267,7 +269,7 @@ const dressGathering = (
             : services;
         return {
             key: `${civil}:${part}:${slugOf(svc)}${i ? `:${i}` : ""}`,
-            civil, part, partLabel: PART_LABELS[part],
+            civil, part, partLabel: PART_LABELS[part], serviceSign:owner.serviceSign,
             time: spec?.time ?? time,
             title: spec?.title ?? title ?? titleOf(svc),
             belongsTo: belongs,

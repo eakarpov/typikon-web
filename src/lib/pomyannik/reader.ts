@@ -12,3 +12,8 @@ export const cleanReadingPlace = (raw: unknown): ReadingPlace | null => {
 export const readingPersons = (persons: PomyannikPerson[], group: string, kind: ReadingPlace["kind"]) =>
     ["living", "departed"].flatMap(section => persons.filter(person => person.kind === section
         && (kind === "all" || person.kind === kind) && (!group || person.groups.includes(group))));
+
+export function readingWindow<T>(items:T[],at:number):{previous?:T;current?:T;next?:T}{
+    if(at<0||at>=items.length)return {};
+    return {previous:items[at-1],current:items[at],next:items[at+1]};
+}

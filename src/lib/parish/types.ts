@@ -135,6 +135,7 @@ export interface WhyStep {
 }
 
 export interface Gathering {
+    serviceSign?:string;
     key: string;
     civil: string;
     part: Part;
@@ -165,6 +166,13 @@ export interface ParishDay {
     /** Ярлык варианта: «Бдение, воскресный день». */
     label: string;
     sign: string;
+    serviceMemories?:string[];
+    serviceSign?:string;
+    eveningSign?:string;
+    serviceVariant?:string;
+    servicePrestoly?:import("@/lib/ordo").OrdoPrestol[];
+    memoryChoices?:{memoryId:string;label:string;sign:string|null}[];
+    dayConfig?:import("./dayConfig").DayConfig;
     triodLabel: string | null;
     memories: { memoryId: string; label: string }[];
     fastingLabel: string | null;
@@ -176,6 +184,7 @@ export interface ParishDay {
 }
 
 export interface ParishSettings {
+    schedulePeriod?: "month"|"week";
     slug: string;
     title: string;
     /** IANA — нужен подписному календарю. */

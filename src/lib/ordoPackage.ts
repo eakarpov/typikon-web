@@ -22,6 +22,9 @@ export interface OrdoDayPackageQuery {
     parallel?: string;
     psalms?: string;
     transfers?: OrdoTransfer[];
+    memories?:string[];
+    serviceSign?:string;
+    prestoly?:import("./ordo").OrdoPrestol[];
 }
 
 export interface OrdoDayPackage {
@@ -77,10 +80,12 @@ const request = async (query: OrdoDayPackageQuery): Promise<Asked<OrdoDayPackage
     url.searchParams.set("bodies", "internal");
     for (const [k, v] of Object.entries({
         ustav: query.ustav, variant: query.variant, lang: query.lang,
-        parallel: query.parallel, psalms: query.psalms,
+        parallel: query.parallel, psalms: query.psalms, service_sign:query.serviceSign,
     })) {
         if (v) url.searchParams.set(k, v);
     }
+    for(const p of query.prestoly??[])url.searchParams.append('prestoly',[p.memoryId,p.kind??'',p.label??''].join('|'));
+    for(const id of query.memories??[])url.searchParams.append("memories",id);
     for (const t of query.transfers ?? []) {
         url.searchParams.append(...transferParam(t));
     }

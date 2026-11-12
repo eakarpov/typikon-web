@@ -526,12 +526,13 @@ export interface OrdoDayDetailed {
 
 export const ordoDayDetailed = async (
     date: string,
-    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[] },
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[]; memories?:string[]; serviceSign?:string },
 ): Promise<OrdoDayDetailed> => {
-    const params: Record<string, string> = { date, ustav: opts?.ustav ?? "" };
+    const params: Record<string, string> = { date, ustav: opts?.ustav ?? "", service_sign:opts?.serviceSign??"" };
     const { data: raw, error, version } = await request<any>("/day", params, [
         ...(opts?.prestoly ?? []).map(prestolParam),
         ...(opts?.transfers ?? []).map(transferParam),
+        ...(opts?.memories??[]).map(id=>["memories",id] as [string,string]),
     ]);
     if (!raw || raw.error || !raw.day) {
         return {
@@ -551,7 +552,7 @@ export const ordoDayDetailed = async (
  */
 export const ordoDay = async (
     date: string,
-    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[] },
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[]; memories?:string[]; serviceSign?:string },
 ): Promise<OrdoDay | null> => (await ordoDayDetailed(date, opts)).day;
 
 // —— Кафизмы дня —————————————————————————————————————————————————

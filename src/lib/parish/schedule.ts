@@ -1,7 +1,10 @@
+import {dayConfigs,memoryMetadata} from "./dayConfigStore";
+import {ordoDay} from "@/lib/ordo";
+import {schedulePeriod,presentationDays,type SchedulePeriodType} from "./period";
 import { cached, CacheTag } from "@/lib/cache";
 import { getTemple } from "@/lib/temples";
 import { settingsFor } from "./settings";
-import { monthDates, ordoRange } from "@/lib/ordo";
+import { ordoRange } from "@/lib/ordo";
 import { buildMonth } from "./gatherings";
 import { DEFAULT_RULES } from "./presets";
 import { applyEdits, editsOf } from "./edits";
@@ -22,8 +25,11 @@ import type { ParishDay, ParishSettings } from "./types";
 export interface ParishMonth {
     slug: string;
     title: string;
+    ustav?:string|null;
     month: string;
     monthLabel: string;
+    periodType:SchedulePeriodType;
+    preferredPeriod:SchedulePeriodType;
     /** Пояс, которым живёт подписной календарь. */
     timezone: string;
     /** Откуда он взят: сказан приходом или выведен нами. */
@@ -37,18 +43,15 @@ export interface ParishMonth {
     failed: string[];
 }
 
-const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
-    "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
-
 const build = async (slug: string, month: string): Promise<ParishMonth | null> => {
     const temple = await getTemple(slug);
     if (!temple) return null;
 
-    const [year, mon] = month.split("-").map(Number);
-    if (!year || !mon || mon < 1 || mon > 12) return null;
+    const period=schedulePeriod(month);if(!period)return null;
 
     const settings = await settingsFor(temple);
-    const dates = monthDates(year, mon);
+    const lookAhead=new Date(period.end+"T12:00:00Z");lookAhead.setUTCDate(lookAhead.getUTCDate()+1);
+    const dates=[...period.dates,lookAhead.toISOString().slice(0,10)];
     const { days, failed } = await ordoRange(dates, {
         ustav: settings.ustav,
         prestoly: settings.prestoly.map(p => ({
@@ -56,14 +59,39 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
         })),
     });
 
-    const prefix = `${year}-${String(mon).padStart(2, "0")}`;
+    const configs=await dayConfigs(slug,period.start,dates[dates.length-1]);
+    const metadata=await memoryMetadata([...days.values()].flatMap(d=>d.memories.map(m=>m.memoryId)).concat(configs.flatMap(c=>c.memories)));
+    for(const config of configs){
+        const original=days.get(config.date);if(!original)continue;
+        const ids=config.memories.length?config.memories:original.memories.map(m=>m.memoryId);
+        const first=config.memories[0]?metadata.get(config.memories[0]):null;
+        const sign=config.sign??(config.memories.length?first?.sign?.default??'bez-znaka':original.variants[0]?.sign);
+        const chosen=await ordoDay(config.date,{ustav:settings.ustav??undefined,memories:ids,serviceSign:sign,
+            prestoly:settings.prestoly});
+        if(!chosen){days.delete(config.date);failed.push(config.date);continue;}
+        days.set(config.date,chosen);
+    }
+    const built=buildMonth(days,settings,date=>date>=period.start&&date<=period.end);
+    await Promise.all(built.map(async row=>{
+        const day=days.get(row.date)!;const config=configs.find(c=>c.date===row.date);
+        const choices=[...day.memories];
+        for(const id of config?.memories??[])if(!choices.some(m=>m.memoryId===id)){const m=metadata.get(id);if(m)choices.push({memoryId:id,label:m.label,book:m.book});}
+        row.memoryChoices=await Promise.all(choices.map(async m=>({...m,sign:metadata.get(m.memoryId)?.sign?.default??null})));
+        row.dayConfig=config?{date:config.date,memories:config.memories,sign:config.sign}:undefined;
+        row.serviceMemories=config?(config.memories.length?config.memories:day.memories.map(m=>m.memoryId)):undefined;
+        row.serviceSign=config?day.variants[0]?.sign:undefined;
+        const tomorrow=new Date(row.date+'T12:00:00Z');tomorrow.setUTCDate(tomorrow.getUTCDate()+1);
+        row.eveningSign=days.get(tomorrow.toISOString().slice(0,10))?.variants[0]?.sign;
+        row.serviceVariant=day.variants[0]?.key;row.servicePrestoly=settings.prestoly;
+    }));
+    const inPeriod=(date:string)=>date>=period.start&&date<=period.end;
     return {
-        slug, title: temple.name, month, timezone: settings.timezone,
+        slug, title: temple.name, ustav:settings.ustav, month, timezone: settings.timezone,
         timezoneHow: settings.timezoneHow, ownRules: settings.ownRules,
-        monthLabel: `${MONTHS[mon - 1]} ${year}`,
-        days: buildMonth(days, settings, d => d.startsWith(prefix)),
+        monthLabel:period.label,periodType:period.type,preferredPeriod:settings.schedulePeriod??"month",
+        days: built,
         unavailable: days.size === 0,
-        failed: failed.filter(d => d.startsWith(prefix)),
+        failed: failed.filter(inPeriod),
     };
 };
 
@@ -85,7 +113,7 @@ export const parishMonth = cached(
 export const parishSchedule = async (slug: string, month: string) => {
     const data = await parishMonth(slug, month);
     if (!data) return null;
-    const edits = await editsOf(slug, month);
+    const edits = await editsOf(slug, schedulePeriod(month)!);
     const { days, applied } = applyEdits(data.days, edits);
     return { ...data, days, edits: applied };
 };
@@ -109,7 +137,7 @@ export interface ParishView extends ParishMonth {
  * Расхождение при этом считается и отдаётся: видеть его должен ответственный, а
  * решать — он же. Молча пересобрать за него нельзя, молча смолчать тоже.
  */
-export const parishView = async (slug: string, month: string): Promise<ParishView | null> => {
+export const parishView = async (slug: string, month: string, draft=false): Promise<ParishView | null> => {
     const live = await parishSchedule(slug, month);
     if (!live) return null;
     const snapshot = await publishedMonth(slug, month);
@@ -118,7 +146,8 @@ export const parishView = async (slug: string, month: string): Promise<ParishVie
     }
     return {
         ...live,
-        days: snapshot.days,
+        days: presentationDays(live.days,snapshot.days,draft),
+        unavailable: draft ? live.unavailable : false,
         published: snapshot.publishedAt ?? null,
         drifted: driftedDays(snapshot.days, live.days),
     } as ParishView;

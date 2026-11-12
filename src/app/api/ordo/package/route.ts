@@ -57,7 +57,14 @@ export async function GET(request: Request) {
     if (!base()) return fail(503, "Служба устава не настроена (ORDO_SERVICE_URL)");
 
     try {
-        const bytes = await fetchBytes(packageUrl(p));
+        const url=packageUrl(p),query=new URL(request.url).searchParams;
+        const ids=query.getAll('memories'),sign=query.get('service_sign'),transfers=query.getAll('perenos'),prestoly=query.getAll('prestoly');
+        if(ids.length>20||transfers.length>20||prestoly.length>20||prestoly.some(p=>p.length>500)||[...ids,...transfers].some(id=>!id||id.length>200)||sign&&!/^[a-z-]{1,60}$/.test(sign))return fail(400,'Неверные параметры состава службы');
+        for(const id of ids)url.searchParams.append('memories',id);
+        if(sign)url.searchParams.set('service_sign',sign);
+        for(const t of transfers)url.searchParams.append('add_memory',t);
+        for(const p of prestoly)url.searchParams.append('prestoly',p);
+        const bytes = await fetchBytes(url);
         const filename = p.service ? `${p.date}-${p.service}.ordo` : `${p.date}.ordo`;
         return new NextResponse(bytes as unknown as BodyInit, {
             headers: {

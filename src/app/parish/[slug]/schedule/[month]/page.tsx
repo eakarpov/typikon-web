@@ -1,3 +1,8 @@
+import {EyeIcon} from "@heroicons/react/20/solid";
+import {dayOrdoHref} from "@/lib/parish/dayConfig";
+import DayEditor from "./DayEditor";
+import {schedulePeriod,shiftSchedulePeriod,parishScheduleHref} from "@/lib/parish/period";
+import ScheduleTools from "./ScheduleTools";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -35,10 +40,10 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
 const WEEKEND = new Set(["суббота", "воскресенье"]);
 
 interface RowProps {
-    day: ParishDay; why: boolean; edit: boolean; slug: string; month: string;
+    day: ParishDay; ustav?:string|null; why: boolean; edit: boolean; slug: string; month: string;
 }
 
-const Row = ({ day, why, edit, slug, month }: RowProps) => {
+const Row = ({ day, why, edit, slug, month,ustav }: RowProps) => {
     const marked = Boolean(day.prestolny) || day.dvunadesyaty;
     return (
         <tr style={{
@@ -51,12 +56,13 @@ const Row = ({ day, why, edit, slug, month }: RowProps) => {
                 fontWeight: WEEKEND.has(day.weekdayLabel) ? 600 : 400,
                 color: WEEKEND.has(day.weekdayLabel) ? "#8a1c1c" : "#333",
             }}>
-                <div style={{ fontSize: "1.05rem" }}>{Number(day.date.slice(8))}</div>
+                <div style={{ fontSize: "1.05rem" }}>{Number(day.date.slice(8))} <Link className="inline-block no-print print:hidden" href={dayOrdoHref(day,ustav)} title="Последование по выбранному варианту дня" aria-label={`Последование на ${day.date}`}><EyeIcon className="w-4 h-4 text-slate-500"/></Link></div>
                 <div style={{ fontSize: ".8rem", color: "#888" }}>{day.weekdayLabel}</div>
             </td>
 
             <td style={{ padding: ".5rem .75rem .5rem 0", verticalAlign: "top" }}>
                 <div>{day.triodLabel ?? day.memories[0]?.label ?? day.label}</div>
+                {!!day.dayConfig?.memories.length&&<div className="text-sm text-slate-700">Служим: {day.dayConfig.memories.map(id=>day.memoryChoices?.find(m=>m.memoryId===id)?.label??id).join('; ')}</div>}
                 {day.prestolny && (
                     <div style={{ color: "#8a6d1c", fontSize: ".85rem" }}>
                         престольный праздник
@@ -66,6 +72,7 @@ const Row = ({ day, why, edit, slug, month }: RowProps) => {
                     {day.label}
                     {day.fastingLabel ? ` · ${day.fastingLabel}` : ""}
                 </div>
+                {edit&&<DayEditor key={JSON.stringify(day.dayConfig)??day.date} slug={slug} period={month} day={day}/>}
             </td>
 
             <td style={{ padding: ".5rem 0", verticalAlign: "top" }}>
@@ -137,23 +144,20 @@ const Item = ({ g, why, edit, slug, month, marks }: {
     </div>
 );
 
-const monthShift = (month: string, by: number) => {
-    const [y, m] = month.split("-").map(Number);
-    const d = new Date(Date.UTC(y, m - 1 + by, 1));
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-};
-
 const Page = async ({ params, searchParams }: Props) => {
     const { slug, month } = await params;
     const q = await searchParams;
     const [why, editWanted] = [q.why === "1", q.edit === "1"];
-    const data = await parishView(slug, month);
+    const rights = await rightsOn(slug);
+    const edit = editWanted && rights.canEdit;
+    const data = await parishView(slug, month,edit);
     if (!data) notFound();
 
     // ПРАВО — ИМЕННОЕ И НА ОДИН ХРАМ: ответственный не администратор сайта, и
     // наоборот. Кнопки правки и публикации видит только тот, кто ведёт
-    const rights = await rightsOn(slug);
-    const edit = editWanted && rights.canEdit;
+    const period=schedulePeriod(month)!;
+    const today=new Intl.DateTimeFormat("en-CA",{timeZone:data.timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+    const anchor=today>=period.start&&today<=period.end?today:period.start;
 
     const stale = data.edits.filter(e => e.status === "stale");
     const orphaned = data.edits.filter(e => e.status === "orphaned");
@@ -166,9 +170,9 @@ const Page = async ({ params, searchParams }: Props) => {
                     Расписание богослужений
                 </h1>
                 <div style={{ fontSize: ".9rem" }}>
-                    <Link href={`/parish/${slug}/schedule/${monthShift(month, -1)}`}>← прошлый</Link>
+                    <Link href={parishScheduleHref(slug,shiftSchedulePeriod(month,-1),edit,why)}>← {data.periodType==="week"?"Предыдущая неделя":"Предыдущий месяц"}</Link>
                     {" · "}
-                    <Link href={`/parish/${slug}/schedule/${monthShift(month, 1)}`}>следующий →</Link>
+                    <Link href={parishScheduleHref(slug,shiftSchedulePeriod(month,1),edit,why)}>{data.periodType==="week"?"Следующая неделя":"Следующий месяц"} →</Link>
                     {" · "}
                     <Link href={`/parish/${slug}/schedule/${month}/print`}>лист на стенд</Link>
                 </div>
@@ -176,6 +180,8 @@ const Page = async ({ params, searchParams }: Props) => {
             <p style={{ color: "#666", margin: ".25rem 0 0" }}>
                 {data.title} · {data.monthLabel}
             </p>
+
+            {rights.canEdit&&<ScheduleTools slug={slug} period={month} type={data.periodType} anchor={anchor} why={why} edit={edit} published={!!data.published}/>}
 
             {data.unavailable ? (
                 <p style={{ margin: "2rem 0", color: "#8a1c1c" }}>
@@ -190,22 +196,11 @@ const Page = async ({ params, searchParams }: Props) => {
                         <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 0 : 1}&edit=${edit ? 1 : 0}`}>
                             {why ? "скрыть объяснения" : "показать, откуда что взялось"}
                         </Link>
-                        {rights.canEdit && (
-                            <>
-                                {" · "}
-                                <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 1 : 0}&edit=${edit ? 0 : 1}`}>
-                                    {edit ? "закончить правку" : "поправить"}
-                                </Link>
-                                {" · "}
-                                <Link href={`/parish/${slug}/rules`}>как у нас служат</Link>
-                                {" · "}
-                                <Link href={`/parish/${slug}/admins`}>кто ведёт</Link>
-                            </>
-                        )}
+
                     </p>
 
                     {rights.canEdit ? (
-                        <Publish slug={slug} month={month}
+                        <Publish periodType={data.periodType} slug={slug} month={month}
                                  published={data.published ? data.published.toISOString() : null}
                                  drifted={data.drifted} />
                     ) : !data.published && (
@@ -256,7 +251,7 @@ const Page = async ({ params, searchParams }: Props) => {
                                     marginTop: "1rem", fontSize: ".95rem" }}>
                         <tbody>
                             {data.days.map(d => (
-                                <Row key={d.date} day={d} why={why} edit={edit}
+                                <Row key={JSON.stringify(d)} day={d} ustav={data.ustav} why={why} edit={edit}
                                      slug={slug} month={month} />
                             ))}
                         </tbody>

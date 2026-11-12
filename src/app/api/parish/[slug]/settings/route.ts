@@ -16,6 +16,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
     }
     const body = await request.json().catch(() => null);
 
+    if(body?.schedulePeriod!==undefined){
+        if(!["month","week"].includes(body.schedulePeriod))return NextResponse.json({error:"Выберите неделю или месяц"},{status:400});
+        await saveSettings(slug,{schedulePeriod:body.schedulePeriod},rights.userId!);
+    }
+
     if (body?.timezone !== undefined) {
         const tz = String(body.timezone);
         // Только пояс, который мы умеем объявить календарю: назвать любой

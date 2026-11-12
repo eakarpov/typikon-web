@@ -1,3 +1,4 @@
+import {schedulePeriod} from "@/lib/parish/period";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CacheTag } from "@/lib/cache";
@@ -19,8 +20,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
 
     const body = await request.json().catch(() => null);
     const month = String(body?.month ?? "");
-    if (!/^\d{4}-\d{2}$/.test(month)) {
-        return NextResponse.json({ error: "нет месяца" }, { status: 400 });
+    if (!schedulePeriod(month)) {
+        return NextResponse.json({ error: "Укажите неделю или месяц" }, { status: 400 });
     }
 
     if (body?.unpublish) {

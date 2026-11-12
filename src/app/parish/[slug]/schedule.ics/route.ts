@@ -1,3 +1,6 @@
+import {getTemple} from "@/lib/temples";
+import {settingsFor} from "@/lib/parish/settings";
+import {periodsBetween,periodKeyForDate} from "@/lib/parish/period";
 import { buildCalendar, knownTimezone, type CalendarEvent } from "@/lib/ical";
 import { parishView } from "@/lib/parish/schedule";
 import { isoDate } from "@/lib/ordo";
@@ -38,20 +41,11 @@ const plusMinutes = (date: string, time: string, minutes: number) => {
         + `${String(d.getUTCMinutes()).padStart(2, "0")}00`;
 };
 
-/** Месяцы окна: от начала месяца, в который попала нижняя граница. */
-const monthsIn = (from: Date, to: Date): string[] => {
-    const out: string[] = [];
-    const d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
-    while (d <= to) {
-        out.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
-        d.setUTCMonth(d.getUTCMonth() + 1);
-    }
-    return out;
-};
-
 export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }) {
     const { slug } = await ctx.params;
 
+    const temple=await getTemple(slug);if(!temple)return new Response("нет такого прихода",{status:404});
+    const settings=await settingsFor(temple);
     const today = new Date();
     today.setUTCHours(12, 0, 0, 0);
     const from = new Date(today); from.setUTCDate(from.getUTCDate() - DAYS_BACK);
@@ -59,7 +53,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
     const [lo, hi] = [isoDate(from), isoDate(to)];
 
     const months = await Promise.all(
-        monthsIn(from, to).map(m => parishView(slug, m)));
+        periodsBetween(from,to,settings.schedulePeriod??"month").map(m => parishView(slug, m)));
     const first = months.find(Boolean);
     if (!first) {
         return new Response("нет такого прихода", { status: 404 });
@@ -98,9 +92,9 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
                             ? `Часовой пояс (${tzid}) выведен по долготе и приходом не подтверждён.`
                             : null,
                         "",
-                        `${BASE_URL}/parish/${slug}/schedule/${day.date.slice(0, 7)}`,
+                        `${BASE_URL}/parish/${slug}/schedule/${periodKeyForDate(day.date,settings.schedulePeriod??"month")}`,
                     ].filter(Boolean).join("\n"),
-                    url: `${BASE_URL}/parish/${slug}/schedule/${day.date.slice(0, 7)}`,
+                    url: `${BASE_URL}/parish/${slug}/schedule/${periodKeyForDate(day.date,settings.schedulePeriod??"month")}`,
                     cancelled: g.cancelled,
                 });
             }

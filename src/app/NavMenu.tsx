@@ -11,11 +11,8 @@ import {
     MagnifyingGlassIcon,
     PencilSquareIcon,
     ArrowLeftOnRectangleIcon,
-    BookOpenIcon,
     ArrowRightOnRectangleIcon,
-    UserCircleIcon,
     LanguageIcon,
-    SunIcon,
 } from "@heroicons/react/20/solid";
 import {usePathname, useRouter} from "next/navigation";
 import {useCallback, useEffect, useState} from "react";
@@ -25,6 +22,7 @@ import {WithRights} from "@/lib/admin/client";
 import NewsLink from "@/app/NewsLink";
 import NavGroup from "@/app/NavGroup";
 import NavPopover from "@/app/NavPopover";
+import ProfileMenu from "./ProfileMenu";
 import {BIBLE_LANGUAGE_OPTIONS, DEFAULT_BIBLE_LANGUAGE, bibleLanguageShort, getClientBibleLanguage, setClientBibleLanguage} from "@/utils/bibleLanguage";
 
 const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
@@ -270,38 +268,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 >
                     <Cog6ToothIcon className="w-4 h-4" />
                 </Link>
-                {/* Помянник — единственное, за чем вошедший приходит РЕГУЛЯРНО:
-                    именины и сороковины ждать не умеют. Оттого он в строке, а
-                    не внутри профиля */}
-                {/* «Сегодня» — вход в личное: день, собранный вокруг человека, а не
-                    вокруг раздела. Стоит первым из личного: с него день и начинают */}
-                {isAuth && (
-                    <Link
-                        title="Сегодня для меня"
-                        href="/segodnya"
-                        className={`cursor-pointer min-w-fit flex items-center ${pathname === `/segodnya` && `text-red-600`}`}
-                    >
-                        <SunIcon className="w-4 h-4" />
-                    </Link>
-                )}
-                {isAuth && (
-                    <Link
-                        title="Помянник"
-                        href="/pomyannik"
-                        className={`cursor-pointer min-w-fit flex items-center ${pathname?.startsWith(`/pomyannik`) && `text-red-600`}`}
-                    >
-                        <BookOpenIcon className="w-4 h-4" />
-                    </Link>
-                )}
-                {isAuth && (
-                    <Link
-                        title="Профиль"
-                        href="/profile"
-                        className={`cursor-pointer min-w-fit flex items-center ${pathname === `/profile` && `text-red-600`}`}
-                    >
-                        <UserCircleIcon className="w-4 h-4" />
-                    </Link>
-                )}
+                {isAuth && <ProfileMenu />}
                 {showButton === Boolean(true).toString() && isSessionResolved && (!isAuth ? (
                     <Link
                         href="/login"

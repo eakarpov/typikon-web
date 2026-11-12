@@ -19,3 +19,12 @@ describe("место чтения", () => {
         assert.deepEqual(persons.map(p => p.id), ["d", "b", "a"]);
     });
 });
+
+import {readingWindow} from './reader';
+it('окно чтения показывает соседние имена и не замыкает границы списка',()=>{
+    assert.deepEqual(readingWindow(['а','б','в'],1),{previous:'а',current:'б',next:'в'});
+    assert.deepEqual(readingWindow(['а','б','в'],0),{previous:undefined,current:'а',next:'б'});
+    assert.deepEqual(readingWindow(['а','б','в'],2),{previous:'б',current:'в',next:undefined});
+    assert.deepEqual(readingWindow(['а'],0),{previous:undefined,current:'а',next:undefined});
+    assert.deepEqual(readingWindow([],0),{});
+});

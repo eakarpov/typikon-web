@@ -27,6 +27,9 @@ export interface ServicesCommon {
     ustav?: string;
     variant?: string;
     transfers: OrdoTransfer[];
+    memories?:string[];
+    serviceSign?:string;
+    prestoly?:import("@/lib/ordo").OrdoPrestol[];
     lang?: string;
     parallel?: string;
     psalms?: string;
@@ -45,7 +48,7 @@ const ServicesBlock = async ({ day, common, razdelno }: {
             lang: common.lang,
             parallel: common.parallel,
             psalms: common.psalms,
-            transfers: common.transfers,
+            transfers: common.transfers,memories:common.memories,serviceSign:common.serviceSign,prestoly:common.prestoly,
         }),
         ordoViewRules(),
     ]);
@@ -113,6 +116,10 @@ const DownloadLink = ({ date, service, common, razdelno }: {
     const q = new URLSearchParams({ date, service });
     if (common.variant) q.set("variant", common.variant);
     if (common.ustav) q.set("ustav", common.ustav);
+    for(const id of common.memories??[])q.append("memories",id);
+    if(common.serviceSign)q.set("service_sign",common.serviceSign);
+    for(const p of common.prestoly??[])q.append('prestoly',[p.memoryId,p.kind??'',p.label??''].join('|'));
+    for(const t of common.transfers)q.append("perenos",t.primary?t.memoryId+":primary":t.memoryId);
     if (razdelno) q.set("bdenie", "0");
     return (
         <><a className="underline mr-3" href={`/companion?${q.toString()}`}>Понять эту службу</a><a download href={`/api/ordo/package?${q.toString()}`}

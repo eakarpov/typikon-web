@@ -1,3 +1,4 @@
+import type { SchedulePeriodType } from "./period";
 import { parishDb } from "./db";
 import { guessTimezone } from "@/lib/timezones";
 import type { Temple } from "@/lib/temples";
@@ -18,6 +19,7 @@ import type { ParishRule, ParishSettings } from "./types";
 export interface StoredSettings {
     _id?: string;
     templeSlug: string;
+    schedulePeriod?: SchedulePeriodType;
     /** Пояс, названный приходом. Пусто — берём догадку по стране и долготе. */
     timezone?: string | null;
     /** Свои правила. Пусто — приход ещё едет на умолчаниях из кода. */
@@ -79,6 +81,7 @@ export const settingsFor = async (temple: Temple): Promise<ParishSettings & {
     return {
         slug: temple.slug,
         title: temple.name,
+        schedulePeriod: stored?.schedulePeriod === "week" ? "week" : "month",
         timezone: tz,
         timezoneHow: how,
         ustav: temple.ustav ?? null,
