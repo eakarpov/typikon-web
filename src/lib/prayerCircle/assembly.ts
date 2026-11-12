@@ -72,7 +72,7 @@ async function psalter(b:Block,date:string,cursor:number,gender:'m'|'f',getConte
         const ref=await compiler<{parts:PsalterPart[]}>('/prayer-circle/psalter',{number:String(n),statia:b.mode==='continuous'&&b.unit==='statia'?String(cursor%3):'all'});
         const built=await buildPsalterParts(ref.parts,String(index),{
             verses:part=>scripture('psaltir',part.psalm,part.from,part.to),
-            slava:()=>compiler<BlockResult>('/prayer-circle/block',{date,kind:'formula',key:'psalter-slava'}),
+            slava:()=>compiler<BlockResult>('/prayer-circle/block',{date,lang,gender,kind:'formula',key:'psalter-slava'}),
             names:namesForSlava,
         });
         rows.push(...built.rows);missing.push(...built.missing);

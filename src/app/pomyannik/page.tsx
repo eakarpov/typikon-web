@@ -70,6 +70,13 @@ const PomyannikPage = async () => {
                 </p>
             </div>
 
+            <nav className="flex flex-wrap gap-4 font-serif text-sm" aria-label="Чтение, печать и настройки помянника">
+                <Link href="/settings#commemoration-title" className="text-red-900 underline">Имена при чтении — настройки</Link>
+                <Link href="/pomyannik/chtenie" className="text-red-900 underline">Читать помянник</Link>
+                <Link href="/pomyannik/korzina" className="text-red-900 underline">Корзина</Link>
+                <Link href="/pomyannik/print" className="text-red-900 underline">Печать личного помянника</Link>
+            </nav>
+
             {persons.length > 0 && (
                 <section className="flex flex-col gap-2">
                     <h2 className="font-bold font-serif text-sm">
@@ -81,11 +88,7 @@ const PomyannikPage = async () => {
                 </section>
             )}
 
-            <nav className="flex flex-wrap gap-4 font-serif text-sm" aria-label="Чтение и печать помянника">
-                <Link href="/pomyannik/chtenie" className="text-red-900 underline">Читать помянник</Link>
-                <Link href="/pomyannik/korzina" className="text-red-900 underline">Корзина</Link>
-                <Link href="/pomyannik/print" className="text-red-900 underline">Печать личного помянника</Link>
-            </nav>
+
 
             <Book forms={forms} initial={persons} names={names.map(n => n.name)} showSignatures={settings.showSignatures} />
 

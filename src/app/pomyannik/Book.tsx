@@ -280,6 +280,7 @@ const Book = ({ initial, names, forms = {}, showSignatures: initialShowSignature
                 <details className="font-serif text-sm">
                     <summary className="cursor-pointer">Настройки помянника</summary>
                     <div className="flex flex-col gap-2 mt-2">
+                        <Link href="/settings#commemoration-title" className="text-red-900 underline">Выбор имён и групп для Псалтири и утренних молитв</Link>
                         <label className="flex items-center gap-2">
                             <input type="checkbox" checked={showSignatures} disabled={busy}
                                 onChange={e => changeSignatures(e.target.checked)} />
