@@ -1,3 +1,4 @@
+import {restoreCancelled} from "./restore";
 import {parishDb} from "./db";
 import type {SchedulePeriod} from "./period";
 import type {ParishEdit} from "./editModel";
@@ -20,3 +21,6 @@ export const saveEdit = async (edit: Omit<ParishEdit, "_id" | "createdAt">) => {
 
 export const dropEdit = async (parishSlug:string,id: string) =>
     (await collection()).deleteOne({ _id: id,parishSlug });
+
+export const restoreGathering=async(parishSlug:string,date:string,gatheringKey:string)=>
+    restoreCancelled(await collection(),parishSlug,date,gatheringKey);

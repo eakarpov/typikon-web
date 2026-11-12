@@ -81,6 +81,13 @@ export const EditGathering = ({ slug, month, g, choices }: {
                         Изменить время
                     </button>
                     <button type="button" className="ml-2 underline" onClick={()=>setCompose(true)}>Состав служб</button>
+                    {g.cancelled && <button type="button" disabled={pending}
+                        title={`Вернуть: ${g.title}`}
+                        className="ml-2 font-bold text-green-800 underline"
+                        onClick={()=>start(async()=>{
+                            await parishMutation(`/api/parish/${slug}/restore`,'POST',{period:month,date:g.civil,gatheringKey:g.key});
+                            router.refresh();
+                        })}>Вернуть богослужение</button>}
                     {!g.cancelled && (
                         <button type="button" disabled={pending}
                                 onClick={() => save("cancel", {})}
