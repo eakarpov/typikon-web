@@ -1,12 +1,13 @@
 'use client';
+import type { PomyannikGroup } from "@/lib/pomyannik/groups";
 import type { PomyannikPerson } from "@/lib/pomyannik/types";
 import type { ReadingPlace } from "@/lib/pomyannik/reader";
 const FIELD = "border rounded px-2 py-2 bg-white max-w-full";
-export default function ReadingControls({ persons, group, kind, onChange, disabled = false }: {
-    persons: PomyannikPerson[]; group: string; kind: ReadingPlace["kind"];
+export default function ReadingControls({ availableGroups, group, kind, onChange, disabled = false }: {
+    persons: PomyannikPerson[]; availableGroups:PomyannikGroup[]; group: string; kind: ReadingPlace["kind"];
     onChange: (group: string, kind: ReadingPlace["kind"]) => void; disabled?: boolean;
 }) {
-    const groups = Array.from(new Set([...persons.flatMap(person => person.groups), ...(group ? [group] : [])])).sort((a, b) => a.localeCompare(b, "ru"));
+    const groups=availableGroups.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
     return <fieldset disabled={disabled} className="flex flex-wrap gap-3 min-w-0">
         <label className="flex flex-col gap-1">Раздел
             <select className={FIELD} value={kind} onChange={e => onChange(group, e.target.value as ReadingPlace["kind"])}>
@@ -15,7 +16,7 @@ export default function ReadingControls({ persons, group, kind, onChange, disabl
         </label>
         <label className="flex flex-col gap-1 max-w-full">Группа
             <select className={FIELD} value={group} onChange={e => onChange(e.target.value, kind)}>
-                <option value="">Все группы</option>{groups.map(name => <option key={name} value={name}>{name}</option>)}
+                <option value="">Все группы</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
         </label>
     </fieldset>;

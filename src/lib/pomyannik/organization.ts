@@ -23,7 +23,7 @@ export const personMatches = (person: PomyannikPerson, query: string, group = ""
     if (group && !(person.groups ?? []).includes(group)) return false;
     const terms = searchKey(query).split(/\s+/).filter(Boolean);
     const text = searchKey([person.name, person.churchName, person.signature, person.relation,
-        ...(person.groups ?? [])].filter(Boolean).join(" "));
+        ...(person.groupNames ?? person.groups ?? [])].filter(Boolean).join(" "));
     return terms.every(term => text.includes(term));
 };
 

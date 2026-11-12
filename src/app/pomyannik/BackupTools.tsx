@@ -49,14 +49,14 @@ export default function BackupTools({ persons }: { persons: PomyannikPerson[] })
             </label>
             <p className="text-slate-600">Сначала покажем состав файла. При восстановлении добавятся недостающие записи в порядке из копии. Существующие карточки сохранятся; точные совпадения будут пропущены. Изменённая карточка считается отдельной записью.</p>
             {backup && plan && <div className="border rounded p-3 space-y-2">
-                <p>В файле: {backup.persons.length}. Добавится: {plan.additions.length}. Уже есть: {plan.skipped}.</p>
+                <p>В файле: {backup.persons.length} имён, {backup.groups?.length??0} групп. Добавится: {plan.additions.length}. Уже есть: {plan.skipped}.</p>
                 {tooMany && <p role="alert" className="text-amber-800">Превышен предел: {MAX_PERSONS} имён. Восстановление недоступно.</p>}
                 {plan.additions.length > 0 && <ul className="max-h-60 overflow-auto list-disc pl-5" aria-label="Имена для восстановления">
                     {plan.additions.slice(0, 100).map((person, i) => <li key={i}>{displayName(person)}{person.signature ? ` · ${person.signature}` : ""} — {person.kind === "living" ? "о здравии" : "о упокоении"}</li>)}
                 </ul>}
                 {plan.additions.length > 100 && <p className="text-slate-500">Показаны первые 100 записей. При подтверждении добавятся все {plan.additions.length}.</p>}
                 <div className="flex gap-3 flex-wrap">
-                    <button type="button" className={BUTTON} disabled={busy || tooMany || !plan.additions.length} onClick={restore}>Добавить недостающие записи</button>
+                    <button type="button" className={BUTTON} disabled={busy || tooMany || (!plan.additions.length&&!backup.groups?.length)} onClick={restore}>Добавить недостающие записи</button>
                     <button type="button" className={BUTTON} disabled={busy} onClick={() => setBackup(null)}>Отмена</button>
                 </div>
             </div>}

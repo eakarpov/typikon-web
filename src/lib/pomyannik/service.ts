@@ -1,4 +1,6 @@
-import { readCommemorations, validateCommemorations, type CommemorationSettings } from "./commemoration";
+import { ensureGroupMigration, listGroups, createGroup, assertOwnGroups } from "./groupsService";
+import { groupIds, GroupError } from "./groups";
+import { readCommemorations, validateCommemorations, CommemorationError, type CommemorationSettings } from "./commemoration";
 import { moveToTrash, recoverFromTrash, TrashLimitError } from "./trash";
 import { personalDate, fullDate, dateParts } from "./dates";
 import { TEMPORARY_RANKS } from "./marks";
@@ -9,7 +11,7 @@ import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { nameKey, normalizeName } from "@/lib/imeniny/core";
 import { autoNameDay } from "@/lib/pomyannik/nameday";
-import { cleanGroups, cleanSignature, validPersonOrder } from "./organization";
+import { cleanSignature, validPersonOrder } from "./organization";
 import { guessSex } from "@/lib/pomyannik/names";
 import {
     MAX_BATCH, MAX_PERSONS, RANK_BY_KEY,
@@ -94,7 +96,8 @@ const clean = (input: PersonInput) => {
     const kind = input.kind === "departed" ? "departed" : "living";
     const died = personalDate(input.died);
 
-    const groups = cleanGroups(input.groups);
+    let groups: string[];
+    try { groups = groupIds(input.groups); } catch(e) { throw new PersonDataError((e as Error).message); }
 
     const sorokoustFrom = input.sorokoust ? isoDate(input.sorokoust.from) : null;
 
@@ -148,11 +151,20 @@ const withNameDay = async (doc: ReturnType<typeof clean>) => {
 };
 
 export const listPersons = async (userId: string): Promise<PomyannikPerson[]> => {
+    await ensureGroupMigration(userId);
     const docs = await (await persons())
         .find({ userId, deletedAt: null })
         .sort({ kind: 1, order: 1, name: 1 })
         .toArray();
-    return docs.map(out);
+    return decorateGroups(userId, docs.map(out));
+};
+
+const decorateGroups = async (userId:string, docs:PomyannikPerson[]) => {
+    const names=new Map((await listGroups(userId)).map(g=>[g.id,g.name]));
+    return docs.map(p=>({...p,groupNames:p.groups.map(id=>names.get(id)).filter((name):name is string=>!!name)}));
+};
+const checkGroups = async(userId:string,raw:unknown) => {
+    try { return await assertOwnGroups(userId,raw); } catch(e) { if(e instanceof GroupError)throw new PersonDataError(e.message);throw e; }
 };
 
 export const countPersons = async (userId: string): Promise<number> =>
@@ -160,8 +172,9 @@ export const countPersons = async (userId: string): Promise<number> =>
 
 export const getPerson = async (userId: string, id: string): Promise<PomyannikPerson | null> => {
     if (!ObjectId.isValid(id)) return null;
+    await ensureGroupMigration(userId);
     const doc = await (await persons()).findOne({ _id: new ObjectId(id), userId, deletedAt: null });
-    return doc ? out(doc) : null;
+    return doc ? (await decorateGroups(userId,[out(doc)]))[0] : null;
 };
 
 /**
@@ -175,6 +188,9 @@ export const addPersons = async (
     userId: string, inputs: PersonInput[],
 ): Promise<PomyannikPerson[]> => {
     if (inputs.length > MAX_BATCH) throw new PersonDataError(`За раз принимается не больше ${MAX_BATCH} имён.`);
+    await ensureGroupMigration(userId);
+    const groupSets = new Map(inputs.filter(input=>input.groups?.length).map(input=>[JSON.stringify(input.groups),input.groups]));
+    for(const groups of groupSets.values())await checkGroups(userId,groups);
     const batch = inputs;
     const cleaned = (await Promise.all(batch.map(i => withNameDay(clean(i)))))
         .filter(Boolean) as Array<NonNullable<ReturnType<typeof clean>>>;
@@ -188,16 +204,18 @@ export const addPersons = async (
     let order = (last[0]?.order ?? 0) + 1;
 
     const now = new Date();
-    const docs = cleaned.map(doc => ({ ...doc, userId, order: order++, createdAt: now, updatedAt: now }));
+    const docs = cleaned.map(doc => ({ ...doc, groupsSchemaVersion:1, userId, order: order++, createdAt: now, updatedAt: now }));
     const result = await collection.insertMany(docs as any[]);
 
-    return docs.map((doc, i) => out({ ...doc, _id: result.insertedIds[i] }));
+    return decorateGroups(userId, docs.map((doc, i) => out({ ...doc, _id: result.insertedIds[i] })));
 };
 
 export const updatePerson = async (
     userId: string, id: string, patch: PersonInput,
 ): Promise<PomyannikPerson | null> => {
     if (!ObjectId.isValid(id)) return null;
+    await ensureGroupMigration(userId);
+    if(patch.groups!==undefined)await checkGroups(userId,patch.groups);
     const collection = await persons();
     const current = await collection.findOne({ _id: new ObjectId(id), userId, deletedAt: null });
     if (!current) return null;
@@ -212,17 +230,20 @@ export const updatePerson = async (
         { _id: new ObjectId(id), userId, deletedAt: null },
         { $set: { ...doc, updatedAt: new Date() } },
     );
-    return out({ ...current, ...doc, _id: current._id });
+    return (await decorateGroups(userId,[out({ ...current, ...doc, _id: current._id })]))[0];
 };
 
 export const deletePerson = async (userId: string, id: string): Promise<boolean> =>
     moveToTrash(await persons(), userId, id);
 
 /** Корзина хранится до восстановления; автоматического удаления нет. */
-export const listTrash = async (userId: string): Promise<PomyannikPerson[]> =>
-    (await (await persons()).find({ userId, deletedAt: { $type: "date" } }).sort({ deletedAt: -1 }).toArray()).map(out);
+export const listTrash = async (userId: string): Promise<PomyannikPerson[]> => {
+    await ensureGroupMigration(userId);
+    return decorateGroups(userId, (await (await persons()).find({ userId, deletedAt: { $type: "date" } }).sort({ deletedAt: -1 }).toArray()).map(out));
+};
 
 export const restoreDeletedPerson = async (userId: string, id: string): Promise<boolean> => {
+    await ensureGroupMigration(userId);
     try { return await recoverFromTrash(await persons(), userId, id, MAX_PERSONS); }
     catch (e) {
         if (e instanceof TrashLimitError) throw new TooManyPersonsError(MAX_PERSONS);
@@ -251,6 +272,7 @@ interface BookSettings { _id: string; showSignatures?: boolean; readingPlace?: R
 const bookSettings = async () => (await clientPromise).db("typikon-users").collection<BookSettings>("pomyannikSettings");
 
 export const getBookSettings = async (userId: string) => {
+    await ensureGroupMigration(userId);
     const doc = await (await bookSettings()).findOne({ _id: userId });
     return { showSignatures: doc?.showSignatures !== false, readingPlace: doc?.readingPlace ?? null, commemorations: readCommemorations(doc?.commemorations) };
 };
@@ -261,12 +283,14 @@ export const setBookSettings = async (userId: string, showSignatures: boolean) =
 
 export const setCommemorations = async (userId: string, raw: unknown) => {
     const patch = validateCommemorations(raw);
+    for(const choice of Object.values(patch))if(choice.mode==="group"){try{await assertOwnGroups(userId,[choice.group]);}catch(e){throw new CommemorationError((e as Error).message);}}
     const fields = Object.fromEntries(Object.entries(patch).map(([place,value]) => [`commemorations.${place}`,value]));
     await (await bookSettings()).updateOne({ _id:userId }, { $set:fields }, { upsert:true });
     return (await getBookSettings(userId)).commemorations;
 };
 
 export const setReadingPlace = async (userId: string, readingPlace: ReadingPlace | null) => {
+    if(readingPlace?.group){try{await assertOwnGroups(userId,[readingPlace.group]);}catch(e){if(e instanceof GroupError)return false;throw e;}}
     if (readingPlace && !await getPerson(userId, readingPlace.personId)) return false;
     await (await bookSettings()).updateOne({ _id: userId }, { $set: { readingPlace } }, { upsert: true });
     return true;
@@ -275,13 +299,16 @@ export const setReadingPlace = async (userId: string, readingPlace: ReadingPlace
 export const restorePersons = async (userId: string, raw: unknown) => {
     const backup = parseBackup(raw);
     const current = await listPersons(userId);
-    const { additions, skipped } = planRestore(current, backup.persons);
+    const { additions, skipped } = planRestore(current.map(p=>({...p,groups:p.groupNames??[]})), backup.persons);
     if (current.length + additions.length > MAX_PERSONS) throw new BackupError(`После восстановления получится больше ${MAX_PERSONS} имён.`);
+    const names=[...new Set([...(backup.groups??[]),...backup.persons.flatMap(p=>p.groups)])];
+    const groupMap=new Map<string,string>();
+    for(const name of names)groupMap.set(name,(await createGroup(userId,name)).id);
     if (!additions.length) return { added: 0, skipped };
     const now = new Date();
     let order = Math.max(0, ...current.map(person => person.order ?? 0)) + 1;
     // Не пересчитываем именины и не угадываем род: восстанавливаем сохранённые сведения.
-    const docs = additions.map(person => ({ ...person, nameKey: nameKey(person.name), userId,
+    const docs = additions.map(person => ({ ...person, groups:[...new Set(person.groups.map(name=>groupMap.get(name)!))],groupsSchemaVersion:1, nameKey: nameKey(person.name), userId,
         order: order++, createdAt: now, updatedAt: now }));
     await (await persons()).insertMany(docs);
     return { added: docs.length, skipped };

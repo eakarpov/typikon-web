@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { COMMEMORATION_PLACES, COMMEMORATION_LABELS, defaultCommemorations, type CommemorationSettings as Settings, type CommemorationPlace, type CommemorationSelection } from '@/lib/pomyannik/commemoration';
-interface Group { name:string; living:number; departed:number }
+interface Group { id:string; name:string; living:number; departed:number }
 const valueOf = (place:CommemorationPlace,choice:CommemorationSelection) => choice.mode === 'group' ? `group:${choice.for??(place==='morning-living'?'living':place==='morning-departed'?'departed':'both')}:${choice.group}` : choice.mode;
 export default function CommemorationSettings() {
     const [settings,setSettings] = useState(defaultCommemorations);
@@ -42,9 +42,9 @@ export default function CommemorationSettings() {
             {COMMEMORATION_PLACES.map(place=>{
                 const choice=settings[place];
                 const groupOptions=groups.flatMap(group=>[
-                    ...(place!=='morning-departed'&&group.living>0?[{value:`group:living:${group.name}`,label:`Группа «${group.name}» — о здравии (${group.living})`}]:[]),
-                    ...(place!=='morning-living'&&group.departed>0?[{value:`group:departed:${group.name}`,label:`Группа «${group.name}» — о упокоении (${group.departed})`}]:[]),
-                    ...(place.startsWith('psalter-')?[{value:`group:both:${group.name}`,label:`Группа «${group.name}» — все имена (${group.living+group.departed})`}]:[]),
+                    ...(place!=='morning-departed'?[{value:`group:living:${group.id}`,label:`Группа «${group.name}» — о здравии (${group.living})`}]:[]),
+                    ...(place!=='morning-living'?[{value:`group:departed:${group.id}`,label:`Группа «${group.name}» — о упокоении (${group.departed})`}]:[]),
+                    ...(place.startsWith('psalter-')?[{value:`group:both:${group.id}`,label:`Группа «${group.name}» — все имена (${group.living+group.departed})`}]:[]),
                 ]);
                 const selectedValue=valueOf(place,choice);
                 return <label key={place} className="flex flex-col gap-1 text-sm">{COMMEMORATION_LABELS[place]}
@@ -53,7 +53,7 @@ export default function CommemorationSettings() {
                         {place!=='morning-departed' && <option value="living">Все имена о здравии</option>}
                         {place!=='morning-living' && <option value="departed">Все имена о упокоении</option>}
                         {groupOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
-                        {choice.mode==='group'&&!groupOptions.some(option=>option.value===selectedValue)&&<option value={selectedValue}>Группа «{choice.group}» — сейчас нет подходящих имён</option>}
+                        {choice.mode==='group'&&!groupOptions.some(option=>option.value===selectedValue)&&<option value={selectedValue}>Группа больше не найдена</option>}
                     </select>
                 </label>;
             })}

@@ -1,3 +1,4 @@
+import { listGroups } from "@/lib/pomyannik/groupsService";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -48,7 +49,7 @@ const PomyannikPage = async () => {
         );
     }
 
-    const [persons, names, settings] = await Promise.all([listPersons(userId), allNames(), getBookSettings(userId)]);
+    const [persons, names, settings, groups] = await Promise.all([listPersons(userId), allNames(), getBookSettings(userId),listGroups(userId)]);
     const forms = await slavonicNames(persons.map(p=>p.churchName||p.name));
     const events = upcoming(persons, undefined, DAYS);
 
@@ -65,8 +66,7 @@ const PomyannikPage = async () => {
                     там, где он посчитан машиной */}
                 <p className="font-serif text-slate-600 text-sm mt-2">
                     <strong>День преставления считается первым.</strong> Оттого третий день —
-                    через два дня после кончины, а сороковой — через тридцать девять. Счёт этот
-                    повсеместен, но он обычай счисления, а не уставное предписание.
+                    через два дня после кончины, а сороковой — через тридцать девять.
                 </p>
             </div>
 
@@ -90,7 +90,7 @@ const PomyannikPage = async () => {
 
 
 
-            <Book forms={forms} initial={persons} names={names.map(n => n.name)} showSignatures={settings.showSignatures} />
+            <Book availableGroups={groups} forms={forms} initial={persons} names={names.map(n => n.name)} showSignatures={settings.showSignatures} />
 
             <nav className="flex flex-wrap gap-4 font-serif text-sm border-t pt-3">
                 <Link href="/pomyannik/vvod" className="text-red-900 hover:underline">

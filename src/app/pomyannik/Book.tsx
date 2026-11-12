@@ -4,6 +4,8 @@ import DuplicateHints from "./DuplicateHints";
 import { expiredRank } from "@/lib/pomyannik/marks";
 import { effectiveRanks } from "@/lib/pomyannik/marks";
 import React from "react";
+import GroupTools from "./GroupTools";
+import type { PomyannikGroup } from "@/lib/pomyannik/groups";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { movePerson, personMatches } from "@/lib/pomyannik/organization";
@@ -28,8 +30,9 @@ const TITLE: Record<PersonKind, string> = {
 
 type Forms = Record<string,{genitive:string;source:string}>;
 const Column = ({
-    kind, persons, onAdd, onRemove, busy, showSignatures, arranging, onMove, allPersons, filterKey, churchView, forms,
+    kind, persons, onAdd, onRemove, busy, showSignatures, arranging, onMove, allPersons, filterKey, churchView, forms, choosing, selected, onSelect,
 }: {
+    choosing:boolean;selected:Set<string>;onSelect:(id:string,on:boolean)=>void;
     churchView:boolean; forms:Forms;
     kind: PersonKind;
     persons: PomyannikPerson[];
@@ -79,6 +82,7 @@ const Column = ({
                 {shown.map((person, index) => (
                     <li key={person.id}
                         className="font-serif text-sm py-1 flex gap-2 items-baseline group">
+                        {choosing && <input type="checkbox" className="shrink-0" disabled={busy} checked={selected.has(person.id!)} onChange={e=>onSelect(person.id!,e.target.checked)} aria-label={`Выбрать: ${displayName(person)}${person.signature?`, ${person.signature}`:''}`} />}
                         {arranging && <span className="flex shrink-0 gap-1">
                             <button type="button" className={BUTTON} disabled={busy || index + offset === 0}
                                 aria-label={`Поднять: ${displayName(person)}${person.signature ? `, ${person.signature}` : ""}`}
@@ -96,7 +100,7 @@ const Column = ({
                                 <div className="text-slate-500 text-xs">{person.signature}</div>
                             )}
                             {(person.groups ?? []).length > 0 && (
-                                <div className="text-slate-400 text-xs">{person.groups.join(" · ")}</div>
+                                <div className="text-slate-400 text-xs">{(person.groupNames??[]).join(" · ")}</div>
                             )}
                         </div>
                         {expiredRank(person) && <Link href={`/pomyannik/${person.id}`} className="text-amber-800 text-xs">Срок пометы истёк</Link>}
@@ -160,8 +164,8 @@ const Column = ({
     );
 };
 
-const Book = ({ initial, names, forms = {}, showSignatures: initialShowSignatures }: {
-    initial: PomyannikPerson[]; names: string[]; showSignatures: boolean; forms?:Forms;
+const Book = ({ initial, names, forms = {}, availableGroups, showSignatures: initialShowSignatures }: {
+    initial: PomyannikPerson[]; names: string[]; showSignatures: boolean; forms?:Forms; availableGroups:PomyannikGroup[];
 }) => {
     const router = useRouter();
     const [persons, setPersons] = React.useState(initial);
@@ -169,14 +173,19 @@ const Book = ({ initial, names, forms = {}, showSignatures: initialShowSignature
     const [error, setError] = React.useState<string | null>(null);
     const [query, setQuery] = React.useState("");
     const [group, setGroup] = React.useState("");
+    const [catalog,setCatalog] = React.useState(availableGroups);
+    const [choosing,setChoosing] = React.useState(false);
+    const [selected,setSelected] = React.useState<Set<string>>(new Set());
+    const [kind,setKind] = React.useState("all");
+    const [notice,setNotice] = React.useState("");
     const [arranging, setArranging] = React.useState(false);
     const [churchView,setChurchView] = React.useState(false);
     const [showSignatures, setShowSignatures] = React.useState(initialShowSignatures);
-    React.useEffect(() => { setPersons(initial); }, [initial]);
-    const groups = Array.from(new Set(persons.flatMap(person => person.groups ?? [])))
-        .sort((a, b) => a.localeCompare(b, "ru"));
-    const filtered = persons.filter(person => personMatches(person, query, group));
-    const hasFilter = Boolean(query.trim() || group);
+    React.useEffect(() => { setPersons(initial);setSelected(new Set()); }, [initial]);
+    React.useEffect(()=>setCatalog(availableGroups),[availableGroups]);
+    const groups=catalog.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+    const filtered = persons.filter(person => personMatches(person, query, group) && (kind==="all"||person.kind===kind));
+    const hasFilter = Boolean(query.trim() || group || kind!=="all");
 
     const add = async (kind: PersonKind, name: string): Promise<boolean> => {
         setBusy(true);
@@ -251,30 +260,60 @@ const Book = ({ initial, names, forms = {}, showSignatures: initialShowSignature
         } finally { setBusy(false); }
     };
 
+    const selectPerson=(id:string,on:boolean)=>setSelected(current=>{const next=new Set(current);if(on)next.add(id);else next.delete(id);return next;});
+    const createGroup=async(name:string):Promise<PomyannikGroup|null>=>{
+        setBusy(true);setError(null);setNotice('');
+        try{
+            const response=await fetch('/api/pomyannik/groups',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+            const data=await response.json();if(!response.ok)throw Error(data.error??'Не удалось создать группу.');
+            const created=data.group as PomyannikGroup;
+            setCatalog(current=>current.some(g=>g.id===created.id)?current:[...current,created]);
+            setNotice(`Группа «${created.name}» сохранена. Можно добавить выбранные имена.`);
+            return created;
+        }catch(e){setError((e as Error).message);return null;}finally{setBusy(false);}
+    };
+    const assignGroup=async(groupId:string)=>{
+        setBusy(true);setError(null);setNotice('');
+        try{
+            const response=await fetch('/api/pomyannik/groups/members',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({groupId,personIds:[...selected]})});
+            const data=await response.json();if(!response.ok)throw Error(data.error??'Не удалось добавить имена.');
+            const changes=new Map<string,string[]>(data.items.map((item:{id:string;groups:string[]})=>[item.id,item.groups]));
+            const names=new Map(catalog.map(g=>[g.id,g.name]));
+            setPersons(current=>current.map(p=>changes.has(p.id!)?{...p,groups:changes.get(p.id!)!,groupNames:changes.get(p.id!)!.map(id=>names.get(id)??'')}:p));
+            setSelected(new Set(data.skipped));
+            setNotice(`Добавлено в группу: ${data.added}. Уже были в группе: ${Math.max(0,selected.size-data.added-data.skipped.length)}.${data.skipped.length?` Не добавлено: ${data.skipped.length} — достигнут предел десяти групп или список изменился.`:''}`);
+            if(!data.skipped.length)router.refresh();
+        }catch(e){setError((e as Error).message);}finally{setBusy(false);}
+    };
+
     const duplicates = React.useMemo(() => personsWithDuplicates(persons), [persons]);
     const of = (kind: PersonKind) => filtered.filter(p => p.kind === kind);
 
     return (
         <div className="flex flex-col gap-3">
+            {notice && <p role="status" className="font-serif text-sm text-green-800">{notice}</p>}
             {error && <p role="alert" className="font-serif text-sm text-amber-700">{error}</p>}
             <div className="flex flex-wrap gap-3 items-end font-serif text-sm">
                 <label className="flex flex-col gap-1 flex-1 min-w-0">
                     Поиск по помяннику
-                    <input type="search" className={FIELD} value={query}
+                    <input type="search" disabled={busy} className={FIELD} value={query}
                         placeholder="Имя, подпись, родство или группа"
-                        onChange={e => { setQuery(e.target.value); setArranging(false); }} />
+                        onChange={e => { setQuery(e.target.value); setArranging(false); setSelected(new Set()); }} />
                 </label>
                 <label className="flex flex-col gap-1 max-w-full">
                     Группа
-                    <select className={`${FIELD} max-w-full`} value={group}
-                        onChange={e => { setGroup(e.target.value); setArranging(false); }}>
+                    <select disabled={busy} className={`${FIELD} max-w-full`} value={group}
+                        onChange={e => { setGroup(e.target.value); setArranging(false); setSelected(new Set()); }}>
                         <option value="">Все группы</option>
-                        {Array.from(new Set([...groups, ...(group ? [group] : [])])).map(name => <option key={name} value={name}>{name}</option>)}
+                        {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                     </select>
                 </label>
-                {hasFilter && <button type="button" className={BUTTON}
-                    onClick={() => { setQuery(""); setGroup(""); }}>Сбросить фильтры</button>}
+                <label className="flex flex-col gap-1">Раздел<select disabled={busy} className={FIELD} value={kind} onChange={e=>{setKind(e.target.value);setSelected(new Set());setArranging(false);}}><option value="all">О здравии и о упокоении</option><option value="living">О здравии</option><option value="departed">О упокоении</option></select></label>
+                <button type="button" className={BUTTON} disabled={busy} aria-expanded={choosing} onClick={()=>{setChoosing(v=>!v);setArranging(false);setSelected(new Set());}}>Группы — создать и добавить имена</button>
+                {hasFilter && <button type="button" disabled={busy} className={BUTTON}
+                    onClick={() => { setQuery(""); setGroup(""); setKind("all"); setSelected(new Set()); }}>Сбросить фильтры</button>}
             </div>
+            {choosing && <GroupTools groups={groups} selected={selected.size} found={filtered.length} busy={busy} onSelectAll={()=>setSelected(new Set(filtered.map(p=>p.id!)))} onClear={()=>setSelected(new Set())} onCreate={createGroup} onAssign={assignGroup} />}
             <div className="flex flex-wrap items-center gap-4 font-serif text-sm">
                 <label className="flex gap-2 items-center"><input type="checkbox" checked={churchView} onChange={e=>setChurchView(e.target.checked)} />Просмотр церковнославянским письмом</label>
                 <details className="font-serif text-sm">
@@ -290,7 +329,7 @@ const Book = ({ initial, names, forms = {}, showSignatures: initialShowSignature
                     </div>
                 </details>
                 <button type="button" className={BUTTON} disabled={busy || hasFilter || persons.length < 2}
-                    aria-pressed={arranging} onClick={() => setArranging(value => !value)}>
+                    aria-pressed={arranging} onClick={() => {setArranging(value => !value);setChoosing(false);setSelected(new Set());}}>
                     {arranging ? "Готово" : "Изменить порядок"}
                 </button>
                 {hasFilter && <span role="status" className="text-slate-500">Найдено: {filtered.length} из {persons.length}</span>}
@@ -298,12 +337,12 @@ const Book = ({ initial, names, forms = {}, showSignatures: initialShowSignature
             {churchView && <p className="font-serif text-xs text-slate-500">Имена в родительном падеже. Для имён вне словаря падеж не проверен; пометы без подтверждённой ЦС формы даны гражданским письмом.</p>}
             {duplicates.length > 0 && <details className="font-serif text-sm"><summary className="cursor-pointer text-amber-800">Похожие записи: {duplicates.length}</summary><DuplicateHints persons={duplicates} /></details>}
             {arranging && <p className="font-serif text-xs text-slate-500">Перемещайте имена стрелками внутри раздела. Порядок сохраняется после каждого перемещения.</p>}
-            {hasFilter && <p className="font-serif text-xs text-slate-500">Для изменения порядка сбросьте фильтры.{group && ` Новые имена попадут в группу «${group}».`}</p>}
+            {hasFilter && <p className="font-serif text-xs text-slate-500">Для изменения порядка сбросьте фильтры.{group && ` Новые имена попадут в группу «${catalog.find(g=>g.id===group)?.name??""}».`}</p>}
             <div className="flex flex-col sm:flex-row gap-8" aria-busy={busy}>
                 <Column kind="living" persons={of("living")} onAdd={add} onRemove={remove} busy={busy}
-                    churchView={churchView} forms={forms} showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}`} />
+                    choosing={choosing} selected={selected} onSelect={selectPerson} churchView={churchView} forms={forms} showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}\0${kind}`} />
                 <Column kind="departed" persons={of("departed")} onAdd={add} onRemove={remove} busy={busy}
-                    churchView={churchView} forms={forms} showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}`} />
+                    choosing={choosing} selected={selected} onSelect={selectPerson} churchView={churchView} forms={forms} showSignatures={showSignatures} arranging={arranging} onMove={move} allPersons={persons} filterKey={`${query}\0${group}\0${kind}`} />
             </div>
             {/* Падеж объясняем ЗДЕСЬ, где имена и стоят: в помяннике они в
                 именительном, а склоняются только в записке, и человек, не

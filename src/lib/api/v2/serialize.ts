@@ -839,6 +839,7 @@ export const pomyannikPerson = (doc: any) => ({
         ? { from: doc.sorokoust.from, where: doc.sorokoust.where ?? null }
         : null,
     groups: doc.groups ?? [],
+    groupNames: doc.groupNames ?? [],
     order: doc.order ?? 0,
 });
 

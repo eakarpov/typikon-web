@@ -1,4 +1,5 @@
 'use client';
+import type { PomyannikGroup } from "@/lib/pomyannik/groups";
 import { useState } from "react";
 import Link from "next/link";
 import type { PomyannikPerson } from "@/lib/pomyannik/types";
@@ -6,7 +7,7 @@ import { readingPersons, type ReadingPlace } from "@/lib/pomyannik/reader";
 import ReadingControls from "../ReadingControls";
 import PersonalName from "../PersonalName";
 import styles from "./PrintBook.module.css";
-export default function PrintBook({ persons, showSignatures }: { persons: PomyannikPerson[]; showSignatures: boolean }) {
+export default function PrintBook({ persons, availableGroups, showSignatures }: { persons: PomyannikPerson[]; availableGroups:PomyannikGroup[]; showSignatures: boolean }) {
     const [group, setGroup] = useState("");
     const [kind, setKind] = useState<ReadingPlace["kind"]>("all");
     const [signatures, setSignatures] = useState(showSignatures);
@@ -17,7 +18,7 @@ export default function PrintBook({ persons, showSignatures }: { persons: Pomyan
         <div className="print:hidden flex flex-col gap-4 mb-6 text-sm">
             <Link href="/pomyannik" className="underline">← К помяннику</Link>
             <p>Личный помянник для домашнего чтения. Выберите, какие сведения оставить на бумаге.</p>
-            <ReadingControls persons={persons} group={group} kind={kind} onChange={(g, k) => { setGroup(g); setKind(k); }} />
+            <ReadingControls availableGroups={availableGroups} persons={persons} group={group} kind={kind} onChange={(g, k) => { setGroup(g); setKind(k); }} />
             <div className="flex flex-wrap gap-4">
                 <label className="flex gap-2"><input type="checkbox" checked={signatures} onChange={e => setSignatures(e.target.checked)} />Подписи</label>
                 <label className="flex gap-2"><input type="checkbox" checked={relations} onChange={e => setRelations(e.target.checked)} />Родство</label>
@@ -27,7 +28,7 @@ export default function PrintBook({ persons, showSignatures }: { persons: Pomyan
         </div>
         <article className={styles.sheet}>
             <h1 className="text-2xl font-bold">Помянник</h1>
-            {group && <p>{group}</p>}
+            {group && <p>{availableGroups.find(g=>g.id===group)?.name}</p>}
             {!list.length && <p>В выбранном списке нет имён.</p>}
             {(["living", "departed"] as const).map(section => {
                 const entries = list.filter(person => person.kind === section);

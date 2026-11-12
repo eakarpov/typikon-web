@@ -1,3 +1,4 @@
+import { listGroups } from "@/lib/pomyannik/groupsService";
 import { effectiveRanks } from "@/lib/pomyannik/marks";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -121,7 +122,7 @@ const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
 
             <section className="flex flex-col gap-3">
                 <h2 className="font-bold font-serif text-sm border-t pt-3">Запись</h2>
-                <Card persons={persons} person={person} nameDays={nameDays} groups={Array.from(new Set(persons.flatMap(p => p.groups ?? []))).sort((a, b) => a.localeCompare(b, "ru"))} />
+                <Card persons={persons} person={person} nameDays={nameDays} groups={await listGroups(session.userId as string)} />
             </section>
 
             <p className="font-serif text-sm">

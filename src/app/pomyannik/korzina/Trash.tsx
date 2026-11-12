@@ -29,7 +29,7 @@ export default function Trash({ initial }: { initial: PomyannikPerson[] }) {
         <ul className="space-y-3">{persons.map(person => <li className="border rounded p-3 flex gap-3 justify-between flex-wrap" key={person.id}>
             <div><p className="font-bold">{displayName(person)}</p><p>{person.signature}</p>
                 <p className="text-sm text-slate-500">{person.kind === "living" ? "О здравии" : "О упокоении"}{person.died && ` · ${humanDate(person.died)}`}</p>
-                <p className="text-sm text-slate-500">{person.groups.join(" · ")}</p>
+                <p className="text-sm text-slate-500">{(person.groupNames??[]).join(" · ")}</p>
             </div>
             <button className="border rounded px-3 py-2 self-center disabled:opacity-50" disabled={busy} onClick={() => restore(person)}>Восстановить</button>
         </li>)}</ul>

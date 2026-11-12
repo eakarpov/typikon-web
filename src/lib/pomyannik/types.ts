@@ -165,7 +165,10 @@ export interface PomyannikPerson {
     /** Заказанный сорокоуст: сорок литургий подряд со дня заказа. */
     sorokoust: { from: string; where: string | null } | null;
     /** Метки вроде «род», «крестники». Списков отдельной сущностью нет. */
+    /** ID самостоятельных групп аккаунта. */
     groups: string[];
+    /** Названия групп для показа; вычисляются сервером, не принимаются на запись. */
+    groupNames?: string[];
     order: number;
     createdAt: Date;
     updatedAt: Date;

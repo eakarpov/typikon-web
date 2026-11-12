@@ -7,7 +7,7 @@ import DuplicateHints from "../DuplicateHints";
 import React from "react";
 import { useRouter } from "next/navigation";
 import type { PomyannikPerson, PersonKind, Rank, Sex } from "@/lib/pomyannik/types";
-import { cleanGroups } from "@/lib/pomyannik/organization";
+import type { PomyannikGroup } from "@/lib/pomyannik/groups";
 import { RANKS } from "@/lib/pomyannik/types";
 import type { NameDayOption } from "@/lib/pomyannik/nameday";
 import { humanDate, rankLabel } from "@/app/pomyannik/labels";
@@ -34,11 +34,10 @@ const Row = ({ label, hint, children }: {
 );
 
 const Card = ({ person, nameDays, groups = [], persons = [] }: {
-    person: PomyannikPerson; nameDays: NameDayOption[]; groups?: string[]; persons?: PomyannikPerson[];
+    person: PomyannikPerson; nameDays: NameDayOption[]; groups?: PomyannikGroup[]; persons?: PomyannikPerson[];
 }) => {
     const router = useRouter();
     const [draft, setDraft] = React.useState({...person, rank:statusRank(person), mark:temporaryRank(person)});
-    const [groupText, setGroupText] = React.useState((person.groups ?? []).join(", "));
     const [busy, setBusy] = React.useState(false);
     const [saved, setSaved] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -71,23 +70,17 @@ const Card = ({ person, nameDays, groups = [], persons = [] }: {
             setError("Проверьте даты: укажите точную дату, год из четырёх цифр или день и месяц в формате ДД.ММ.");
             return;
         }
-        const rawGroups = groupText.split(",").map(group => group.trim()).filter(Boolean);
-        if (rawGroups.some(group => group.length > 40) || new Set(rawGroups.map(group => group.toLocaleLowerCase("ru"))).size > 10) {
-            setError("Можно указать до 10 групп, не больше 40 знаков в каждой.");
-            return;
-        }
         setBusy(true);
         setError(null);
         try {
             const response = await fetch(`/api/pomyannik/${person.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...draft, groups: cleanGroups(groupText.split(",")) }),
+                body: JSON.stringify(draft),
             });
             if (!response.ok) { const body = await response.json().catch(() => null); setError(body?.error ?? "не удалось сохранить"); return; }
             const savedPerson = await response.json();
             setDraft(savedPerson);
-            setGroupText((savedPerson.groups ?? []).join(", "));
             setSaved(true);
             router.refresh();
         } catch {
@@ -182,17 +175,12 @@ const Card = ({ person, nameDays, groups = [], persons = [] }: {
             </div>}
             <DuplicateHints persons={duplicateCandidates(draft, persons)} />
 
-            <Row label="группы" hint="через запятую; до 10 групп по 40 знаков">
-                <input className={FIELD} value={groupText} placeholder="Семья, Крестники"
-                       onChange={e => { setGroupText(e.target.value); setSaved(false); }} />
-            </Row>
-            {groups.length > 0 && <div className="flex flex-wrap gap-2" aria-label="Существующие группы">
-                {groups.map(group => <button key={group} type="button" className={BUTTON}
-                    disabled={cleanGroups(groupText.split(",")).includes(group)}
-                    onClick={() => { setGroupText(cleanGroups([...groupText.split(","), group]).join(", ")); setSaved(false); }}>
-                    + {group}
-                </button>)}
-            </div>}
+            <fieldset className="font-serif text-sm space-y-2">
+                <legend>Группы · не более десяти</legend>
+                {groups.length===0&&<p className="text-slate-500">Группы пока не созданы.</p>}
+                <div className="flex flex-wrap gap-3">{groups.map(group=><label key={group.id} className="flex gap-2 items-center"><input type="checkbox" checked={draft.groups.includes(group.id)} disabled={!draft.groups.includes(group.id)&&draft.groups.length>=10} onChange={e=>set("groups",e.target.checked?[...draft.groups,group.id]:draft.groups.filter(id=>id!==group.id))}/>{group.name}</label>)}</div>
+                <a href="/pomyannik" className="underline text-red-900">Создать группу и добавить несколько имён — в помяннике</a>
+            </fieldset>
 
             <h3 className="font-bold font-serif text-sm border-t pt-3">Даты</h3>
             <div className="grid sm:grid-cols-2 gap-3">

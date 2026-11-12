@@ -29,7 +29,7 @@ export async function commemorationPrayers(context:CommemorationContext,place:Co
     if(selection.mode==='none') return {selection,counts,prayers,missing,notes};
     if(!context.signedIn) notes.push('Поимённое поминовение из помянника доступно после входа.');
     const kinds:PersonKind[]=selection.mode==='group'?(['living','departed'] as const).filter(kind=>names[kind].length>0):[selection.mode];
-    if(selection.mode==='group'&&!kinds.length) notes.push(`В группе «${selection.group}» нет подходящих имён. Имена из других групп не добавлены.`);
+    if(selection.mode==='group'&&!kinds.length) notes.push('В выбранной группе нет подходящих имён. Имена из других групп не добавлены.');
     for(const kind of kinds) {
         const style=place.startsWith('psalter-')&&kind==='departed'?'psalter-departed':'molitvoslov-short';
         const found=namedPrayerTexts(NAMED_STYLES[style][kind],lang,gender);

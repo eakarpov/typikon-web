@@ -1,3 +1,4 @@
+import { listGroups } from "@/lib/pomyannik/groupsService";
 import { authorizeUser } from '@/lib/api/v2/user';
 import { fail, preflight, respondPrivate } from '@/lib/api/v2/http';
 import { reportError } from '@/lib/reportError';
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
     try {
         const [persons, settings] = await Promise.all([listPersons(access.userId), getBookSettings(access.userId)]);
         const forms = await slavonicNames(persons.map(p => p.churchName || p.name));
-        return respondPrivate({ items: persons.map(p => ({ ...pomyannikPerson(p), slavonic: forms[p.churchName || p.name] ?? null })), settings }, { access });
+        return respondPrivate({ groups:await listGroups(access.userId), items: persons.map(p => ({ ...pomyannikPerson(p), slavonic: forms[p.churchName || p.name] ?? null })), settings }, { access });
     }
     catch (e) {
         reportError(e, { where: 'api/v2/pomyannik/book', source: 'api' });

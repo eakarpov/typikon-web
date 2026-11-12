@@ -1,4 +1,5 @@
 'use client';
+import type { PomyannikGroup } from "@/lib/pomyannik/groups";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PomyannikPerson } from "@/lib/pomyannik/types";
@@ -7,8 +8,8 @@ import ReadingControls from "../ReadingControls";
 import PersonalName from "../PersonalName";
 const BUTTON = "border rounded px-4 py-2 bg-slate-50 hover:bg-slate-100 disabled:opacity-50";
 
-export default function Reader({ persons, place, showSignatures }: {
-    persons: PomyannikPerson[]; place: ReadingPlace | null; showSignatures: boolean;
+export default function Reader({ persons, availableGroups, place, showSignatures }: {
+    persons: PomyannikPerson[]; availableGroups:PomyannikGroup[]; place: ReadingPlace | null; showSignatures: boolean;
 }) {
     useEffect(() => {
         const previous = document.documentElement.dataset.readingFocus;
@@ -55,7 +56,7 @@ export default function Reader({ persons, place, showSignatures }: {
     return <div className="font-serif flex flex-col gap-5 max-w-3xl mx-auto py-4">
         <div className="flex justify-between gap-3 items-baseline flex-wrap"><h1 className="text-xl font-bold">Чтение помянника</h1><Link href="/pomyannik" className="underline">К помяннику</Link></div>
         <details><summary className="cursor-pointer">Состав и вид чтения</summary><div className="flex flex-col gap-4 mt-3 text-sm">
-            <ReadingControls persons={persons} group={group} kind={kind} onChange={change} disabled={busy} />
+            <ReadingControls availableGroups={availableGroups} persons={persons} group={group} kind={kind} onChange={change} disabled={busy} />
             <label className="flex gap-2"><input type="checkbox" checked={signatures} onChange={e => setSignatures(e.target.checked)} />Показывать подписи</label>
             <label className="flex gap-2"><input type="checkbox" checked={relations} onChange={e => setRelations(e.target.checked)} />Показывать родство</label>
             <label className="flex gap-2"><input type="checkbox" checked={dates} onChange={e => setDates(e.target.checked)} />Показывать даты</label>

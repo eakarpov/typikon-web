@@ -1,3 +1,4 @@
+import { listGroups } from "@/lib/pomyannik/groupsService";
 import { authorizeUser } from '@/lib/api/v2/user';
 import { fail, preflight, respondPrivate } from '@/lib/api/v2/http';
 import { reportError } from '@/lib/reportError';
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
     if (access.denied)
         return access.denied;
     try {
-        return respondPrivate(makeBackup(await listPersons(access.userId)), { access });
+        return respondPrivate(makeBackup(await listPersons(access.userId),new Date(),await listGroups(access.userId)), { access });
     }
     catch (e) {
         reportError(e, { where: 'api/v2/pomyannik/backup', source: 'api' });

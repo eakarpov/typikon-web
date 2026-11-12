@@ -40,7 +40,7 @@ describe('поминовение в молитвенных чтениях',()=>{
         assert.equal(chosen.length,10000);assert.equal(chosen[9999].id,'9999');
     });
     it('считает группы из действующего помянника раздельно по живым и усопшим',()=>{
-        assert.deepEqual(commemorationGroups(persons),[{name:'Друзья',living:1,departed:0},{name:'Род',living:0,departed:1},{name:'Семья',living:1,departed:1}]);
+        assert.deepEqual(commemorationGroups(persons,['Друзья','Род','Семья'].map(name=>({id:name,name}))),[{id:'Друзья',name:'Друзья',living:1,departed:0},{id:'Род',name:'Род',living:0,departed:1},{id:'Семья',name:'Семья',living:1,departed:1}]);
     });
     it('не позволяет изменить неизвестное место, добавить чужие поля или спутать разделы',()=>{
         for(const raw of [null,{},[],{other:{mode:'living'}},{'psalter-1':{mode:'other'}},{'psalter-2':{mode:'group',group:''}},

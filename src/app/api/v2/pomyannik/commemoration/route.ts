@@ -1,3 +1,4 @@
+import { listGroups } from "@/lib/pomyannik/groupsService";
 import { reportError } from '@/lib/reportError';
 import { authorizeUser } from '@/lib/api/v2/user';
 import { fail, preflight, respondPrivate } from '@/lib/api/v2/http';
@@ -9,7 +10,7 @@ export async function GET(request:Request) {
     const access = await authorizeUser(request,'pomyannik'); if(access.denied) return access.denied;
     try {
         const [settings,persons] = await Promise.all([getBookSettings(access.userId),listPersons(access.userId)]);
-        return respondPrivate({ settings:settings.commemorations, groups:commemorationGroups(persons), places:COMMEMORATION_PLACES },{access});
+        return respondPrivate({ settings:settings.commemorations, groups:commemorationGroups(persons,await listGroups(access.userId)), places:COMMEMORATION_PLACES },{access});
     } catch(e) {reportError(e,{where:'api/v2/pomyannik/commemoration#GET',source:'api'});return fail('internal','Не удалось загрузить настройки поминовения.');}
 }
 export async function PUT(request:Request) {

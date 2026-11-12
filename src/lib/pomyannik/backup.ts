@@ -8,6 +8,7 @@ export type BackupPerson = Pick<PomyannikPerson, "name" | "churchName" | "kind" 
 export interface PomyannikBackup {
     format: "typikon-pomyannik";
     version: 2;
+    groups?: string[];
     exportedAt: string;
     persons: BackupPerson[];
 }
@@ -73,15 +74,16 @@ export const backupPerson = (raw: unknown): BackupPerson => {
     } as BackupPerson;
 };
 
-export const makeBackup = (persons: PomyannikPerson[], now = new Date()): PomyannikBackup => ({
-    format: "typikon-pomyannik", version: 2, exportedAt: now.toISOString(), persons: persons.map(backupPerson),
+export const makeBackup = (persons: PomyannikPerson[], now = new Date(), groups: {name:string}[] = []): PomyannikBackup => ({
+    format: "typikon-pomyannik", version: 2, groups:groups.map(g=>g.name), exportedAt: now.toISOString(), persons: persons.map(p=>backupPerson({...p,groups:p.groupNames??p.groups})),
 });
 
 export const parseBackup = (raw: unknown): PomyannikBackup => {
     const value = object(raw);
     if (value.format !== "typikon-pomyannik" || (value.version !== 1 && value.version !== 2)) throw new BackupError("Это не резервная копия помянника поддерживаемой версии.");
     if (!Array.isArray(value.persons) || value.persons.length > MAX_PERSONS) throw new BackupError(`В файле должно быть не больше ${MAX_PERSONS} имён.`);
-    return { format: "typikon-pomyannik", version: 2, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", persons: value.persons.map((person, index) => {
+    if(value.groups!=null&&(!Array.isArray(value.groups)||value.groups.some(g=>!text(g,40)?.trim())))throw new BackupError("Некорректный список групп.");
+    return { format: "typikon-pomyannik", version: 2, groups:(value.groups??[]) as string[], exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", persons: value.persons.map((person, index) => {
         try { return backupPerson(person); }
         catch (e) { throw new BackupError(`Запись ${index + 1}: ${e instanceof Error ? e.message : "ошибка данных"}`); }
     }) };
@@ -89,7 +91,7 @@ export const parseBackup = (raw: unknown): PomyannikBackup => {
 
 /** Совпадения считаются с кратностью: две одинаковые карточки не превращаются в одну. */
 export const planRestore = (current: PomyannikPerson[], incoming: BackupPerson[]) => {
-    const identity = (raw: unknown) => {const p=backupPerson(raw);const {rank:_rank,mark:_mark,...rest}=p;return JSON.stringify({...rest, rank:statusRank(p),mark:temporaryRank(p)});};
+    const identity = (raw: unknown) => {const value=raw as PomyannikPerson;const p=backupPerson({...value,groups:value.groupNames??value.groups});const {rank:_rank,mark:_mark,...rest}=p;return JSON.stringify({...rest,groups:p.groups.map(g=>g.normalize("NFD").replace(/\p{M}/gu,"").toLocaleLowerCase("ru").replace(/ё/g,"е")).sort(), rank:statusRank(p),mark:temporaryRank(p)});};
     const counts = new Map<string, number>();
     for (const person of current) {
         const key = identity(person);

@@ -43,10 +43,10 @@ export const selectCommemorationPersons = (persons: PomyannikPerson[], place: Co
     return persons.filter(person => !person.deletedAt && (!fixedKind || person.kind === fixedKind)
         && (choice.mode === 'group' ? person.groups.includes(choice.group ?? '') : person.kind === choice.mode));
 };
-export const commemorationGroups = (persons: PomyannikPerson[]) => {
-    const groups = new Map<string,{name:string;living:number;departed:number}>();
-    for (const person of persons) if (!person.deletedAt) for (const name of new Set(person.groups)) {
-        const value = groups.get(name) ?? { name, living:0, departed:0 }; value[person.kind]++; groups.set(name,value);
+export const commemorationGroups = (persons:PomyannikPerson[],catalog:{id:string;name:string}[]) => {
+    const groups=new Map(catalog.map(g=>[g.id,{...g,living:0,departed:0}]));
+    for(const person of persons)if(!person.deletedAt)for(const id of new Set(person.groups)){
+        const group=groups.get(id);if(group)group[person.kind]++;
     }
     return [...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,'ru'));
 };
