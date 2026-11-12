@@ -12,7 +12,7 @@ exports.rules=(count)=>{const practice=defaultPractice('RU');practice.liturgies.
 exports.title=(sign)=>renderToStaticMarkup(React.createElement(DayTitle,{day:{sign,date:'2026-11-13',label:'Полиелей, седмичный день',triodLabel:null,memories:[{memoryId:'a',label:'Святой'}]}}));
 `,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'cjs',write:false,external:['react','react-dom/server'],jsx:'automatic',plugins:[{name:'router',setup(b){b.onResolve({filter:/^next\/navigation$/},()=>({path:'router',namespace:'test'}));b.onLoad({filter:/.*/,namespace:'test'},()=>({contents:'exports.useRouter=()=>({refresh(){}});'}));}}]});
 
-async function views(){const bundle=await bundlePromise,module={exports:{}};new Function('require','module','exports',bundle.outputFiles![0].text)(require,module,module.exports);return module.exports as {rules:(n:number)=>string;title:(sign:string)=>string};}
+async function views(){const bundle=await bundlePromise,holder={exports:{}};new Function('require','module','exports',bundle.outputFiles![0].text)(require,holder,holder.exports);return holder.exports as {rules:(n:number)=>string;title:(sign:string)=>string};}
 test('форма показывает нужные утренние варианты и только одну вечернюю службу',async()=>{
  const ui=await views();
  const one=ui.rules(1),two=ui.rules(2),three=ui.rules(3);

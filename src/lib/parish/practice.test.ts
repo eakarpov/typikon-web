@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {applyPractice,defaultPractice,practiceTime,slots,validatePractice,PRACTICE_RULES} from './practice';
-import {parseCivilYear,civilYear} from './civilCalendar';
+import {parseCivilYear,parseCivilSource,civilYear} from './civilCalendar';
 import {validateDayConfig} from './dayConfig';
 import type {ParishDay,Gathering} from './types';
 const service=(key:string,label=key)=>({key,label});
@@ -56,6 +56,23 @@ test('производственный календарь: переносы, с�
  const original=globalThis.fetch;let calls=0;
  globalThis.fetch=async()=>{calls++;return new Response('0'.repeat(365));};
  try{const values=await Promise.all([civilYear('RU',2026),civilYear('RU',2026)]);assert.equal(calls,1);assert.equal(Object.keys(values[0]!).length,365);await civilYear('RU',2026);assert.equal(calls,1);
- globalThis.fetch=async()=>{calls++;throw Error('network');};assert.equal(await civilYear('BY',2026),null);assert.equal(await civilYear('BY',2026),null);assert.equal(calls,2);
+ globalThis.fetch=async()=>{calls++;throw Error('network');};assert.equal(await civilYear('BY',2026),null);assert.equal(await civilYear('BY',2026),null);assert.equal(calls,3);
  }finally{globalThis.fetch=original;}
+});
+
+test('официальный резервный календарь применяется при отказе API и учитывает рабочую субботу',async()=>{
+ const source={year:2026,countrycode:'kz',dayoff:['0101','0316'],workday:['0314'],predayoff:['0425'],covidday:[]};
+ const parsed=parseCivilSource('KZ',2026,source);
+ assert.equal(parsed['2026-03-14'],false);assert.equal(parsed['2026-03-15'],true);assert.equal(parsed['2026-04-25'],false);assert.equal(parsed['2026-03-16'],true);assert.equal(Object.keys(parsed).length,365);
+ assert.throws(()=>parseCivilSource('RU',2026,source));assert.throws(()=>parseCivilSource('KZ',2026,{...source,dayoff:['0230']}));
+ const original=globalThis.fetch,urls:string[]=[];
+ globalThis.fetch=async url=>{urls.push(String(url));if(String(url).startsWith('https://isdayoff.ru'))throw Error('timeout');return Response.json(source);};
+ try{const calendar=await civilYear('KZ',2026);assert.equal(calendar?.['2026-03-14'],false);assert.equal(calendar?.['2026-03-16'],true);assert.equal(urls.length,2);assert.match(urls[1],/isdayoff\/calendars\/main\/db\/2026\/kz2026.json/);}finally{globalThis.fetch=original;}
+});
+test('серверный адрес календаря можно направить через мост, страна и год передаются отдельно',async()=>{
+ const original=globalThis.fetch,old=process.env.CIVIL_CALENDAR_URL;let asked:URL|undefined;
+ process.env.CIVIL_CALENDAR_URL='https://bridge.test/_internal/civil-calendar';
+ globalThis.fetch=async url=>{asked=new URL(String(url));return new Response('0'.repeat(365));};
+ try{assert.ok(await civilYear('UZ',2026));assert.equal(asked?.host,'bridge.test');assert.equal(asked?.pathname,'/_internal/civil-calendar');assert.equal(asked?.searchParams.get('cc'),'uz');assert.equal(asked?.searchParams.get('year'),'2026');}
+ finally{globalThis.fetch=original;if(old===undefined)delete process.env.CIVIL_CALENDAR_URL;else process.env.CIVIL_CALENDAR_URL=old;}
 });
