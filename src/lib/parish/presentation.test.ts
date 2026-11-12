@@ -5,12 +5,14 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const bundlePromise=build({stdin:{contents:`
 const React=require('react');const {renderToStaticMarkup}=require('react-dom/server');
+const EditNotices=require('./src/app/parish/[slug]/schedule/[month]/EditNotices.tsx').default;
 const {EditGathering}=require('./src/app/parish/[slug]/schedule/[month]/Edit.tsx');
 const {Rules}=require('./src/app/parish/[slug]/rules/Rules.tsx');
 const ServiceOptions=require('./src/app/parish/[slug]/schedule/[month]/ServiceOptions.tsx').default;
 const MorningLiturgies=require('./src/app/parish/[slug]/schedule/[month]/MorningLiturgies.tsx').default;
 const DayTitle=require('./src/app/parish/[slug]/schedule/DayTitle.tsx').default;
 const {defaultPractice}=require('./src/lib/parish/practice.ts');
+exports.notices=(canEdit)=>{const edit={_id:'edit',date:'2026-11-09',value:{time:'09:00'},now:{time:'08:00'}};return renderToStaticMarkup(React.createElement(EditNotices,{canEdit,slug:'test',stale:[edit],orphaned:[{...edit,_id:'old'}]}));};
 exports.editor=(cancelled)=>renderToStaticMarkup(React.createElement(EditGathering,{slug:'test',month:'2026-11',g:{key:'g',civil:'2026-11-15',part:'vecher',time:'17:00',title:'Вечерня',services:[{key:'vespers',label:'Вечерня'}],cancelled}}));
 exports.rules=(count)=>{const practice=defaultPractice('RU');practice.liturgies.sunday=count;return renderToStaticMarkup(React.createElement(Rules,{slug:'test',practice,timezone:'Europe/Moscow',zones:['Europe/Moscow'],calendarAvailable:true}));};
 exports.options=()=>renderToStaticMarkup(React.createElement(ServiceOptions,{services:['moleben','compline'],value:{moleben:{memories:Array.from({length:4},(_,i)=>({memoryId:String(i),label:'Святой '+i})),akathist:true},compline:{memories:[]}},onChange(){}}));
@@ -18,7 +20,7 @@ exports.morning=()=>renderToStaticMarkup(React.createElement(MorningLiturgies,{s
 exports.title=(sign)=>renderToStaticMarkup(React.createElement(DayTitle,{day:{sign,date:'2026-11-13',label:'Полиелей, седмичный день',triodLabel:null,memories:[{memoryId:'a',label:'Святой'}]}}));
 `,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'cjs',write:false,external:['react','react-dom/server'],jsx:'automatic',plugins:[{name:'router',setup(b){b.onResolve({filter:/^next\/navigation$/},()=>({path:'router',namespace:'test'}));b.onLoad({filter:/.*/,namespace:'test'},()=>({contents:'exports.useRouter=()=>({refresh(){}});'}));}}]});
 
-async function views(){const bundle=await bundlePromise,holder={exports:{}};new Function('require','module','exports',bundle.outputFiles![0].text)(require,holder,holder.exports);return holder.exports as {rules:(n:number)=>string;title:(sign:string)=>string;options:()=>string;morning:()=>string;editor:(cancelled:boolean)=>string};}
+async function views(){const bundle=await bundlePromise,holder={exports:{}};new Function('require','module','exports',bundle.outputFiles![0].text)(require,holder,holder.exports);return holder.exports as {rules:(n:number)=>string;title:(sign:string)=>string;options:()=>string;morning:()=>string;editor:(cancelled:boolean)=>string;notices:(canEdit:boolean)=>string};}
 test('форма показывает нужные утренние варианты и только одну вечернюю службу',async()=>{
  const ui=await views();
  const one=ui.rules(1),two=ui.rules(2),three=ui.rules(3);
@@ -42,4 +44,14 @@ test('редактор предлагает возврат отменённой 
  const ui=await views(),cancelled=ui.editor(true),active=ui.editor(false);
  assert.match(cancelled,/>Вернуть богослужение<\/button>/);assert.doesNotMatch(cancelled,/>Не служим<\/button>/);
  assert.doesNotMatch(active,/>Вернуть богослужение<\/button>/);assert.match(active,/>Не служим<\/button>/);
+});
+
+test('расхождения устава и осиротевшие правки видны только редактору храма',async()=>{
+ const ui=await views();assert.equal(ui.notices(false),'');
+ const editor=ui.notices(true);assert.match(editor,/устав теперь предлагает 08:00/);assert.match(editor,/у вас поставлено 09:00/);assert.match(editor,/устав больше не назначает/);
+});
+
+test('память полиелея и бдения выделяется жирным, прочие знаки не выделяются',async()=>{
+ const ui=await views();for(const sign of ['polieley','bdenie','velikoe-bdenie'])assert.match(ui.title(sign),/<strong>Святой<\/strong>/);
+ for(const sign of ['slavoslovie','shesterichnaya','bez-znaka'])assert.doesNotMatch(ui.title(sign),/<strong>/);
 });

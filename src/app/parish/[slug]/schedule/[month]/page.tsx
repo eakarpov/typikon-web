@@ -3,6 +3,7 @@ import type {ServiceMemory} from "@/lib/parish/serviceDetails";
 import {EyeIcon} from "@heroicons/react/20/solid";
 import {dayOrdoHref} from "@/lib/parish/dayConfig";
 import DayTitle from "../DayTitle";
+import EditNotices from "./EditNotices";
 import MorningLiturgies from "./MorningLiturgies";
 import DayEditor from "./DayEditor";
 import {schedulePeriod,shiftSchedulePeriod,parishScheduleHref} from "@/lib/parish/period";
@@ -13,7 +14,7 @@ import { notFound } from "next/navigation";
 import { parishMonth, parishView } from "@/lib/parish/schedule";
 import { rightsOn } from "@/lib/parish/access";
 import type { Gathering, ParishDay } from "@/lib/parish/types";
-import { AddGathering, DropEdit, EditGathering, type DayMarks } from "./Edit";
+import { AddGathering, EditGathering, type DayMarks } from "./Edit";
 import { Publish } from "./Publish";
 
 // ПРОЕКТ РАСПИСАНИЯ, который остаётся поправить, а не составить.
@@ -200,8 +201,8 @@ const Page = async ({ params, searchParams }: Props) => {
                 <>
                     <p style={{ color: "#777", fontSize: ".85rem", margin: ".75rem 0 0" }}>
                         {data.published
-                            ? "Расписание храма. Что служится — сказал устав, час поставил приход."
-                            : "Это ПРОЕКТ, выведенный из устава: что служится — сказал устав, во сколько — приходское умолчание."}{" "}
+                            ? "Расписание храма."
+                            : "Проект расписания богослужений."}{" "}
                         <Link href={`/parish/${slug}/schedule/${month}?why=${why ? 0 : 1}&edit=${edit ? 1 : 0}`}>
                             {why ? "скрыть объяснения" : "показать, откуда что взялось"}
                         </Link>
@@ -223,27 +224,7 @@ const Page = async ({ params, searchParams }: Props) => {
                         </p>
                     )}
 
-                    {(stale.length > 0 || orphaned.length > 0) && (
-                        <div style={{ margin: ".75rem 0 0", padding: ".5rem .75rem",
-                                      background: "#fdf6e3", fontSize: ".85rem" }}>
-                            {stale.map(e => (
-                                <div key={e._id} style={{ marginBottom: ".3rem" }}>
-                                    <b>{Number(e.date.slice(8))} числа</b> устав теперь
-                                    предлагает {e.now?.time ?? "без часа"} — у вас
-                                    поставлено {e.value.time ?? e.value.title}.
-                                    Правка держится.{" "}
-                                    <DropEdit slug={slug} id={e._id!} />
-                                </div>
-                            ))}
-                            {orphaned.map(e => (
-                                <div key={e._id} style={{ marginBottom: ".3rem" }}>
-                                    <b>{Number(e.date.slice(8))} числа</b> устав больше не
-                                    назначает того собрания, которое вы правили.{" "}
-                                    <DropEdit slug={slug} id={e._id!} />
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <EditNotices canEdit={rights.canEdit} slug={slug} stale={stale} orphaned={orphaned}/>
 
                     {data.failed.length > 0 && (
                         <p style={{ margin: ".75rem 0 0", padding: ".5rem .75rem",

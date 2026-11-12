@@ -10,6 +10,6 @@ export default function DayTitle({ day }: {
     const memories = selected?.length ? selected.map(id => day.memoryChoices?.find(m => m.memoryId === id) ?? { memoryId: id, label: day.memories.find(m => m.memoryId === id)?.label ?? id }) : day.memories.slice(0, 1);
     return <div>{day.triodLabel && <div>{day.triodLabel}</div>}{memories.map((m, i) => {
             const sign = i === 0 ? day.sign : day.memoryChoices?.find(n => n.memoryId === m.memoryId)?.sign ?? '', glyph = signGlyph(sign);
-            return <div key={m.memoryId}>{m.label}{glyph && <span aria-label="Знак службы" style={{ color: glyph.color === 'red' ? '#b21f1f' : '#000', fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif', marginLeft: '.3em' }}>{glyph.glyph}</span>}</div>;
+            return <div key={m.memoryId}>{['polieley','bdenie','velikoe-bdenie'].includes(sign)?<strong>{m.label}</strong>:m.label}{glyph && <span aria-label="Знак службы" style={{ color: glyph.color === 'red' ? '#b21f1f' : '#000', fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif', marginLeft: '.3em' }}>{glyph.glyph}</span>}</div>;
         })}</div>;
 }
