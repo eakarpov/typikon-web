@@ -4,9 +4,10 @@ import { cookies } from "next/headers";
 import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont } from "@/utils/font";
 import { allNames } from "@/lib/imeniny/store";
-import { listPersons } from "@/lib/pomyannik/service";
+import { getBookSettings, listPersons } from "@/lib/pomyannik/service";
 import { upcoming } from "@/lib/pomyannik/reckoning";
 import Book from "@/app/pomyannik/Book";
+import BackupTools from "./BackupTools";
 import Upcoming from "@/app/pomyannik/Upcoming";
 
 // ПОМЯННИК.
@@ -46,7 +47,7 @@ const PomyannikPage = async () => {
         );
     }
 
-    const [persons, names] = await Promise.all([listPersons(userId), allNames()]);
+    const [persons, names, settings] = await Promise.all([listPersons(userId), allNames(), getBookSettings(userId)]);
     const events = upcoming(persons, undefined, DAYS);
 
     return (
@@ -78,7 +79,13 @@ const PomyannikPage = async () => {
                 </section>
             )}
 
-            <Book initial={persons} names={names.map(n => n.name)} />
+            <nav className="flex flex-wrap gap-4 font-serif text-sm" aria-label="Чтение и печать помянника">
+                <Link href="/pomyannik/chtenie" className="text-red-900 underline">Читать помянник</Link>
+                <Link href="/pomyannik/korzina" className="text-red-900 underline">Корзина</Link>
+                <Link href="/pomyannik/print" className="text-red-900 underline">Печать личного помянника</Link>
+            </nav>
+
+            <Book initial={persons} names={names.map(n => n.name)} showSignatures={settings.showSignatures} />
 
             <nav className="flex flex-wrap gap-4 font-serif text-sm border-t pt-3">
                 <Link href="/pomyannik/vvod" className="text-red-900 hover:underline">
@@ -94,6 +101,8 @@ const PomyannikPage = async () => {
                     кому подать записку →
                 </Link>
             </nav>
+
+            <BackupTools persons={persons} />
 
             <section className="max-w-2xl">
                 <h2 className="font-serif font-bold text-sm">Откуда это взято</h2>

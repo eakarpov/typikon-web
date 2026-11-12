@@ -148,8 +148,13 @@ export interface PomyannikPerson {
     kind: PersonKind;
     sex: Sex;
     rank: Rank | null;
+    /** Временная помета действует по эту дату включительно. */
+    rankUntil?: string | null;
     /** «мама», «крёстный» — для хозяина помянника, в записку не идёт. */
     relation: string | null;
+    /** Фамилия или уточнение для владельца; в церковную записку не входит. */
+    signature?: string | null;
+    /** YYYY-MM-DD, YYYY или --MM-DD. Неизвестные части не подставляются. */
     born: string | null;
     baptized: string | null;
     died: string | null;
@@ -161,14 +166,15 @@ export interface PomyannikPerson {
     order: number;
     createdAt: Date;
     updatedAt: Date;
+    deletedAt?: Date | null;
 }
 
 /** Что приходит на запись: без хозяина, без служебных полей. */
 export type PersonInput = Partial<Omit<PomyannikPerson,
-    "id" | "userId" | "nameKey" | "createdAt" | "updatedAt">> & { name: string };
+    "id" | "userId" | "nameKey" | "createdAt" | "updatedAt" | "deletedAt">> & { name: string };
 
-export const MAX_PERSONS = 500;
-export const MAX_BATCH = 200;
+export const MAX_PERSONS = 10000;
+export const MAX_BATCH = 500;
 
 // ТИПЫ ПОМИНОВЕНИЯ.
 //

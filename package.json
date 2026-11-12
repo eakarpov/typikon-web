@@ -157,7 +157,8 @@
     "sass": "^1.77.6",
     "trek-captcha": "^0.4.0",
     "undici": "^8.10.0",
-    "use-long-press": "^3.3.0"
+    "use-long-press": "^3.3.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

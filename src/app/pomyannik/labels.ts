@@ -1,3 +1,4 @@
+import { dateParts } from "@/lib/pomyannik/dates";
 import { MONTH_OF } from "@/utils/chantLabels";
 import { RANK_BY_KEY, type PomyannikPerson, type Rank, type Sex } from "@/lib/pomyannik/types";
 import type { EventKind } from "@/lib/pomyannik/reckoning";
@@ -7,10 +8,10 @@ import type { EventKind } from "@/lib/pomyannik/reckoning";
 
 /** «12 марта 2019». Год опускается, когда он и так понятен из соседства. */
 export const humanDate = (iso: string | null | undefined, withYear = true): string => {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? ""));
-    if (!m) return "";
-    const day = Number(m[3]), month = Number(m[2]);
-    return `${day} ${MONTH_OF[month]}${withYear ? ` ${m[1]}` : ""}`;
+    const parts = dateParts(iso);
+    if (!parts) return "";
+    if (parts.month === null) return `${parts.year} г.`;
+    return `${parts.day} ${MONTH_OF[parts.month]}${withYear && parts.year !== null ? ` ${parts.year}` : ""}`;
 };
 
 // Именительный падеж: день стоит в перечне сам по себе — «11 сентября,
@@ -48,6 +49,9 @@ export const EVENT_LABEL: Record<EventKind, string> = {
     "sorokoust-end": "оканчивается сорокоуст",
     "memorial-day": "поминовение усопших",
 };
+
+export const eventLabel = (event: { kind: EventKind; years?: number }) =>
+    event.kind === "anniversary" && event.years === undefined ? "день памяти (год неизвестен)" : EVENT_LABEL[event.kind];
 
 /** «через 3 дня», «сегодня», «завтра» — так до дня понятнее, чем числом. */
 export const inDays = (days: number): string => {

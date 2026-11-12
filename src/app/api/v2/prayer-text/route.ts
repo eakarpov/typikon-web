@@ -9,7 +9,9 @@ import {
 } from "@/lib/molitvoslov/store";
 import { listPersons } from "@/lib/pomyannik/service";
 import { slavonicNames } from "@/lib/pomyannik/slavonic";
-import { MAX_NAMES_IN_NOTE } from "@/lib/pomyannik/types";
+import { effectiveRank } from "@/lib/pomyannik/marks";
+import { isCommemorationPlace } from "@/lib/pomyannik/commemoration";
+import { loadCommemorationContext, commemorationPrayers } from "@/lib/pomyannik/commemorationPrayers";
 import { reportError } from "@/lib/reportError";
 
 // ПОИМЁННЫЕ МОЛИТВЫ: шаблон книги + собственный помянник → готовый текст.
@@ -37,6 +39,20 @@ export async function GET(request: Request) {
     const lang = (readEnum(url, "lang", PRAYER_LANGS) ?? "cu_gr") as PrayerLang;
     const gender = (readEnum(url, "gender", GENDERS) ?? "m") as PrayerGender;
 
+    const place=url.searchParams.get("place");
+    if(place!==null) {
+        if(!isCommemorationPlace(place)) return fail("bad_request","Неизвестное место поминовения.");
+        try {
+            const result=await commemorationPrayers(await loadCommemorationContext(access.userId),place,lang,gender);
+            if(result.missing.length) return fail("corpus_unavailable",result.missing.join(" "));
+            return respondPrivate({place,selection:result.selection,counts:result.counts,lang,gender,notes:result.notes,
+                prayers:result.prayers.map(prayer=>({...namedPrayer(prayer),for:prayer.for,lang:prayer.lang}))},{access});
+        } catch(e) {
+            reportError(e,{where:"app/api/v2/prayer-text/route#place",source:"api"});
+            return fail("internal","Не удалось собрать поимённую молитву.");
+        }
+    }
+
     if (!forKind) {
         return fail("bad_request", "Параметр for обязателен: living или departed");
     }
@@ -59,14 +75,13 @@ export async function GET(request: Request) {
             return fail("not_found", "Тексты этого стиля в корпусе не нашлись");
         }
 
-        // Имена — свой помянник, разворот по for, не больше того, что кладут
-        // в одну записку: больше — уже не молитва, а листание.
+        // Для чтения берём весь выбранный раздел. Лимит записки к молитве не относится.
         const mine = await listPersons(access.userId);
-        const chosen = mine.filter(person => person.kind === forKind).slice(0, MAX_NAMES_IN_NOTE);
+        const chosen = mine.filter(person => person.kind === forKind);
         const forms = await slavonicNames(chosen.map(p => p.churchName || p.name));
         const persons: NamedPerson[] = chosen.map(p => {
             const form = forms[p.churchName || p.name];
-            return { name: form?.genitive ?? p.name, rank: p.rank, sex: p.sex };
+            return { name: form?.genitive ?? p.name, rank: effectiveRank(p), sex: p.sex };
         });
 
         return respondPrivate({

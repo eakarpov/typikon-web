@@ -15,7 +15,7 @@ export interface CircleConfig {
 }
 export interface Row {
     id: string; legacyId?:string; contentKey?:string; sourceIds?:string[]; blockId?: string; text: string; label?: string | null; kind: string; note?: string | null;
-    repeatCount?: number; poklon?: string | boolean | null; language?: string; sourceBook?: string; sourceEdition?:string; sourceLocator?:string;
+    repeatCount?: number; poklon?: string | boolean | null; language?: string; sourceBook?: string; sourceEdition?:string; sourceTextId?:string; sourceLocator?:string;
     redistributable?: boolean; zone?: string; footnotes?: string[]; markdown?: boolean;
 }
 export interface BlockResult { rows: Row[]; missing: string[]; changes?: unknown[]; version?: string }

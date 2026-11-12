@@ -14,12 +14,16 @@ export interface NavItem {
     href: string;
     label: string;
     /** Чем определяется подсветка, если адрес не совпадает с href буквально. */
-    match?: string;
+    match?: string | string[];
 }
 
 const NavGroup = ({ title, items }: { title: string; items: NavItem[] }) => {
     const pathname = usePathname();
-    const active = items.some((item) => pathname?.includes(item.match ?? item.href));
+    const isActive = (item: NavItem) => {
+        const matches = item.match ?? item.href;
+        return (Array.isArray(matches) ? matches : [matches]).some((path) => pathname?.includes(path));
+    };
+    const active = items.some(isActive);
 
     return (
         <NavPopover
@@ -32,7 +36,7 @@ const NavGroup = ({ title, items }: { title: string; items: NavItem[] }) => {
                     href={item.href}
                     onClick={close}
                     className={`font-serif px-3 py-1 hover:bg-amber-50 ${
-                        pathname?.includes(item.match ?? item.href) ? "text-red-600" : ""
+                        isActive(item) ? "text-red-600" : ""
                     }`}
                 >
                     {item.label}

@@ -738,18 +738,24 @@ dneslov (`nobles:link-dneslov`), поиск дубликатов (`nobles:find-d
 crontab -e
 ```
 
-В начало файла — `PATH`, иначе cron не найдёт `npm`/`node` из nvm (тот же путь, что и в systemd-юните):
+После перехода на каталоги релизов задания запускаются из `typikon-web-releases/current`.
+На production Node/npm находятся в `/usr/bin`; `flock` исключает наложение запусков,
+вывод сохраняется в journald. Часы — Europe/Moscow, часовой пояс сервера.
+Каждая строка ниже должна быть скопирована целиком (без обрезки длинных строк редактором):
 ```
-PATH=/home/admin/.nvm/versions/node/v20.20.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-```
-
-Дальше сами задания:
-```
-0 3 * * * cd /var/www/typikon.su/typikon-web && npm run channel-posts:generate 2>&1 | logger -t channel-posts-gen
-0 9,18 * * * cd /var/www/typikon.su/typikon-web && npm run channel-posts:publish 2>&1 | logger -t channel-posts-pub
+0 3 * * * PATH=/usr/local/bin:/usr/bin:/bin /usr/bin/flock -n /var/www/typikon.su/typikon-web-releases/channel-posts-generate.lock /bin/bash -c 'cd /var/www/typikon.su/typikon-web-releases/current && /usr/bin/npm run channel-posts:generate' 2>&1 | /usr/bin/logger -t channel-posts-gen
+0 9,18 * * * PATH=/usr/local/bin:/usr/bin:/bin /usr/bin/flock -n /var/www/typikon.su/typikon-web-releases/channel-posts-publish.lock /bin/bash -c 'cd /var/www/typikon.su/typikon-web-releases/current && /usr/bin/npm run channel-posts:publish' 2>&1 | /usr/bin/logger -t channel-posts-pub
 ```
 `.env.production` подгружать вручную не нужно — скрипты делают это сами через `@next/env`
 (`src/scripts/lib/env.ts`), важен только `cd` в корень репозитория, где лежит `.env.production`.
+
+2026-11-10 эти два задания восстановлены на production: прежние строки буквально
+заканчивались на `generate >` и `publis>`, что приводило к синтаксической ошибке shell
+до запуска npm. Они также ссылались на старый checkout. Остальные строки crontab
+сохранены; резервная копия —
+`/var/www/typikon.su/typikon-web-releases/backups/channel-cron-20261110T090942Z/crontab.before`.
+Публикация подхватывает все `ready` с наступившим `scheduledAt`, включая просроченные.
+Журнал: `journalctl -t channel-posts-pub` (генерация: `-t channel-posts-gen`).
 
 
 ## 2026-10-31: чтения дня на телефоне и с клавиатуры

@@ -1,8 +1,15 @@
+import { readCommemorations, validateCommemorations, type CommemorationSettings } from "./commemoration";
+import { moveToTrash, recoverFromTrash, TrashLimitError } from "./trash";
+import { personalDate, fullDate, dateParts } from "./dates";
+import { TEMPORARY_RANKS } from "./marks";
+import { BackupError, parseBackup, planRestore } from "./backup";
+import type { ReadingPlace } from "./reader";
 import { randomBytes } from "node:crypto";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { nameKey, normalizeName } from "@/lib/imeniny/core";
 import { autoNameDay } from "@/lib/pomyannik/nameday";
+import { cleanGroups, cleanSignature, validPersonOrder } from "./organization";
 import { guessSex } from "@/lib/pomyannik/names";
 import {
     MAX_BATCH, MAX_PERSONS, RANK_BY_KEY,
@@ -28,6 +35,8 @@ const persons = async () =>
 
 const feeds = async () =>
     (await clientPromise).db("typikon-users").collection(FEEDS);
+
+export class PersonDataError extends Error {}
 
 export class TooManyPersonsError extends Error {
     constructor(readonly limit: number) {
@@ -71,6 +80,10 @@ const cleanNameDay = (raw: unknown): NameDay | null => {
  * чужой userId.
  */
 const clean = (input: PersonInput) => {
+    for (const key of ["born", "baptized", "died"] as const) {
+        if (input[key] && !personalDate(input[key])) throw new PersonDataError("Некорректная дата: укажите точную дату, только год или день и месяц без года.");
+    }
+    if (input.rankUntil && (!fullDate(input.rankUntil) || !input.rank || !TEMPORARY_RANKS.includes(input.rank))) throw new PersonDataError("Срок можно задать только для временной пометы и полной датой.");
     const name = normalizeName(String(input.name ?? "")).slice(0, 60);
     const key = nameKey(name);
     if (!key) return null;
@@ -78,12 +91,9 @@ const clean = (input: PersonInput) => {
     const rank = typeof input.rank === "string" && RANK_BY_KEY[input.rank]
         ? input.rank : null;
     const kind = input.kind === "departed" ? "departed" : "living";
-    const died = isoDate(input.died);
+    const died = personalDate(input.died);
 
-    const groups = Array.isArray(input.groups)
-        ? [...new Set(input.groups.map(g => String(g ?? "").trim().slice(0, 40)).filter(Boolean))]
-              .slice(0, 10)
-        : [];
+    const groups = cleanGroups(input.groups);
 
     const sorokoustFrom = input.sorokoust ? isoDate(input.sorokoust.from) : null;
 
@@ -101,9 +111,11 @@ const clean = (input: PersonInput) => {
         // родом у всех. Ошибётся она на Никите и Илии, и правится одним щелчком.
         sex: input.sex === "m" || input.sex === "f" ? input.sex : guessSex(name),
         rank,
+        rankUntil: rank && TEMPORARY_RANKS.includes(rank) ? fullDate(input.rankUntil) : null,
         relation: input.relation ? String(input.relation).trim().slice(0, 60) || null : null,
-        born: isoDate(input.born),
-        baptized: isoDate(input.baptized),
+        signature: cleanSignature(input.signature),
+        born: personalDate(input.born),
+        baptized: personalDate(input.baptized),
         died,
         nameDay: cleanNameDay(input.nameDay),
         sorokoust: sorokoustFrom
@@ -117,7 +129,7 @@ const clean = (input: PersonInput) => {
 
 const out = (doc: any): PomyannikPerson => {
     const { _id, ...rest } = doc;
-    return { ...rest, id: String(_id) } as PomyannikPerson;
+    return { ...rest, signature: rest.signature ?? null, groups: rest.groups ?? [], id: String(_id) } as PomyannikPerson;
 };
 
 /**
@@ -128,25 +140,25 @@ const out = (doc: any): PomyannikPerson => {
 const withNameDay = async (doc: ReturnType<typeof clean>) => {
     if (!doc) return doc;
     if (doc.nameDay && doc.nameDay.source === "manual") return doc;
-    if (!doc.born) return { ...doc, nameDay: doc.nameDay?.source === "auto" ? null : doc.nameDay };
+    if (!dateParts(doc.born)?.month) return { ...doc, nameDay: doc.nameDay?.source === "auto" ? null : doc.nameDay };
     const auto = await autoNameDay(doc.churchName || doc.name, doc.born);
     return { ...doc, nameDay: auto ?? doc.nameDay ?? null };
 };
 
 export const listPersons = async (userId: string): Promise<PomyannikPerson[]> => {
     const docs = await (await persons())
-        .find({ userId })
+        .find({ userId, deletedAt: null })
         .sort({ kind: 1, order: 1, name: 1 })
         .toArray();
     return docs.map(out);
 };
 
 export const countPersons = async (userId: string): Promise<number> =>
-    (await persons()).countDocuments({ userId });
+    (await persons()).countDocuments({ userId, deletedAt: null });
 
 export const getPerson = async (userId: string, id: string): Promise<PomyannikPerson | null> => {
     if (!ObjectId.isValid(id)) return null;
-    const doc = await (await persons()).findOne({ _id: new ObjectId(id), userId });
+    const doc = await (await persons()).findOne({ _id: new ObjectId(id), userId, deletedAt: null });
     return doc ? out(doc) : null;
 };
 
@@ -160,16 +172,17 @@ export const getPerson = async (userId: string, id: string): Promise<PomyannikPe
 export const addPersons = async (
     userId: string, inputs: PersonInput[],
 ): Promise<PomyannikPerson[]> => {
-    const batch = inputs.slice(0, MAX_BATCH);
+    if (inputs.length > MAX_BATCH) throw new PersonDataError(`За раз принимается не больше ${MAX_BATCH} имён.`);
+    const batch = inputs;
     const cleaned = (await Promise.all(batch.map(i => withNameDay(clean(i)))))
         .filter(Boolean) as Array<NonNullable<ReturnType<typeof clean>>>;
     if (!cleaned.length) return [];
 
     const collection = await persons();
-    const already = await collection.countDocuments({ userId });
+    const already = await collection.countDocuments({ userId, deletedAt: null });
     if (already + cleaned.length > MAX_PERSONS) throw new TooManyPersonsError(MAX_PERSONS);
 
-    const last = await collection.find({ userId }).sort({ order: -1 }).limit(1).toArray();
+    const last = await collection.find({ userId, deletedAt: null }).sort({ order: -1 }).limit(1).toArray();
     let order = (last[0]?.order ?? 0) + 1;
 
     const now = new Date();
@@ -184,7 +197,7 @@ export const updatePerson = async (
 ): Promise<PomyannikPerson | null> => {
     if (!ObjectId.isValid(id)) return null;
     const collection = await persons();
-    const current = await collection.findOne({ _id: new ObjectId(id), userId });
+    const current = await collection.findOne({ _id: new ObjectId(id), userId, deletedAt: null });
     if (!current) return null;
 
     // Правка приходит целым лицом, а не по полю: иначе пришлось бы решать, что
@@ -194,16 +207,82 @@ export const updatePerson = async (
     if (!doc) return null;
 
     await collection.updateOne(
-        { _id: new ObjectId(id), userId },
+        { _id: new ObjectId(id), userId, deletedAt: null },
         { $set: { ...doc, updatedAt: new Date() } },
     );
     return out({ ...current, ...doc, _id: current._id });
 };
 
-export const deletePerson = async (userId: string, id: string): Promise<boolean> => {
-    if (!ObjectId.isValid(id)) return false;
-    const result = await (await persons()).deleteOne({ _id: new ObjectId(id), userId });
-    return result.deletedCount > 0;
+export const deletePerson = async (userId: string, id: string): Promise<boolean> =>
+    moveToTrash(await persons(), userId, id);
+
+/** Корзина хранится до восстановления; автоматического удаления нет. */
+export const listTrash = async (userId: string): Promise<PomyannikPerson[]> =>
+    (await (await persons()).find({ userId, deletedAt: { $type: "date" } }).sort({ deletedAt: -1 }).toArray()).map(out);
+
+export const restoreDeletedPerson = async (userId: string, id: string): Promise<boolean> => {
+    try { return await recoverFromTrash(await persons(), userId, id, MAX_PERSONS); }
+    catch (e) {
+        if (e instanceof TrashLimitError) throw new TooManyPersonsError(MAX_PERSONS);
+        throw e;
+    }
+};
+
+/** Меняет только порядок, не перезаписывая карточки устаревшими данными клиента. */
+export const reorderPersons = async (userId: string, ids: unknown): Promise<boolean> => {
+    const collection = await persons();
+    const current = await collection.find({ userId, deletedAt: null }, { projection: { _id: 1, order: 1 } }).toArray();
+    if (!validPersonOrder(ids, current.map(doc => String(doc._id)))) return false;
+    if (!ids.length) return true;
+    const orders = new Map(current.map(doc => [String(doc._id), doc.order]));
+    const updates = ids.map((id, order) => ({
+        updateOne: {
+            filter: { _id: new ObjectId(id), userId, deletedAt: null },
+            update: { $set: { order, updatedAt: new Date() } },
+        },
+    })).filter((operation, order) => orders.get(ids[order]) !== order);
+    if (updates.length) await collection.bulkWrite(updates);
+    return true;
+};
+
+interface BookSettings { _id: string; showSignatures?: boolean; readingPlace?: ReadingPlace | null; commemorations?: Partial<CommemorationSettings> }
+const bookSettings = async () => (await clientPromise).db("typikon-users").collection<BookSettings>("pomyannikSettings");
+
+export const getBookSettings = async (userId: string) => {
+    const doc = await (await bookSettings()).findOne({ _id: userId });
+    return { showSignatures: doc?.showSignatures !== false, readingPlace: doc?.readingPlace ?? null, commemorations: readCommemorations(doc?.commemorations) };
+};
+
+export const setBookSettings = async (userId: string, showSignatures: boolean) => {
+    await (await bookSettings()).updateOne({ _id: userId }, { $set: { showSignatures } }, { upsert: true });
+};
+
+export const setCommemorations = async (userId: string, raw: unknown) => {
+    const patch = validateCommemorations(raw);
+    const fields = Object.fromEntries(Object.entries(patch).map(([place,value]) => [`commemorations.${place}`,value]));
+    await (await bookSettings()).updateOne({ _id:userId }, { $set:fields }, { upsert:true });
+    return (await getBookSettings(userId)).commemorations;
+};
+
+export const setReadingPlace = async (userId: string, readingPlace: ReadingPlace | null) => {
+    if (readingPlace && !await getPerson(userId, readingPlace.personId)) return false;
+    await (await bookSettings()).updateOne({ _id: userId }, { $set: { readingPlace } }, { upsert: true });
+    return true;
+};
+
+export const restorePersons = async (userId: string, raw: unknown) => {
+    const backup = parseBackup(raw);
+    const current = await listPersons(userId);
+    const { additions, skipped } = planRestore(current, backup.persons);
+    if (current.length + additions.length > MAX_PERSONS) throw new BackupError(`После восстановления получится больше ${MAX_PERSONS} имён.`);
+    if (!additions.length) return { added: 0, skipped };
+    const now = new Date();
+    let order = Math.max(0, ...current.map(person => person.order ?? 0)) + 1;
+    // Не пересчитываем именины и не угадываем род: восстанавливаем сохранённые сведения.
+    const docs = additions.map(person => ({ ...person, nameKey: nameKey(person.name), userId,
+        order: order++, createdAt: now, updatedAt: now }));
+    await (await persons()).insertMany(docs);
+    return { added: docs.length, skipped };
 };
 
 // --- лента подписки --------------------------------------------------------

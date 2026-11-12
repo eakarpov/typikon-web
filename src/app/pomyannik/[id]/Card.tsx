@@ -1,7 +1,13 @@
 'use client';
+import { personalDate, fullDate, dateParts } from "@/lib/pomyannik/dates";
+import { TEMPORARY_RANKS, expiredRank } from "@/lib/pomyannik/marks";
+import { duplicateCandidates } from "@/lib/pomyannik/duplicates";
+import DateField from "../DateField";
+import DuplicateHints from "../DuplicateHints";
 import React from "react";
 import { useRouter } from "next/navigation";
 import type { PomyannikPerson, PersonKind, Rank, Sex } from "@/lib/pomyannik/types";
+import { cleanGroups } from "@/lib/pomyannik/organization";
 import { RANKS } from "@/lib/pomyannik/types";
 import type { NameDayOption } from "@/lib/pomyannik/nameday";
 import { humanDate, rankLabel } from "@/app/pomyannik/labels";
@@ -27,11 +33,12 @@ const Row = ({ label, hint, children }: {
     </label>
 );
 
-const Card = ({ person, nameDays }: {
-    person: PomyannikPerson; nameDays: NameDayOption[];
+const Card = ({ person, nameDays, groups = [], persons = [] }: {
+    person: PomyannikPerson; nameDays: NameDayOption[]; groups?: string[]; persons?: PomyannikPerson[];
 }) => {
     const router = useRouter();
     const [draft, setDraft] = React.useState(person);
+    const [groupText, setGroupText] = React.useState((person.groups ?? []).join(", "));
     const [busy, setBusy] = React.useState(false);
     const [saved, setSaved] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -60,29 +67,47 @@ const Card = ({ person, nameDays }: {
     };
 
     const save = async () => {
+        if ([draft.born, draft.baptized, draft.died].some(value => value && !personalDate(value)) || (draft.rankUntil && !fullDate(draft.rankUntil))) {
+            setError("Проверьте даты: укажите точную дату, год из четырёх цифр или день и месяц в формате ДД.ММ.");
+            return;
+        }
+        const rawGroups = groupText.split(",").map(group => group.trim()).filter(Boolean);
+        if (rawGroups.some(group => group.length > 40) || new Set(rawGroups.map(group => group.toLocaleLowerCase("ru"))).size > 10) {
+            setError("Можно указать до 10 групп, не больше 40 знаков в каждой.");
+            return;
+        }
         setBusy(true);
         setError(null);
         try {
             const response = await fetch(`/api/pomyannik/${person.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(draft),
+                body: JSON.stringify({ ...draft, groups: cleanGroups(groupText.split(",")) }),
             });
-            if (!response.ok) { setError("не удалось сохранить"); return; }
-            setDraft(await response.json());
+            if (!response.ok) { const body = await response.json().catch(() => null); setError(body?.error ?? "не удалось сохранить"); return; }
+            const savedPerson = await response.json();
+            setDraft(savedPerson);
+            setGroupText((savedPerson.groups ?? []).join(", "));
             setSaved(true);
             router.refresh();
+        } catch {
+            setError("Не удалось сохранить. Проверьте сеть и повторите.");
         } finally {
             setBusy(false);
         }
     };
 
     const remove = async () => {
-        if (!window.confirm(`Убрать ${draft.name} из помянника?`)) return;
+        if (!window.confirm(`Переместить ${draft.name} в корзину? Запись можно будет восстановить.`)) return;
         setBusy(true);
-        const response = await fetch(`/api/pomyannik/${person.id}`, { method: "DELETE" });
-        if (response.ok) { router.push("/pomyannik"); router.refresh(); }
-        else { setBusy(false); setError("не удалось убрать"); }
+        setError(null);
+        try {
+            const response = await fetch(`/api/pomyannik/${person.id}`, { method: "DELETE" });
+            if (response.ok) { router.push("/pomyannik"); router.refresh(); }
+            else setError("Не удалось убрать имя.");
+        } catch {
+            setError("Не удалось убрать имя. Проверьте сеть и повторите.");
+        } finally { setBusy(false); }
     };
 
     // Женская форма чина есть не у всякого: у отрока и отроковицы это разные
@@ -90,7 +115,7 @@ const Card = ({ person, nameDays }: {
     const ranks = RANKS.filter(r => !r.only || r.only === draft.kind);
 
     return (
-        <div className="flex flex-col gap-4 max-w-xl">
+        <fieldset disabled={busy} className="flex flex-col gap-4 max-w-xl min-w-0">
             <div className="grid sm:grid-cols-2 gap-3">
                 <Row label="имя" hint="как пишете вы">
                     <input className={FIELD} value={draft.name}
@@ -102,6 +127,12 @@ const Card = ({ person, nameDays }: {
                            onChange={e => set("churchName", e.target.value || null)} />
                 </Row>
 
+                <Row label="подпись для себя" hint="фамилия, прозвище или уточнение; в записку не идёт">
+                    <input className={FIELD} value={draft.signature ?? ""} maxLength={120}
+                           placeholder="Иванов · университет"
+                           onChange={e => set("signature", e.target.value || null)} />
+                </Row>
+
                 <Row label="раздел">
                     <select className={FIELD} value={draft.kind}
                             onChange={e => set("kind", e.target.value as PersonKind)}>
@@ -111,7 +142,7 @@ const Card = ({ person, nameDays }: {
                 </Row>
                 <Row label="чин или помета">
                     <select className={FIELD} value={draft.rank ?? ""}
-                            onChange={e => set("rank", (e.target.value || null) as Rank | null)}>
+                            onChange={e => { set("rank", (e.target.value || null) as Rank | null); set("rankUntil", null); }}>
                         <option value="">—</option>
                         {ranks.map(rank => (
                             <option key={rank.key} value={rank.key}>
@@ -121,6 +152,9 @@ const Card = ({ person, nameDays }: {
                     </select>
                 </Row>
 
+                {draft.rank && TEMPORARY_RANKS.includes(draft.rank) && <Row label="помета действует по" hint="включительно; пусто — без срока">
+                    <input type="date" className={FIELD} value={draft.rankUntil ?? ""} onChange={e => set("rankUntil", e.target.value || null)} />
+                </Row>}
                 <Row label="род" hint="от него зависит форма пометы">
                     <select className={FIELD} value={draft.sex ?? ""}
                             onChange={e => set("sex", (e.target.value || null) as Sex)}>
@@ -136,23 +170,29 @@ const Card = ({ person, nameDays }: {
 
             </div>
 
+            {expiredRank(draft) && <div className="text-amber-800 text-sm" role="status">
+                Срок пометы истёк {humanDate(draft.rankUntil)}. Она больше не выводится при чтении и в новых записках. Продлите срок выше или уберите помету.
+                <button type="button" className="underline ml-2" onClick={() => { set("rank", null); set("rankUntil", null); }}>Убрать помету</button>
+            </div>}
+            <DuplicateHints persons={duplicateCandidates(draft, persons)} />
+
+            <Row label="группы" hint="через запятую; до 10 групп по 40 знаков">
+                <input className={FIELD} value={groupText} placeholder="Семья, Крестники"
+                       onChange={e => { setGroupText(e.target.value); setSaved(false); }} />
+            </Row>
+            {groups.length > 0 && <div className="flex flex-wrap gap-2" aria-label="Существующие группы">
+                {groups.map(group => <button key={group} type="button" className={BUTTON}
+                    disabled={cleanGroups(groupText.split(",")).includes(group)}
+                    onClick={() => { setGroupText(cleanGroups([...groupText.split(","), group]).join(", ")); setSaved(false); }}>
+                    + {group}
+                </button>)}
+            </div>}
+
             <h3 className="font-bold font-serif text-sm border-t pt-3">Даты</h3>
             <div className="grid sm:grid-cols-2 gap-3">
-                <Row label="день рождения">
-                    <input className={FIELD} type="date" value={draft.born ?? ""}
-                           onChange={e => set("born", e.target.value || null)} />
-                </Row>
-                <Row label="день крещения">
-                    <input className={FIELD} type="date" value={draft.baptized ?? ""}
-                           onChange={e => set("baptized", e.target.value || null)} />
-                </Row>
-
-                {draft.kind === "departed" && (
-                    <Row label="день преставления">
-                        <input className={FIELD} type="date" value={draft.died ?? ""}
-                               onChange={e => set("died", e.target.value || null)} />
-                    </Row>
-                )}
+                <DateField label="день рождения" value={draft.born} onChange={value => set("born", value)} />
+                <DateField label="день крещения" value={draft.baptized} onChange={value => set("baptized", value)} />
+                {draft.kind === "departed" && <DateField label="день преставления" value={draft.died} onChange={value => set("died", value)} />}
 
                 <Row label="сорокоуст заказан" hint="сорок литургий со дня заказа">
                     <input className={FIELD} type="date" value={draft.sorokoust?.from ?? ""}
@@ -169,6 +209,8 @@ const Card = ({ person, nameDays }: {
                 )}
             </div>
 
+            <p className="font-serif text-xs text-slate-500">Неизвестные части даты оставьте неизвестными. Если указан только год, напоминание по числу не создаётся. Без года возраст и 3-й, 9-й и 40-й дни не рассчитываются.</p>
+
             {/* ИМЕНИНЫ ВЫБИРАЮТСЯ, А НЕ ТОЛЬКО СЧИТАЮТСЯ.
                 Расчёт по дню рождения — самый ходовой обычай, но у имени памятей
                 бывает десяток, и какая из них своя, знает человек, а не мы:
@@ -180,9 +222,9 @@ const Card = ({ person, nameDays }: {
                 <select className={FIELD} value={chosenDay}
                         onChange={e => pickDay(e.target.value)}>
                     <option value="">
-                        {draft.born
+                        {dateParts(draft.born)?.month
                             ? "считать по дню рождения — ближайшая память после него"
-                            : "считать по дню рождения (день рождения пока не назван)"}
+                            : "считать по дню рождения (нужны день и месяц)"}
                     </option>
                     {nameDays.map(option => (
                         <option key={`${option.value}:${option.saint}`}
@@ -214,14 +256,14 @@ const Card = ({ person, nameDays }: {
                 )}
             </div>
 
-            {error && <p className="font-serif text-sm text-amber-700">{error}</p>}
+            {error && <p role="alert" className="font-serif text-sm text-amber-700">{error}</p>}
 
             <div className="flex gap-3 items-center">
                 <button className={BUTTON} onClick={save} disabled={busy}>сохранить</button>
-                <button className={BUTTON} onClick={remove} disabled={busy}>убрать из помянника</button>
+                <button className={BUTTON} onClick={remove} disabled={busy}>в корзину</button>
                 {saved && <span className="font-serif text-sm text-slate-500">сохранено</span>}
             </div>
-        </div>
+        </fieldset>
     );
 };
 

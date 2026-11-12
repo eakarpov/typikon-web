@@ -1,3 +1,4 @@
+import { personalDate } from "./dates";
 import { nameKey, normalizeName } from "@/lib/imeniny/core";
 import { RANKS, type PersonKind, type PersonInput, type Rank, type Sex, MAX_BATCH } from "@/lib/pomyannik/types";
 import { guessSex } from "@/lib/pomyannik/names";
@@ -68,24 +69,20 @@ const RANK_INDEX: Record<string, Rank> = (() => {
 
 const cleanWord = (raw: string) => raw.trim().toLowerCase().replace(/ё/g, "е").replace(/\.$/, "");
 
-/** «12.03.2019», «12.3.2019», «2019-03-12». Двузначного года не понимаем нарочно. */
+/** Точная дата, только год или день с месяцем. Двузначного года не угадываем. */
 const parseDate = (raw: string): string | null => {
     const value = raw.trim();
-    const dotted = /^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/.exec(value);
+    const direct = personalDate(value);
+    if (direct) return direct;
+    const dotted = /^(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{4}))?$/.exec(value);
     if (dotted) {
         const [, d, m, y] = dotted;
-        const date = new Date(Number(y), Number(m) - 1, Number(d), 12);
-        if (date.getMonth() !== Number(m) - 1 || date.getDate() !== Number(d)) return null;
-        return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+        return personalDate(`${y ?? "-"}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
     }
     const isoLike = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
-    if (isoLike) {
-        const [, y, m, d] = isoLike;
-        const date = new Date(Number(y), Number(m) - 1, Number(d), 12);
-        if (date.getMonth() !== Number(m) - 1 || date.getDate() !== Number(d)) return null;
-        return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-    }
-    return null;
+    if (!isoLike) return null;
+    const [, y, m, d] = isoLike;
+    return personalDate(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
 };
 
 export interface ParsedLine {

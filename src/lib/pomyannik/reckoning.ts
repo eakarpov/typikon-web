@@ -1,3 +1,4 @@
+import { dateParts } from "./dates";
 import { getPaschaDate } from "@/utils/lectionaryCycle";
 import { civilDate } from "@/lib/imeniny/dates";
 import type { PomyannikPerson } from "@/lib/pomyannik/types";
@@ -24,14 +25,16 @@ const DAY_MS = 24 * 3600 * 1000;
 const at = (iso: string): Date | null => {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? ""));
     if (!m) return null;
-    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0, 0);
+    const d = new Date(0);
+    d.setFullYear(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    d.setHours(12, 0, 0, 0);
     return Number.isNaN(+d) ? null : d;
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
 export const iso = (d: Date): string =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    `${String(d.getFullYear()).padStart(4, "0")}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 export const shift = (date: string, days: number): string | null => {
     const d = at(date);
@@ -273,12 +276,12 @@ export const upcoming = (
         }
 
         if (person.born && person.kind === "living") {
-            const b = at(person.born);
-            if (b) {
-                const date = nextYearly(b.getMonth() + 1, b.getDate(), from);
+            const b = dateParts(person.born);
+            if (b?.month && b.day) {
+                const date = nextYearly(b.month, b.day, from);
                 if (within(date)) {
                     out.push({ date, kind: "birthday", personId: person.id, name: who,
-                               years: at(date)!.getFullYear() - b.getFullYear(),
+                               ...(b.year !== null ? { years: at(date)!.getFullYear() - b.year } : {}),
                                title: `День рождения: ${who}` });
                 }
             }
@@ -309,6 +312,13 @@ export const upcoming = (
                                years, title: `Годовщина преставления: ${who}` });
                 }
             }
+        }
+
+        if (person.kind === "departed" && person.died?.startsWith("--")) {
+            const d = dateParts(person.died);
+            const date = d?.month && d.day ? nextYearly(d.month, d.day, from) : null;
+            if (within(date)) out.push({ date, kind: "anniversary", personId: person.id, name: who,
+                title: `День памяти: ${who}` });
         }
 
         if (person.sorokoust) {

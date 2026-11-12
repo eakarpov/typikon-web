@@ -1,3 +1,4 @@
+import { effectiveRank } from "./marks";
 import {
     MAX_NAMES_IN_NOTE, NOTE_KIND_BY_KEY,
     type NoteKind, type PersonKind, type Rank, type Sex,
@@ -36,7 +37,7 @@ export class NoteError extends Error {}
 export const snapshot = (
     person: {
         name: string; churchName?: string | null; kind: PersonKind;
-        rank?: Rank | null; sex?: Sex;
+        rank?: Rank | null; rankUntil?: string | null; sex?: Sex;
     },
     slavonic?: { genitive: string; source: "lexicon" | "accents" | "plain" } | null,
 ): NoteName => ({
@@ -45,7 +46,7 @@ export const snapshot = (
     slavonic: slavonic?.genitive ?? null,
     slavonicSource: slavonic?.source ?? null,
     kind: person.kind === "departed" ? "departed" : "living",
-    rank: person.rank ?? null,
+    rank: effectiveRank(person),
     sex: person.sex ?? null,
 });
 

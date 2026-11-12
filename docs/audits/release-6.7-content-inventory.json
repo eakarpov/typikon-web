@@ -1,0 +1,753 @@
+{
+  "checkedAt": "2026-11-09T15:37:27.567Z",
+  "scope": "Registered library cards, not an exhaustive list of readings prescribed by the Typikon; Bible content is stored separately.",
+  "source": "Read-only local MongoDB typikon; per-book body/poem/card totals checked against production with no differences.",
+  "interpretation": "Counts measure stored fields, not source completeness or editorial approval. Prolog is complete per owner; Matthew is being transcribed manually.",
+  "books": [
+    {
+      "id": "63c96645e99d9f4d9010c5ad",
+      "name": "Сборник слов Григория Богослова",
+      "alias": "sbornik-slov-grigoriya-bogoslova",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 6,
+      "withBody": 5,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 1,
+      "readiness": {
+        "ready": 5,
+        "unset": 1
+      }
+    },
+    {
+      "id": "63cf97b9a0245854ba1d790f",
+      "name": "Синаксари Цветной Триоди",
+      "alias": "sinaksari-cvetnoy-triodi",
+      "category": "liturgical",
+      "language": "cu_gr",
+      "registeredCards": 14,
+      "withBody": 14,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 14
+      }
+    },
+    {
+      "id": "63cffe1fa0245854ba1d7914",
+      "name": "Другие слова Иоанна Златоуста",
+      "alias": "drugie-slova-ioanna-zlatousta",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 1,
+      "withBody": 1,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 1
+      }
+    },
+    {
+      "id": "63e0a13761c39059532d1f2d",
+      "name": "Беседы на Евангелие от Иоанна",
+      "alias": "besedy-na-evangelie-ot-ioanna",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 88,
+      "withBody": 88,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 88
+      }
+    },
+    {
+      "id": "63e0a18f61c39059532d1f2e",
+      "name": "Толковый апостол",
+      "alias": "tolkovyy-apostol",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 363,
+      "withBody": 36,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 327,
+      "readiness": {
+        "ready": 36,
+        "presence": 327
+      }
+    },
+    {
+      "id": "63e0a1bd61c39059532d1f2f",
+      "name": "Оглашения Феодора Студита",
+      "alias": "oglasheniya-feodora-studita",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 9,
+      "withBody": 9,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 9
+      }
+    },
+    {
+      "id": "63e0b40702d746453f8d2176",
+      "name": "Пролог (март)",
+      "alias": "prolog-mart",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 160,
+      "withBody": 124,
+      "withPoemsOnly": 26,
+      "withoutBodyOrPoems": 10,
+      "readiness": {
+        "ready": 128,
+        "correcting": 7,
+        "presence": 12,
+        "texted": 13
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "63eb3c60a9bca9a4f774333a",
+      "name": "Пролог (апрель)",
+      "alias": "prolog-aprel",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 203,
+      "withBody": 147,
+      "withPoemsOnly": 51,
+      "withoutBodyOrPoems": 5,
+      "readiness": {
+        "ready": 138,
+        "texted": 60,
+        "presence": 5
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "63eb3c67a9bca9a4f774333b",
+      "name": "Пролог (май)",
+      "alias": "prolog-may",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 256,
+      "withBody": 149,
+      "withPoemsOnly": 75,
+      "withoutBodyOrPoems": 32,
+      "readiness": {
+        "ready": 169,
+        "texted": 46,
+        "presence": 38,
+        "correcting": 3
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "63eb3c6da9bca9a4f774333c",
+      "name": "Пролог (июнь)",
+      "alias": "prolog-iyun",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 227,
+      "withBody": 148,
+      "withPoemsOnly": 69,
+      "withoutBodyOrPoems": 10,
+      "readiness": {
+        "ready": 177,
+        "texted": 38,
+        "presence": 5,
+        "correcting": 7
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "63efe3ee6afed3a683f5c2ea",
+      "name": "Златоустник",
+      "alias": "zlatoustnik",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 79,
+      "withBody": 79,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 79
+      }
+    },
+    {
+      "id": "63f373ecf9b2f15ac55cddae",
+      "name": "Евангелие учительное",
+      "alias": "evangelie-uchitelnoe",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 13,
+      "withBody": 13,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 11,
+        "texted": 2
+      }
+    },
+    {
+      "id": "63f515d308f7ee04e7b53f19",
+      "name": "Торжественник триодный",
+      "alias": "torzhestvennik-triodnyy",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 56,
+      "withBody": 56,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 55,
+        "texted": 1
+      }
+    },
+    {
+      "id": "64ab000c3b382e95ab11b46d",
+      "name": "Торжественник минейный",
+      "alias": "torzhestvennik-mineynyy",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 38,
+      "withBody": 37,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 1,
+      "readiness": {
+        "ready": 34,
+        "unset": 1,
+        "texted": 1,
+        "presence": 2
+      }
+    },
+    {
+      "id": "64adbd451d6a5cdd784d5cfb",
+      "name": "Пролог (июль)",
+      "alias": "prolog-iyul",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 117,
+      "withBody": 111,
+      "withPoemsOnly": 5,
+      "withoutBodyOrPoems": 1,
+      "readiness": {
+        "ready": 117
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "64d77558d7a3678afe89d069",
+      "name": "Пролог (август)",
+      "alias": "prolog-avgust",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 110,
+      "withBody": 107,
+      "withPoemsOnly": 2,
+      "withoutBodyOrPoems": 1,
+      "readiness": {
+        "ready": 109,
+        "unset": 1
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "6501c2cbcb56dd4224ee1804",
+      "name": "Пролог (сентябрь)",
+      "alias": "prolog-sentyabr",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 116,
+      "withBody": 115,
+      "withPoemsOnly": 1,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 115,
+        "texted": 1
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "65293e8392a0dbf4cbc64b3e",
+      "name": "Пролог (октябрь)",
+      "alias": "prolog-oktyabr",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 114,
+      "withBody": 114,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 114
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "6546b5283fcacc9e6edcaf57",
+      "name": "Пролог (ноябрь)",
+      "alias": "prolog-noyabr",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 122,
+      "withBody": 121,
+      "withPoemsOnly": 1,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 122
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "6546b5343fcacc9e6edcaf58",
+      "name": "Пролог (декабрь)",
+      "alias": "prolog-dekabr",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 125,
+      "withBody": 123,
+      "withPoemsOnly": 1,
+      "withoutBodyOrPoems": 1,
+      "readiness": {
+        "ready": 124,
+        "correcting": 1
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "6546b5413fcacc9e6edcaf59",
+      "name": "Молитвы",
+      "alias": "molitvy",
+      "category": "liturgical",
+      "language": "cu_gr",
+      "registeredCards": 8,
+      "withBody": 8,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 8
+      }
+    },
+    {
+      "id": "655f0478a17467ae88787e05",
+      "name": "Жития святых",
+      "alias": "zhitiya-svyatyh",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 5,
+      "withBody": 5,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 5
+      }
+    },
+    {
+      "id": "65994e517a09d61b41570d7b",
+      "name": "Пролог (январь)",
+      "alias": "prolog-yanvar",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 120,
+      "withBody": 119,
+      "withPoemsOnly": 1,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 120
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "65994e867a09d61b41570d7c",
+      "name": "Пролог (февраль)",
+      "alias": "prolog-fevral",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 99,
+      "withBody": 99,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 99
+      },
+      "editorialStatus": "complete",
+      "basis": "Owner confirmed 2026-11-09; short commemorations are intentional"
+    },
+    {
+      "id": "65f09d2ec768d7d9df11f318",
+      "name": "Паренесис",
+      "alias": "parenesis",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 105,
+      "withBody": 105,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 105
+      }
+    },
+    {
+      "id": "662c1afb0f3c42b7c34c2870",
+      "name": "Синаксари Постной Триоди",
+      "alias": "sinaksari-postnoy-triodi",
+      "category": "liturgical",
+      "language": "cu_gr",
+      "registeredCards": 22,
+      "withBody": 22,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 22
+      }
+    },
+    {
+      "id": "665048e1e63c6518b68e1eb2",
+      "name": "Службы",
+      "alias": "sluzhby",
+      "category": "liturgical",
+      "language": "cu_gr",
+      "registeredCards": 22,
+      "withBody": 22,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 22
+      }
+    },
+    {
+      "id": "6797627444236fa4ab11574c",
+      "name": "Беседы на Евангелие от Матфея",
+      "alias": "besedy-na-evangelie-ot-matfeya",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 91,
+      "withBody": 5,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 86,
+      "readiness": {
+        "texted": 5,
+        "presence": 86
+      },
+      "editorialStatus": "manual-transcription-in-progress",
+      "basis": "Owner confirmed 2026-11-09; exclude from OCR candidates"
+    },
+    {
+      "id": "67bdad4c6d0a6a67d91e0154",
+      "name": "Торжественник триодный (постный)",
+      "alias": "torzhestvennik-triodnyy-postnyy",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 26,
+      "withBody": 6,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 20,
+      "readiness": {
+        "ready": 6,
+        "presence": 20
+      }
+    },
+    {
+      "id": "67dbc04f65eff75af347b015",
+      "name": "Последования мирского чина",
+      "alias": "posledovaniya-mirskogo-china",
+      "category": "liturgical",
+      "language": "cu_gr",
+      "registeredCards": 14,
+      "withBody": 14,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 14
+      }
+    },
+    {
+      "id": "67e06087545c525e05bf419f",
+      "name": "Часослов (Соф.1052)",
+      "alias": "chasoslov-sof-1052",
+      "category": "liturgical",
+      "language": "cu_gr",
+      "registeredCards": 21,
+      "withBody": 21,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 21
+      }
+    },
+    {
+      "id": "695268f3f86313eabc66f3da",
+      "name": "Лествица",
+      "alias": "lestvica",
+      "category": "patristic",
+      "language": "cu",
+      "registeredCards": 55,
+      "withBody": 55,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 55
+      }
+    },
+    {
+      "id": "695ad885d095cc428a7432c3",
+      "name": "Добротолюбие, или словеса и главизны священного трезвения",
+      "alias": "dobrotolyubie",
+      "category": "patristic",
+      "language": "cu",
+      "registeredCards": 64,
+      "withBody": 64,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 64
+      }
+    },
+    {
+      "id": "6960025ad095cc428a7432c4",
+      "name": "Лавсаик",
+      "alias": "lavsaik",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 41,
+      "withBody": 1,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 40,
+      "readiness": {
+        "ready": 1,
+        "presence": 40
+      }
+    },
+    {
+      "id": "698266d03eb449fef879dac2",
+      "name": "Ифика Иерополитика",
+      "alias": "ifika-ieropolitika",
+      "category": "patristic",
+      "language": "cu",
+      "registeredCards": 71,
+      "withBody": 71,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 71
+      }
+    },
+    {
+      "id": "6982670e3eb449fef879dac3",
+      "name": "Алфавит Духовный",
+      "alias": "alfavit-duhovnyy",
+      "category": "patristic",
+      "language": "cu",
+      "registeredCards": 42,
+      "withBody": 42,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 42
+      }
+    },
+    {
+      "id": "6982f221b97a02b4f5b62110",
+      "name": "Книга правил святых апостолов, святых соборов вселенских и поместных",
+      "alias": "kniga-pravil",
+      "category": "patristic",
+      "language": "cu",
+      "registeredCards": 69,
+      "withBody": 69,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 69
+      }
+    },
+    {
+      "id": "6989959c169656dfeafaa36a",
+      "name": "Сфънта Скриптура (Библия - на румынской кириллице)",
+      "alias": "sfnta-skriptura-bibliya-na-rumynskoy-kirillice",
+      "category": "bible",
+      "language": "ro_cyr",
+      "registeredCards": 0,
+      "withBody": 0,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {}
+    },
+    {
+      "id": "6990424cbc8ea9ea56f84d1a",
+      "name": "Новый Пролог",
+      "alias": "novyy-prolog",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 1,
+      "withBody": 1,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 1
+      }
+    },
+    {
+      "id": "6992d190b9df99cbe01f6174",
+      "name": "Маргарит",
+      "alias": "margarit",
+      "category": "patristic",
+      "language": "cu",
+      "registeredCards": 35,
+      "withBody": 35,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "texted": 35
+      }
+    },
+    {
+      "id": "69ef24e59a92a456ed64117b",
+      "name": "Беседы на Бытие",
+      "alias": "besedy-na-bytie",
+      "category": "patristic",
+      "language": "ru_cu",
+      "registeredCards": 67,
+      "withBody": 1,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 66,
+      "readiness": {
+        "texted": 1,
+        "presence": 66
+      }
+    },
+    {
+      "id": "6a0b3f02069334c00c9ff637",
+      "name": "Повесть временных лет",
+      "alias": "povest-vremennyh-let",
+      "category": "historical",
+      "language": "orv",
+      "registeredCards": 1,
+      "withBody": 1,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 1
+      }
+    },
+    {
+      "id": "6a0b7292f220c517efabaf0e",
+      "name": "Пролог для чтения (ЦС шрифт)",
+      "alias": "prolog-dlya-chteniya-cs-shrift",
+      "category": "hagiographic",
+      "language": "cu",
+      "registeredCards": 2,
+      "withBody": 2,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 2
+      }
+    },
+    {
+      "id": "6a8202a20ee48daf61f4247f",
+      "name": "Библия (церковнославянский, Елизаветинская)",
+      "alias": "bibliya-cerkovnoslavyanskiy-elizavetinskaya",
+      "category": "bible",
+      "language": "cu",
+      "registeredCards": 0,
+      "withBody": 0,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {}
+    },
+    {
+      "id": "6a830695bf9411b8a617d148",
+      "name": "Толковое Евангелие от Луки",
+      "alias": "tolkovoe-evangelie-ot-luki",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 25,
+      "withBody": 0,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 25,
+      "readiness": {
+        "presence": 25
+      }
+    },
+    {
+      "id": "6a830695bf9411b8a617d162",
+      "name": "Толковое Евангелие от Марка",
+      "alias": "tolkovoe-evangelie-ot-marka",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 17,
+      "withBody": 0,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 17,
+      "readiness": {
+        "presence": 17
+      }
+    },
+    {
+      "id": "6a830695bf9411b8a617d354",
+      "name": "Толкование на Апокалипсис",
+      "alias": "tolkovanie-na-apokalipsis",
+      "category": "patristic",
+      "language": "cu_gr",
+      "registeredCards": 22,
+      "withBody": 0,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 22,
+      "readiness": {
+        "presence": 22
+      }
+    },
+    {
+      "id": "6a97fe86e50dad707c061284",
+      "name": "Biblia 1914 (Библия - румынская синодальная)",
+      "alias": "biblia-1914-bibliya-rumynskaya-sinodalnaya",
+      "category": "bible",
+      "language": "ro",
+      "registeredCards": 0,
+      "withBody": 0,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {}
+    },
+    {
+      "id": "6a9b302aa0f9dae8957390a6",
+      "name": "Великие Четьи-Минеи (сентябрь)",
+      "alias": "velikie-cheti-minei-sentyabr",
+      "category": "hagiographic",
+      "language": "cu_gr",
+      "registeredCards": 146,
+      "withBody": 142,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 4,
+      "readiness": {
+        "texted": 146
+      }
+    },
+    {
+      "id": "6aa851caa21b602b9e97a4c3",
+      "name": "Библейская энциклопедия",
+      "alias": "bibleyskaya-enciklopediya",
+      "category": "encyclopedic",
+      "language": "ru",
+      "registeredCards": 4582,
+      "withBody": 4582,
+      "withPoemsOnly": 0,
+      "withoutBodyOrPoems": 0,
+      "readiness": {
+        "ready": 4582
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { UpcomingEvent } from "@/lib/pomyannik/reckoning";
 import { between, todayIso } from "@/lib/pomyannik/reckoning";
-import { EVENT_LABEL, humanDate, inDays, weekdayOf, YEARS } from "@/app/pomyannik/labels";
+import { eventLabel, humanDate, inDays, weekdayOf, YEARS } from "@/app/pomyannik/labels";
 
 // БЛИЖАЙШЕЕ — то, ради чего помянник и открывают между службами: не список имён,
 // а вопрос «кого поминать на этой неделе». Оттого он стоит вверху страницы, а не
@@ -36,7 +36,7 @@ const Upcoming = ({ events, days }: { events: UpcomingEvent[]; days: number }) =
                                 </Link>
                             ) : null}
                             {event.personId ? " — " : ""}
-                            {event.personId ? EVENT_LABEL[event.kind] : event.title}
+                            {event.personId ? eventLabel(event) : event.title}
                             {event.kind === "anniversary" && event.years ? `, ${YEARS(event.years)}` : ""}
                         </span>
                         {/* Неуставный день помечен прямо в строке: выдать указ за

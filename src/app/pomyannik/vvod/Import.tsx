@@ -1,7 +1,9 @@
 'use client';
+import TableFile from "./TableFile";
+import type { ImportedName } from "@/lib/pomyannik/importRows";
 import React from "react";
 import { useRouter } from "next/navigation";
-import type { PersonKind } from "@/lib/pomyannik/types";
+import { MAX_BATCH, type PersonKind } from "@/lib/pomyannik/types";
 import type { NameCheck } from "@/lib/pomyannik/names";
 import type { ParsedLine } from "@/lib/pomyannik/parse";
 import { humanDate, rankLabel } from "@/app/pomyannik/labels";
@@ -41,22 +43,28 @@ const Import = () => {
     const [chosen, setChosen] = React.useState<Record<number, string>>({});
     const [skip, setSkip] = React.useState<Record<number, boolean>>({});
     const [busy, setBusy] = React.useState(false);
+    const [source, setSource] = React.useState("");
     const [error, setError] = React.useState<string | null>(null);
 
-    const parse = async () => {
+    const parse = async (names?: ImportedName[], origin = "") => {
         setBusy(true);
         setError(null);
         try {
             const response = await fetch("/api/pomyannik/parse", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text, kind }),
+                body: JSON.stringify(names ? { names, kind } : { text, kind }),
             });
-            if (!response.ok) { setError("не удалось разобрать список"); return; }
+            if (!response.ok) { const body = await response.json().catch(() => null); setError(body?.error ?? "не удалось разобрать список"); return; }
             const body = await response.json();
+            if (body.truncated) { setError(`В списке больше ${MAX_BATCH} имён. Сократите список или диапазон — ничего не записано.`); return; }
+            if (!body.count) { setError("В выбранном списке не нашлось имён."); return; }
+            setSource(origin);
             setLines(body.lines.filter((l: Line) => l.person));
             setChosen({});
             setSkip({});
+        } catch {
+            setError("Не удалось выполнить запрос. Проверьте сеть и повторите.");
         } finally {
             setBusy(false);
         }
@@ -89,6 +97,8 @@ const Import = () => {
             }
             router.push("/pomyannik");
             router.refresh();
+        } catch {
+            setError("Не удалось выполнить запрос. Проверьте сеть и повторите.");
         } finally {
             setBusy(false);
         }
@@ -98,14 +108,17 @@ const Import = () => {
         const willSave = lines.filter(l => !skip[l.line]).length;
         return (
             <div className="flex flex-col gap-4">
+                <div hidden><TableFile onPreview={parse} disabled={busy} kind={kind} onKindChange={setKind} /></div>
+                {source && <p className="font-serif text-sm break-words">Источник: {source}</p>}
                 <p className="font-serif text-sm text-slate-600">
                     Вот что мы поняли. Поправьте, что нужно, и запишите — до этого в помянник
                     ничего не попало.
                 </p>
 
-                <table className="font-serif text-sm border-collapse">
+                <div className="overflow-x-auto"><table className="font-serif text-sm border-collapse">
                     <thead>
                         <tr className="text-left text-slate-500 border-b">
+                            {source && <th className="py-1 pr-3 font-normal">строка файла</th>}
                             <th className="py-1 pr-3 font-normal">имя</th>
                             <th className="py-1 pr-3 font-normal">раздел</th>
                             <th className="py-1 pr-3 font-normal">помета и даты</th>
@@ -120,6 +133,7 @@ const Import = () => {
                             return (
                                 <tr key={line.line}
                                     className={`border-b border-slate-100 align-top ${off ? "opacity-40" : ""}`}>
+                                    {source && <td className="py-1 pr-3 text-slate-500">{line.line}</td>}
                                     <td className="py-1 pr-3">
                                         {church ? (
                                             <>
@@ -193,7 +207,7 @@ const Import = () => {
                             );
                         })}
                     </tbody>
-                </table>
+                </table></div>
 
                 {error && <p className="font-serif text-sm text-amber-700">{error}</p>}
 
@@ -211,6 +225,8 @@ const Import = () => {
 
     return (
         <div className="flex flex-col gap-3">
+            <div><TableFile onPreview={parse} disabled={busy} kind={kind} onKindChange={setKind} /></div>
+            <h2 className="font-serif font-bold">Или вставить текст</h2>
             <div className="flex flex-wrap gap-3 items-center font-serif text-sm">
                 <span className="text-slate-600">без заголовка считать именами</span>
                 {(["living", "departed"] as PersonKind[]).map(value => (
@@ -235,7 +251,7 @@ const Import = () => {
             />
 
             <div className="flex gap-3">
-                <button className={BUTTON} onClick={parse} disabled={busy || !text.trim()}>
+                <button className={BUTTON} onClick={() => parse()} disabled={busy || !text.trim()}>
                     разобрать
                 </button>
                 {!text.trim() && (

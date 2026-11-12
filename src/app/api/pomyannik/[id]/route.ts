@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/authorize/sessions";
-import { deletePerson, getPerson, updatePerson } from "@/lib/pomyannik/service";
+import { PersonDataError, deletePerson, getPerson, updatePerson } from "@/lib/pomyannik/service";
 
 export async function GET(_: NextRequest, ctx: { params: Promise<{ id: string }> }) {
     const session = await getSession();
@@ -22,9 +22,14 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
         return NextResponse.json({ error: "не разобрали тело запроса" }, { status: 400 });
     }
 
-    const person = await updatePerson(session.id, id, body);
-    if (!person) return new NextResponse(null, { status: 404 });
-    return NextResponse.json(person);
+    try {
+        const person = await updatePerson(session.id, id, body);
+        if (!person) return new NextResponse(null, { status: 404 });
+        return NextResponse.json(person);
+    } catch (e) {
+        if (e instanceof PersonDataError) return NextResponse.json({ error: e.message }, { status: 400 });
+        throw e;
+    }
 }
 
 export async function DELETE(_: NextRequest, ctx: { params: Promise<{ id: string }> }) {

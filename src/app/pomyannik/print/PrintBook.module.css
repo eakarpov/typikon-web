@@ -1,0 +1,9 @@
+.sheet { color: #111; }
+.person { break-inside: avoid; padding: 0.4rem 0; overflow-wrap: anywhere; }
+.section { margin: 1.5rem 0; }
+@media print {
+    .sheet { font-size: 16pt; background: white; }
+    .section h2 { break-after: avoid; }
+    .person { padding: 0.2cm 0; }
+    @page { margin: 18mm; }
+}

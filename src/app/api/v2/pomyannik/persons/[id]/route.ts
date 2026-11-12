@@ -1,7 +1,7 @@
 import { authorizeUser } from "@/lib/api/v2/user";
 import { fail, respondPrivate } from "@/lib/api/v2/http";
 import { pomyannikPerson } from "@/lib/api/v2/serialize";
-import { deletePerson, getPerson, updatePerson } from "@/lib/pomyannik/service";
+import { PersonDataError, deletePerson, getPerson, updatePerson } from "@/lib/pomyannik/service";
 import type { PersonInput } from "@/lib/pomyannik/types";
 import { memorialDays, sorokoustSpan, todayIso } from "@/lib/pomyannik/reckoning";
 import { reportError } from "@/lib/reportError";
@@ -42,6 +42,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string 
             sorokoust: person.sorokoust ? sorokoustSpan(person.sorokoust.from, on) : null,
         }, { access });
     } catch (e) {
+        if (e instanceof PersonDataError) return fail("bad_request", e.message);
         reportError(e, { where: "app/api/v2/pomyannik/persons/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось открыть запись");
     }
@@ -71,6 +72,7 @@ export async function PUT(request: Request, ctx: { params: Promise<{ id: string 
 
         return respondPrivate({ person: pomyannikPerson(person) }, { access });
     } catch (e) {
+        if (e instanceof PersonDataError) return fail("bad_request", e.message);
         reportError(e, { where: "app/api/v2/pomyannik/persons/[id]/route#PUT", source: "api" });
         return fail("internal", "Не удалось поправить запись");
     }
@@ -88,6 +90,7 @@ export async function DELETE(request: Request, ctx: { params: Promise<{ id: stri
 
         return respondPrivate({ deleted: true }, { access });
     } catch (e) {
+        if (e instanceof PersonDataError) return fail("bad_request", e.message);
         reportError(e, { where: "app/api/v2/pomyannik/persons/[id]/route#DELETE", source: "api" });
         return fail("internal", "Не удалось убрать запись");
     }

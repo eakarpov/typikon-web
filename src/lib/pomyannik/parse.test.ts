@@ -100,10 +100,16 @@ describe("разбор списка", () => {
         assert.deepEqual(lines.map(l => l.line), [1, 3]);
     });
 
+    it("принимает 500 имён без обрезания", () => {
+        const batch = parseList(Array.from({ length: 500 }, () => "Николай").join("\n"));
+        assert.equal(batch.count, 500);
+        assert.equal(batch.truncated, false);
+    });
+
     it("длинный список обрезает и говорит об этом", () => {
         const { count, truncated } = parseList(
-            Array.from({ length: 250 }, () => "Николай").join("\n"));
-        assert.equal(count, 200);
+            Array.from({ length: 501 }, () => "Николай").join("\n"));
+        assert.equal(count, 500);
         assert.equal(truncated, true);
     });
 });

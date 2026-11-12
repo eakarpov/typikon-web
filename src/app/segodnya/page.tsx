@@ -11,7 +11,7 @@ import { knownTimeZone } from "@/lib/push/zones";
 import { between } from "@/lib/pomyannik/reckoning";
 import { AHEAD_DAYS, personalToday } from "@/lib/personal/today";
 import { paragraphAnchor } from "@/lib/personal/progress";
-import { EVENT_LABEL, humanDate, inDays, weekdayOf, YEARS } from "@/app/pomyannik/labels";
+import { eventLabel, humanDate, inDays, weekdayOf, YEARS } from "@/app/pomyannik/labels";
 import ContentToday from "@/app/ContentToday";
 import TrapezaToday from "@/app/components/TrapezaToday";
 import MyTempleToday from "@/app/components/MyTempleToday";
@@ -133,7 +133,7 @@ const SegodnyaPage = async () => {
                                 {event.personId && event.name ? (
                                     <>
                                         <Link href={`/pomyannik/${event.personId}`} className={more}>{event.name}</Link>
-                                        {" — "}{EVENT_LABEL[event.kind]}
+                                        {" — "}{eventLabel(event)}
                                         {event.kind === "anniversary" && event.years ? `, ${YEARS(event.years)}` : ""}
                                     </>
                                 ) : event.title}
@@ -175,7 +175,7 @@ const SegodnyaPage = async () => {
                                     {event.personId && event.name ? (
                                         <>
                                             <Link href={`/pomyannik/${event.personId}`} className={more}>{event.name}</Link>
-                                            {" — "}{EVENT_LABEL[event.kind]}
+                                            {" — "}{eventLabel(event)}
                                             {event.kind === "anniversary" && event.years ? `, ${YEARS(event.years)}` : ""}
                                         </>
                                     ) : event.title}

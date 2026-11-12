@@ -6,7 +6,7 @@ import { myFont } from "@/utils/font";
 import Import from "@/app/pomyannik/vvod/Import";
 
 export const metadata: Metadata = {
-    title: "Вписать списком — Помянник",
+    title: "Импорт имён — Помянник",
     robots: { index: false, follow: false },
 };
 
@@ -27,9 +27,9 @@ const VvodPage = async () => {
     return (
         <div className={`${myFont.variable} pt-2 flex flex-col gap-5`}>
             <div className="max-w-2xl">
-                <h1 className="font-bold font-serif">Вписать списком</h1>
+                <h1 className="font-bold font-serif">Импорт имён</h1>
                 <p className="font-serif text-slate-800 mt-2">
-                    Перепишите помянник как он есть — строкой на имя. Пометы и даты через
+                    Загрузите Excel, CSV или текстовый файл с именами либо вставьте список ниже. Для вставленного текста — одна строка на имя. Пометы и даты через
                     запятую, в любом порядке. Заголовки «о здравии» и «о упокоении» разводят
                     имена по разворотам.
                 </p>
@@ -40,6 +40,7 @@ const VvodPage = async () => {
                 </p>
             </div>
 
+            <p className="font-serif text-sm text-slate-600">Неполные даты тоже поддерживаются: «Николай, р.1950» или «Иоанн, †12.03». Неизвестный год подставляться не будет.</p>
             <Import />
 
             <p className="font-serif text-sm">

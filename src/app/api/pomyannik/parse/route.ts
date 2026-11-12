@@ -1,3 +1,4 @@
+import { NameImportError, parseImportedNames } from "@/lib/pomyannik/importRows";
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/authorize/sessions";
 import { parseList } from "@/lib/pomyannik/parse";
@@ -16,10 +17,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => null);
     const text = typeof body?.text === "string" ? body.text : null;
-    if (!text) return NextResponse.json({ error: "нечего разбирать" }, { status: 400 });
+    if (!text && !Array.isArray(body?.names)) return NextResponse.json({ error: "нечего разбирать" }, { status: 400 });
 
     const kind = body?.kind === "departed" ? "departed" : "living";
-    const batch = parseList(text, kind);
+    let batch;
+    try { batch = Array.isArray(body?.names) ? parseImportedNames(body.names, kind) : parseList(text!, kind); }
+    catch (e) {
+        if (e instanceof NameImportError) return NextResponse.json({ error: e.message }, { status: 400 });
+        throw e;
+    }
 
     const [names, mine] = await Promise.all([allNames(), listPersons(session.id)]);
     const index = new Set(names.map(n => n.key));

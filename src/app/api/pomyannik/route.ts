@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/authorize/sessions";
-import { addPersons, listPersons, TooManyPersonsError } from "@/lib/pomyannik/service";
+import { PersonDataError, addPersons, listPersons, TooManyPersonsError } from "@/lib/pomyannik/service";
 import type { PersonInput } from "@/lib/pomyannik/types";
 
 // Помянник целиком и запись имён — одним или пачкой.
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json({ persons: created }, { status: 201 });
     } catch (e) {
+        if (e instanceof PersonDataError) return NextResponse.json({ error: e.message }, { status: 400 });
         if (e instanceof TooManyPersonsError) {
             return NextResponse.json({ error: e.message }, { status: 409 });
         }

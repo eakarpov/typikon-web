@@ -1,3 +1,4 @@
+import { effectiveRank } from "@/lib/pomyannik/marks";
 import { textLinks } from "@/lib/textLinks";
 import {blocksOf,fingerprint} from '@/lib/study/core';
 import { DEFAULT_BOOK_LANGUAGE } from "@/utils/bookLanguages";
@@ -814,7 +815,10 @@ export const pomyannikPerson = (doc: any) => ({
     kind: doc.kind ?? "living",
     sex: doc.sex ?? null,
     rank: doc.rank ?? null,
+    activeRank: effectiveRank(doc),
+    rankUntil: doc.rankUntil ?? null,
     relation: doc.relation ?? null,
+    signature: doc.signature ?? null,
     born: doc.born ?? null,
     baptized: doc.baptized ?? null,
     died: doc.died ?? null,

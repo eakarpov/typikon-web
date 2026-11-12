@@ -2,7 +2,7 @@ import { authorizeUser } from "@/lib/api/v2/user";
 import { fail, respondPrivate, respondPrivateCollection } from "@/lib/api/v2/http";
 import { readEnum, readPage } from "@/lib/api/v2/params";
 import { pomyannikPerson } from "@/lib/api/v2/serialize";
-import { addPersons, listPersons, TooManyPersonsError } from "@/lib/pomyannik/service";
+import { PersonDataError, addPersons, listPersons, TooManyPersonsError } from "@/lib/pomyannik/service";
 import { MAX_BATCH } from "@/lib/pomyannik/types";
 import type { PersonInput } from "@/lib/pomyannik/types";
 import { reportError } from "@/lib/reportError";
@@ -42,6 +42,7 @@ export async function GET(request: Request) {
             { access },
         );
     } catch (e) {
+        if (e instanceof PersonDataError) return fail("bad_request", e.message);
         reportError(e, { where: "app/api/v2/pomyannik/persons/route#GET", source: "api" });
         return fail("internal", "Не удалось открыть помянник");
     }
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
 
         return respondPrivate({ items: created.map(pomyannikPerson) }, { access, status: 201 });
     } catch (e) {
+        if (e instanceof PersonDataError) return fail("bad_request", e.message);
         if (e instanceof TooManyPersonsError) return fail("conflict", e.message);
         reportError(e, { where: "app/api/v2/pomyannik/persons/route#POST", source: "api" });
         return fail("internal", "Не удалось записать имя");

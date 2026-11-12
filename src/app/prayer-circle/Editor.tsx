@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useState } from 'react';
 import type { Block, Catalog, CircleConfig, Part } from '@/lib/prayerCircle/core';
 const btn='border rounded px-3 py-2 min-h-11';
@@ -29,7 +30,8 @@ export default function Editor({value,catalog,onSave,onCancel}:{value:CircleConf
     {b.kind==='psalter'&&<><label>Способ чтения <select className={btn} value={b.mode} onChange={e=>update(variant.blocks.map(x=>x.id===b.id?{...x,mode:e.target.value as Block['mode'],schedule:x.schedule??{'1':[1],'2':[2],'3':[3],'4':[4],'5':[5],'6':[6],'7':[7]}}:x))}><option value="continuous">В своём темпе</option><option value="scheduled">Своё расписание</option><option value="liturgical">Богослужебное расписание</option></select></label>
     {b.mode==='continuous'&&<label>За один раз <select className={btn} value={b.unit} onChange={e=>update(variant.blocks.map(x=>x.id===b.id?{...x,unit:e.target.value as Block['unit']}:x))}><option value="kathisma">Кафизма</option><option value="statia">Статия</option></select></label>}
     {b.mode==='scheduled'&&['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((d,n)=><label key={d} className="block">{d}: кафизмы <input className={btn} defaultValue={b.schedule?.[String(n+1)]?.join(', ')??''} onBlur={e=>update(variant.blocks.map(x=>x.id===b.id?{...x,schedule:{...x.schedule,[String(n+1)]:e.target.value.split(/[,\s]+/).filter(Boolean).map(Number)}}:x))}/></label>)}
-    <label className="block"><input type="checkbox" checked={b.departed??false} onChange={e=>update(variant.blocks.map(x=>x.id===b.id?{...x,departed:e.target.checked}:x))}/> Поминовение усопших на славах</label></>}
+    <p className="text-sm">Имена после каждой из трёх слав выбираются отдельно в <Link href="/settings#commemoration-title" className="underline">настройках поминовения</Link>.</p></>}
+    {b.kind==='template'&&['utrennie','serafimovo-diveevo'].includes(b.key)&&<p className="text-sm">Группы для молитв о здравии и о упокоении выбираются независимо в <Link href="/settings#commemoration-title" className="underline">настройках поминовения</Link>.</p>}
     <div className="flex gap-2"><button className={btn} disabled={!i} onClick={()=>{const a=[...variant.blocks];[a[i-1],a[i]]=[a[i],a[i-1]];update(a);}}>Выше</button><button className={btn} disabled={i===variant.blocks.length-1} onClick={()=>{const a=[...variant.blocks];[a[i+1],a[i]]=[a[i],a[i+1]];update(a);}}>Ниже</button><button className={btn} onClick={()=>update(variant.blocks.filter(x=>x.id!==b.id))}>Убрать</button></div>
     </fieldset>)}
     <fieldset className="space-y-2"><legend>Добавить чтение</legend><select className={btn} value={kind} onChange={e=>{setKind(e.target.value as Block['kind']);setKey('');}}>{[['template','Готовое последование'],['canon','Канон'],['akathist','Акафист'],['psalter','Псалтирь'],['scripture','Отрывок Писания'],['day-readings','Чтения дня'],['reading-plan','Личный план']].map(([k,t])=><option key={k} value={k}>{t}</option>)}</select>

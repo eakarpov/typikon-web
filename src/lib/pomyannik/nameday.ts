@@ -1,3 +1,4 @@
+import { dateParts } from "./dates";
 import { keyOf, nameEntry, type IndexedSaint } from "@/lib/imeniny/store";
 import { civilDate, nameDay as nameDayRule, parseMemoryDate, type DatedMemory } from "@/lib/imeniny/dates";
 import type { NameDay } from "@/lib/pomyannik/types";
@@ -57,11 +58,8 @@ export const autoNameDay = async (
 };
 
 const parseBirthday = (raw: string | null | undefined) => {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(raw ?? ""));
-    if (!m) return null;
-    const month = Number(m[2]), day = Number(m[3]);
-    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-    return { month, day };
+    const parts = dateParts(raw);
+    return parts?.month && parts.day ? { month: parts.month, day: parts.day } : null;
 };
 
 export interface NameDayOption {

@@ -425,7 +425,7 @@ sudo install -m 644 nginx/typikon-legacy.conf /etc/nginx/sites-available/typikon
   `/var/www/letsencrypt`; менять renewal без согласования этого пути нельзя.
 - Путь CA (`/etc/ssl/certs/ca-certificates.crt` для Debian/Ubuntu) и допустимые
   TLS-протоколы своей версии nginx/OpenSSL. Не выключай `proxy_ssl_verify`.
-- Лимит тела `client_max_body_size 20m` согласуй с прежним и новым сервером.
+- Лимит тела `client_max_body_size 64m` согласуй с прежним и новым сервером.
 - Если IPv6 не используется/не поддерживается, убери только соответствующие
   `listen [::]`. При существующей AAAA-записи IPv6 должен продолжать работать.
 

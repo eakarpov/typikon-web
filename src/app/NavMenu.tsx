@@ -88,29 +88,20 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 частным селектором и перебивает ml-auto у служебной половины —
                 та переставала прижиматься вправо, причём молча. */}
             <div className="flex flex-row gap-4 grow">
+                <NavGroup
+                    title="Уставные чтения по Уставу"
+                    items={[
+                        { href: "/penticostarion", label: "Цветная триодь" },
+                        { href: "/triodion", label: "Постная триодь" },
+                        { href: "/rest-readings", label: "Вне триодного цикла" },
+                        { href: "/calendar", label: "Календарные чтения", match: ["/calendar", "/months"] },
+                    ]}
+                />
                 <Link
-                    href="/penticostarion"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/penticostarion`) && `text-red-600`}`}
+                    href="/posledovanie"
+                    className={`cursor-pointer min-w-fit font-serif ${(pathname?.includes(`/posledovanie`) || pathname?.includes(`/ustav`)) && `text-red-600`}`}
                 >
-                    Цветная триодь
-                </Link>
-                <Link
-                    href="/triodion"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname?.includes(`/triodion`) && `text-red-600`}`}
-                >
-                    Постная триодь
-                </Link>
-                <Link
-                    href="/rest-readings"
-                    className={`cursor-pointer min-w-fit font-serif ${pathname === `/rest-readings` && `text-red-600`}`}
-                >
-                    Вне триодного цикла
-                </Link>
-                <Link
-                    href="/calendar"
-                    className={`cursor-pointer min-w-fit font-serif ${(pathname?.includes(`/calendar`) || pathname?.includes(`/months`)) && `text-red-600`}`}
-                >
-                    Календарные чтения
+                    Последование (бета)
                 </Link>
                 <Link
                     href="/calculator"

@@ -1,10 +1,11 @@
+import { effectiveRank } from "@/lib/pomyannik/marks";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { readSessionPayload } from "@/lib/authorize/sessions";
 import { myFont, csFont } from "@/utils/font";
-import { getPerson } from "@/lib/pomyannik/service";
+import { getPerson, listPersons } from "@/lib/pomyannik/service";
 import { memorialDays, sorokoustSpan, upcoming } from "@/lib/pomyannik/reckoning";
 import { slavonicName } from "@/lib/pomyannik/slavonic";
 import { nameDayOptions } from "@/lib/pomyannik/nameday";
@@ -43,9 +44,10 @@ const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
     const person = await getPerson(session.userId as string, id);
     if (!person) notFound();
 
-    const [slavonic, nameDays] = await Promise.all([
+    const [slavonic, nameDays, persons] = await Promise.all([
         slavonicName(person.churchName || person.name),
         nameDayOptions(person.churchName || person.name),
+        listPersons(session.userId as string),
     ]);
     const memorial = person.died ? memorialDays(person.died) : null;
     const sorokoust = person.sorokoust ? sorokoustSpan(person.sorokoust.from) : null;
@@ -60,13 +62,14 @@ const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
                         <span className="font-normal text-slate-400 text-sm"> · {person.relation}</span>
                     )}
                 </h1>
+                {person.signature && <p className="font-serif text-sm text-slate-500">{person.signature}</p>}
                 {/* КАК ИМЯ ПРОЧТУТ В ЗАПИСКЕ — с оговоркой об источнике: наш
                     именительный падеж, принятый за проверенный родительный, —
                     худшее, что здесь может выйти */}
                 <p className="mt-2 font-serif text-slate-800">
                     В записке:{" "}
                     <span className="font-sans-serif text-lg">
-                        {[rankGenitive(person.rank, person.sex), slavonic.genitive]
+                        {[rankGenitive(effectiveRank(person), person.sex), slavonic.genitive]
                             .filter(Boolean).join(" ")}
                     </span>
                 </p>
@@ -118,7 +121,7 @@ const PersonPage = async (props: { params: Promise<{ id: string }> }) => {
 
             <section className="flex flex-col gap-3">
                 <h2 className="font-bold font-serif text-sm border-t pt-3">Запись</h2>
-                <Card person={person} nameDays={nameDays} />
+                <Card persons={persons} person={person} nameDays={nameDays} groups={Array.from(new Set(persons.flatMap(p => p.groups ?? []))).sort((a, b) => a.localeCompare(b, "ru"))} />
             </section>
 
             <p className="font-serif text-sm">

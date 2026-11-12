@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ordoDay, ordoOptions, parseTransfer, type OrdoDay, type OrdoTransfer } from "@/lib/ordo";
 import { viewChoices } from "@/lib/ordoView";
 import { MONTH_OF } from "@/utils/chantLabels";
@@ -128,6 +129,9 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                     <span className="mr-2 rounded bg-amber-100 px-2 py-0.5 font-semibold">Бета</span>
                     Сборка последования ещё проверяется: возможны пропуски текстов и ошибки в порядке службы.
                     Сверяйте последование с богослужебными книгами.
+                    <Link href="/ustav" className="mt-2 block underline underline-offset-4">
+                        Конструктор службы — задать параметры вручную
+                    </Link>
                 </div>
                 <DayHead day={day} />
                 <div className="flex items-baseline gap-3 mt-1 flex-wrap">
