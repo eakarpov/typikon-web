@@ -77,3 +77,17 @@ test('единое название часов для движка и опубл
  const normalized=normalizeHours(old);assert.deepEqual(normalized.services.map(s=>s.label),['3-й час','6-й час']);assert.deepEqual(normalizeHours(normalized),normalized);
  const morning=defaultHours({...group(['liturgy-chrysostom']),part:'utro',title:'Литургия',services:[{key:'hour-3',label:'Час 3-й'},{key:'hour-6',label:'Час 6-й'},{key:'liturgy-chrysostom',label:'Литургия'}]});assert.equal(morning.title,'3-й час. 6-й час. Литургия');
 });
+
+test('скрытый 9-й час движка не выбран обычным утром, но ручной выбор и постовой порядок сохраняются',()=>{
+ const raw={...group(['hour-3','hour-6','hour-9','izobrazitelny','liturgy-chrysostom']),part:'utro' as const,title:'Литургия Иоанна Златоустаго'};
+ const p=defaultPractice('RU');p.compline='never';
+ const result=applyPractice([day([raw])],p);
+ const morning=result[0].gatherings[0];
+ assert.deepEqual(morning.services.map(s=>s.key),['hour-3','hour-6','izobrazitelny','liturgy-chrysostom']);
+ assert.equal(morning.key,raw.key);
+ assert.equal(raw.services.some(s=>s.key==='hour-9'),true);
+ const manual=applyEdits(result,[{...edit({services:['hour-9','hour-3','hour-6','liturgy-chrysostom']}),part:'utro'}]).days[0].gatherings[0];
+ assert.equal(manual.services.some(s=>s.key==='hour-9'),true);
+ const lent={...day([raw]),liturgicalSeason:'velikiy-post'};
+ assert.equal(applyPractice([lent],p)[0].gatherings[0].services.some(s=>s.key==='hour-9'),true);
+});

@@ -72,7 +72,12 @@ export function practiceTime(day: ParishDay, p: ParishPractice, part: 'morning' 
 export function isLiturgy(g: Gathering) { return g.services.some(s => s.key === 'liturgy' || s.key.startsWith('liturgy-')) || g.title.includes('Литургия'); }
 export function applyPractice(days: ParishDay[], p: ParishPractice): ParishDay[] {
     return days.map(day => {
-        let gatherings = day.gatherings.map(g => ({ ...g, services: g.services.slice(), time: practiceTime(day, p, g.part === 'vecher' ? 'evening' : 'morning', g.liturgySlot) }));
+        let gatherings = day.gatherings.map(g => ({ ...g,
+            // Движок включает скрытый в названии 9-й час в обычное утро.
+            // В приходском варианте перед Литургией — 3-й и 6-й; постовой
+            // порядок сохраняем. Явные правки состава применяются позже.
+            services: g.services.filter(s => !(s.key === 'hour-9' && g.part === 'utro' && isLiturgy(g) && day.liturgicalSeason !== 'velikiy-post')),
+            time: practiceTime(day, p, g.part === 'vecher' ? 'evening' : 'morning', g.liturgySlot) }));
         const candidates = gatherings.filter(g => g.part === 'utro' && isLiturgy(g));
         const template = candidates[0];
         const typica=day.dayConfig?.morningService==='typica';

@@ -6,3 +6,11 @@ test('ошибка записи не выдаётся за успешную пр
     await assert.rejects(()=>parishMutation('/api/parish/x/edits','POST',{time:'10:00'},request),/Нет права редактирования/);
     await parishMutation('/api/parish/x/edits','POST',{},(async()=>new Response('{}',{status:200})) as typeof fetch);
 });
+test('при перезапуске сайта форма сохраняется, запрос записи автоматически не повторяется',async()=>{
+ for(const status of [502,503,504]){
+  let requests=0;
+  const request=(async()=>{requests++;return new Response('<html>Unavailable</html>',{status});}) as typeof fetch;
+  await assert.rejects(()=>parishMutation('/api/parish/x/edits','POST',{},request),/изменения остались в форме/);
+  assert.equal(requests,1);
+ }
+});
