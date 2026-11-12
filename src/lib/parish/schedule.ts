@@ -1,6 +1,7 @@
 import {dayConfigs,memoryMetadata} from "./dayConfigStore";
 import {ordoDay} from "@/lib/ordo";
 import {schedulePeriod,presentationDays,type SchedulePeriodType} from "./period";
+import {cacheComplete} from "@/lib/completeCache";
 import { cached, CacheTag } from "@/lib/cache";
 import { getTemple } from "@/lib/temples";
 import { settingsFor } from "./settings";
@@ -39,6 +40,8 @@ export interface ParishMonth {
     days: ParishDay[];
     /** Служба устава не поднята — расписание строить не из чего. */
     unavailable: boolean;
+    /** Все запрошенные даты, включая вечерню последнего дня, получены. */
+    complete: boolean;
     /** Даты, на которые устав не ответил: их в расписании нет, и это сказано. */
     failed: string[];
 }
@@ -91,17 +94,17 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
         monthLabel:period.label,periodType:period.type,preferredPeriod:settings.schedulePeriod??"month",
         days: built,
         unavailable: days.size === 0,
+        complete: failed.length === 0,
         failed: failed.filter(inPeriod),
     };
 };
 
 // ПРОЕКТ кэшируется: он выводится из устава и приходских правил, и меняется
 // только вместе с ними.
-export const parishMonth = cached(
+export const parishMonth = cacheComplete(
     build,
-    ["parish-month"],
-    [CacheTag.PARISH],
-    3600,
+    work=>cached(work,["parish-period-complete"],[CacheTag.PARISH],3600),
+    result=>!result||(!result.unavailable&&result.complete),
 );
 
 /**

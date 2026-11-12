@@ -1,4 +1,5 @@
 // Клиент к службе сборки последования (проект typikon-rules, src/ordo_service.py).
+import {requestQueue} from "./ordoQueue";
 import {reportError} from "@/lib/reportError";
 //
 // Почему служба, а не свой код. Устав — не выборка, а конструктор: какие
@@ -71,7 +72,7 @@ type Asked<T> =
     | { data: T; error: null; status: number; version: string | null }
     | { data: null; error: { status: number | null; message: string }; version: string | null };
 
-const request = async <T>(
+const unpooledRequest = async <T>(
     path: string,
     params?: Record<string, string>,
     // Повторяемые параметры отдельно: престолов у храма бывает несколько, а
@@ -98,7 +99,7 @@ const request = async <T>(
     // закрытое соединение: «fetch failed», хотя до службы запрос не дошёл
     // вовсе. Тайм-аут не повторяем — служба занята, и второй заход её не
     // разгрузит.
-    for (let attempt = 1; ; attempt++) {
+    for (let attempt = 1, busyRetries=0; ; attempt++) {
         try {
             const response = await fetch(url, {
                 signal: AbortSignal.timeout(timeoutMs),
@@ -108,6 +109,12 @@ const request = async <T>(
                 cache: "no-store",
             });
             const version = response.headers.get("x-ordo-version");
+            if(response.status===503&&busyRetries<3){
+                const delay=Math.min(2000,Math.max(100,Number(response.headers.get('retry-after')??2)*1000));
+                await response.body?.cancel();
+                await new Promise(resolve=>setTimeout(resolve,Number.isFinite(delay)?delay:2000));
+                busyRetries++;attempt--;continue;
+            }
             if (!response.ok) {
                 const said = await response.json().then(b => b?.error, () => null);
                 const message = `${response.status}${said ? `: ${said}` : ""}`;
@@ -132,6 +139,10 @@ const request = async <T>(
         }
     }
 };
+
+const calendarQueue=requestQueue(2);
+const request=<T>(path:string,params?:Record<string,string>,repeated?:[string,string][],timeoutMs=ORDO_TIMEOUT_MS):Promise<Asked<T>>=>
+    calendarQueue.run(JSON.stringify([base(),path,params,repeated,timeoutMs]),()=>unpooledRequest<T>(path,params,repeated,timeoutMs));
 
 /**
  * Запрос к службе. Возвращает null, когда её нет: последование — раздел,
