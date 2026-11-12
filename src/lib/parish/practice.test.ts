@@ -8,7 +8,7 @@ const service=(key:string,label=key)=>({key,label});
 const gathering=(key:string,part:Gathering['part'],services:Gathering['services']):Gathering=>({key,civil:'2026-11-13',part,partLabel:part,time:null,title:services.map(s=>s.label).join('. '),belongsTo:null,duration:null,services,why:[]});
 const day=(date:string,gatherings:Gathering[]=[]):ParishDay=>({date,weekdayLabel:'',label:'Полиелей, седмичный день',sign:'polieley',triodLabel:null,memories:[],fastingLabel:'Пост',prestolny:null,dvunadesyaty:false,tone:1,gatherings});
 const liturgy=gathering('l','utro',[service('hour-3','3-й час'),service('liturgy','Литургия')]);
-test('две литургии — ранняя и обычная; разовый выбор дня выше постоянного',()=>{
+test('две литургии — ранняя и поздняя без изменения сохранённых часов; разовый выбор дня выше постоянного',()=>{
  const p=defaultPractice('RU');p.compline='never';p.liturgies.sunday=3;
  p.times.sundayEarly.morning='06:00';p.times.sundayOrdinary.morning='08:30';p.times.sundayLate.morning='11:00';
  assert.deepEqual(slots(1),['ordinary']);assert.deepEqual(slots(2),['early','ordinary']);
@@ -40,8 +40,8 @@ test('повечерие и полунощница: всегда, только �
 });
 test('панихида после вечерни отличается от панихиды в конце вечерней службы',()=>{
  const p=defaultPractice('RU');p.compline='never';const friday=day('2026-11-13',[gathering('v','vecher',[service('vespers'),service('matins')])]);
- p.panihida='friday-vespers';assert.deepEqual(applyPractice([friday],p)[0].gatherings[0].services.map(s=>s.key),['vespers','panihida','matins']);
- p.panihida='friday-end';assert.deepEqual(applyPractice([friday],p)[0].gatherings[0].services.map(s=>s.key),['vespers','matins','panihida']);
+ p.panihida='friday-vespers';assert.deepEqual(applyPractice([friday],p)[0].gatherings[0].services.map(s=>s.key),['hour-9','vespers','panihida','matins']);
+ p.panihida='friday-end';assert.deepEqual(applyPractice([friday],p)[0].gatherings[0].services.map(s=>s.key),['hour-9','vespers','matins','panihida']);
  p.panihida='saturday-liturgy';assert.equal(applyPractice([day('2026-11-14')],p)[0].gatherings.length,0);
  const saturday=applyPractice([day('2026-11-14',[liturgy])],p)[0];assert.equal(saturday.gatherings[0].services.at(-1)?.key,'panihida');
 });

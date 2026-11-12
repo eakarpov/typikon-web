@@ -1,3 +1,5 @@
+import {liturgySlotLabel} from "./practice";
+import {detailServices,nextDayLabel,type ServiceDetails} from "./serviceDetails";
 import { composedServices, SERVICE_CHOICES } from "./dayConfig";
 import { PART_LABELS, type Gathering, type ParishDay, type Part } from "./types";
 export type EditOp = "time" | "title" | "cancel" | "add" | "compose";
@@ -21,6 +23,7 @@ export interface ParishEdit {
         time?: string;
         title?: string;
         services?: string[];
+        details?:ServiceDetails;
         part?: Part;
     };
     /**
@@ -84,6 +87,8 @@ export const applyEdits = (days: ParishDay[], edits: ParishEdit[]): {
                     why: [{ kind: "parish", text: e.note ?? "добавлено руками" }],
                     edited: true,
                 };
+                g.details=e.value.details;g.services=detailServices(g.services,g.details);
+                if(g.details)g.title=g.services.map(s=>s.label).join(". ");
                 gatherings.push(g);
                 applied.push({ ...e, status: "active" });
                 continue;
@@ -101,8 +106,10 @@ export const applyEdits = (days: ParishDay[], edits: ParishEdit[]): {
             if (e.op === 'compose') {
                 const part=e.value.part??g.part;
                 const sign=part===g.part?g.serviceSign??(part==="vecher"?day.eveningSign??day.sign:day.sign):part==="vecher"?day.eveningSign??day.sign:day.sign;
-                const services = composedServices(e.value.services ?? [], sign);
-                gatherings[i] = { ...g, part, partLabel:PART_LABELS[part], serviceSign:sign, time: e.value.time ?? g.time, title: services.map(s => s.label).join('. '), services, edited: true,
+                const services = detailServices(composedServices(e.value.services ?? [], sign),e.value.details);
+                const count=day.dayConfig?.morningLiturgies??day.defaultMorningLiturgies??1;
+                const title=services.map(s=>(g.liturgySlot&&count>1&&(s.key==='liturgy'||s.key.startsWith('liturgy-'))?liturgySlotLabel(g.liturgySlot,count)+' ':'')+s.label).join('. ');
+                gatherings[i] = { ...g, part, partLabel:PART_LABELS[part], serviceSign:sign, time: e.value.time ?? g.time, title, services, details:e.value.details, edited: true,
                     why: [...g.why, { kind: 'parish', text: 'состав богослужения выбран вручную' }] };
             }
             else if (e.op === "cancel") {
@@ -129,6 +136,7 @@ export const applyEdits = (days: ParishDay[], edits: ParishEdit[]): {
             }
             applied.push({ ...e, status: drifted ? "stale" : "active", now: nowValue });
         }
+        gatherings=gatherings.map(g=>({...g,belongsTo:nextDayLabel(g)}));
         gatherings.sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
         return { ...day, gatherings };
     });

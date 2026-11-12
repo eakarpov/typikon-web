@@ -1,3 +1,4 @@
+import {defaultHours} from "./serviceDetails";
 import type { Gathering, ParishDay, ParishRule } from './types';
 import { serviceLabel } from './dayConfig';
 export type Frequency = 'always' | 'lent' | 'never';
@@ -50,6 +51,12 @@ export const PRACTICE_RULES: ParishRule[] = [
     { key: 'practice-vigil', label: 'Всенощное бдение', when: { hasService: ['vsenoshchnoe'] }, then: { choose: ['vsenoshchnoe'] } },
 ];
 export function slots(count: LiturgyCount): Slot[] { return count === 1 ? ['ordinary'] : count === 2 ? ['early', 'ordinary'] : ['early', 'ordinary', 'late']; }
+/** Ключ ordinary сохраняет уже заданное время второй литургии. */
+export function liturgySlotLabel(slot:Slot,count:LiturgyCount){return slot==='early'?'Ранняя':slot==='late'?'Поздняя':count===2?'Поздняя':count===3?'Средняя':'Обычная';}
+export function timeRowLabel(key:TimeKey,label:string,p:ParishPractice){
+ for(const category of ['sunday','feast','patron'] as const)if(key===category+'Ordinary')return label.replace('обычная',liturgySlotLabel('ordinary',p.liturgies[category]).toLowerCase());
+ return label;
+}
 export function category(day: ParishDay): 'sunday' | 'feast' | 'patron' | null { return day.prestolny ? 'patron' : day.dvunadesyaty || day.sign === 'velikoe-bdenie' ? 'feast' : new Date(day.date + 'T12:00:00Z').getUTCDay() === 0 ? 'sunday' : null; }
 export function countForDay(day: ParishDay, p: ParishPractice): LiturgyCount { return day.dayConfig?.morningLiturgies ?? (category(day) ? p.liturgies[category(day)!] : 1); }
 export function practiceTime(day: ParishDay, p: ParishPractice, part: 'morning' | 'evening', slot: Slot = 'ordinary') {
@@ -68,12 +75,21 @@ export function applyPractice(days: ParishDay[], p: ParishPractice): ParishDay[]
         let gatherings = day.gatherings.map(g => ({ ...g, services: g.services.slice(), time: practiceTime(day, p, g.part === 'vecher' ? 'evening' : 'morning', g.liturgySlot) }));
         const candidates = gatherings.filter(g => g.part === 'utro' && isLiturgy(g));
         const template = candidates[0];
-        if (template || day.dayConfig?.morningLiturgies) {
+        const typica=day.dayConfig?.morningService==='typica';
+        if(typica){
+            const existing=gatherings.find(g=>g.part==='utro'&&g.services.some(s=>s.key==='izobrazitelny'));
+            const source=existing??template??gatherings.find(g=>g.part==='utro');
+            gatherings=gatherings.filter(g=>!candidates.includes(g)&&g!==source&&g!==existing);
+            const services=source?.services.filter(s=>s.key!=='liturgy'&&!s.key.startsWith('liturgy-')&&!s.label.startsWith('Литургия'))??[];
+            if(!services.some(s=>s.key==='izobrazitelny'))services.push({key:'izobrazitelny',label:'Изобразительны',own:true});
+            gatherings.push({key:existing?.key??day.date+':utro:typica',civil:day.date,part:'utro',partLabel:'утром',time:practiceTime(day,p,'morning'),title:services.map(s=>s.label).join('. '),belongsTo:null,duration:source?.duration??null,services,why:[{kind:'parish',text:'Изобразительны выбраны вместо Литургии'}]});
+        }
+        else if (template || day.dayConfig?.morningLiturgies || day.dayConfig?.morningService==='liturgy') {
             const source = template ?? { key: day.date + ':utro:liturgy', civil: day.date, part: 'utro' as const, partLabel: 'утром', time: null, title: serviceLabel('liturgy-chrysostom', day.sign), belongsTo: null, duration: null, services: [{ key: 'liturgy-chrysostom', label: serviceLabel('liturgy-chrysostom', day.sign), own: true }], why: [] };
             const count = countForDay(day, p);
             gatherings = gatherings.filter(g => !candidates.includes(g));
             for (const slot of slots(count))
-                gatherings.push({ ...source, key: slot === 'ordinary' ? source.key : source.key + ':' + slot, liturgySlot: slot, title: (count > 1 ? { early: 'Ранняя ', ordinary: 'Обычная ', late: 'Поздняя ' }[slot] : '') + source.title, time: practiceTime(day, p, 'morning', slot), services: source.services.slice() });
+                gatherings.push({ ...source, key: slot === 'ordinary' ? source.key : source.key + ':' + slot, liturgySlot: slot, title: (count > 1 ? liturgySlotLabel(slot,count)+' ' : '') + source.title, time: practiceTime(day, p, 'morning', slot), services: source.services.slice() });
         }
         const extra = (key: string, part: 'utro' | 'vecher', label = serviceLabel(key, day.sign)) => ({ key: day.date + ':practice:' + key, civil: day.date, part, partLabel: part === 'utro' ? 'утром' : 'вечером', time: practiceTime(day, p, part === 'utro' ? 'morning' : 'evening'), title: label, belongsTo: null, duration: null, services: [{ key, label, own: true }], why: [{ kind: 'parish' as const, text: 'Постоянный состав прихода' }] });
         const lent = day.liturgicalSeason === 'velikiy-post';
@@ -96,6 +112,6 @@ export function applyPractice(days: ParishDay[], p: ParishPractice): ParishDay[]
         if (weekday === 6 && p.panihida === 'saturday-liturgy')
             panihida(gatherings.filter(g => isLiturgy(g)).at(-1));
         gatherings.sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99'));
-        return { ...day, gatherings, defaultMorningLiturgies: category(day) ? p.liturgies[category(day)!] : 1 };
+        return { ...day, gatherings:gatherings.map(defaultHours), defaultMorningLiturgies: category(day) ? p.liturgies[category(day)!] : 1 };
     });
 }

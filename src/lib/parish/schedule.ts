@@ -89,7 +89,7 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
         for(const id of config?.memories??[])if(!choices.some(m=>m.memoryId===id)){const m=metadata.get(id);if(m)choices.push({memoryId:id,label:m.label,book:m.book});}
         row.memoryChoices=await Promise.all(choices.map(async m=>({...m,sign:metadata.get(m.memoryId)?.sign?.default??null})));
         row.civilDayOff=civilDays[row.date];row.liturgicalSeason=day.triod;
-        row.dayConfig=config?{date:config.date,memories:config.memories,sign:config.sign,morningLiturgies:config.morningLiturgies}:undefined;
+        row.dayConfig=config?{date:config.date,memories:config.memories,sign:config.sign,morningLiturgies:config.morningLiturgies,morningService:config.morningService}:undefined;
         const declared=!!config&&(!!config.memories.length||!!config.sign);
         row.serviceMemories=declared?(config.memories.length?config.memories:day.memories.map(m=>m.memoryId)):undefined;
         row.serviceSign=declared?day.variants[0]?.sign:undefined;

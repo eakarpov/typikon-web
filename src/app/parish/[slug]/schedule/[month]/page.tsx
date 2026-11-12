@@ -1,3 +1,5 @@
+import {nextDayLabel} from "@/lib/parish/serviceDetails";
+import type {ServiceMemory} from "@/lib/parish/serviceDetails";
 import {EyeIcon} from "@heroicons/react/20/solid";
 import {dayOrdoHref} from "@/lib/parish/dayConfig";
 import DayTitle from "../DayTitle";
@@ -79,14 +81,20 @@ const Row = ({ day, why, edit, slug, month,ustav }: RowProps) => {
                 {day.gatherings.length === 0 && (
                     <span style={{ color: "#bbb" }}>—</span>
                 )}
-                {day.gatherings.map(g => (
-                    <Item key={g.key} g={g} why={why} edit={edit} slug={slug} month={month}
+                {day.gatherings.filter(g=>!edit||g.part!=='vecher').map(g => (
+                    <Item key={g.key} choices={day.memoryChoices??day.memories} g={g} why={why} edit={edit} slug={slug} month={month}
                           marks={{ sign: day.sign, dayVariant: dayVariantOf(day),
                                    weekday: day.weekdayLabel, dvunadesyaty: day.dvunadesyaty,
                                    prestolny: Boolean(day.prestolny), triod: day.triodLabel }} />
                 ))}
                 {edit&&<MorningLiturgies slug={slug} period={month} day={day}/>}
-                {edit && <AddGathering slug={slug} month={month} date={day.date} />}
+                {day.gatherings.filter(g=>edit&&g.part==='vecher').map(g => (
+                    <Item key={g.key} choices={day.memoryChoices??day.memories} g={g} why={why} edit={edit} slug={slug} month={month}
+                          marks={{ sign: day.sign, dayVariant: dayVariantOf(day),
+                                   weekday: day.weekdayLabel, dvunadesyaty: day.dvunadesyaty,
+                                   prestolny: Boolean(day.prestolny), triod: day.triodLabel }} />
+                ))}
+                {edit && <AddGathering slug={slug} month={month} date={day.date} choices={day.memoryChoices??day.memories} />}
             </td>
         </tr>
     );
@@ -98,9 +106,9 @@ const dayVariantOf = (d: ParishDay) =>
     d.weekdayLabel === "воскресенье" ? "voskresny"
         : d.weekdayLabel === "суббота" ? "subbotny" : "sedmichny";
 
-const Item = ({ g, why, edit, slug, month, marks }: {
+const Item = ({ g, why, edit, slug, month, marks,choices }: {
     g: Gathering; why: boolean; edit: boolean; slug: string; month: string;
-    marks?: DayMarks;
+    marks?: DayMarks;choices?:ServiceMemory[];
 }) => (
     <div style={{ marginBottom: ".35rem",
                   opacity: g.cancelled ? .75 : 1 }}>
@@ -114,8 +122,8 @@ const Item = ({ g, why, edit, slug, month, marks }: {
         <span style={{ borderBottom: g.edited ? "2px solid #c9a227" : undefined }}>
             {g.cancelled?"Нет богослужения":g.title}
         </span>
-        {!g.cancelled&&g.belongsTo && (
-            <span style={{ color: "#777" }}> — {g.belongsTo}</span>
+        {nextDayLabel(g) && (
+            <span style={{ color: "#777" }}> — {nextDayLabel(g)}</span>
         )}
         {/* своё, не попавшее в заголовок: молебен по литургии, крестный ход */}
         {!g.cancelled&&g.services.filter(s => s.own && !g.title.includes(s.label)).length > 0 && (
@@ -125,7 +133,7 @@ const Item = ({ g, why, edit, slug, month, marks }: {
                     .map(s => s.label).join(", ")}
             </span>
         )}
-        {edit && <EditGathering slug={slug} month={month} g={g} day={marks} />}
+        {edit && <EditGathering slug={slug} month={month} g={g} day={marks} choices={choices} />}
         {why && (
             <ul style={{
                 margin: ".2rem 0 .5rem 3.4rem", padding: 0, listStyle: "none",

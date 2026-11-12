@@ -48,7 +48,7 @@ export default function DayEditor({ slug, period, day }: {
     const defaultSign = memories.length ? choices.find(m => m.memoryId === memories[0])?.sign ?? 'bez-znaka' : day.sign;
     const defaultSignLabel = SERVICE_SIGNS.find(s => s[0] === defaultSign)?.[1] ?? defaultSign;
     const save = (reset = false) => run(async () => {
-        await parishMutation('/api/parish/' + slug + '/day', 'POST', { period, date: day.date, memories: reset ? [] : memories, sign: reset ? null : sign || null, morningLiturgies:reset?null:day.dayConfig?.morningLiturgies??null });
+        await parishMutation('/api/parish/' + slug + '/day', 'POST', { period, date: day.date, memories: reset ? [] : memories, sign: reset ? null : sign || null, morningLiturgies:reset?null:day.dayConfig?.morningLiturgies??null,morningService:reset?null:day.dayConfig?.morningService??null });
         router.refresh();
     });
     return <details className="font-serif text-sm mt-2 whitespace-normal"><summary className="cursor-pointer text-blue-800">Святой и знак службы</summary>

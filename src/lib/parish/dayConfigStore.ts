@@ -7,11 +7,11 @@ export const dayConfigs = async (slug: string, from: string, to: string) => (awa
 }>('parishDays').find({ parishSlug: slug, date: { $gte: from, $lte: to } }).toArray();
 export const saveDayConfig = async (slug: string, config: DayConfig, userId: string) => {
     const col = (await parishDb()).collection('parishDays');
-    if (!config.memories.length && !config.sign && !config.morningLiturgies) {
+    if (!config.memories.length && !config.sign && !config.morningLiturgies && !config.morningService) {
         await col.deleteOne({ _id: `${slug}:${config.date}` } as never);
         return;
     }
-    await col.updateOne({ _id: `${slug}:${config.date}` } as never, { $set: { ...config, parishSlug: slug, updatedAt: new Date(), updatedBy: userId }, ...(!config.morningLiturgies?{$unset:{morningLiturgies:""}}:{}) }, { upsert: true });
+    await col.updateOne({ _id: `${slug}:${config.date}` } as never, { $set: { ...config, parishSlug: slug, updatedAt: new Date(), updatedBy: userId }, ...((!config.morningLiturgies||!config.morningService)?{$unset:{...(!config.morningLiturgies?{morningLiturgies:""}:{}),...(!config.morningService?{morningService:""}:{})}}:{}) }, { upsert: true });
 };
 /** Без вложенного Next cache: вызывается из кэшируемой сборки периода. */
 export const memoryMetadata = async (ids: string[]) => {

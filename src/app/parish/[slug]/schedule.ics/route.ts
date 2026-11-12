@@ -1,3 +1,4 @@
+import {nextDayLabel} from "@/lib/parish/serviceDetails";
 import {getTemple} from "@/lib/temples";
 import {settingsFor} from "@/lib/parish/settings";
 import {periodsBetween,periodKeyForDate} from "@/lib/parish/period";
@@ -78,7 +79,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
                     start: stamp(g.civil, g.time),
                     end: plusMinutes(g.civil, g.time, g.duration ?? DEFAULT_MINUTES),
                     tzid,
-                    summary: g.title + (g.belongsTo ? ` — ${g.belongsTo}` : ""),
+                    summary: g.title + (nextDayLabel(g) ? ` — ${nextDayLabel(g)}` : ""),
                     description: [
                         day.triodLabel ?? day.memories[0]?.label ?? day.label,
                         day.prestolny ? "Престольный праздник" : null,

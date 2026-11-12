@@ -1,3 +1,5 @@
+import {validateServiceDetails,resolveServiceDetails} from "@/lib/parish/serviceDetails";
+import {getMemory} from "@/lib/memories";
 import {SERVICE_CHOICES} from "@/lib/parish/dayConfig";
 import {schedulePeriod} from "@/lib/parish/period";
 import { NextRequest, NextResponse } from "next/server";
@@ -32,6 +34,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
     if(!['utro','vecher','noch','den'].includes(body.part)||body.value?.time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(body.value.time))return NextResponse.json({error:'Проверьте время и часть суток'},{status:400});
     if(['compose','add'].includes(body.op)&&(!Array.isArray(body.value?.services)||!body.value.services.length||body.value.services.length>20||body.value.services.some((key:unknown)=>!SERVICE_CHOICES.some(s=>s[0]===key))))return NextResponse.json({error:'Выберите службы из списка'},{status:400});
     if(body.value?.part&&!['utro','vecher','noch','den'].includes(body.value.part))return NextResponse.json({error:'Неизвестная часть суток'},{status:400});
+    let details;
+    if(["compose","add"].includes(body.op)){try{details=await resolveServiceDetails(validateServiceDetails(body.value.services,body.value.details),getMemory);}catch(e){return NextResponse.json({error:(e as Error).message},{status:400});}}
     const id = await saveEdit({
         parishSlug: slug,
         month: String(body.month),
@@ -39,7 +43,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
         part: body.part as Part,
         gatheringKey: String(body.gatheringKey),
         op: body.op as EditOp,
-        value: body.value ?? {},
+        value: {...body.value, ...(["compose","add"].includes(body.op)?{details}:{})},
         baseline: body.baseline ?? {},
         note: body.note ? String(body.note) : undefined,
         // КТО ПРАВИЛ — записывается всегда: приход должен понимать, чьей рукой

@@ -135,6 +135,7 @@ export interface WhyStep {
 }
 
 export interface Gathering {
+    details?:import("./serviceDetails").ServiceDetails;
     liturgySlot?:import("./practice").Slot;
     serviceSign?:string;
     key: string;
