@@ -1,156 +1,42 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { PART_LABELS, type ParishRule } from "@/lib/parish/types";
-
-// Экран правил: откуда взялся каждый час — и как его поменять навсегда.
-//
-// Показывается УСЛОВИЕ ЧЕЛОВЕЧЕСКИМИ СЛОВАМИ, а не полями: «в воскресенье»,
-// «в двунадесятый праздник». Правило, которого нельзя прочесть, нельзя и
-// проверить, а проверять его будет тот, кто по нему служит.
-
-const SIGN_WORDS: Record<string, string> = {
-    "bdenie": "бдение", "velikoe-bdenie": "великое бдение", "polieley": "полиелей",
-    "slavoslovie": "славословие", "shesterichnaya": "шестеричная",
-    "bez-znaka": "без знака", "alliluinaya-postnaya": "аллилуйная постная",
-    "postnaya-prezhdeosvyashchennaya": "Преждеосвященная",
-    "paskha": "Пасха", "po-paskhe": "по Пасхе",
-    "strastnaya-pyatok": "Великий Пяток", "strastnaya-subbota": "Великая Суббота",
-    "strastnaya-chetvertok": "Великий Четверток",
-};
-const DAY_WORDS: Record<string, string> = {
-    voskresny: "в воскресенье", subbotny: "в субботу", sedmichny: "в седмичный день",
-};
-const TRIOD_WORDS: Record<string, string> = {
-    "velikiy-post": "Великим постом", "strastnaya": "на Страстной",
-    "svetlaya-sedmica": "на Светлой седмице",
-};
-
-const conditionWords = (r: ParishRule): string => {
-    const w = r.when, parts: string[] = [];
-    if (w.date) parts.push(`${w.date}`);
-    if (w.paschaOffset !== undefined) parts.push(`${w.paschaOffset} дней от Пасхи`);
-    if (w.triod?.length) parts.push(w.triod.map(t => TRIOD_WORDS[t] ?? t).join(" или "));
-    if (w.dayVariant?.length) parts.push(w.dayVariant.map(d => DAY_WORDS[d] ?? d).join(" или "));
-    if (w.dvunadesyaty) parts.push("в двунадесятый праздник");
-    if (w.prestolny) parts.push("в престольный праздник");
-    if (w.sign?.length) parts.push(`при знаке: ${w.sign.map(s => SIGN_WORDS[s] ?? s).join(", ")}`);
-    if (w.hasService?.length) parts.push(`когда есть ${w.hasService.join(", ")}`);
-    if (w.part) parts.push(PART_LABELS[w.part]);
-    return parts.join(", ") || "всегда";
-};
-
-const Rule = ({ slug, r }: { slug: string; r: ParishRule }) => {
-    const router = useRouter();
-    const [pending, start] = useTransition();
-    const [open, setOpen] = useState(false);
-    const time = r.then.set?.time ?? r.then.gatherings?.[0]?.time ?? "";
-    const [value, setValue] = useState(time);
-
-    const save = () => start(async () => {
-        await fetch(`/api/parish/${slug}/settings`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rule: { key: r.key,
-                then: { ...r.then, set: { ...(r.then.set ?? { part: r.when.part ?? "utro" }),
-                                          time: value } } } }),
-        });
-        setOpen(false);
-        router.refresh();
-    });
-
-    return (
-        <div style={{ borderTop: "1px solid #eee", padding: ".6rem 0" }}>
-            <div>
-                <b>{r.label}</b>
-                {r.source === "parish" && (
-                    <span style={{ color: "#8a6d1c", fontSize: ".85rem" }}> · ваше</span>
-                )}
-                {r.enabled === false && (
-                    <span style={{ color: "#888", fontSize: ".85rem" }}> · выключено</span>
-                )}
-            </div>
-            <div style={{ fontSize: ".88rem", color: "#555" }}>{conditionWords(r)}</div>
-            {r.note && (
-                <div style={{ fontSize: ".85rem", color: "#777", marginTop: ".15rem" }}>{r.note}</div>
-            )}
-            <div style={{ fontSize: ".88rem", marginTop: ".3rem" }}>
-                {time ? <>час: <b>{time}</b></> : <span style={{ color: "#999" }}>часа не ставит</span>}
-                {" · "}
-                {open ? (
-                    <>
-                        <input type="time" value={value} onChange={e => setValue(e.target.value)}
-                               style={{ border: "1px solid #ccc", width: "6rem" }} />
-                        <button type="button" disabled={pending} onClick={save}
-                                style={{ marginLeft: ".3rem", color: "#1c5a8a" }}>поставить</button>
-                        <button type="button" onClick={() => setOpen(false)}
-                                style={{ marginLeft: ".3rem", color: "#999" }}>отмена</button>
-                    </>
-                ) : (
-                    <button type="button" onClick={() => setOpen(true)} style={{ color: "#1c5a8a" }}>
-                        поменять
-                    </button>
-                )}
-            </div>
-        </div>
-    );
-};
-
-export const Rules = ({ slug, rules, own, timezone, timezoneHow, zones }: {
-    slug: string; rules: ParishRule[]; own: boolean;
-    timezone: string; timezoneHow: string | null; zones: string[];
-}) => {
-    const router = useRouter();
-    const [pending, start] = useTransition();
-    const [tz, setTz] = useState(timezone);
-
-    const call = (body: object) => start(async () => {
-        await fetch(`/api/parish/${slug}/settings`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-        router.refresh();
-    });
-
-    return (
-        <div style={{ maxWidth: "44rem" }}>
-            <div style={{ padding: ".6rem .75rem", background: "#f7f7f7", marginBottom: "1rem" }}>
-                <b>Часовой пояс</b>{" "}
-                <select value={tz} onChange={e => setTz(e.target.value)}
-                        style={{ border: "1px solid #ccc", padding: ".2rem" }}>
-                    {zones.map(z => <option key={z} value={z}>{z}</option>)}
-                </select>
-                <button type="button" disabled={pending || tz === timezone}
-                        onClick={() => call({ timezone: tz })}
-                        style={{ marginLeft: ".5rem", color: "#1c5a8a" }}>поставить</button>
-                <div style={{ fontSize: ".85rem", color: "#666", marginTop: ".3rem" }}>
-                    {timezoneHow === "parish" ? "выбран вами"
-                        : timezoneHow === "country" ? "в вашей стране пояс один — ошибиться негде"
-                        : timezoneHow === "longitude"
-                            ? "выведен по долготе и вами не подтверждён; у пограничных областей "
-                              + "он ошибается на час — проверьте"
-                            : "не выведен — стоит умолчание"}
-                    {". "}Им живёт подписной календарь.
-                </div>
-            </div>
-
-            <p style={{ color: "#666", fontSize: ".9rem" }}>
-                {own
-                    ? "Это ваши правила: наши поправки к умолчаниям их больше не касаются."
-                    : "Пока это наши умолчания, и поправки к ним доходят до вас сами. "
-                      + "Первая же ваша правка скопирует их вам — дальше они ваши."}
-            </p>
-
-            {rules.map(r => <Rule key={r.key} slug={slug} r={r} />)}
-
-            {own && (
-                <p style={{ marginTop: "1rem", fontSize: ".85rem" }}>
-                    <button type="button" disabled={pending} onClick={() => call({ reset: true })}
-                            style={{ color: "#8a1c1c" }}>
-                        вернуться к нашим умолчаниям
-                    </button>
-                    <span style={{ color: "#888" }}> — свои правила при этом пропадут</span>
-                </p>
-            )}
-        </div>
-    );
-};
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { parishMutation } from '@/lib/parish/client';
+import { TIME_ROWS, defaultPractice, slots, type ParishPractice, type TimeKey, type LiturgyCount, type Frequency } from '@/lib/parish/practice';
+import { useParishWrite } from '../schedule/[month]/useParishWrite';
+const field = 'border rounded bg-white px-2 py-1';
+export function Rules({ slug, practice, timezone, zones, calendarAvailable }: {
+    slug: string;
+    practice: ParishPractice;
+    timezone: string;
+    zones: string[];
+    calendarAvailable: boolean;
+}) {
+    const router = useRouter(), { pending, error, run } = useParishWrite();
+    const [value, setValue] = useState(practice), [tz, setTz] = useState(timezone), [saved, setSaved] = useState('');
+    const save = () => run(async () => { await parishMutation('/api/parish/' + slug + '/settings', 'POST', { practice: value, timezone: tz }); setSaved('Настройки сохранены.'); router.refresh(); });
+    const update = (next: ParishPractice) => { setSaved(''); setValue(next); };
+    const setTime = (key: TimeKey, part: 'morning' | 'evening', time: string) => update({ ...value, times: { ...value.times, [key]: { ...value.times[key], [part]: time } } });
+    const visible = (key: TimeKey) => { for (const cat of ['sunday', 'feast', 'patron'] as const)
+        if (key.startsWith(cat)) {
+            const slot = key.slice(cat.length).toLowerCase();
+            return slots(value.liturgies[cat]).includes(slot as ReturnType<typeof slots>[number]);
+        } return true; };
+    return <form className="font-serif space-y-6" onSubmit={e => { e.preventDefault(); void save(); }}>
+ <fieldset disabled={pending} className="space-y-3"><legend className="text-xl font-bold mb-3">Время</legend>
+ <div className="flex flex-wrap gap-3"><label>Часовой пояс <select className={field} value={tz} onChange={e => { setTz(e.target.value); setSaved(''); }}>{zones.map(z => <option key={z}>{z}</option>)}</select></label>
+ <label>Страна календаря <input className={field + ' w-20'} aria-label="Страна календаря (код ISO)" maxLength={2} placeholder="RU" value={value.country} onChange={e => update({ ...value, country: e.target.value.toUpperCase() })}/></label></div>
+ <p className="text-sm text-slate-600">Код страны храма: RU — Россия, BY — Беларусь, KZ — Казахстан и т. д. Гражданские выходные и переносы рабочих дней берём из производственного календаря <a className="underline" href="https://www.isdayoff.ru/db/" target="_blank" rel="noreferrer">isDayOff</a>. Воскресенье всегда использует собственные указания.</p>
+ {!calendarAvailable && <p role="status" className="text-amber-800 text-sm">Производственный календарь для сохранённой страны пока недоступен. Временно учитываются только субботы и воскресенья; после загрузки календаря появятся гражданские выходные.</p>}
+ <p className="text-sm text-slate-600">«Выходной день» — базовое время для гражданских выходных и суббот. Пустое поле субботы использует это время; в рабочую перенесённую субботу — время буднего дня. Отдельные указания субботы имеют приоритет. Для двух литургий — ранняя и обычная. Вечерняя служба одна, её время задаётся в строке «обычная».</p>
+ <table className="w-full border-collapse text-sm"><thead><tr><th className="text-left py-2">Вариант дня</th><th>Утро</th><th>Вечер</th></tr></thead><tbody>{TIME_ROWS.filter(([key]) => visible(key)).map(([key, label]) => <tr key={key} className="border-t"><th className="text-left font-normal py-2 pr-2">{label}</th>{(['morning', 'evening'] as const).map(part => <td key={part} className="p-1">{part === 'evening' && /Early$|Late$/.test(key) ? <span className="text-slate-400">—</span> : <><input type="time" aria-label={`${label} — ${part === 'morning' ? 'утро' : 'вечер'}`} className={field + ' w-full'} value={value.times[key][part]} required={['weekday', 'weekend'].includes(key)} onChange={e => setTime(key, part, e.target.value)}/>{!value.times[key][part] && <small className="text-slate-500">по базовому времени</small>}</>}</td>)}</tr>)}</tbody></table>
+ </fieldset>
+ <fieldset disabled={pending} className="space-y-3"><legend className="text-xl font-bold mb-3">Состав</legend>
+ {(['compline', 'midnight'] as const).map(key => <label key={key} className="flex flex-wrap items-center justify-between gap-2">{key === 'compline' ? 'Повечерие' : 'Полунощница'}<select className={field} value={value[key]} onChange={e => update({ ...value, [key]: e.target.value as Frequency })}><option value="always">Есть всегда</option><option value="lent">Есть Великим постом</option><option value="never">Нет</option></select></label>)}
+ <label className="flex flex-wrap justify-between gap-2">Уставная панихида<select className={field} value={value.panihida} onChange={e => update({ ...value, panihida: e.target.value as ParishPractice['panihida'] })}><option value="friday-vespers">Пятница после вечерни</option><option value="friday-end">Пятница в конце вечерней службы</option><option value="saturday-liturgy">В субботу после Литургии</option><option value="never">Нет</option></select></label>
+ {([['sunday', 'Количество Литургий в воскресенье'], ['patron', 'Количество Литургий на престол'], ['feast', 'Количество Литургий на великие праздники']] as const).map(([key, label]) => <label key={key} className="flex items-center justify-between gap-2">{label}<select className={field} value={value.liturgies[key]} onChange={e => update({ ...value, liturgies: { ...value.liturgies, [key]: Number(e.target.value) as LiturgyCount } })}>{[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}</select></label>)}
+ </fieldset>
+ {error && <p role="alert" className="text-red-800">{error}</p>}{saved && <p role="status" className="text-green-800">{saved}</p>}
+ <div className="flex gap-4"><button disabled={pending} type="submit" className="border rounded bg-amber-50 px-4 py-2">Сохранить настройки</button><button disabled={pending} type="button" className="underline" onClick={() => update(defaultPractice(value.country))}>Заполнить начальными значениями</button></div>
+ </form>;
+}

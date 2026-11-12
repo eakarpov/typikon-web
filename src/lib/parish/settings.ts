@@ -1,3 +1,4 @@
+import {defaultPractice,PRACTICE_RULES,type ParishPractice} from "./practice";
 import type { SchedulePeriodType } from "./period";
 import { parishDb } from "./db";
 import { guessTimezone } from "@/lib/timezones";
@@ -20,6 +21,7 @@ export interface StoredSettings {
     _id?: string;
     templeSlug: string;
     schedulePeriod?: SchedulePeriodType;
+    practice?:ParishPractice;
     /** Пояс, названный приходом. Пусто — берём догадку по стране и долготе. */
     timezone?: string | null;
     /** Свои правила. Пусто — приход ещё едет на умолчаниях из кода. */
@@ -88,7 +90,8 @@ export const settingsFor = async (temple: Temple): Promise<ParishSettings & {
         prestoly: (temple.prestoly ?? [])
             .filter(p => p.state !== "lost" && p.memoryIds?.length)
             .map(p => ({ memoryId: p.memoryIds[0], kind: p.kind ?? null, label: p.label ?? null })),
-        rules: stored?.rules?.length ? stored.rules : DEFAULT_RULES,
-        ownRules: Boolean(stored?.rules?.length),
+        rules: PRACTICE_RULES,
+        practice: stored?.practice??defaultPractice(temple.country??""),
+        ownRules: Boolean(stored?.practice),
     };
 };

@@ -30,8 +30,6 @@ export const EditGathering = ({ slug, month, g, day }: {
     const [compose,setCompose]=useState(false);
     const [services,setServices]=useState(g.services.map(s=>s.key==='liturgy'||s.key==='vespers'&&s.label.startsWith('Литургия')?(s.label.includes('Василия')?'liturgy-basil':s.label.includes('Преждеосвященных')?'liturgy-presanctified':'liturgy-chrysostom'):s.key));
     const [part,setPart]=useState<Part>(g.part);
-    const [promote, setPromote] = useState(false);
-    const [scope, setScope] = useState("dayVariant");
 
     const save = (op: "time" | "title" | "cancel", value: Record<string, string>) =>
         start(async () => {
@@ -45,37 +43,6 @@ export const EditGathering = ({ slug, month, g, day }: {
             router.refresh();
         });
 
-    // ЧЕТЫРЕ ШИРИНЫ, а не свободное поле: человек, которому дали писать
-    // условие, напишет его неверно — и узнает об этом через год
-    const SCOPES: [string, string, () => Record<string, unknown>][] = day ? [
-        ["dayVariant", `по всем таким дням (${
-            { voskresny: "воскресеньям", subbotny: "субботам", sedmichny: "седмичным" }
-                [day.dayVariant] ?? day.dayVariant})`,
-         () => ({ part: g.part, dayVariant: [day.dayVariant] })],
-        ["sign", `при таком знаке (${day.sign})`,
-         () => ({ part: g.part, sign: [day.sign] })],
-        ["dvunadesyaty", "во все двунадесятые праздники",
-         () => ({ part: g.part, dvunadesyaty: true })],
-        ["prestolny", "в престольный праздник",
-         () => ({ part: g.part, prestolny: true })],
-    ] : [];
-
-    const promoteNow = () => start(async () => {
-        const chosen = SCOPES.find(s => s[0] === scope);
-        if (!chosen) return;
-        await parishMutation(`/api/parish/${slug}/settings`,"POST",{
-            promote: {
-                key: `svoyo-${scope}-${g.part}`,
-                label: `${g.title} — ${chosen[1]}`,
-                when: chosen[2](),
-                part: g.part, time: g.time ?? undefined, title: g.title,
-                note: "заведено из правки расписания",
-            },
-        });
-        setPromote(false);
-        router.refresh();
-    });
-
     if(compose)return <span className="block border rounded p-2 my-2 text-sm whitespace-normal">
         <ServicePicker value={services} onChange={setServices}/>
         <label>Время <input type="time" value={time} onChange={e=>setTime(e.target.value)} /></label>
@@ -84,22 +51,6 @@ export const EditGathering = ({ slug, month, g, day }: {
         <button type="button" disabled={pending} onClick={()=>setCompose(false)}>Отмена</button>
         {error&&<span role="alert" className="block text-red-800">{error}</span>}
     </span>;
-    if (promote && day) {
-        return (
-            <span style={{ marginLeft: ".5rem", fontSize: ".8rem" }}>
-                <select value={scope} onChange={e => setScope(e.target.value)}
-                        style={{ border: "1px solid #ccc" }}>
-                    {SCOPES.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-                </select>
-                <button type="button" disabled={pending} onClick={promoteNow}
-                        style={{ marginLeft: ".3rem", color: "#1c5a8a" }}>завести правило</button>
-                {error&&<span role="alert" className="text-red-800 whitespace-normal">{error}</span>}
-                <button type="button" onClick={() => setPromote(false)}
-                        style={{ marginLeft: ".3rem", color: "#999" }}>отмена</button>
-            </span>
-        );
-    }
-
     return (
         <span style={{ marginLeft: ".5rem", fontSize: ".8rem", whiteSpace: "normal" }}>
             {error&&<span role="alert" className="block text-red-800">{error}</span>}
@@ -130,18 +81,10 @@ export const EditGathering = ({ slug, month, g, day }: {
                         <button type="button" disabled={pending}
                                 onClick={() => save("cancel", {})}
                                 style={{ marginLeft: ".5rem", color: "#8a1c1c" }}>
-                            не служим
+                            Не служим
                         </button>
                     )}
-                    {/* ПРАВКА, СТАВШАЯ ПРАВИЛОМ. Условие собирается из
-                        признаков этого самого дня и ПРЕДЛАГАЕТСЯ — согласиться
-                        с ним человек должен сам, глядя на слова */}
-                    {g.edited && day && (
-                        <button type="button" disabled={pending} onClick={() => setPromote(true)}
-                                style={{ marginLeft: ".5rem", color: "#8a6d1c" }}>
-                            так у нас всегда
-                        </button>
-                    )}
+                    {g.edited&&<a className="ml-2 underline" href={`/parish/${slug}/rules`}>Постоянные настройки</a>}
                 </>
             )}
         </span>

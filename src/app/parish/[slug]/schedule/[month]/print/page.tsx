@@ -1,3 +1,4 @@
+import DayTitle from "../../DayTitle";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { parishView } from "@/lib/parish/schedule";
@@ -94,7 +95,7 @@ const Day = ({ d }: { d: ParishDay }) => (
             <span className="wd">{d.weekdayLabel.slice(0, 2)}</span>
         </div>
         <div className="what">
-            <div>{d.triodLabel ?? d.memories[0]?.label ?? d.label}</div>
+            <DayTitle day={d}/>
             <p className="sub">
                 {d.prestolny ? "престольный праздник · " : ""}
                 {shortFast(d.fastingLabel)}
@@ -102,8 +103,8 @@ const Day = ({ d }: { d: ParishDay }) => (
         </div>
         <div className="when">
             {d.gatherings.length === 0 ? <div>&nbsp;</div> : d.gatherings.map(g => (
-                <div key={g.key} title={g.title}>
-                    <b>{g.time ?? "—"}</b>{shortTitle(g.title)}
+                <div key={g.key} title={g.cancelled?"Нет богослужения":g.title}>
+                    <b>{g.time ?? "—"}</b>{g.cancelled?"Нет богослужения":shortTitle(g.title)}
                 </div>
             ))}
         </div>

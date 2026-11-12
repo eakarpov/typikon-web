@@ -1,5 +1,7 @@
 import {EyeIcon} from "@heroicons/react/20/solid";
 import {dayOrdoHref} from "@/lib/parish/dayConfig";
+import DayTitle from "../DayTitle";
+import MorningLiturgies from "./MorningLiturgies";
 import DayEditor from "./DayEditor";
 import {schedulePeriod,shiftSchedulePeriod,parishScheduleHref} from "@/lib/parish/period";
 import ScheduleTools from "./ScheduleTools";
@@ -61,16 +63,14 @@ const Row = ({ day, why, edit, slug, month,ustav }: RowProps) => {
             </td>
 
             <td style={{ padding: ".5rem .75rem .5rem 0", verticalAlign: "top" }}>
-                <div>{day.triodLabel ?? day.memories[0]?.label ?? day.label}</div>
-                {!!day.dayConfig?.memories.length&&<div className="text-sm text-slate-700">Служим: {day.dayConfig.memories.map(id=>day.memoryChoices?.find(m=>m.memoryId===id)?.label??id).join('; ')}</div>}
+                <DayTitle day={day}/>
                 {day.prestolny && (
                     <div style={{ color: "#8a6d1c", fontSize: ".85rem" }}>
                         престольный праздник
                     </div>
                 )}
                 <div style={{ color: "#888", fontSize: ".82rem" }}>
-                    {day.label}
-                    {day.fastingLabel ? ` · ${day.fastingLabel}` : ""}
+                    {day.fastingLabel??""}
                 </div>
                 {edit&&<DayEditor key={JSON.stringify(day.dayConfig)??day.date} slug={slug} period={month} day={day}/>}
             </td>
@@ -85,6 +85,7 @@ const Row = ({ day, why, edit, slug, month,ustav }: RowProps) => {
                                    weekday: day.weekdayLabel, dvunadesyaty: day.dvunadesyaty,
                                    prestolny: Boolean(day.prestolny), triod: day.triodLabel }} />
                 ))}
+                {edit&&<MorningLiturgies slug={slug} period={month} day={day}/>}
                 {edit && <AddGathering slug={slug} month={month} date={day.date} />}
             </td>
         </tr>
@@ -102,8 +103,7 @@ const Item = ({ g, why, edit, slug, month, marks }: {
     marks?: DayMarks;
 }) => (
     <div style={{ marginBottom: ".35rem",
-                  textDecoration: g.cancelled ? "line-through" : undefined,
-                  opacity: g.cancelled ? .55 : 1 }}>
+                  opacity: g.cancelled ? .75 : 1 }}>
         <span style={{
             display: "inline-block", minWidth: "3.4rem",
             fontVariantNumeric: "tabular-nums",
@@ -112,13 +112,13 @@ const Item = ({ g, why, edit, slug, month, marks }: {
             {g.time ?? "—:—"}
         </span>
         <span style={{ borderBottom: g.edited ? "2px solid #c9a227" : undefined }}>
-            {g.title}
+            {g.cancelled?"Нет богослужения":g.title}
         </span>
-        {g.belongsTo && (
+        {!g.cancelled&&g.belongsTo && (
             <span style={{ color: "#777" }}> — {g.belongsTo}</span>
         )}
         {/* своё, не попавшее в заголовок: молебен по литургии, крестный ход */}
-        {g.services.filter(s => s.own && !g.title.includes(s.label)).length > 0 && (
+        {!g.cancelled&&g.services.filter(s => s.own && !g.title.includes(s.label)).length > 0 && (
             <span style={{ color: "#666" }}>
                 {" · "}
                 {g.services.filter(s => s.own && !g.title.includes(s.label))
@@ -181,6 +181,7 @@ const Page = async ({ params, searchParams }: Props) => {
                 {data.title} · {data.monthLabel}
             </p>
 
+            {data.civilCalendarAvailable===false&&<p role="status" className="text-sm text-amber-800 mt-2">Производственный календарь временно недоступен. Гражданские выходные пока не учтены; воскресные и отдельные субботние указания действуют.</p>}
             {rights.canEdit&&<ScheduleTools slug={slug} period={month} type={data.periodType} anchor={anchor} why={why} edit={edit} published={!!data.published}/>}
 
             {data.unavailable ? (

@@ -135,6 +135,7 @@ export interface WhyStep {
 }
 
 export interface Gathering {
+    liturgySlot?:import("./practice").Slot;
     serviceSign?:string;
     key: string;
     civil: string;
@@ -161,6 +162,9 @@ export interface Gathering {
 }
 
 export interface ParishDay {
+    civilDayOff?:boolean;
+    liturgicalSeason?:string|null;
+    defaultMorningLiturgies?:import("./practice").LiturgyCount;
     date: string;
     weekdayLabel: string;
     /** Ярлык варианта: «Бдение, воскресный день». */
@@ -184,6 +188,7 @@ export interface ParishDay {
 }
 
 export interface ParishSettings {
+    practice?:import("./practice").ParishPractice;
     schedulePeriod?: "month"|"week";
     slug: string;
     title: string;

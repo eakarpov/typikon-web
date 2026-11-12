@@ -1,3 +1,5 @@
+import {applyPractice} from "./practice";
+import {civilYear} from "./civilCalendar";
 import {dayConfigs,memoryMetadata} from "./dayConfigStore";
 import {ordoDay} from "@/lib/ordo";
 import {schedulePeriod,presentationDays,type SchedulePeriodType} from "./period";
@@ -29,6 +31,7 @@ export interface ParishMonth {
     ustav?:string|null;
     month: string;
     monthLabel: string;
+    civilCalendarAvailable?:boolean;
     periodType:SchedulePeriodType;
     preferredPeriod:SchedulePeriodType;
     /** Пояс, которым живёт подписной календарь. */
@@ -65,6 +68,7 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
     const configs=await dayConfigs(slug,period.start,dates[dates.length-1]);
     const metadata=await memoryMetadata([...days.values()].flatMap(d=>d.memories.map(m=>m.memoryId)).concat(configs.flatMap(c=>c.memories)));
     for(const config of configs){
+        if(!config.memories.length&&!config.sign)continue;
         const original=days.get(config.date);if(!original)continue;
         const ids=config.memories.length?config.memories:original.memories.map(m=>m.memoryId);
         const first=config.memories[0]?metadata.get(config.memories[0]):null;
@@ -74,15 +78,21 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
         if(!chosen){days.delete(config.date);failed.push(config.date);continue;}
         days.set(config.date,chosen);
     }
+    const country=settings.practice?.country??temple.country??'';
+    const calendars=await Promise.all([...new Set(period.dates.map(date=>Number(date.slice(0,4))))].map(year=>civilYear(country,year)));
+    const civilDays=Object.assign({},...calendars.filter(Boolean)) as Record<string,boolean>;
+    const civilCalendarAvailable=!!country&&calendars.every(Boolean);
     const built=buildMonth(days,settings,date=>date>=period.start&&date<=period.end);
     await Promise.all(built.map(async row=>{
         const day=days.get(row.date)!;const config=configs.find(c=>c.date===row.date);
         const choices=[...day.memories];
         for(const id of config?.memories??[])if(!choices.some(m=>m.memoryId===id)){const m=metadata.get(id);if(m)choices.push({memoryId:id,label:m.label,book:m.book});}
         row.memoryChoices=await Promise.all(choices.map(async m=>({...m,sign:metadata.get(m.memoryId)?.sign?.default??null})));
-        row.dayConfig=config?{date:config.date,memories:config.memories,sign:config.sign}:undefined;
-        row.serviceMemories=config?(config.memories.length?config.memories:day.memories.map(m=>m.memoryId)):undefined;
-        row.serviceSign=config?day.variants[0]?.sign:undefined;
+        row.civilDayOff=civilDays[row.date];row.liturgicalSeason=day.triod;
+        row.dayConfig=config?{date:config.date,memories:config.memories,sign:config.sign,morningLiturgies:config.morningLiturgies}:undefined;
+        const declared=!!config&&(!!config.memories.length||!!config.sign);
+        row.serviceMemories=declared?(config.memories.length?config.memories:day.memories.map(m=>m.memoryId)):undefined;
+        row.serviceSign=declared?day.variants[0]?.sign:undefined;
         const tomorrow=new Date(row.date+'T12:00:00Z');tomorrow.setUTCDate(tomorrow.getUTCDate()+1);
         row.eveningSign=days.get(tomorrow.toISOString().slice(0,10))?.variants[0]?.sign;
         row.serviceVariant=day.variants[0]?.key;row.servicePrestoly=settings.prestoly;
@@ -92,7 +102,8 @@ const build = async (slug: string, month: string): Promise<ParishMonth | null> =
         slug, title: temple.name, ustav:settings.ustav, month, timezone: settings.timezone,
         timezoneHow: settings.timezoneHow, ownRules: settings.ownRules,
         monthLabel:period.label,periodType:period.type,preferredPeriod:settings.schedulePeriod??"month",
-        days: built,
+        days: settings.practice?applyPractice(built,settings.practice):built,
+        civilCalendarAvailable,
         unavailable: days.size === 0,
         complete: failed.length === 0,
         failed: failed.filter(inPeriod),

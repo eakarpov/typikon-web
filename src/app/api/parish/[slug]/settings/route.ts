@@ -1,3 +1,4 @@
+import {validatePractice} from "@/lib/parish/practice";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CacheTag } from "@/lib/cache";
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
     }
     const body = await request.json().catch(() => null);
 
+    if(body?.practice!==undefined){
+        try{const practice=validatePractice(body.practice);await saveSettings(slug,{practice},rights.userId!);}
+        catch(e){return NextResponse.json({error:(e as Error).message},{status:400});}
+    }
     if(body?.schedulePeriod!==undefined){
         if(!["month","week"].includes(body.schedulePeriod))return NextResponse.json({error:"Выберите неделю или месяц"},{status:400});
         await saveSettings(slug,{schedulePeriod:body.schedulePeriod},rights.userId!);

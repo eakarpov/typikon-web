@@ -5,6 +5,7 @@ export interface DayConfig {
     date: string;
     memories: string[];
     sign: string | null;
+    morningLiturgies?:import("./practice").LiturgyCount|null;
 }
 export function serviceLabel(key: string, sign: string) {
     if (key === 'vespers')
@@ -19,7 +20,8 @@ export function validateDayConfig(value: unknown): DayConfig {
         throw Error('Проверьте дату и список святых');
     if (v.sign !== null && !SERVICE_SIGNS.some(s => s[0] === v.sign))
         throw Error('Неизвестный знак службы');
-    return { date: v.date, memories: v.memories, sign: v.sign };
+    if(v.morningLiturgies!=null&&![1,2,3].includes(v.morningLiturgies))throw Error("Количество литургий — от одной до трёх");
+    return { date: v.date, memories: v.memories, sign: v.sign, ...(v.morningLiturgies!=null?{morningLiturgies:v.morningLiturgies}:{}) };
 }
 export function dayOrdoHref(day: ParishDay, ustav?: string | null) {
     const q = new URLSearchParams({ date: day.date });
