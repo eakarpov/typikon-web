@@ -67,10 +67,23 @@ export function detailServices(services: GatheringService[], details?: ServiceDe
 }
 export function hasDayService(services: GatheringService[]) { return services.some(s => ['vespers', 'vespers-small', 'matins', 'vsenoshchnoe', 'liturgy'].includes(s.key) || s.key.startsWith('liturgy-')); }
 export function nextDayLabel(g: Gathering) { return !g.cancelled && hasDayService(g.services) ? g.belongsTo : null; }
-const hour = (key: string): GatheringService => ({ key, label: ({ 'hour-3': '3-й час', 'hour-6': '6-й час', 'hour-9': '9-й час' } as Record<string, string>)[key] });
+export const HOUR_LABELS:Record<string,string>={'hour-1':'1-й час','hour-3':'3-й час','hour-6':'6-й час','hour-9':'9-й час'};
+export function normalizeHourText(text:string){return text.replace(/часъ?\s+([1369])\s*[-‑–—]\s*й/gi,'$1-й час');}
+/** Корректирует также старые опубликованные снимки, не переписывая их в БД. */
+export function normalizeHours(g:Gathering):Gathering{
+ let title=normalizeHourText(g.title);
+ const services=g.services.map(s=>{
+  const label=HOUR_LABELS[s.key];if(!label)return s;
+  if(s.label&&s.label!==label)title=title.split(s.label).join(label);
+  return {...s,label};
+ });
+ return {...g,title,services};
+}
+export function displayGatheringTitle(g:Gathering){return normalizeHours(g).title;}
+const hour = (key: string): GatheringService => ({ key, label:HOUR_LABELS[key] });
 const liturgy = (s: GatheringService) => s.key === 'liturgy' || s.key.startsWith('liturgy-') || s.label.startsWith('Литургия');
 export function defaultHourServices(services: GatheringService[], part: Part): GatheringService[] {
-    let result = services.slice();
+    let result = services.map(s=>HOUR_LABELS[s.key]?{...s,label:HOUR_LABELS[s.key]}:s);
     const insert = (keys: string[], at: (s: GatheringService) => boolean) => {
         const index = result.findIndex(at);
         if (index < 0)
@@ -87,6 +100,7 @@ export function defaultHourServices(services: GatheringService[], part: Part): G
     return result;
 }
 export function defaultHours(g: Gathering): Gathering {
+    g=normalizeHours(g);
     const relevant = g.part === 'vecher' ? hasDayService(g.services) : (g.part === 'utro' || g.part === 'den') && g.services.some(s => liturgy(s) || s.key === 'izobrazitelny');
     if (!relevant)
         return g;

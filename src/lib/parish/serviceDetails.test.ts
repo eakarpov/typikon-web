@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {validateServiceDetails,resolveServiceDetails,detailsInput,detailServices,nextDayLabel,defaultHours,defaultHourServices,chooseService} from './serviceDetails';
+import {validateServiceDetails,resolveServiceDetails,detailsInput,detailServices,nextDayLabel,defaultHours,defaultHourServices,chooseService,normalizeHourText,normalizeHours,displayGatheringTitle} from './serviceDetails';
 import {applyEdits,type ParishEdit} from './editModel';
 import {applyPractice,defaultPractice,liturgySlotLabel,timeRowLabel} from './practice';
 import {validateDayConfig,serviceSelection,serviceLabel} from './dayConfig';
@@ -67,4 +67,13 @@ test('названия двух и трёх литургий обновляют�
  p.liturgies.sunday=3;const three=applyPractice([d],p)[0].gatherings;assert.match(three[1].title,/Средняя/);assert.equal(three[1].time,'09:30');assert.equal(three[2].time,'11:30');
  const composed=applyEdits([applyPractice([d],p)[0]],[{...edit({services:['hour-3','hour-6','liturgy-basil']}),part:'utro',gatheringKey:'g'}]).days[0].gatherings.find(g=>g.key==='g')!;assert.match(composed.title,/Средняя Литургия Василия/);
  assert.equal(liturgySlotLabel('ordinary',3),'Средняя');assert.equal(timeRowLabel('sundayOrdinary','Воскресенье — обычная',p),'Воскресенье — средняя');
+});
+
+test('единое название часов для движка и опубликованных снимков',()=>{
+ assert.equal(normalizeHourText('Час 3-й. Час 6-й. Час 9-й. Час 1-й.'),'3-й час. 6-й час. 9-й час. 1-й час.');
+ assert.equal(normalizeHourText('3-й час. 6-й час.'),'3-й час. 6-й час.');
+ const old={...group(['hour-3','hour-6']),title:'Час 3-й. Час 6-й. Литургия',services:[{key:'hour-3',label:'Час 3-й'},{key:'hour-6',label:'Час 6-й'}]};
+ assert.equal(displayGatheringTitle(old),'3-й час. 6-й час. Литургия');assert.equal(old.title,'Час 3-й. Час 6-й. Литургия');
+ const normalized=normalizeHours(old);assert.deepEqual(normalized.services.map(s=>s.label),['3-й час','6-й час']);assert.deepEqual(normalizeHours(normalized),normalized);
+ const morning=defaultHours({...group(['liturgy-chrysostom']),part:'utro',title:'Литургия',services:[{key:'hour-3',label:'Час 3-й'},{key:'hour-6',label:'Час 6-й'},{key:'liturgy-chrysostom',label:'Литургия'}]});assert.equal(morning.title,'3-й час. 6-й час. Литургия');
 });

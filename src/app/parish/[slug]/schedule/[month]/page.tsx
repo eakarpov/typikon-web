@@ -1,4 +1,4 @@
-import {nextDayLabel} from "@/lib/parish/serviceDetails";
+import {nextDayLabel,displayGatheringTitle,normalizeHourText} from "@/lib/parish/serviceDetails";
 import type {ServiceMemory} from "@/lib/parish/serviceDetails";
 import {EyeIcon} from "@heroicons/react/20/solid";
 import {dayOrdoHref} from "@/lib/parish/dayConfig";
@@ -121,17 +121,17 @@ const Item = ({ g, why, edit, slug, month, marks,choices }: {
             {g.time ?? "—:—"}
         </span>
         <span style={{ borderBottom: g.edited ? "2px solid #c9a227" : undefined }}>
-            {g.cancelled?"Нет богослужения":g.title}
+            {g.cancelled?"Нет богослужения":displayGatheringTitle(g)}
         </span>
         {nextDayLabel(g) && (
             <span style={{ color: "#777" }}> — {nextDayLabel(g)}</span>
         )}
         {/* своё, не попавшее в заголовок: молебен по литургии, крестный ход */}
-        {!g.cancelled&&g.services.filter(s => s.own && !g.title.includes(s.label)).length > 0 && (
+        {!g.cancelled&&g.services.filter(s => s.own && !displayGatheringTitle(g).includes(normalizeHourText(s.label))).length > 0 && (
             <span style={{ color: "#666" }}>
                 {" · "}
-                {g.services.filter(s => s.own && !g.title.includes(s.label))
-                    .map(s => s.label).join(", ")}
+                {g.services.filter(s => s.own && !displayGatheringTitle(g).includes(normalizeHourText(s.label)))
+                    .map(s => normalizeHourText(s.label)).join(", ")}
             </span>
         )}
         {edit && <EditGathering slug={slug} month={month} g={g} day={marks} choices={choices} />}

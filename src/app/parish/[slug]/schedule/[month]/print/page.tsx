@@ -1,3 +1,4 @@
+import {displayGatheringTitle} from "@/lib/parish/serviceDetails";
 import DayTitle from "../../DayTitle";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -103,8 +104,8 @@ const Day = ({ d }: { d: ParishDay }) => (
         </div>
         <div className="when">
             {d.gatherings.length === 0 ? <div>&nbsp;</div> : d.gatherings.map(g => (
-                <div key={g.key} title={g.cancelled?"Нет богослужения":g.title}>
-                    <b>{g.time ?? "—"}</b>{g.cancelled?"Нет богослужения":shortTitle(g.title)}
+                <div key={g.key} title={g.cancelled?"Нет богослужения":displayGatheringTitle(g)}>
+                    <b>{g.time ?? "—"}</b>{g.cancelled?"Нет богослужения":shortTitle(displayGatheringTitle(g))}
                 </div>
             ))}
         </div>
