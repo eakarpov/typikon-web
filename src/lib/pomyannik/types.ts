@@ -170,6 +170,8 @@ export interface PomyannikPerson {
     /** Фамилия или уточнение для владельца; в церковную записку не входит. */
     signature?: string | null;
     /** Optional words after the name in personal reading. */
+    manualGenitive?: string | null;
+    manualDative?: string | null;
     commemorationSuffix?: "kinsfolk" | "child" | "children" | null;
     /** YYYY-MM-DD, YYYY или --MM-DD. Неизвестные части не подставляются. */
     born: string | null;

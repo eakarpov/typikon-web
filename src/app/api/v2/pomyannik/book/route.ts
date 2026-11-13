@@ -4,7 +4,7 @@ import { fail, preflight, respondPrivate } from '@/lib/api/v2/http';
 import { reportError } from '@/lib/reportError';
 import { listPersons, getBookSettings, setBookSettings, setReadingPlace, reorderPersons } from '@/lib/pomyannik/service';
 import { pomyannikPerson } from '@/lib/api/v2/serialize';
-import { slavonicNames } from '@/lib/pomyannik/slavonic';
+import { personSlavonic } from '@/lib/pomyannik/slavonic';
 import { cleanReadingPlace } from '@/lib/pomyannik/reader';
 export const dynamic = 'force-dynamic';
 export const OPTIONS = () => {
@@ -18,8 +18,8 @@ export async function GET(request: Request) {
         return access.denied;
     try {
         const [persons, settings] = await Promise.all([listPersons(access.userId), getBookSettings(access.userId)]);
-        const forms = await slavonicNames(persons.map(p => p.churchName || p.name));
-        return respondPrivate({ groups:await listGroups(access.userId), items: persons.map(p => ({ ...pomyannikPerson(p), slavonic: forms[p.churchName || p.name] ?? null })), settings }, { access });
+        const forms = await Promise.all(persons.map(personSlavonic));
+        return respondPrivate({ groups:await listGroups(access.userId), items: persons.map((p, index) => ({ ...pomyannikPerson(p), slavonic: forms[index] })), settings }, { access });
     }
     catch (e) {
         reportError(e, { where: 'api/v2/pomyannik/book', source: 'api' });

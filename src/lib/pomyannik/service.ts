@@ -1,3 +1,4 @@
+import { cleanManualCase } from "./nameForms";
 import { cleanCommemorationSuffix } from "./suffix";
 import { ensureGroupMigration, listGroups, createGroup, assertOwnGroups } from "./groupsService";
 import { groupIds, GroupError } from "./groups";
@@ -88,6 +89,9 @@ const clean = (input: PersonInput) => {
     }
     if (input.mark != null && !TEMPORARY_RANKS.includes(input.mark)) throw new PersonDataError("Неизвестная временная помета.");
     if (input.rankUntil && (!fullDate(input.rankUntil) || !(input.mark ?? input.rank) || !TEMPORARY_RANKS.includes((input.mark ?? input.rank)!))) throw new PersonDataError("Срок можно задать только для временной пометы и полной датой.");
+    let manualGenitive, manualDative;
+    try { manualGenitive = cleanManualCase(input.manualGenitive); manualDative = cleanManualCase(input.manualDative); }
+    catch (error) { throw new PersonDataError((error as Error).message); }
     let commemorationSuffix;
     try { commemorationSuffix = cleanCommemorationSuffix(input.commemorationSuffix); }
     catch (error) { throw new PersonDataError((error as Error).message); }
@@ -123,7 +127,7 @@ const clean = (input: PersonInput) => {
         rankUntil: (input.mark ?? rank) && TEMPORARY_RANKS.includes((input.mark ?? rank)!) ? fullDate(input.rankUntil) : null,
         relation: input.relation ? String(input.relation).trim().slice(0, 60) || null : null,
         signature: cleanSignature(input.signature),
-        commemorationSuffix,
+        commemorationSuffix, manualGenitive, manualDative,
         born: personalDate(input.born),
         baptized: personalDate(input.baptized),
         died,

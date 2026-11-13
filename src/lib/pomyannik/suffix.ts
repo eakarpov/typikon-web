@@ -7,3 +7,7 @@ export function cleanCommemorationSuffix(value: unknown): CommemorationSuffix | 
     }
     return value as CommemorationSuffix;
 }
+
+export const COMMEMORATION_SUFFIX_CHURCH: Record<CommemorationSuffix, string> = {
+    kinsfolk: "со сро́дники", child: "со ча́домъ", children: "со ча́ды",
+};

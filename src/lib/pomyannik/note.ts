@@ -19,7 +19,7 @@ export interface NoteName {
      * Откуда взялось славянское написание: `lexicon` — склонено по словарю,
      * прочее — не склонено. Священник должен видеть это, а не гадать.
      */
-    slavonicSource: "lexicon" | "accents" | "plain" | null;
+    slavonicSource: "lexicon" | "accents" | "plain" | "manual" | null;
     kind: PersonKind;
     rank: Rank | null;
     marks?: Rank[];
@@ -40,7 +40,7 @@ export const snapshot = (
         name: string; churchName?: string | null; kind: PersonKind;
         rank?: Rank | null; mark?: Rank | null; rankUntil?: string | null; sex?: Sex;
     },
-    slavonic?: { genitive: string; source: "lexicon" | "accents" | "plain" } | null,
+    slavonic?: { genitive: string; source: "lexicon" | "accents" | "plain" | "manual" } | null,
 ): NoteName => ({
     name: String(person.name ?? "").trim().slice(0, 60),
     churchName: person.churchName ? String(person.churchName).trim().slice(0, 60) : null,

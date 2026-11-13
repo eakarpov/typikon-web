@@ -1,3 +1,4 @@
+import { COMMEMORATION_SUFFIX_CHURCH, type CommemorationSuffix } from "@/lib/pomyannik/suffix";
 import { RANK_BY_KEY, type Rank, type Sex } from "@/lib/pomyannik/types";
 
 // ПОИМЁННЫЕ МОЛИТВЫ — чистая логика подстановки имён в книжный шаблон.
@@ -23,6 +24,8 @@ export type PrayerGender = "m" | "f";
 export interface NamedPerson {
     /** Родительный падеж церковнославянским письмом («їѡа́нна»). */
     name: string;
+    dative?: string | null;
+    commemorationSuffix?: CommemorationSuffix | null;
     rank?: Rank | null;
     marks?: Rank[];
     sex?: Sex;
@@ -83,7 +86,8 @@ const personLabel = (person: NamedPerson, gender: PrayerGender): string => {
     if (!name) return "";
     const capitalized = name.charAt(0).toLocaleUpperCase("ru") + name.slice(1);
     const rank = (person.marks ?? (person.rank ? [person.rank] : [])).map(r => rankGenitive(r, person.sex ?? null, gender)).filter(Boolean).join(" ");
-    return rank ? `${rank} ${capitalized}` : capitalized;
+    const suffix = person.commemorationSuffix ? COMMEMORATION_SUFFIX_CHURCH[person.commemorationSuffix] : null;
+    return [rank, capitalized, suffix].filter(Boolean).join(" ");
 };
 
 /** Имена склеенные: через запятую. */

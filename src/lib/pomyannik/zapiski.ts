@@ -60,7 +60,7 @@ export const sendNote = async (
     toUserId: string,
     kind: NoteKind,
     persons: Array<Parameters<typeof snapshot>[0]>,
-    slavonic: Record<string, { genitive: string; source: "lexicon" | "accents" | "plain" }>,
+    slavonic: Record<string, { genitive: string; source: "lexicon" | "accents" | "plain" | "manual" }>,
 ): Promise<Zapiska> => {
     const names = validateNote(kind, persons.map(p =>
         snapshot(p, slavonic[p.churchName || p.name] ?? null)));

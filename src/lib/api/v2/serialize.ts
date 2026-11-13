@@ -821,6 +821,8 @@ export const pomyannikPerson = (doc: any) => ({
     relation: doc.relation ?? null,
     signature: doc.signature ?? null,
     commemorationSuffix: doc.commemorationSuffix ?? null,
+    manualGenitive: doc.manualGenitive ?? null,
+    manualDative: doc.manualDative ?? null,
     born: doc.born ?? null,
     baptized: doc.baptized ?? null,
     died: doc.died ?? null,

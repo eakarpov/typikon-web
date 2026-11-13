@@ -1,3 +1,4 @@
+import { cleanManualCase } from "./nameForms";
 import { cleanCommemorationSuffix } from "./suffix";
 import { personalDate, fullDate } from "./dates";
 import { TEMPORARY_RANKS, statusRank, temporaryRank } from "./marks";
@@ -5,7 +6,7 @@ import { MAX_PERSONS, RANK_BY_KEY, type PomyannikPerson, type NameDay } from "./
 
 export const MAX_BACKUP_MB = 64;
 export const MAX_BACKUP_BYTES = MAX_BACKUP_MB * 1024 * 1024;
-export type BackupPerson = Pick<PomyannikPerson, "name" | "churchName" | "kind" | "sex" | "rank" | "mark" | "rankUntil" | "commemorationSuffix" | "relation" | "born" | "baptized" | "died" | "nameDay" | "sorokoust" | "groups"> & { signature: string | null };
+export type BackupPerson = Pick<PomyannikPerson, "name" | "churchName" | "kind" | "sex" | "rank" | "mark" | "rankUntil" | "commemorationSuffix" | "manualGenitive" | "manualDative" | "relation" | "born" | "baptized" | "died" | "nameDay" | "sorokoust" | "groups"> & { signature: string | null };
 export interface PomyannikBackup {
     format: "typikon-pomyannik";
     version: 2;
@@ -55,6 +56,9 @@ export const backupPerson = (raw: unknown): BackupPerson => {
     if (value.mark != null && !TEMPORARY_RANKS.includes(value.mark as PomyannikPerson["rank"] & string)) throw new BackupError("Неизвестная временная помета.");
     if (value.rank != null && (typeof value.rank !== "string" || !Object.hasOwn(RANK_BY_KEY, value.rank))) throw new BackupError("Неизвестный чин или помета.");
     if (value.rankUntil != null && (!(value.mark ?? value.rank) || !TEMPORARY_RANKS.some(rank => rank === (value.mark ?? value.rank)))) throw new BackupError("Срок задан для постоянного чина.");
+    let manualGenitive, manualDative;
+    try { manualGenitive = cleanManualCase(value.manualGenitive); manualDative = cleanManualCase(value.manualDative); }
+    catch (error) { throw new BackupError((error as Error).message); }
     let commemorationSuffix;
     try { commemorationSuffix = cleanCommemorationSuffix(value.commemorationSuffix); }
     catch (error) { throw new BackupError((error as Error).message); }
@@ -70,7 +74,7 @@ export const backupPerson = (raw: unknown): BackupPerson => {
         sorokoust = { from, where: text(span.where, 120) };
     }
     return {
-        commemorationSuffix,
+        commemorationSuffix, manualGenitive, manualDative,
         name, churchName: text(value.churchName, 60), kind: value.kind, sex: value.sex ?? null,
         ...(value.mark !== undefined ? { mark: value.mark as PomyannikPerson["rank"] } : {}),
         rank: value.rank ?? null, rankUntil: date(value.rankUntil, true), relation: text(value.relation, 60), signature: text(value.signature, 120),
