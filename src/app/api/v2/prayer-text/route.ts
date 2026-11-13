@@ -46,7 +46,7 @@ export async function GET(request: Request) {
             const result=await commemorationPrayers(await loadCommemorationContext(access.userId),place,lang,gender);
             if(result.missing.length) return fail("corpus_unavailable",result.missing.join(" "));
             return respondPrivate({place,selection:result.selection,counts:result.counts,lang,gender,notes:result.notes,
-                prayers:result.prayers.map(prayer=>({...namedPrayer(prayer),for:prayer.for,lang:prayer.lang}))},{access});
+                prayers:result.prayers.map(prayer=>({...namedPrayer(prayer),for:prayer.for,lang:prayer.lang,...('italic' in prayer ? {italic:prayer.italic} : {})}))},{access});
         } catch(e) {
             reportError(e,{where:"app/api/v2/prayer-text/route#place",source:"api"});
             return fail("internal","Не удалось собрать поимённую молитву.");

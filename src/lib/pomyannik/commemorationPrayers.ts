@@ -1,3 +1,4 @@
+import { psalterCommemorationTexts } from './psalter-names';
 import { namedPrayerTexts, NAMED_STYLES, type PrayerLang } from '@/lib/molitvoslov/store';
 import { renderNamedPrayer, type NamedPerson, type PrayerGender } from '@/lib/molitvoslov/named';
 import { personSlavonicForms } from './slavonic';
@@ -23,13 +24,17 @@ export async function commemorationPrayers(context:CommemorationContext,place:Co
     const selection=context.settings[place];
     const names=await selectedNamedPersons(context,place);
     const counts={living:names.living.length,departed:names.departed.length};
-    const prayers:{id:string;title:string|null;text:string;for:PersonKind;lang:PrayerLang}[]=[];
+    const prayers:{id:string;title:string|null;text:string;for:PersonKind;lang:PrayerLang;italic?:string[]}[]=[];
     const missing:string[]=[];
     const notes:string[]=[];
     if(selection.mode==='none') return {selection,counts,prayers,missing,notes};
     if(!context.signedIn) notes.push('Поимённое поминовение из помянника доступно после входа.');
     const kinds:PersonKind[]=selection.mode==='group'?(['living','departed'] as const).filter(kind=>names[kind].length>0):[selection.mode];
     if(selection.mode==='group'&&!kinds.length) notes.push('В выбранной группе нет подходящих имён. Имена из других групп не добавлены.');
+    if(place.startsWith('psalter-')) {
+        prayers.push(...psalterCommemorationTexts(names, gender, place === 'psalter-3', kinds));
+        return {selection,counts,prayers,missing,notes};
+    }
     for(const kind of kinds) {
         const style=place.startsWith('psalter-')&&kind==='departed'?'psalter-departed':'molitvoslov-short';
         const found=namedPrayerTexts(NAMED_STYLES[style][kind],lang,gender);

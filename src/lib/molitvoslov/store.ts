@@ -1,3 +1,4 @@
+import psalterBook from './psalter-book.json';
 import { rulesDb } from "@/lib/rulesDb";
 import type { PrayerGender } from "@/lib/molitvoslov/named";
 import { buildPosledovanieRows, type BuiltPosledovanieRow, type PosledovanieRowInput } from "@/lib/molitvoslov/posledovanie";
@@ -91,6 +92,8 @@ export const NAMED_FOR_KINDS: NamedFor[] = ["living", "departed"];
  *  разделы — слаги издания; сверены с parsed/molitvoslov и kelia-moments.yaml:
  *  у каждого из девяти раздела есть вхождения в базе. */
 export const POSLEDOVANIYA: Record<string, string> = {
+    "psaltir-before": "psaltir-before",
+    "psaltir-after": "psaltir-after",
     ...Object.fromEntries(Array.from({ length: 20 }, (_, i) => {
         const key = `psaltir-kafizma-${i + 1}`;
         return [key, key];
@@ -214,6 +217,11 @@ export const posledovanieTexts = (
     lang: PrayerLang,
     gender: PrayerGender,
 ): PosledovanieResult | null => {
+    // Книжные начальный и конечный чины: версионированная часть корпуса,
+    // источник и исходное начертание сохранены вместе с рядами.
+    if (section === 'psaltir-before' || section === 'psaltir-after') {
+        return { lang: 'cu_gr', rows: psalterBook.sections[section].map(row => ({ ...row })) };
+    }
     if (!rulesDb()) return null;
 
     const { lang: used, rows } = withLangFallback((l) => bySection(section, l), lang);
