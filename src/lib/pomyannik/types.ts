@@ -21,7 +21,9 @@ export type Rank =
     // священные и монашеские
     | "ierey" | "protoierey" | "ieromonah" | "igumen" | "arhimandrit"
     | "diakon" | "protodiakon" | "monah" | "shimonah" | "inok"
-    | "poslushnik" | "arhierey" | "novoprestavlennyy";
+    | "poslushnik" | "arhierey" | "novoprestavlennyy"
+    | "episkop" | "arhiepiskop" | "mitropolit" | "patriarh"
+    | "protopresviter" | "ierodiakon" | "shiarhimandrit";
 
 export interface RankInfo {
     key: Rank;
@@ -73,7 +75,13 @@ export const RANKS: RankInfo[] = [
     { key: "ubiennyy", label: "убиенный", genitive: "убиенного", cs: null,
       feminine: { label: "убиенная", genitive: "убиенной", cs: null }, only: "departed" },
 
-    { key: "arhierey", label: "архиерей", genitive: "архиерея", cs: "а҆рхіере́ѧ" },
+    { key: "episkop", label: "епископ", genitive: "епископа", cs: null },
+    { key: "arhiepiskop", label: "архиепископ", genitive: "архиепископа", cs: null },
+    { key: "mitropolit", label: "митрополит", genitive: "митрополита", cs: null },
+    { key: "patriarh", label: "патриарх", genitive: "патриарха", cs: null },
+    { key: "protopresviter", label: "протопресвитер", genitive: "протопресвитера", cs: null },
+    { key: "ierodiakon", label: "иеродиакон", genitive: "иеродиакона", cs: null },
+    { key: "shiarhimandrit", label: "схиархимандрит", genitive: "схиархимандрита", cs: null },
     { key: "protoierey", label: "протоиерей", genitive: "протоиерея", cs: "прѡтоїере́ѧ" },
     { key: "ierey", label: "иерей", genitive: "иерея", cs: "і҆ере́ѧ" },
     { key: "protodiakon", label: "протодиакон", genitive: "протодиакона", cs: "прѡтодіа́кона" },
@@ -93,7 +101,11 @@ export const RANKS: RankInfo[] = [
 ];
 
 export const RANK_BY_KEY: Record<string, RankInfo> =
-    Object.fromEntries(RANKS.map(r => [r.key, r]));
+    Object.fromEntries([
+        ...RANKS.map(r => [r.key, r]),
+        // Only for existing records/backups; no longer a selectable rank.
+        ["arhierey", { key: "arhierey", label: "архиерей", genitive: "архиерея", cs: "а҆рхіере́ѧ" }],
+    ]);
 
 /** Живой или усопший. Помянник тем и устроен, что разворотов два. */
 export type PersonKind = "living" | "departed";

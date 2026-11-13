@@ -53,7 +53,9 @@ const RANK_ALIASES: Record<string, Rank> = {
     "схим": "shimonah", "схимонахиня": "shimonah",
     "инокини": "inok", "инокиня": "inok", "посл": "poslushnik",
     "послушницы": "poslushnik", "послушница": "poslushnik",
-    "архиер": "arhierey", "еп": "arhierey", "епископа": "arhierey",
+    "еп": "episkop", "архиеп": "arhiepiskop", "митр": "mitropolit",
+    "патр": "patriarh", "протопр": "protopresviter",
+    "иерод": "ierodiakon", "схиархим": "shiarhimandrit",
 };
 
 const RANK_INDEX: Record<string, Rank> = (() => {

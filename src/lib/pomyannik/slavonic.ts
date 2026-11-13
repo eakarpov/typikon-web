@@ -1,3 +1,4 @@
+import { withInitialBreathing } from "./breathing";
 import clientPromise from "@/lib/mongodb";
 import { cached, CacheTag } from "@/lib/cache";
 import { decline } from "@/lib/morphology/decline";
@@ -106,7 +107,7 @@ export const readSlavonic = async (name: string): Promise<SlavonicName> => {
         });
         const genitive = paradigm?.sgGen?.[0];
         if (genitive) {
-            return { text: lexeme.name, genitive, source: "lexicon", lexeme: lexeme.name };
+            return { text: withInitialBreathing(lexeme.name), genitive: withInitialBreathing(genitive), source: "lexicon", lexeme: lexeme.name };
         }
     }
 
@@ -117,7 +118,7 @@ export const readSlavonic = async (name: string): Promise<SlavonicName> => {
     if (converted && hasChurchSlavonicGraphics(converted.text)) {
         // Падеж тот же, что и был. Источник об этом говорит, и печать обязана
         // это показать — здесь мы не склоняем, а только пишем.
-        return { text: converted.text, genitive: converted.text, source: "accents" };
+        return { text: withInitialBreathing(converted.text), genitive: withInitialBreathing(converted.text), source: "accents" };
     }
 
     return { text: clean, genitive: clean, source: "plain" };
@@ -129,7 +130,7 @@ export const readSlavonic = async (name: string): Promise<SlavonicName> => {
  * Кэшируется надолго: имена не меняются, а словарь пополняется выкладкой, и
  * сбрасывается тем же тегом, что и прочее словарное.
  */
-export const slavonicName = cached(readSlavonic, ["pomyannik-slavonic"], [CacheTag.TEXTS], 86400);
+export const slavonicName = cached(readSlavonic, ["pomyannik-slavonic-breathing-v2"], [CacheTag.TEXTS], 86400);
 
 /** То же для списка имён — записка спрашивает сразу все. */
 export const slavonicNames = async (names: string[]): Promise<Record<string, SlavonicName>> => {
