@@ -36,7 +36,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string 
 
         return respondPrivate({
             on,
-            person: { ...pomyannikPerson(person), slavonic: await personSlavonic(person) },
+            person: { ...pomyannikPerson(person), slavonic: await personSlavonic(person).catch(() => null) },
             memorial: person.died ? memorialDays(person.died, on) : null,
             // Сорокоуст — НЕ сороковой день: он считается со дня заказа, а не со
             // дня кончины, и заказанный на девятый день кончится на сорок восьмой.
@@ -71,7 +71,7 @@ export async function PUT(request: Request, ctx: { params: Promise<{ id: string 
         const person = await updatePerson(access.userId, id, body as PersonInput);
         if (!person) return fail("not_found", "Такого имени в вашем помяннике нет");
 
-        return respondPrivate({ person: { ...pomyannikPerson(person), slavonic: await personSlavonic(person) } }, { access });
+        return respondPrivate({ person: pomyannikPerson(person) }, { access });
     } catch (e) {
         if (e instanceof PersonDataError) return fail("bad_request", e.message);
         reportError(e, { where: "app/api/v2/pomyannik/persons/[id]/route#PUT", source: "api" });

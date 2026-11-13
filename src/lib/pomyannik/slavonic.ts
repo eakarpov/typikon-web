@@ -162,3 +162,14 @@ export const personSlavonic = async (person: Pick<PomyannikPerson, "name" | "chu
     const form = await slavonicName(person.churchName || person.name, person.sex);
     return applyManualCases(person, form, async text => (await byConversion(text))?.text ?? text);
 };
+
+/** Keep shared automatic lookups deduplicated; manual forms remain per person. */
+export const personSlavonicForms = async (persons: Parameters<typeof personSlavonic>[0][]): Promise<SlavonicName[]> => {
+    const automatic = new Map<string, Promise<SlavonicName>>();
+    return Promise.all(persons.map(async person => {
+        const name = person.churchName || person.name;
+        const key = JSON.stringify([name, person.sex]);
+        if (!automatic.has(key)) automatic.set(key, slavonicName(name, person.sex));
+        return applyManualCases(person, await automatic.get(key)!, async text => (await byConversion(text))?.text ?? text);
+    }));
+};

@@ -8,7 +8,7 @@ import {
     PRAYER_LANGS, type NamedFor, type NamedStyleKey, type PrayerLang,
 } from "@/lib/molitvoslov/store";
 import { listPersons } from "@/lib/pomyannik/service";
-import { personSlavonic } from "@/lib/pomyannik/slavonic";
+import { personSlavonicForms } from "@/lib/pomyannik/slavonic";
 import { effectiveRank, effectiveRanks } from "@/lib/pomyannik/marks";
 import { isCommemorationPlace } from "@/lib/pomyannik/commemoration";
 import { loadCommemorationContext, commemorationPrayers } from "@/lib/pomyannik/commemorationPrayers";
@@ -78,10 +78,11 @@ export async function GET(request: Request) {
         // Для чтения берём весь выбранный раздел. Лимит записки к молитве не относится.
         const mine = await listPersons(access.userId);
         const chosen = mine.filter(person => person.kind === forKind);
-        const persons: NamedPerson[] = await Promise.all(chosen.map(async p => {
-            const form = await personSlavonic(p);
+        const forms = await personSlavonicForms(chosen);
+        const persons: NamedPerson[] = chosen.map((p, index) => {
+            const form = forms[index];
             return { name: form.genitive, dative: form.dative, commemorationSuffix: p.commemorationSuffix, rank: effectiveRank(p), marks: effectiveRanks(p), sex: p.sex };
-        }));
+        });
 
         return respondPrivate({
             for: forKind,
