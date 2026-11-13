@@ -8,6 +8,7 @@ test("specific clergy ranks are selectable and understood by import", () => {
     for (const key of ["episkop", "arhiepiskop", "mitropolit", "patriarh", "protopresviter", "ierodiakon", "shiarhimandrit"]) {
         const rank = RANKS.find(r => r.key === key)!;
         assert.ok(rank);
+        assert.ok(rank.cs, `Missing Church Slavonic form: ${key}`);
         assert.equal(parseLine(`Николай, ${rank.label}`).person?.rank, key);
         assert.equal(parseLine(`Николай, ${rank.genitive}`).person?.rank, key);
     }

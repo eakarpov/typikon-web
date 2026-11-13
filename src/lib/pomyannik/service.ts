@@ -1,3 +1,4 @@
+import { cleanCommemorationSuffix } from "./suffix";
 import { ensureGroupMigration, listGroups, createGroup, assertOwnGroups } from "./groupsService";
 import { groupIds, GroupError } from "./groups";
 import { readCommemorations, validateCommemorations, CommemorationError, type CommemorationSettings } from "./commemoration";
@@ -87,6 +88,9 @@ const clean = (input: PersonInput) => {
     }
     if (input.mark != null && !TEMPORARY_RANKS.includes(input.mark)) throw new PersonDataError("Неизвестная временная помета.");
     if (input.rankUntil && (!fullDate(input.rankUntil) || !(input.mark ?? input.rank) || !TEMPORARY_RANKS.includes((input.mark ?? input.rank)!))) throw new PersonDataError("Срок можно задать только для временной пометы и полной датой.");
+    let commemorationSuffix;
+    try { commemorationSuffix = cleanCommemorationSuffix(input.commemorationSuffix); }
+    catch (error) { throw new PersonDataError((error as Error).message); }
     const name = normalizeName(String(input.name ?? "")).slice(0, 60);
     const key = nameKey(name);
     if (!key) return null;
@@ -119,6 +123,7 @@ const clean = (input: PersonInput) => {
         rankUntil: (input.mark ?? rank) && TEMPORARY_RANKS.includes((input.mark ?? rank)!) ? fullDate(input.rankUntil) : null,
         relation: input.relation ? String(input.relation).trim().slice(0, 60) || null : null,
         signature: cleanSignature(input.signature),
+        commemorationSuffix,
         born: personalDate(input.born),
         baptized: personalDate(input.baptized),
         died,

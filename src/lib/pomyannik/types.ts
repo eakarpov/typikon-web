@@ -75,13 +75,13 @@ export const RANKS: RankInfo[] = [
     { key: "ubiennyy", label: "убиенный", genitive: "убиенного", cs: null,
       feminine: { label: "убиенная", genitive: "убиенной", cs: null }, only: "departed" },
 
-    { key: "episkop", label: "епископ", genitive: "епископа", cs: null },
-    { key: "arhiepiskop", label: "архиепископ", genitive: "архиепископа", cs: null },
-    { key: "mitropolit", label: "митрополит", genitive: "митрополита", cs: null },
-    { key: "patriarh", label: "патриарх", genitive: "патриарха", cs: null },
-    { key: "protopresviter", label: "протопресвитер", genitive: "протопресвитера", cs: null },
-    { key: "ierodiakon", label: "иеродиакон", genitive: "иеродиакона", cs: null },
-    { key: "shiarhimandrit", label: "схиархимандрит", genitive: "схиархимандрита", cs: null },
+    { key: "episkop", label: "епископ", genitive: "епископа", cs: "є҆пі́скопа" },
+    { key: "arhiepiskop", label: "архиепископ", genitive: "архиепископа", cs: "а҆рхїепі́скопа" },
+    { key: "mitropolit", label: "митрополит", genitive: "митрополита", cs: "митрополі́та" },
+    { key: "patriarh", label: "патриарх", genitive: "патриарха", cs: "патрїа́рха" },
+    { key: "protopresviter", label: "протопресвитер", genitive: "протопресвитера", cs: "прѡтопресвѵ́тера" },
+    { key: "ierodiakon", label: "иеродиакон", genitive: "иеродиакона", cs: "і҆еродїа́кона" },
+    { key: "shiarhimandrit", label: "схиархимандрит", genitive: "схиархимандрита", cs: "схїархїмандрі́та" },
     { key: "protoierey", label: "протоиерей", genitive: "протоиерея", cs: "прѡтоїере́ѧ" },
     { key: "ierey", label: "иерей", genitive: "иерея", cs: "і҆ере́ѧ" },
     { key: "protodiakon", label: "протодиакон", genitive: "протодиакона", cs: "прѡтодіа́кона" },
@@ -169,6 +169,8 @@ export interface PomyannikPerson {
     relation: string | null;
     /** Фамилия или уточнение для владельца; в церковную записку не входит. */
     signature?: string | null;
+    /** Optional words after the name in personal reading. */
+    commemorationSuffix?: "kinsfolk" | "child" | "children" | null;
     /** YYYY-MM-DD, YYYY или --MM-DD. Неизвестные части не подставляются. */
     born: string | null;
     baptized: string | null;
