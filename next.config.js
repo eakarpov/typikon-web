@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   swcMinify: true,
+  // Release compiler memory before type checking; keep build workers bounded.
+  experimental: {
+    webpackBuildWorker: true,
+    cpus: 2,
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback.fs = false;
