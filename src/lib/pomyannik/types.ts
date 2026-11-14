@@ -17,6 +17,7 @@
 export type Rank =
     // мирские
     | "mladenets" | "otrok" | "otrokovitsa" | "bolyashchiy" | "puteshestvuyushchiy"
+    | "tyazhkobolyashchiy" | "prisnopamyatnyy" | "uchashchiysya"
     | "voin" | "zaklyuchennyy" | "neprazdnaya" | "ubiennyy"
     // священные и монашеские
     | "ierey" | "protoierey" | "ieromonah" | "igumen" | "arhimandrit"
@@ -64,6 +65,12 @@ export const RANKS: RankInfo[] = [
       feminine: { label: "младенца", genitive: "младенцы", cs: "младе́нцы" } },
     { key: "otrok", label: "отрок", genitive: "отрока", cs: "ѻ҆́трока" },
     { key: "otrokovitsa", label: "отроковица", genitive: "отроковицы", cs: "ѻ҆трокови́цы" },
+    { key: "tyazhkobolyashchiy", label: "тяжкоболящий", genitive: "тяжкоболящего", cs: null,
+      feminine: { label: "тяжкоболящая", genitive: "тяжкоболящей", cs: null }, only: "living" },
+    { key: "prisnopamyatnyy", label: "приснопамятный", genitive: "приснопамятного", cs: null,
+      feminine: { label: "приснопамятная", genitive: "приснопамятной", cs: null } },
+    { key: "uchashchiysya", label: "учащийся", genitive: "учащегося", cs: null,
+      feminine: { label: "учащаяся", genitive: "учащейся", cs: null }, only: "living" },
     { key: "bolyashchiy", label: "болящий", genitive: "болящего", cs: null,
       feminine: { label: "болящая", genitive: "болящей", cs: null }, only: "living" },
     { key: "puteshestvuyushchiy", label: "путешествующий", genitive: "путешествующего", cs: null,

@@ -5,15 +5,15 @@ import {psalterCommemorationTexts} from '../pomyannik/psalter-names';
 test('начальный и конечный чины доступны без установленной SQLite',()=>{
  for(const key of ['psaltir-before','psaltir-after']) {
   assert.equal(POSLEDOVANIYA[key],key);
-  const book=posledovanieTexts(key,'cu','m');
+  const book=posledovanieTexts(key,'cu_gr','m');
   assert.equal(book?.lang,'cu_gr');assert.ok(book!.rows.length>=20);
   assert.ok(book!.rows.some(row=>row.repeatCount===3));
   assert.ok(book!.rows.some(row=>row.repeatCount===40));
  }
- const before=posledovanieTexts('psaltir-before','cu','m')!;
+ const before=posledovanieTexts('psaltir-before','cu_gr','m')!;
  assert.ok(before.rows.some(row=>row.text?.startsWith('Всесвята́я Тро́ице')));
  assert.ok(before.rows.at(-1)?.note?.startsWith('Таже постой'));
- const after=posledovanieTexts('psaltir-after','cu','m')!;
+ const after=posledovanieTexts('psaltir-after','cu_gr','m')!;
  assert.ok(after.rows.some(row=>row.text?.startsWith('Многоми́лостиве')));
  assert.ok(after.rows.at(-1)?.text?.includes('поми́луй и спаси́ мя'));
 });
@@ -33,4 +33,22 @@ test('списки подставляются один раз; духовник 
  assert.equal(third[0].text.split('Николая').length-1,1);
  assert.equal(third[0].text.split('Марии').length-1,1);
  assert.equal(psalterCommemorationTexts(names,'m',true,[]).length,0);
+});
+
+test('ЦС слой книжный: оба чина, полные общие молитвы, отдельные рубрики',()=>{
+ for(const key of ['psaltir-before','psaltir-after']) {
+  const cs=posledovanieTexts(key,'cu','m')!;
+  const civil=posledovanieTexts(key,'cu_gr','m')!;
+  assert.equal(cs.lang,'cu');assert.equal(civil.lang,'cu_gr');
+  assert.equal(cs.rows.length,civil.rows.length);
+  assert.match(cs.rows.map(row=>row.text).join(' '),/[ѣѧꙋ]/);
+  assert.match(cs.rows.map(row=>row.text).join(' '),/҃/);
+  assert.ok(cs.rows.some(row=>row.note));
+ }
+ const before=posledovanieTexts('psaltir-before','cu','m')!;
+ assert.ok(before.rows.some(row=>row.text?.startsWith('Всест҃а́ѧ')&&row.text.length>600));
+ assert.ok(before.rows.some(row=>row.text?.startsWith('Цр҃ю̀')&&row.text.length>150));
+ const after=posledovanieTexts('psaltir-after','cu','m')!;
+ assert.ok(after.rows.some(row=>row.text?.startsWith('Многомлⷭ҇тиве')&&row.text.length>1500));
+ assert.ok(after.rows.some(row=>row.text?.startsWith('Ѡ҆ тебѣ̀')&&row.text.length>300));
 });

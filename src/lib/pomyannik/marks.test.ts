@@ -43,3 +43,21 @@ it('old and new representation identify the same person during restore', () => {
     assert.equal(planRestore([modern], makeBackup([old]).persons).additions.length, 0);
     assert.equal(planRestore([old], makeBackup([modern]).persons).additions.length, 0);
 });
+
+it('all new marks have the requested scope and are temporary',()=>{
+    for(const mark of ['tyazhkobolyashchiy','uchashchiysya','bolyashchiy','puteshestvuyushchiy','zaklyuchennyy'] as const) {
+        assert.deepEqual(effectiveRanks({kind:'living',mark},'2026-11-14'),[mark]);
+        assert.deepEqual(effectiveRanks({kind:'departed',mark},'2026-11-14'),[]);
+    }
+    assert.deepEqual(effectiveRanks({kind:'living',rank:'ubiennyy'},'2026-11-14'),[]);
+    assert.deepEqual(effectiveRanks({kind:'departed',rank:'ubiennyy'},'2026-11-14'),['ubiennyy']);
+    for(const kind of ['living','departed'])assert.deepEqual(effectiveRanks({kind,mark:'prisnopamyatnyy'},'2026-11-14'),['prisnopamyatnyy']);
+});
+it('automatic newly departed overrides explicit marks through day 40 and then restores an unexpired mark',()=>{
+    const p={rank:'ierey' as const,mark:'ubiennyy' as const,kind:'departed',died:'2026-11-01'};
+    assert.deepEqual(effectiveRanks(p,'2026-11-01'),['ierey','novoprestavlennyy']);
+    assert.deepEqual(effectiveRanks(p,'2026-12-10'),['ierey','novoprestavlennyy']);
+    assert.deepEqual(effectiveRanks(p,'2026-12-11'),['ierey','ubiennyy']);
+    assert.deepEqual(effectiveRanks({...p,mark:'prisnopamyatnyy',rankUntil:'2026-11-30'},'2026-12-11'),['ierey']);
+    assert.deepEqual(effectiveRanks({...p,died:'2026-12-01'},'2026-11-14'),['ierey','ubiennyy']);
+});

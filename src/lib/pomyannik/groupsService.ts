@@ -1,3 +1,4 @@
+import { orderedGroups, validateGroupOrder } from './groupPriority';
 import { addGroupMembers } from "./groupMembers";
 import { groupIdentity, planGroupMigration } from "./groupMigration";
 import { ObjectId } from 'mongodb';
@@ -58,7 +59,9 @@ export async function ensureGroupMigration(userId: string): Promise<void> {
 }
 export async function listGroups(userId: string): Promise<PomyannikGroup[]> {
     await ensureGroupMigration(userId);
-    return (await (await registry()).find({ userId }).sort({ name: 1 }).toArray()).map(g => ({ id: g._id, name: g.name }));
+    const groups=(await (await registry()).find({ userId }).sort({ name: 1 }).toArray()).map(g=>({id:g._id,name:g.name}));
+    const settings=await (await database()).collection<{_id:string;groupOrder?:string[]}>('pomyannikSettings').findOne({_id:userId});
+    return orderedGroups(groups,settings?.groupOrder??[]);
 }
 export async function createGroup(userId: string, raw: unknown): Promise<PomyannikGroup> {
     const name = groupName(raw);
@@ -79,4 +82,10 @@ export async function assertOwnGroups(userId: string, raw: unknown): Promise<str
 export async function addPersonsToGroup(userId: string, groupId: unknown, rawIds: unknown) {
     const [ownedGroup] = await assertOwnGroups(userId, [groupId]);
     return addGroupMembers((await database()).collection('pomyannikPersons'), userId, ownedGroup, rawIds);
+}
+
+export async function reorderGroups(userId:string, raw:unknown):Promise<void> {
+    const order=validateGroupOrder(raw,await listGroups(userId));
+    await (await database()).collection<{_id:string;groupOrder?:string[]}>('pomyannikSettings')
+        .updateOne({_id:userId},{$set:{groupOrder:order}},{upsert:true});
 }

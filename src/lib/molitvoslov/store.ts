@@ -220,7 +220,7 @@ export const posledovanieTexts = (
     // Книжные начальный и конечный чины: версионированная часть корпуса,
     // источник и исходное начертание сохранены вместе с рядами.
     if (section === 'psaltir-before' || section === 'psaltir-after') {
-        return { lang: 'cu_gr', rows: psalterBook.sections[section].map(row => ({ ...row })) };
+        return { lang, rows: (lang === 'cu' ? psalterBook.sectionsCu[section] : psalterBook.sections[section]).map(row => ({ ...row })) };
     }
     if (!rulesDb()) return null;
 

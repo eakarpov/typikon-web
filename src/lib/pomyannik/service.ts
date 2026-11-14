@@ -1,3 +1,4 @@
+import { prioritizePersons, UNGROUPED } from './groupPriority';
 import { cleanManualCase } from "./nameForms";
 import { cleanCommemorationSuffix } from "./suffix";
 import { ensureGroupMigration, listGroups, createGroup, assertOwnGroups } from "./groupsService";
@@ -165,11 +166,13 @@ export const listPersons = async (userId: string): Promise<PomyannikPerson[]> =>
         .find({ userId, deletedAt: null })
         .sort({ kind: 1, order: 1, name: 1 })
         .toArray();
-    return decorateGroups(userId, docs.map(out));
+    return decorateGroups(userId, docs.map(out), true);
 };
 
-const decorateGroups = async (userId:string, docs:PomyannikPerson[]) => {
-    const names=new Map((await listGroups(userId)).map(g=>[g.id,g.name]));
+const decorateGroups = async (userId:string, docs:PomyannikPerson[], prioritize=false) => {
+    const groups=await listGroups(userId);
+    if(prioritize)docs=prioritizePersons(docs,groups.map(g=>g.id));
+    const names=new Map(groups.map(g=>[g.id,g.name]));
     return docs.map(p=>({...p,groupNames:p.groups.map(id=>names.get(id)).filter((name):name is string=>!!name)}));
 };
 const checkGroups = async(userId:string,raw:unknown) => {
@@ -299,7 +302,7 @@ export const setCommemorations = async (userId: string, raw: unknown) => {
 };
 
 export const setReadingPlace = async (userId: string, readingPlace: ReadingPlace | null) => {
-    if(readingPlace?.group){try{await assertOwnGroups(userId,[readingPlace.group]);}catch(e){if(e instanceof GroupError)return false;throw e;}}
+    if(readingPlace?.group && readingPlace.group!==UNGROUPED){try{await assertOwnGroups(userId,[readingPlace.group]);}catch(e){if(e instanceof GroupError)return false;throw e;}}
     if (readingPlace && !await getPerson(userId, readingPlace.personId)) return false;
     await (await bookSettings()).updateOne({ _id: userId }, { $set: { readingPlace } }, { upsert: true });
     return true;
