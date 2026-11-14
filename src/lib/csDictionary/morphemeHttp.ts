@@ -26,11 +26,12 @@ export async function csMorphemes(request:Request,id:string,view:View):Promise<R
  try{
   p=morphemePublication(view==='word'?undefined:version!);
   if(view==='word'&&p.dictionaryVersion!==dictionaryPublication().version)throw Error('Dictionary version mismatch');
+  if(view==='word'&&u.searchParams.has('dictionaryVersion')&&u.searchParams.get('dictionaryVersion')!==p.dictionaryVersion)throw new MorphemeError(409,'dictionary_version_mismatch','Обновите словарную статью перед открытием разбора.');
   const body=view==='word'?p.word(id):view==='card'?p.card(id,Number(schema) as 1|2):p.words(id,Number(size),u.searchParams.get('cursor'));
   if(!body)return csResponse({error:{code:'not_found',message:'Материал не найден'}},404);
   const etag=p.etag(u.href);
   if(request.headers.get('If-None-Match')===etag)return new Response(null,{status:304,headers:{'Access-Control-Allow-Origin':'*','ETag':etag,'Cache-Control':'public, max-age=60',...compatibility}});
-  return csResponse(body,200,{'ETag':etag,...compatibility});
+  return csResponse(view==='word'?{...body,dictionaryVersion:p.dictionaryVersion,morphemeVersion:p.version}:body,200,{'ETag':etag,...compatibility});
  }catch(error){
   return error instanceof MorphemeError?csResponse({error:{code:error.code,message:error.message}},error.status):csResponse({error:{code:'unavailable',message:'Морфемная база временно недоступна'}},503);
  }finally{

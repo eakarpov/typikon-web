@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {consume,clientIpFromHeaders} from '@/lib/rateLimit';
-import {dictionaryPublication} from './database';
+import {dictionaryPublication,withDictionaryPublication} from './database';
+import {dictionarySchema,dictionaryCompatibility,dictionaryError,searchV2,articleV2,legacyArticle,sourceV2} from './profile';
 import type {Direction} from './types';
 const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','X-Content-Type-Options':'nosniff'};
 export const csResponse=(body:unknown,status=200,extra:Record<string,string>={}):NextResponse=>NextResponse.json(body,{status,headers:{...headers,'Cache-Control':status===200?'public, max-age=60':'no-store',...extra}});
@@ -12,16 +13,27 @@ function limit(request:Request,kind:'search'|'detail'|'report'):NextResponse|nul
 export async function csSearch(request:Request):Promise<Response>{
  const blocked=limit(request,'search');if(blocked)return blocked;
  const u=new URL(request.url),q=(u.searchParams.get('q')??'').trim(),d=u.searchParams.get('direction')??'cu-ru',cursor=Number(u.searchParams.get('cursor')??0),size=Number(u.searchParams.get('limit')??20);
- if(!q||!/[\p{L}\p{N}]/u.test(q)||[...q].length>120||!['cu-ru','ru-cu'].includes(d)||!Number.isSafeInteger(cursor)||cursor<0||cursor>100000||!Number.isInteger(size)||size<1||size>50)return csResponse({error:{code:'bad_request',message:'Проверьте запрос и направление поиска'}},400);
- try{return csResponse(dictionaryPublication().search(q,d as Direction,cursor,size));}catch{return csResponse({error:{code:'unavailable',message:'Словарь временно недоступен'}},503);}
+ try{
+ const schema=dictionarySchema(u),compat=dictionaryCompatibility(u);
+ if(!q||!/[\p{L}\p{N}]/u.test(q)||[...q].length>120||!['cu-ru','ru-cu'].includes(d)||schema===1&&(!Number.isSafeInteger(cursor)||cursor<0||cursor>100000)||!Number.isInteger(size)||size<1||size>50)return csResponse({error:{code:'bad_request',message:'Проверьте запрос и направление поиска'}},400,compat);
+ const body=schema===1?dictionaryPublication().search(q,d as Direction,cursor,size):withDictionaryPublication(u.searchParams.get('version'),p=>searchV2(p,u,q,d as Direction,size));
+ return csResponse(body,200,compat);
+ }catch(error){const e=dictionaryError(error);return csResponse(e.body,e.status,dictionaryCompatibility(u));}
 }
 export async function csArticle(request:Request,id:string):Promise<Response>{
  const blocked=limit(request,'detail');if(blocked)return blocked;if(!/^[a-f0-9]{24}$/.test(id))return csResponse({error:{code:'bad_request',message:'Неверный ID'}},400);
- try{const p=dictionaryPublication(),item=new URL(request.url).searchParams.get('view')==='relations'?p.relationView(id):p.article(id);return item?csResponse({...item,version:p.version}):csResponse({error:{code:'not_found',message:'Статья не найдена'}},404);}catch{return csResponse({error:{code:'unavailable',message:'Словарь временно недоступен'}},503);}
+ const u=new URL(request.url);try{
+ const schema=dictionarySchema(u),compat=dictionaryCompatibility(u);
+ return withDictionaryPublication(schema===2?u.searchParams.get('version'):null,p=>{
+ const relations=u.searchParams.get('view')==='relations',item=relations?p.relationView(id):p.article(id);
+ if(!item)return csResponse({error:{code:'not_found',message:'Статья не найдена'}},404,compat);
+ const body=relations?{...item,version:p.version,...(schema===2?{schemaVersion:2,dictionaryVersion:p.version}:{})}:schema===2?articleV2(p,item as import('./types').Article):{...legacyArticle(item as import('./types').Article),version:p.version};
+ return csResponse(body,200,compat);
+ });}catch(error){const e=dictionaryError(error);return csResponse(e.body,e.status,dictionaryCompatibility(u));}
 }
 export async function csSource(request:Request,id:string):Promise<Response>{
  const blocked=limit(request,'detail');if(blocked)return blocked;if(!/^[a-f0-9]{64}$/.test(id))return csResponse({error:{code:'bad_request',message:'Неверный ID источника'}},400);
- try{const p=dictionaryPublication(),item=p.source(id);return item?csResponse({...item,publicationVersion:p.version}):csResponse({error:{code:'not_found',message:'Материал не найден'}},404);}catch{return csResponse({error:{code:'unavailable',message:'Источники временно недоступны'}},503);}
+ const u=new URL(request.url);try{const schema=dictionarySchema(u),compat=dictionaryCompatibility(u);return withDictionaryPublication(schema===2?u.searchParams.get('version'):null,p=>{const item=p.source(id);return item?csResponse(schema===2?sourceV2(p,item):{...item,publicationVersion:p.version},200,compat):csResponse({error:{code:'not_found',message:'Материал не найден'}},404,compat);});}catch(error){const e=dictionaryError(error);return csResponse(e.body,e.status,dictionaryCompatibility(u));}
 }
 export async function csReport(request:Request):Promise<Response>{
  const blocked=limit(request,'report');if(blocked)return blocked;

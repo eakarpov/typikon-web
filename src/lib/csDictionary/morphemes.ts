@@ -55,14 +55,20 @@ export function morphemePublication(version?:string):MorphemePublication {
  if(!active)throw Error('Morpheme publication is not configured');
  // Version is a content hash, never a caller-supplied filesystem path.
  if(version!==undefined&&!/^[a-f0-9]{64}$/.test(version))throw new MorphemeError(409,'version_expired','Версия базы недоступна. Откройте разбор заново.');
- if(cached?.path===active&&(!version||cached.pub.version===version))return cached.pub;
- const path=version&&cached?.pub.version!==version?join(dirname(resolve(active)),`morphemes-${version}.sqlite`):active;
  let db:Database.Database|undefined;
  try{
+  // Resolve the actual active publication before comparing versions. A cache
+  // from the previous active path must not redirect an archived request.
+  if(cached?.path!==active){
+   db=new Database(active,{readonly:true,fileMustExist:true});
+   const pub=new MorphemePublication(db);
+   cached?.pub.db.close();cached={path:active,pub};db=undefined;
+  }
+  if(!version||cached.pub.version===version)return cached.pub;
+  const path=join(dirname(resolve(active)),`morphemes-${version}.sqlite`);
   db=new Database(path,{readonly:true,fileMustExist:true});
   const pub=new MorphemePublication(db);
-  if(version&&pub.version!==version){db.close();throw new MorphemeError(409,'version_expired','Версия базы недоступна. Откройте разбор заново.');}
-  if(path===active){cached?.pub.db.close();cached={path:active,pub};}
+  if(pub.version!==version)throw new MorphemeError(409,'version_expired','Версия базы недоступна. Откройте разбор заново.');
   return pub;
  }catch(error){db?.close();if(error instanceof MorphemeError)throw error;if(version)throw new MorphemeError(409,'version_expired','Версия базы недоступна. Откройте разбор заново.');throw error;}
 }

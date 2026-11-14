@@ -1,3 +1,4 @@
+import {installDictionaryProfiles} from './profileOpenapi';
 export const csPaths = {
   "/api/v2/cs/search": {
     "get": {
@@ -653,3 +654,5 @@ export const csSchemas = {
     ]
   }
 };
+
+installDictionaryProfiles(csPaths,csSchemas);

@@ -3,6 +3,7 @@ import {sourceExamples} from './examples';
 import type { Article, SourceEntry, SearchResult, SearchItem, Direction } from './types';
 import { civilKey } from '@/lib/cslav/core';
 import { russianKey } from './dsl';
+import {dirname,join} from 'node:path';
 export function readableAnalysis(value:string):string{
  const parts=value.split(' / ').filter(Boolean);
  // The same attested form is indexed both with its original tags and its labelled paradigm slots.
@@ -26,7 +27,7 @@ export function createPublication(db:Database.Database):void{
 }
 export class DictionaryPublication{
  readonly version:string;
- constructor(readonly db:Database.Database){const m=Object.fromEntries((db.prepare('SELECT key,value FROM metadata').all() as {key:string;value:string}[]).map(r=>[r.key,r.value]));if(m.state!=='complete'||m.format!=='cs-publication-v1'||m.scopeChecked!=='1')throw Error('Dictionary publication is incomplete');this.version=m.version;}
+ constructor(readonly db:Database.Database){const m=Object.fromEntries((db.prepare('SELECT key,value FROM metadata').all() as {key:string;value:string}[]).map(r=>[r.key,r.value]));if(m.state!=='complete'||m.format!=='cs-publication-v1'||m.scopeChecked!=='1'||!m.version)throw Error('Dictionary publication is incomplete');this.version=m.version;}
  relationView(id:string):Pick<Article,'id'|'name'|'pos'|'relations'>|null {const r=this.db.prepare('SELECT payload FROM articles WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const a=JSON.parse(r.payload) as Article;return {id:a.id,name:a.name,pos:a.pos,relations:a.relations};}
  article(id:string):Article|null {const r=this.db.prepare('SELECT payload FROM articles WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const a=JSON.parse(r.payload) as Article;for(const f of a.extra)f.grammar=readableAnalysis(f.grammar);if(a.examples===undefined){a.examples=a.sources.filter(r=>r.mappingStatus==='verified').flatMap(r=>this.source(r.id)?.examples??[]);}return a;}
  source(id:string):SourceEntry|null {const r=this.db.prepare('SELECT payload FROM sources WHERE id=?').get(id) as {payload:string}|undefined;if(!r)return null;const s=JSON.parse(r.payload) as SourceEntry;s.examples??=sourceExamples(s);return s;}
@@ -43,7 +44,7 @@ export class DictionaryPublication{
     SELECT c.id,a.name,a.pos,c."match",CASE WHEN c."match"='lemma' THEN a.name ELSE c.matched END matched,c.grammar,c.rank FROM candidates c JOIN articles a ON a.id=c.id WHERE c.choice=1 ORDER BY c.rank,a.name,c.id LIMIT ? OFFSET ?`).all(key,key,key,prefix?upper:key,limit+1,cursor) as SearchItem[];
    return {version:this.version,query,direction,items:rows.slice(0,limit).map(r=>({...r,exact:r.rank<10,grammar:readableAnalysis(r.pos==='noun'?r.grammar.replace(/ · (мужской род|женский род|средний род)/g,''):r.grammar)})),nextCursor:rows.length>limit?String(cursor+limit):null};
   }else{
-   const translated=this.db.prepare(`SELECT t.lexemeId id,a.name,a.pos,'translation' AS "match",t.value matched,'' grammar,CASE WHEN t.key=? THEN 0 ELSE 10 END rank FROM translations t JOIN articles a ON a.id=t.lexemeId WHERE t.key>=? AND t.key${prefix?'<':'='}? GROUP BY t.lexemeId ORDER BY rank,a.name LIMIT 100000`).all(key,key,prefix?upper:key) as SearchItem[];
+   const translated=this.db.prepare(`SELECT t.lexemeId id,a.name,a.pos,'translation' AS "match",t.value matched,'' grammar,CASE WHEN t.key=? THEN 0 ELSE 10 END rank FROM translations t JOIN articles a ON a.id=t.lexemeId WHERE t.key>=? AND t.key${prefix?'<':'='}? GROUP BY t.lexemeId ORDER BY rank,a.name,a.id LIMIT 100000`).all(key,key,prefix?upper:key) as SearchItem[];
    const terms=key.match(/[\p{L}\p{N}]+/gu)??[];const expression=terms.map(t=>'"'+t.replace(/"/g,'""')+'"'+(prefix?'*':'')).join(' AND ');
    const explanations=expression?this.db.prepare(`SELECT e.lexemeId id,a.name,a.pos,'explanation' AS "match",substr(min(e.text),1,220) matched,'' grammar,30 rank FROM explanations e JOIN articles a ON a.id=e.lexemeId WHERE explanations MATCH ? GROUP BY e.lexemeId ORDER BY a.name LIMIT 100000`).all(expression) as SearchItem[]:[];
    rows=[...translated,...explanations];
@@ -57,4 +58,22 @@ export function dictionaryPublication():DictionaryPublication{
  const path=process.env.CS_DICTIONARY_DB;if(!path)throw Error('Dictionary publication is not configured');
  if(cache?.path===path)return cache.publication;
  const publication=new DictionaryPublication(new Database(path,{readonly:true,fileMustExist:true}));cache?.publication.db.close();cache={path,publication};return publication;
+}
+export class DictionaryVersionError extends Error {
+ readonly status=409;readonly code='version_unavailable';
+ constructor(){super('Версия словаря недоступна. Откройте текущую версию.');}
+}
+/** Retained files are immutable dictionary-<version>.sqlite, never caller paths. */
+export function withDictionaryPublication<T>(version:string|null,read:(p:DictionaryPublication)=>T):T {
+ if(version!==null&&!/^[a-f0-9]{64}$/.test(version))throw new DictionaryVersionError();
+ const active=dictionaryPublication();
+ if(version===null||version===active.version)return read(active);
+ let db:Database.Database|undefined;
+ let publication:DictionaryPublication;
+ try{
+  db=new Database(join(process.env.CS_DICTIONARY_ARCHIVE_DIR??dirname(process.env.CS_DICTIONARY_DB!),`dictionary-${version}.sqlite`),{readonly:true,fileMustExist:true});
+  publication=new DictionaryPublication(db);
+  if(publication.version!==version)throw new DictionaryVersionError();
+ }catch{db?.close();throw new DictionaryVersionError();}
+ try{return read(publication);}finally{db.close();}
 }
