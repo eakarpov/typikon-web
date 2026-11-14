@@ -1,3 +1,4 @@
+import {effectiveStatusRank} from './age';
 import { RANK_BY_KEY, type Rank } from "./types";
 export const TEMPORARY_RANKS: Rank[] = ["bolyashchiy", "tyazhkobolyashchiy", "uchashchiysya", "prisnopamyatnyy", "ubiennyy", "puteshestvuyushchiy", "zaklyuchennyy", "neprazdnaya", "novoprestavlennyy"];
 export const markToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Moscow", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
@@ -7,6 +8,8 @@ type Marked = {
     rankUntil?: string | null;
     kind?: string;
     died?: string | null;
+    born?: string | null;
+    sex?: string | null;
 };
 export const statusRank = (p: Marked): Rank | null => p.rank && !TEMPORARY_RANKS.includes(p.rank) ? p.rank : null;
 export const temporaryRank = (p: Marked): Rank | null => p.mark !== undefined ? p.mark : p.rank && TEMPORARY_RANKS.includes(p.rank) ? p.rank : null;
@@ -26,5 +29,5 @@ export const effectiveMark = (p: Marked, on = markToday()): Rank | null => {
     return null;
 };
 /** Совместимость с потребителями одного поля. Новым нужен effectiveRanks. */
-export const effectiveRank = (p: Marked, on = markToday()): Rank | null => statusRank(p) ?? effectiveMark(p, on);
-export const effectiveRanks = (p: Marked, on = markToday()): Rank[] => [statusRank(p), effectiveMark(p, on)].filter((r): r is Rank => !!r);
+export const effectiveRank = (p: Marked, on = markToday()): Rank | null => effectiveStatusRank({...p,rank:statusRank(p)},on) ?? effectiveMark(p, on);
+export const effectiveRanks = (p: Marked, on = markToday()): Rank[] => [effectiveStatusRank({...p,rank:statusRank(p)},on), effectiveMark(p, on)].filter((r): r is Rank => !!r);

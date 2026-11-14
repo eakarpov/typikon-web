@@ -1,3 +1,4 @@
+import {markToday} from './marks';
 import { psalterCommemorationTexts } from './psalter-names';
 import { namedPrayerTexts, NAMED_STYLES, type PrayerLang } from '@/lib/molitvoslov/store';
 import { renderNamedPrayer, type NamedPerson, type PrayerGender } from '@/lib/molitvoslov/named';
@@ -7,33 +8,33 @@ import { getBookSettings, listPersons } from './service';
 import { defaultCommemorations, selectCommemorationPersons, type CommemorationPlace, type CommemorationSettings } from './commemoration';
 import type { PomyannikPerson, PersonKind } from './types';
 import { rulesDb } from '@/lib/rulesDb';
-export interface CommemorationContext { settings:CommemorationSettings; persons:PomyannikPerson[]; signedIn:boolean }
+export interface CommemorationContext { settings:CommemorationSettings; persons:PomyannikPerson[]; signedIn:boolean;on?:string }
 export const loadCommemorationContext = async (userId?:string):Promise<CommemorationContext> => {
-    if(!userId) return {settings:defaultCommemorations(),persons:[],signedIn:false};
+    if(!userId) return {settings:defaultCommemorations(),persons:[],signedIn:false,on:markToday()};
     const [settings,persons] = await Promise.all([getBookSettings(userId),listPersons(userId)]);
-    return {settings:settings.commemorations,persons,signedIn:true};
+    return {settings:settings.commemorations,persons,signedIn:true,on:markToday()};
 };
-export const selectedNamedPersons = async (context:CommemorationContext,place:CommemorationPlace):Promise<Record<PersonKind,NamedPerson[]>> => {
-    const selected=selectCommemorationPersons(context.persons,place,context.settings[place]);
+export const selectedNamedPersons = async (context:CommemorationContext,place:CommemorationPlace,on?:string):Promise<Record<PersonKind,NamedPerson[]>> => {
+    const selected=selectCommemorationPersons(context.persons,place,context.settings[place],on??context.on??markToday());
     const forms=await personSlavonicForms(selected);
     const result:Record<PersonKind,NamedPerson[]>={living:[],departed:[]};
     selected.forEach((person, index) => result[person.kind].push({name:forms[index].genitive,dative:forms[index].dative,commemorationSuffix:person.commemorationSuffix,rank:effectiveRank(person),marks:effectiveRanks(person),sex:person.sex}));
     return result;
 };
-export async function commemorationPrayers(context:CommemorationContext,place:CommemorationPlace,lang:PrayerLang,gender:PrayerGender) {
+export async function commemorationPrayers(context:CommemorationContext,place:CommemorationPlace,lang:PrayerLang,gender:PrayerGender,on?:string) {
     const selection=context.settings[place];
-    const names=await selectedNamedPersons(context,place);
+    const names=await selectedNamedPersons(context,place,on);
     const counts={living:names.living.length,departed:names.departed.length};
     const prayers:{id:string;title:string|null;text:string;for:PersonKind;lang:PrayerLang;italic?:string[]}[]=[];
     const missing:string[]=[];
     const notes:string[]=[];
-    if(selection.mode==='none') return {selection,counts,prayers,missing,notes};
+    if(selection.mode==='none') return {selection,counts,prayers,missing,notes,day:on??context.on??markToday()};
     if(!context.signedIn) notes.push('Поимённое поминовение из помянника доступно после входа.');
     const kinds:PersonKind[]=selection.mode==='group'?(['living','departed'] as const).filter(kind=>names[kind].length>0):[selection.mode];
     if(selection.mode==='group'&&!kinds.length) notes.push('В выбранной группе нет подходящих имён. Имена из других групп не добавлены.');
-    if(place.startsWith('psalter-')) {
+    if(place.startsWith('psalter-')||place.startsWith('evening-')) {
         prayers.push(...psalterCommemorationTexts(names, gender, place === 'psalter-3', kinds));
-        return {selection,counts,prayers,missing,notes};
+        return {selection,counts,prayers,missing,notes,day:on??context.on??markToday()};
     }
     for(const kind of kinds) {
         const style=place.startsWith('psalter-')&&kind==='departed'?'psalter-departed':'molitvoslov-short';
@@ -41,7 +42,7 @@ export async function commemorationPrayers(context:CommemorationContext,place:Co
         if(!found?.prayers.length) {missing.push(`Молитва ${kind==='living'?'о здравии':'о упокоении'} недоступна.`);continue;}
         prayers.push(...found.prayers.map(prayer=>({...prayer,for:kind,lang:found.lang,text:renderNamedPrayer(prayer.text,names[kind],gender)})));
     }
-    return {selection,counts,prayers,missing,notes};
+    return {selection,counts,prayers,missing,notes,day:on??context.on??markToday()};
 }
 /** Идентифицируем книжные места по ID источника, включая женские варианты. */
 export function morningCommemorationIds():Map<string,PersonKind> {

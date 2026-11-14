@@ -1,3 +1,4 @@
+import {removeGroupMembers,groupDeletionSettings} from './groupDeletion';
 import { orderedGroups, validateGroupOrder } from './groupPriority';
 import { addGroupMembers } from "./groupMembers";
 import { groupIdentity, planGroupMigration } from "./groupMigration";
@@ -13,6 +14,7 @@ const registry = async () => {
         name: string;
         key: string;
         createdAt: Date;
+        deleting?:boolean;
     }>('pomyannikGroups');
     groupIndex ??= collection.createIndex({ userId: 1, key: 1 }, { unique: true, name: 'owner_group_name' }).catch(error => {
         groupIndex = undefined;
@@ -74,7 +76,7 @@ export async function createGroup(userId: string, raw: unknown): Promise<Pomyann
 export async function assertOwnGroups(userId: string, raw: unknown): Promise<string[]> {
     const ids = groupIds(raw);
     await ensureGroupMigration(userId);
-    if (ids.length && await (await registry()).countDocuments({ _id: { $in: ids }, userId }) !== ids.length)
+    if (ids.length && await (await registry()).countDocuments({ _id: { $in: ids }, userId, deleting:{$ne:true} }) !== ids.length)
         throw new GroupError('Группа не найдена в вашем помяннике. Обновите страницу.');
     return ids;
 }
@@ -88,4 +90,23 @@ export async function reorderGroups(userId:string, raw:unknown):Promise<void> {
     const order=validateGroupOrder(raw,await listGroups(userId));
     await (await database()).collection<{_id:string;groupOrder?:string[]}>('pomyannikSettings')
         .updateOne({_id:userId},{$set:{groupOrder:order}},{upsert:true});
+}
+
+export async function deleteGroup(userId:string,groupId:unknown,deletePersons:unknown) {
+    if(typeof groupId!=='string'||! /^(?:[a-f0-9]{24})$/.test(groupId)||typeof deletePersons!=='boolean')throw new GroupError('Укажите группу и действие с именами.');
+    await ensureGroupMigration(userId);
+    const collection=await registry();
+    const group=await collection.findOne({_id:groupId,userId});
+    if(!group)throw new GroupError('Группа не найдена в вашем помяннике.');
+    await collection.updateOne({_id:groupId,userId},{$set:{deleting:true}});
+    const db=await database(),persons=db.collection<any>('pomyannikPersons');
+    const selected=deletePersons?await persons.find({userId,groups:groupId,deletedAt:null},{projection:{_id:1}}).toArray():[];
+    const removed=await removeGroupMembers(persons,userId,groupId,deletePersons);
+    const settings=db.collection<{_id:string;groupOrder?:string[];commemorations?:Record<string,any>;readingPlace?:any}>('pomyannikSettings');
+    const stored:{commemorations?:Record<string,any>;readingPlace?:any}=await settings.findOne({_id:userId})??{};
+    const fields=groupDeletionSettings(stored,groupId,selected.map(p=>String(p._id)));
+    if(stored.readingPlace?.personId && ObjectId.isValid(stored.readingPlace.personId) && !await persons.findOne({_id:new ObjectId(stored.readingPlace.personId),userId,deletedAt:null}))fields.readingPlace=null;
+    await settings.updateOne({_id:userId},{$pull:{groupOrder:groupId},...(Object.keys(fields).length?{$set:fields}:{})});
+    await collection.deleteOne({_id:groupId,userId});
+    return {removed};
 }

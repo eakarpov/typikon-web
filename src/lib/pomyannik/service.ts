@@ -1,3 +1,4 @@
+import {validateLifeDates} from './age';
 import { prioritizePersons, UNGROUPED } from './groupPriority';
 import { cleanManualCase } from "./nameForms";
 import { cleanCommemorationSuffix } from "./suffix";
@@ -90,6 +91,7 @@ const clean = (input: PersonInput) => {
     }
     if (input.mark != null && !TEMPORARY_RANKS.includes(input.mark)) throw new PersonDataError("Неизвестная временная помета.");
     if (input.rankUntil && (!fullDate(input.rankUntil) || !(input.mark ?? input.rank) || !TEMPORARY_RANKS.includes((input.mark ?? input.rank)!))) throw new PersonDataError("Срок можно задать только для временной пометы и полной датой.");
+    try {validateLifeDates({...input,kind:input.died?"departed":input.kind});} catch(error) {throw new PersonDataError((error as Error).message);}
     let manualGenitive, manualDative;
     try { manualGenitive = cleanManualCase(input.manualGenitive); manualDative = cleanManualCase(input.manualDative); }
     catch (error) { throw new PersonDataError((error as Error).message); }

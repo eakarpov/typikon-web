@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         const context = await loadCommemorationContext(access.userId);
         const [living, departed] = await Promise.all([selectedNamedPersons(context, 'morning-living'), selectedNamedPersons(context, 'morning-departed')]);
         const rows = fillMorningCommemorations(found.rows, morningCommemorationIds(), { living: living.living, departed: departed.departed }, gender);
-        return respondPrivate({ key: 'utrennie', lang: found.lang, rows: rows.map(posledovanieRow) }, { access });
+        return respondPrivate({ key: 'utrennie', day:context.on, rotating:Boolean(context.settings['morning-living'].daily||context.settings['morning-departed'].daily), lang: found.lang, rows: rows.map(posledovanieRow) }, { access });
     }
     catch (e) {
         reportError(e, { where: 'api/v2/pomyannik/morning', source: 'api' });

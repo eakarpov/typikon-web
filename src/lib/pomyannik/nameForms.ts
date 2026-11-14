@@ -4,9 +4,12 @@ export interface PersonalLexeme { name: string; search: string; scheme?: string 
 // Дария is absent from the imported lexicon. Its feminine -иа paradigm is N3e,
 // the same dictionary paradigm used by Маріа; explicit supplement, not a general guess.
 export function supplementalPersonalLexeme(raw: string): PersonalLexeme | null {
-    return ["дария", "дарья", "дариа"].includes(nameKey(raw))
-        ? { name: "да́ріа", search: "дариа", scheme: "N3e", properties: "S,f,anim,persn" }
-        : null;
+    const key=nameKey(raw);
+    if (["дария", "дарья", "дариа"].includes(key)) return { name: "да́ріа", search: "дариа", scheme: "N3e", properties: "S,f,anim,persn" };
+    // Лидия Иллирийская (https://azbyka.ru/days/sv-lidija-illirijskaja).
+    // The geographic lexeme must not be used as a personal name.
+    if (["лидия", "лидиа"].includes(key)) return { name: "ли́діа", search: "лидиа", scheme: "N3e", properties: "S,f,anim,persn" };
+    return null;
 }
 export function feminineBaseKeys(raw: string): string[] {
     const key = nameKey(raw);

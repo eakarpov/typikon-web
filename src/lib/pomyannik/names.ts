@@ -1,3 +1,4 @@
+import { supplementalPersonalLexeme } from './nameForms';
 import { nameKey, normalizeName } from "@/lib/imeniny/core";
 
 // ИМЯ В ЗАПИСКЕ — ИМЯ НАРЕЧЕНИЯ, А НЕ ИЗ ПАСПОРТА, и в этом вся забота этого
@@ -168,7 +169,7 @@ export const checkName = (raw: string, known: Iterable<string>): NameCheck => {
     const index = known instanceof Set ? known : new Set(known);
 
     if (!key) return { name, key, status: "unknown", suggestions: [] };
-    if (index.has(key)) return { name, key, status: "known", suggestions: [] };
+    if (index.has(key) || supplementalPersonalLexeme(name)) return { name, key, status: "known", suggestions: [] };
 
     const forms = CHURCH_FORMS[key];
     if (forms?.length) {

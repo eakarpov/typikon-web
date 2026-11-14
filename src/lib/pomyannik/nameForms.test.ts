@@ -1,3 +1,4 @@
+import {checkName} from './names';
 import { guessSex } from "./names";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -65,4 +66,12 @@ test("Космы retains its terminal heavy stress after declension", () => {
     const p = decline({name:"косма́",scheme:"N3t",properties:"S,m,anim,persn"})!;
     assert.equal(personalCaseForm("косма́",p.sgGen[0]),"космы̀");
     assert.equal(personalCaseForm("косма́","космы̀"),"космы̀");
+});
+
+test('Лидия is a personal saint name with feminine genitive and dative, independent of the geographic lexeme',()=>{
+ for(const name of ['Лидия','Ли́дия','Лидиа']) {
+  const lexeme=supplementalPersonalLexeme(name)!;assert.ok(lexeme);
+  const forms=decline(lexeme)!;assert.equal(forms.sgGen[0],'ли́діи');assert.equal(forms.sgDat[0],'ли́діи');
+  assert.equal(checkName(name,[]).status,'known');
+ }
 });

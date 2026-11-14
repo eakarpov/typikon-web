@@ -876,6 +876,7 @@ export const memorialDay = (day: any) => ({
 export const rankInfo = (rank: any) => ({
     key: rank.key,
     category: TEMPORARY_RANKS.includes(rank.key) ? "temporary" : "status",
+    onlySex:rank.onlySex??null,
     label: rank.label,
     genitive: rank.genitive,
     cs: rank.cs ?? null,

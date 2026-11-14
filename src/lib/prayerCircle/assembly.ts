@@ -62,7 +62,7 @@ async function psalter(b:Block,date:string,cursor:number,gender:'m'|'f',getConte
     async function namesForSlava(statia:number):Promise<BlockResult> {
         if(named.has(statia)) return named.get(statia)!;
         const place=`psalter-${statia+1}` as CommemorationPlace;
-        const result=await commemorationPrayers(await getContext(),place,lang,gender);
+        const result=await commemorationPrayers(await getContext(),place,lang,gender,date);
         named.set(statia,{missing:result.missing,rows:[...result.prayers.map(prayer=>({id:prayer.id,kind:'text',text:prayer.text,label:prayer.for==='living'?'О здравии':'О упокоении',sourceBook:'molitvoslov',language:prayer.lang})),
             ...result.notes.map((text,i)=>({id:`note:${i}`,kind:'rubric',text}))]});
         return named.get(statia)!;
@@ -97,7 +97,7 @@ async function resolve(b:Block,date:string,cycle:CycleState,catalog:Catalog,user
         if(b.kind==='template'&&['utrennie','serafimovo-diveevo'].includes(b.key)) {
             try {
                 const context=await getContext();
-                const [living,departed]=await Promise.all([selectedNamedPersons(context,'morning-living'),selectedNamedPersons(context,'morning-departed')]);
+                const [living,departed]=await Promise.all([selectedNamedPersons(context,'morning-living',date),selectedNamedPersons(context,'morning-departed',date)]);
                 const ids=morningCommemorationIds();
                 const names={living:living.living,departed:departed.departed};
                 if(!ids.size&&(names.living.length||names.departed.length)) r.missing.push('Не найдены книжные места поимённого поминовения.');
@@ -108,6 +108,16 @@ async function resolve(b:Block,date:string,cycle:CycleState,catalog:Catalog,user
                     return choice.mode==='group'&&!names[kind].length?{...row,note:[row.note,`В группе «${choice.group}» нет подходящих имён. Другие группы не добавлены.`].filter(Boolean).join(' ')}:row;
                 });
             } catch {r.missing.push('Не удалось загрузить имена для утренних молитв.');}
+        }
+        if(b.kind==='template'&&b.key==='na-son') {
+            try {
+                const context=await getContext();
+                for(const place of ['evening-living','evening-departed'] as const) {
+                    const block=await commemorationPrayers(context,place,cycle.config.lang,cycle.config.gender,date);
+                    r.missing.push(...block.missing);
+                    r.rows.push(...block.prayers.map(prayer=>({id:prayer.id,kind:'text' as const,text:prayer.text,label:'Поминовение из помянника',sourceBook:'molitvoslov',language:prayer.lang,redistributable:true})));
+                }
+            } catch {r.missing.push('Не удалось загрузить имена для вечерних молитв.');}
         }
         const refused=r.rows.filter(r=>r.redistributable!==true);
         return {...r,rows:r.rows.filter(r=>r.redistributable===true),missing:[...r.missing,...(refused.length?['Некоторые тексты не разрешены к выдаче.']:[])]};

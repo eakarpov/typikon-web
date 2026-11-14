@@ -148,7 +148,7 @@ export const readSlavonic = async (name: string, sex?: "m" | "f" | null): Promis
  * Кэшируется надолго: имена не меняются, а словарь пополняется выкладкой, и
  * сбрасывается тем же тегом, что и прочее словарное.
  */
-export const slavonicName = cached(readSlavonic, ["pomyannik-slavonic-cases-v3"], [CacheTag.TEXTS], 86400);
+export const slavonicName = cached(readSlavonic, ["pomyannik-slavonic-cases-v4"], [CacheTag.TEXTS], 86400);
 
 /** То же для списка имён — записка спрашивает сразу все. */
 export const slavonicNames = async (names: string[]): Promise<Record<string, SlavonicName>> => {

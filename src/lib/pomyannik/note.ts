@@ -38,7 +38,7 @@ export class NoteError extends Error {}
 export const snapshot = (
     person: {
         name: string; churchName?: string | null; kind: PersonKind;
-        rank?: Rank | null; mark?: Rank | null; rankUntil?: string | null; sex?: Sex;
+        rank?: Rank | null; mark?: Rank | null; rankUntil?: string | null; sex?: Sex; born?:string|null; died?:string|null;
     },
     slavonic?: { genitive: string; source: "lexicon" | "accents" | "plain" | "manual" } | null,
 ): NoteName => ({

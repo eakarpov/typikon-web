@@ -1,12 +1,12 @@
 import { authorizeUser } from '@/lib/api/v2/user';
 import { fail, preflight, respondPrivate } from '@/lib/api/v2/http';
-import { createGroup, listGroups, reorderGroups } from '@/lib/pomyannik/groupsService';
+import { createGroup, listGroups, reorderGroups, deleteGroup } from '@/lib/pomyannik/groupsService';
 import { GroupError } from '@/lib/pomyannik/groups';
 import { reportError } from '@/lib/reportError';
 export const dynamic = 'force-dynamic';
 export const OPTIONS = () => {
     const r = preflight();
-    r.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+    r.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     return r;
 };
 export async function GET(request: Request) {
@@ -42,5 +42,16 @@ export async function PUT(request:Request) {
         if(error instanceof GroupError)return fail('conflict',error.message);
         reportError(error,{where:'api/v2/pomyannik/groups#PUT',source:'api'});
         return fail('internal','Не удалось сохранить порядок групп.');
+    }
+}
+
+export async function DELETE(request:Request) {
+    const access=await authorizeUser(request,'pomyannik');if(access.denied)return access.denied;
+    const body=await request.json().catch(()=>null);
+    try {return respondPrivate({deleted:true,...await deleteGroup(access.userId,body?.id,body?.deletePersons)},{access});}
+    catch(error) {
+        if(error instanceof GroupError)return fail('bad_request',error.message);
+        reportError(error,{where:'api/v2/pomyannik/groups#DELETE',source:'api'});
+        return fail('internal','Не удалось удалить группу. Повторите запрос.');
     }
 }

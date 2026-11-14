@@ -50,6 +50,7 @@ export interface RankInfo {
     feminine?: { label: string; genitive: string; cs: string | null };
     /** Только живым, только усопшим или всё равно. */
     only?: "living" | "departed";
+    onlySex?: "m" | "f";
 }
 
 /**
@@ -63,8 +64,8 @@ export const RANKS: RankInfo[] = [
     { key: "novoprestavlennyy", label: "новопреставленный", genitive: "новопреставленного", cs: null, feminine: { label: "новопреставленная", genitive: "новопреставленной", cs: null }, only: "departed" },
     { key: "mladenets", label: "младенец", genitive: "младенца", cs: "младе́нца",
       feminine: { label: "младенца", genitive: "младенцы", cs: "младе́нцы" } },
-    { key: "otrok", label: "отрок", genitive: "отрока", cs: "ѻ҆́трока" },
-    { key: "otrokovitsa", label: "отроковица", genitive: "отроковицы", cs: "ѻ҆трокови́цы" },
+    { key: "otrok", onlySex:"m", label: "отрок", genitive: "отрока", cs: "ѻ҆́трока" },
+    { key: "otrokovitsa", onlySex:"f", label: "отроковица", genitive: "отроковицы", cs: "ѻ҆трокови́цы" },
     { key: "tyazhkobolyashchiy", label: "тяжкоболящий", genitive: "тяжкоболящего", cs: null,
       feminine: { label: "тяжкоболящая", genitive: "тяжкоболящей", cs: null }, only: "living" },
     { key: "prisnopamyatnyy", label: "приснопамятный", genitive: "приснопамятного", cs: null,

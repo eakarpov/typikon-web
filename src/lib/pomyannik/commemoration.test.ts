@@ -10,7 +10,7 @@ const persons=[person('a','living',['Семья']),person('b','departed',['Се�
 describe('поминовение в молитвенных чтениях',()=>{
     it('без новых настроек использует три заданных значения Псалтири и два утренних',()=>{
         assert.deepEqual(readCommemorations(undefined),defaultCommemorations());
-        assert.deepEqual(Object.values(defaultCommemorations()).map(c=>c.mode),['living','departed','none','living','departed']);
+        assert.deepEqual(Object.values(defaultCommemorations()).map(c=>c.mode),['living','departed','none','none','none','living','departed']);
     });
     it('изменение одного места не меняет остальные и не возвращает изменяемые общие объекты',()=>{
         const patch=validateCommemorations({'psalter-3':{mode:'group',group:'Семья',for:'living'}});
