@@ -6,9 +6,10 @@ export interface PersonalLexeme { name: string; search: string; scheme?: string 
 export function supplementalPersonalLexeme(raw: string): PersonalLexeme | null {
     const key=nameKey(raw);
     if (["дария", "дарья", "дариа"].includes(key)) return { name: "да́ріа", search: "дариа", scheme: "N3e", properties: "S,f,anim,persn" };
-    // Лидия Иллирийская (https://azbyka.ru/days/sv-lidija-illirijskaja).
+    // Лидия Иллирийская; personal-name spelling Лѵ́диа in Hiltebrandt:
+    // https://azbyka.ru/otechnik/Petr_Giltebrandt/spravochnyj-i-ob-jasnitelnyj-slovar-k-novomu-zavetu/13
     // The geographic lexeme must not be used as a personal name.
-    if (["лидия", "лидиа"].includes(key)) return { name: "ли́діа", search: "лидиа", scheme: "N3e", properties: "S,f,anim,persn" };
+    if (["лидия", "лидиа"].includes(key)) return { name: "лѵ́діа", search: "лидиа", scheme: "N3e", properties: "S,f,anim,persn" };
     return null;
 }
 export function feminineBaseKeys(raw: string): string[] {

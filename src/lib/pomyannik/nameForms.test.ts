@@ -48,7 +48,7 @@ test("reading prayers keep each suffix attached to its name", () => {
     assert.equal(text,"Помяни Анны со сро́дники, Марии со ча́домъ, Елены со ча́ды, Николая.");
 });
 test("Church Slavonic name normalization preserves stress and existing breathing", () => {
-    for (const [raw, expected] of [["Екатери́ны","Є҆катери́ны"],["ніки́ты","нїки́ты"],["мела́ніи","мела́нїи"],["діонѵ́сіи","дїонѵ́сїи"],["і҆ѡа́нны","і҆ѡа́нны"],["і́и","і҆́и"],["Аѵгꙋсти́ны","А҆ѷгꙋсти́ны"]]) {
+    for (const [raw, expected] of [["Екатери́ны","Є҆катери́ны"],["ніки́ты","нїки́ты"],["мела́ніи","мела́нїи"],["діонѵ́сіи","дїонѵ́сїи"],["і҆ѡа́нны","і҆ѡа́нны"],["і́и","і҆́и"],["Аѵгꙋсти́ны","А҆ѵгꙋсти́ны"]]) {
         assert.equal(withInitialBreathing(raw), expected);
         assert.equal(withInitialBreathing(expected),expected);
     }
@@ -71,7 +71,17 @@ test("Космы retains its terminal heavy stress after declension", () => {
 test('Лидия is a personal saint name with feminine genitive and dative, independent of the geographic lexeme',()=>{
  for(const name of ['Лидия','Ли́дия','Лидиа']) {
   const lexeme=supplementalPersonalLexeme(name)!;assert.ok(lexeme);
-  const forms=decline(lexeme)!;assert.equal(forms.sgGen[0],'ли́діи');assert.equal(forms.sgDat[0],'ли́діи');
+  const forms=decline(lexeme)!;assert.equal(forms.sgGen[0],'лѵ́діи');assert.equal(forms.sgDat[0],'лѵ́діи');
+  assert.equal(personalCaseForm(lexeme.name,forms.sgGen[0]),'лѵ́дїи');
+  assert.equal(personalCaseForm(lexeme.name,forms.sgDat[0]),'лѵ́дїи');
   assert.equal(checkName(name,[]).status,'known');
  }
+});
+
+test("izhitsa distinguishes consonantal V from vocalic I, including cached kendema", () => {
+    const examples = [["ѷпа́тіа", "ѵ҆па́тїа"], ["ПА́ѶЛА", "ПА́ѴЛА"], ["па́ѵла", "па́ѵла"], ["па́ѷла", "па́ѵла"], ["па́ѷла", "па́ѵла"], ["єѵге́нїѧ", "є҆ѵге́нїѧ"], ["єѷдокі́и", "є҆ѵдокі́и"], ["саѵла", "саѵла"], ["кла́ѵдїи", "кла́ѵдїи"], ["мѵро́на", "мѷро́на"], ["полѵе́ѵкта", "полѷе́ѵкта"], ["мѷро́на", "мѷро́на"], ["лѵ́діи", "лѵ́дїи"], ["паѵ́сїа", "паѵ́сїа"]];
+    for (const [raw, expected] of examples) {
+        assert.equal(withInitialBreathing(raw), expected);
+        assert.equal(withInitialBreathing(expected), expected);
+    }
 });
