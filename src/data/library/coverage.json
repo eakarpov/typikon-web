@@ -1114,22 +1114,26 @@
         "done",
         "done",
         "pending",
-        "pending",
-        "pending",
+        "partial",
+        "partial",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "3 HTML с киноварью; нового разбора нет"
+        "label": "Локальная электронная книга: три части, 7678 блоков, 8047 красных прогонов, два орнамента. Подготовлены 7492 фрагмента исходной разметки. Распознавание отдельных песнопений и календарных соответствий, сплошная выверка печатного тома не завершены. Публикация отложена: полный цикл сборки портала не завершён; после попытки переключения восстановлен предыдущий выпуск."
       },
       "tags": [],
       "evidence": [
         "raw/romanian/penticostar",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "spec/library-triodia.md",
+        "scripts/build_library_romanian_triod.py",
+        "reports/library/romanian-pentecostarion/build.json",
+        "reports/deploy-pentecostarion-ro-20261117/attempt.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "typikon",
