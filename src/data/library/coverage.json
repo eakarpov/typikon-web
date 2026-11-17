@@ -1027,7 +1027,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "366 дней с киноварью; книжный слой не собран"
+        "label": "Все 12 месяцев и 366 дат по манифестам сохранены без пропусков файлов, киноварь подтверждена прежним аудитом; книжный слой принимать помесячно."
       },
       "tags": [],
       "evidence": [
@@ -1035,7 +1035,8 @@
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
         "reports/library/next-wave/source-audit.json",
-        "spec/library-corpus-pilot.md"
+        "spec/library-corpus-pilot.md",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
       "updated_at": "2026-11-17"
     },
@@ -1054,16 +1055,17 @@
       ],
       "quality": {
         "percent": null,
-        "label": "63 части; правила разобраны частично"
+        "label": "Все 63/63 части HTML на месте; в манифесте издание М., 2002. Правила разобраны частично, книжные адреса и связи по главам не собраны."
       },
       "tags": [],
       "evidence": [
         "raw/tipikon",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "irmologion",
@@ -1170,16 +1172,17 @@
       ],
       "quality": {
         "percent": null,
-        "label": "6 HTML с киноварью; объём выверить"
+        "label": "Все 6 HTML на месте, киноварь присутствует. Серии 1–6 сохранены в порядке загрузки; нужны порядок книги, приёмка состава и связи правил с главами."
       },
       "tags": [],
       "evidence": [
         "raw/romanian/tipicul",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "menaion",
@@ -1196,16 +1199,17 @@
       ],
       "quality": {
         "percent": null,
-        "label": "27 HTML с киноварью; полнота привязок не проверена"
+        "label": "27 HTML с киноварью: индекс и помесячные части, представлены 12 месяцев. Границы частей, полноту дат и книжные привязки нужно принимать помесячно."
       },
       "tags": [],
       "evidence": [
         "raw/romanian/mineiele",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "sluzhebnik",
@@ -1222,16 +1226,17 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Royster: 55 HTML, 50 с киноварью; отдельный разбор не сделан"
+        "label": "Royster: 55 HTML, все 29 целей оглавления на месте; в 50 файлах явная киноварь. Нужны книжный слой и отдельный разбор/связи этого источника."
       },
       "tags": [],
       "evidence": [
         "raw/ponomar/files/www.ponomar.net/data/royster",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "chasoslov",
@@ -1417,16 +1422,17 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Старообрядческий источник; 27 глав, киноварь"
+        "label": "SamStar: все 27/27 глав Markdown на месте, киноварь присутствует. Дополнительное старообрядческое издание; библиография и связи ещё не приняты."
       },
       "tags": [],
       "evidence": [
         "raw/cu-md-oldrite",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16",
+      "updated_at": "2026-11-17",
       "edition": "Дополнительный источник"
     },
     {
@@ -1444,7 +1450,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "28 глав; нужна отдельная сверка"
+        "label": "Все 28/28 глав Markdown на месте, во всех есть маркеры киновари; нужны приёмка состава, библиография и книжные связи."
       },
       "tags": [
         "Старомосковский извод"
@@ -1453,9 +1459,10 @@
         "raw/cu-md-oldrite",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16",
+      "updated_at": "2026-11-17",
       "edition": "Псалтирь · SamStar"
     },
     {
@@ -1473,16 +1480,17 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Старообрядческий источник: 48 глав, киноварь"
+        "label": "Все 48/48 глав Markdown на месте, киноварь присутствует. Обнаружено расхождение даты в манифесте с заголовком текста; календарные подписи и библиография требуют выверки."
       },
       "tags": [],
       "evidence": [
         "raw/cu-md-oldrite",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "chasoslov",
@@ -1652,7 +1660,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "48 глав; нужна отдельная сверка"
+        "label": "Все 48/48 глав Markdown на месте, во всех есть маркеры киновари; самостоятельный источник, нужны отдельные приёмка состава и библиография."
       },
       "tags": [
         "Старомосковский извод"
@@ -1661,9 +1669,10 @@
         "raw/cu-md-oldrite",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/after-triodia-20261117/source-audit.json"
       ],
-      "updated_at": "2026-11-16",
+      "updated_at": "2026-11-17",
       "edition": "Псалтирь · Уставщик"
     },
     {
