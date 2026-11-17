@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import Database from 'better-sqlite3';
-import { loadBody, rules } from './native';
+import { loadBody, rules, fileSha256 } from './native';
 import { sha } from './core';
 import { legacyNativeId, legacyPublicIds } from './legacy';
 test('old raw revision only reads through an explicit current-dataset bridge and still verifies exact bytes', async () => {
@@ -25,4 +25,11 @@ test('publishing a scoped pilot does not activate global legacy numeric IDs', as
     const db: any = { collection(name: string) { assert.equal(name, 'readerPilots'); return { async findOne() { return { activeRelease: 'new', legacyRegistryActive: false }; } }; } };
     assert.equal(await legacyNativeId(132, db), 132);
     assert.deepEqual([...await legacyPublicIds([132, 77050], db)], [[132, 132], [77050, 77050]]);
+});
+
+test('native artifact SHA256 streams multiple chunks without changing dataset identity', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'reader-sha-')); try {
+        const bytes = Buffer.from('Сло́во\u0000'.repeat(220000) + 'end'); const path = join(dir, 'native.db'); writeFileSync(path, bytes);
+        assert.equal(fileSha256(path), sha(bytes));
+    } finally { rmSync(dir, { recursive: true, force: true }); }
 });

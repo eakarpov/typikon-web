@@ -1,12 +1,17 @@
 import Database from 'better-sqlite3';
-import { readFileSync, statSync } from 'node:fs';
+import { openSync, readSync, closeSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { ObjectId, type Db } from 'mongodb';
 import { fail, sha, revision, nativeKey, type Obj } from './core';
 
+export function fileSha256(path: string) {
+    const fd = openSync(path, 'r'), hash = createHash('sha256'), buffer = Buffer.allocUnsafe(1048576);
+    try { for (;;) { const n = readSync(fd, buffer, 0, buffer.length, null); if (!n) break; hash.update(buffer.subarray(0, n)); } return hash.digest('hex'); } finally { closeSync(fd); }
+}
 let opened: { stamp: string, db: Database.Database, datasetRevision: string } | undefined;
 export function rules() {
     const path = process.env.RULES_DB; if (!path) fail('corpus_unavailable', 503, 'Не задан певческий корпус.');
-    try { const st = statSync(path!); const stamp = path + ':' + st.ino + ':' + st.size + ':' + st.mtimeMs; if (opened?.stamp !== stamp) { opened?.db.close(); const db = new Database(path!, { readonly: true, fileMustExist: true }); opened = { stamp, db, datasetRevision: revision('ds1', { profile: 'dataset-r1', artifacts: [{ name: 'rules.db', sha256: sha(readFileSync(path!)) }] }) }; } return opened!; } catch (error) { if (error instanceof Error && 'code' in error && String((error as any).code).startsWith('reader')) throw error; fail('corpus_unavailable', 503, 'Певческий корпус недоступен.'); }
+    try { const st = statSync(path!); const stamp = path + ':' + st.ino + ':' + st.size + ':' + st.mtimeMs; if (opened?.stamp !== stamp) { opened?.db.close(); const db = new Database(path!, { readonly: true, fileMustExist: true }); opened = { stamp, db, datasetRevision: revision('ds1', { profile: 'dataset-r1', artifacts: [{ name: 'rules.db', sha256: fileSha256(path!) }] }) }; } return opened!; } catch (error) { if (error instanceof Error && 'code' in error && String((error as any).code).startsWith('reader')) throw error; fail('corpus_unavailable', 503, 'Певческий корпус недоступен.'); }
 }
 const SQL = `SELECT ci.*,g.slot_key AS group_slot,c.slot_key AS canon_slot,COALESCE(g.source_book,a.source_book,e.source_book) AS source_book,
  COALESCE(g.memory_id,c.memory_id) AS memory_id FROM content_items ci
