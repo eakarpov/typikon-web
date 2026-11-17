@@ -52,7 +52,7 @@ export class CorpusIndexService {
             const context = await this.context(index);
             const visibleBodies = new Set([...context.placements.values()].map(p => p.bodyKey));
             const sourceIds = new Set([...context.placements.values()].flatMap(p => p.aliases.map((a: Obj) => a.address.sourceId)));
-            return { available: true, pilotId: PILOT, indexRevision: index.manifest.indexRevision, corpusRelease: index.manifest.corpusRelease, dictionaryVersion: index.manifest.dictionaryVersion, profiles: index.manifest.profileFingerprints, limits: INDEX_LIMITS, matchKinds: ['folded', 'abbreviation_skeleton', 'lexeme_verified'], verifiedLexemeCoverage: 'partial', profileLimitations: ['Source/unicode profiles supported; legacy letterfold-r1 changes PUA token identity and is excluded from the index. Reader profiles remain available.'], coverage: { navigationMaterials: sourceIds.size, placements: context.placements.size, bodies: visibleBodies.size }, publicRead: process.env.CS_READER_PUBLIC_PILOT === '1', ratePolicy: { id: 'reader-public-pilot-r1', aggregatePerMinute: 120, searchAndOccurrencesPerMinute: 30, lookupPerMinute: 30, storage: 'single-process' }, sourceRights: 'per-source; no automatic license grant', bulkExport: false };
+            return { available: true, pilotId: PILOT, indexRevision: index.manifest.indexRevision, corpusRelease: index.manifest.corpusRelease, dictionaryVersion: index.manifest.dictionaryVersion, profiles: index.manifest.profileFingerprints, limits: INDEX_LIMITS, matchKinds: ['folded', 'abbreviation_skeleton', 'lexeme_verified'], verifiedLexemeCoverage: 'partial', profileLimitations: ['Source/unicode profiles supported; letterfold token identity differs on pilot PUA and is excluded from the index.'], coverage: { navigationMaterials: sourceIds.size, placements: context.placements.size, bodies: visibleBodies.size }, publicRead: process.env.CS_READER_PUBLIC_PILOT === '1', ratePolicy: { id: 'reader-public-pilot-r1', aggregatePerMinute: 120, searchAndOccurrencesPerMinute: 30, lookupPerMinute: 30, storage: 'single-process' }, sourceRights: 'per-source; no automatic license grant', bulkExport: false };
         } finally { index.db.close(); }
     }
     async search(query: Obj) { return this.query(query, false); }
@@ -61,7 +61,7 @@ export class CorpusIndexService {
         const allowed = ['pilotId', 'indexRevision', 'profileSetId', 'limit', 'cursor', ...(lemma ? ['lexemeId', 'dictionaryVersion'] : ['mode', 'q'])];
         if (Object.keys(query).some(k => !allowed.includes(k))) fail('invalid_request', 400, 'Неизвестный параметр.');
         if (query.pilotId !== PILOT) fail('not_found', 404, 'Неизвестный пилот.');
-        const ps = profile(query.profileSetId); if (!INDEX_PROFILE_IDS.includes(ps.id)) fail('unsupported_profile', 422, 'Индекс поддерживает source-r1 и unicode-r1; letterfold-r1 меняет границы PUA-токенов.', { supported: INDEX_PROFILE_IDS }); const size = limit(query.limit, 20, 50);
+        const ps = profile(query.profileSetId); if (!INDEX_PROFILE_IDS.includes(ps.id)) fail('unsupported_profile', 422, 'Профиль не поддержан этой публикацией индекса.', { supported: INDEX_PROFILE_IDS }); const size = limit(query.limit, 20, 50);
         if (query.cursor && !query.indexRevision) fail('cursor_mismatch', 409, 'Для продолжения закрепите индекс.');
         let cursor: Obj | undefined;
         if (query.cursor) {

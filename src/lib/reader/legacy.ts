@@ -47,13 +47,13 @@ export async function prepareLegacy(db: Db, apply: boolean, progress: (message: 
 }
 export async function legacyDb() { const { default: client } = await import('@/lib/mongodb'); return (await client).db('typikon'); }
 export async function legacyNativeId(publicId: number, db?: Db): Promise<number> {
-    const store = db ?? await legacyDb(); const enabled = await store.collection('readerPilots').findOne({ _id: 'cs-mvp-pilot-01' as any }); if (!enabled?.activeRelease) return publicId;
+    const store = db ?? await legacyDb(); const enabled = await store.collection('readerPilots').findOne({ _id: 'cs-mvp-pilot-01' as any }); if (!enabled?.activeRelease || enabled.legacyRegistryActive === false) return publicId;
     const ds = rules().datasetRevision; const binding = await store.collection<any>('readerLegacyBindings').findOne({ _id: ds + ':' + publicId }); if (binding) return binding.nativeId;
     const known = await store.collection<any>('readerLegacyIdentities').findOne({ _id: String(publicId) });
     if (known) fail('ambiguous', 409, 'Прежний адрес не сопоставлен с текущей сборкой.'); fail('not_found', 404, 'Публичный ID не найден.');
 }
 export async function legacyPublicIds(nativeIds: number[], db?: Db): Promise<Map<number, number>> {
-    const store = db ?? await legacyDb(); const enabled = await store.collection('readerPilots').findOne({ _id: 'cs-mvp-pilot-01' as any }); if (!enabled?.activeRelease) return new Map(nativeIds.map(id => [id, id]));
+    const store = db ?? await legacyDb(); const enabled = await store.collection('readerPilots').findOne({ _id: 'cs-mvp-pilot-01' as any }); if (!enabled?.activeRelease || enabled.legacyRegistryActive === false) return new Map(nativeIds.map(id => [id, id]));
     const rows = await store.collection<any>('readerLegacyBindings').find({ datasetRevision: rules().datasetRevision, nativeId: { $in: nativeIds } }).toArray(); const result = new Map<number, number>(rows.map(r => [r.nativeId, r.publicId])); if (nativeIds.some(id => !result.has(id))) fail('corpus_unavailable', 503, 'Для сборки не подготовлены публичные адреса.'); return result;
 }
 export async function publicChant(row: Obj): Promise<Obj> { const ids = [row.id, ...(row.textItemId == null ? [] : [row.textItemId])]; const map = await legacyPublicIds(ids); return { ...row, id: map.get(row.id), textItemId: row.textItemId == null ? null : map.get(row.textItemId) }; }

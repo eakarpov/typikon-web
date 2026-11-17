@@ -12,7 +12,7 @@ export const INDEX_LIMITS = { pageDefault: 20, pageMax: 50, queryMaxUtf16: 200, 
 // Any code change affecting tokenization, keys, matching or deduplication must change this version.
 export const INDEX_RULES = { format: 'cs-index-sqlite/1', projection: 'reader-projection-r1', query: 'whole-token-sequence-r1', deduplication: 'occurrence-body-ordered-token-r1', candidate: 'exact-dictionary-search-top5-unreviewed-r1' };
 export const profileFingerprints = () => profileSets.filter(p => INDEX_PROFILE_IDS.includes(p.id)).map(p => ({ id: p.id, fingerprint: revision('pf1', { profile: p, rules: INDEX_RULES }) }));
-export const INDEX_PROFILE_IDS = ['cs-pilot-source-r1', 'cs-pilot-unicode-r1'];
+export const INDEX_PROFILE_IDS = profileSets.filter(p => !p.id.includes('letterfold')).map(p => p.id);
 export const lexical = (t: Obj) => ['word', 'numberCandidate', 'unresolved'].includes(t.type);
 export const bodyKey = (b: Obj) => b.bodyId + ':' + b.bodyRevision;
 export function hitId(occurrenceId: string, body: Obj, tokenIds: string[]) { return revision('hit1', { occurrenceId, bodyId: body.bodyId, bodyRevision: body.bodyRevision, tokenIds }); }
@@ -58,7 +58,7 @@ export async function buildIndex(reader: ReaderService, options: BuildOptions) {
           CREATE INDEX accepted_lexeme ON accepted_links(lexeme_id,occurrence_id,position);`);
         const bodies = new Map<string, Obj>(), placements = new Map<string, Obj>();
         if (old) verifyIndex(old);
-        const reuseCompatible = old && old.manifest.profileFingerprints.find((p: Obj) => p.id === 'cs-pilot-source-r1')?.fingerprint === profileFingerprints().find(p => p.id === 'cs-pilot-source-r1')?.fingerprint;
+        const reuseCompatible = old && canonical(old.manifest.profileFingerprints) === canonical(profileFingerprints());
         const insertBody = db.prepare('INSERT INTO bodies VALUES(?,?,?,?,?)'), insertToken = db.prepare('INSERT INTO tokens VALUES(?,?,?,?)'), insertKey = db.prepare('INSERT INTO search_keys VALUES(?,?,?,?)');
         for (const e of release.entries) {
             const address = { version: 2, sourceId: e.sourceId, sourceRevision: e.sourceRevision, passportRevision: e.passportRevision };

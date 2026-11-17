@@ -5,7 +5,11 @@ import { normalizeChurchSlavonic } from '@/utils/churchSlavonic';
 import { fail, revision, sha, canonical, utf16, LIMITS, type Obj } from './core';
 
 const glyphs: Record<string, string> = { 'ᲀ': 'в', 'ᲁ': 'д', 'ᲂ': 'о', 'ᲃ': 'с', 'ᲄ': 'т', 'ᲅ': 'т', 'ᲆ': 'ъ', 'ᲇ': 'ѣ', 'ᲈ': 'ꙋ' };
-export const profileSets = ['source', 'unicode', 'letterfold'].map(name => ({ id: 'cs-pilot-' + name + '-r1', profiles: { markup: 'markup-r1', display: name === 'source' ? 'display-source-r1' : name === 'unicode' ? 'display-unicode-r1' : 'display-letterfold-r1', tokenizer: 'token-cs-r1', lookup: 'lookup-cs-r1', search: 'search-cs-r1' }, versions: { unicode: process.versions.unicode, segmenter: 'cs-grapheme-r1/unicode' + process.versions.unicode, puaTableSha256: sha(canonical(PUA_TABLE)), letterTableSha256: sha(canonical(Object.entries(glyphs))) } }));
+export function profilesForUnicode(unicode: string) {
+    const generation = unicode === '16.0' ? 'r1' : unicode === '17.0' ? 'r2' : fail('unsupported_runtime', 503, 'Нужен закреплённый Unicode 16 или 17.');
+    return ['source', 'unicode', 'letterfold'].map(name => ({ id: 'cs-pilot-' + name + '-' + generation, profiles: { markup: 'markup-r1', display: name === 'source' ? 'display-source-r1' : name === 'unicode' ? 'display-unicode-r1' : 'display-letterfold-r1', tokenizer: 'token-cs-r1', lookup: 'lookup-cs-r1', search: 'search-cs-r1' }, versions: { unicode: unicode, segmenter: 'cs-grapheme-r1/unicode' + unicode, puaTableSha256: sha(canonical(PUA_TABLE)), letterTableSha256: sha(canonical(Object.entries(glyphs))) } }));
+}
+export const profileSets = profilesForUnicode(process.versions.unicode ?? '');
 export function profile(id: string) { return profileSets.find(x => x.id === id) ?? fail('unsupported_profile', 422, 'Профиль не поддерживается.', { supported: profileSets.map(x => x.id) }); }
 export function foldKnown(text: string, letters: boolean) { return text.replace(PUA_PATTERN, ch => { const e = PUA_BY_CODE[ch.codePointAt(0)!]; return e?.to && (letters || e.kind !== 'letter') ? e.to : ch; }); }
 export function unknownGlyph(text: string) { return [...text].some(ch => { const n = ch.codePointAt(0)!; return /\p{Co}/u.test(ch) && !PUA_BY_CODE[n]?.to; }); }

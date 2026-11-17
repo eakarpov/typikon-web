@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { canonical, sha, validate, envelope, ReaderError } from './core';
-import { project, lookupKey, searchKey } from './projection';
+import { project, lookupKey, searchKey, profileSets, profilesForUnicode, profile } from './projection';
 import { readerDeprecationHeaders } from './deprecation';
 import { continuity } from './legacy';
 const body = (raw: string) => ({ raw, bodyId: 'bdy_00000000000040008000000000000001', bodyRevision: 'br1_' + sha(raw) });
-const source = 'cs-pilot-source-r1', unicode = 'cs-pilot-unicode-r1';
+const source = profileSets[0].id, unicode = profileSets[1].id;
 test('canonical hashing rejects invalid UTF16, floats and preserves original string', () => {
     assert.equal(canonical({ z: 'ѣ́', a: 1 }), '{"a":1,"z":"ѣ́"}');
     assert.throws(() => canonical('\ud800')); assert.throws(() => canonical(1.1)); assert.throws(() => canonical({ a: undefined }));
@@ -46,4 +46,13 @@ test('pinned Mongo bodies fail closed after edit or concealment', async () => {
     assert.equal(await loadBody(db, binding), 'старый текст'); text.content = 'новый текст';
     await assert.rejects(loadBody(db, binding), (e: any) => e.code === 'revision_unavailable' && e.status === 410);
     text.public = false; await assert.rejects(loadBody(db, binding), (e: any) => e.code === 'not_found' && e.status === 404);
+});
+
+test('Unicode17 uses new profile IDs while Unicode16 profile definitions remain frozen', () => {
+    const old = profilesForUnicode('16.0'), next = profilesForUnicode('17.0');
+    assert.equal(old[0].id, 'cs-pilot-source-r1'); assert.equal(old[0].versions.unicode, '16.0');
+    assert.equal(next[0].id, 'cs-pilot-source-r2'); assert.equal(next[0].versions.unicode, '17.0');
+    assert.equal(old[0].profiles.tokenizer, next[0].profiles.tokenizer);
+    assert.notEqual(canonical(old[0]), canonical(next[0]));
+    if (process.versions.unicode === '17.0') assert.throws(() => profile(old[0].id), (e: any) => e.code === 'unsupported_profile');
 });

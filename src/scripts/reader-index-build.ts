@@ -8,6 +8,7 @@ import { readerDb } from '@/lib/reader/registry';
 import { buildIndex, type Review } from '@/lib/reader/index/store';
 const arg = (key: string) => { const i = process.argv.indexOf(key); return i < 0 ? undefined : process.argv[i + 1]; };
 async function main() {
+    if (process.versions.unicode !== '17.0') throw Error('Current corpus publication requires pinned .nvmrc / Unicode17; use reader-unicode-baseline for historical Unicode16 comparison.');
     // Local builder reads existing identity registry. It never calls publishPilot or mutates Mongo.
     const uri = new URL(process.env.MONGODB_URI ?? '');
     if (!['localhost', '127.0.0.1', '[::1]'].includes(uri.hostname)) throw Error('Local builder only; use an audited release for remote publication.');

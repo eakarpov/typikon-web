@@ -45,9 +45,15 @@ export async function loadBody(db: Db, binding: Obj): Promise<string> {
         if (!text || text.public === false || book?.public === false || !['ready', 'correcting', 'texted'].includes(text.readiness)) fail('not_found', 404, 'Источник закрыт.');
         raw = binding.footnoteIndex === undefined ? text.content : text.footnotes?.[binding.footnoteIndex];
     } else {
-        const current = rules(); if (current.datasetRevision !== binding.datasetRevision) fail('revision_unavailable', 410, 'Для этой ревизии нужна прежняя сборка корпуса.');
-        const table = binding.nativeRef.namespace === 'rules.fixed_texts' ? 'fixed_texts' : 'content_items'; const key = table === 'fixed_texts' ? 'text_id' : 'item_id';
-        const row: any = current.db.prepare(`SELECT text FROM ${table} WHERE ${key}=?`).get(binding.nativeRef.id); raw = row?.text;
+        const current = rules(); let ref = binding.nativeRef;
+        if (current.datasetRevision !== binding.datasetRevision) {
+            // Only an audited explicit bridge may reuse unchanged bytes from a newer native artifact.
+            const bridge = await db.collection<any>('readerBodyRebindings').findOne({ _id: binding._id + ':' + current.datasetRevision, bodyId: binding.bodyId, bodyRevision: binding.bodyRevision, fromDatasetRevision: binding.datasetRevision, datasetRevision: current.datasetRevision });
+            if (!bridge || bridge.nativeRef.namespace !== binding.nativeRef.namespace) fail('revision_unavailable', 410, 'Для этой ревизии нужна прежняя сборка или проверенная привязка.');
+            ref = bridge.nativeRef;
+        }
+        const table = ref.namespace === 'rules.fixed_texts' ? 'fixed_texts' : 'content_items'; const key = table === 'fixed_texts' ? 'text_id' : 'item_id';
+        const row: any = current.db.prepare(`SELECT text FROM ${table} WHERE ${key}=?`).get(ref.id); raw = row?.text;
     }
     if (typeof raw !== 'string' || 'br1_' + sha(raw) !== binding.bodyRevision) fail('revision_unavailable', 410, 'Прежнее тело изменено или недоступно.'); return raw!;
 }

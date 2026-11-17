@@ -7,7 +7,15 @@ import { profileSets, project } from './projection';
 import { freezePassport } from './passport';
 import { checkPassport } from './acceptance';
 
-export async function readerDb() { const { default: client } = await import('@/lib/mongodb'); return (await client).db('typikon'); }
+export async function readerDb() {
+    const { default: client } = await import('@/lib/mongodb'); const connection = await client, native = connection.db('typikon');
+    const name = process.env.CS_READER_REGISTRY_DB;
+    if (!name) return native;
+    if (!/^typikon_reader_[a-z0-9_]+$/.test(name)) fail('corpus_unavailable', 503, 'Неверное имя изолированного reader-реестра.');
+    const registry = connection.db(name);
+    // Acceptance namespaces isolate sidecars; canonical texts/books always remain in typikon.
+    return new Proxy(native, { get(target, key) { if (key === 'collection') return (collection: string, ...args: any[]) => (collection.startsWith('reader') ? registry : native).collection(collection, ...args); const value = Reflect.get(target, key); return typeof value === 'function' ? value.bind(target) : value; } });
+}
 export async function identity(db: Db, key: string, prefix: string) { const c = db.collection<any>('readerIdentities'); const old = await c.findOne({ _id: key }); if (old) return old.id; try { const id = newId(prefix); await c.insertOne({ _id: key, id, createdAt: new Date() }); return id; } catch (error) { if ((error as any).code !== 11000) throw error; return (await c.findOne({ _id: key }))!.id; } }
 async function immutable(db: Db, collection: string, id: string, data: Obj) {if(collection==='readerPassports'){const previous=await db.collection<any>(collection).findOne({_id:id});if(previous&&canonical(previous.data)!==canonical(data.data))fail('map_revision_mismatch',409,'Паспорт изменён без новых ревизий наблюдений.');} const c = db.collection<any>(collection); await c.updateOne({ _id: id }, { $setOnInsert: { _id: id, ...data } }, { upsert: true }); }
 export function passportData(key: string, sourceId: string, evidence: Obj = config.evidence): Obj {

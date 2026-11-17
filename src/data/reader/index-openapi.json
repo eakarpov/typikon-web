@@ -94,7 +94,9 @@
               "type": "string",
               "enum": [
                 "cs-pilot-source-r1",
-                "cs-pilot-unicode-r1"
+                "cs-pilot-unicode-r1",
+                "cs-pilot-source-r2",
+                "cs-pilot-unicode-r2"
               ]
             }
           },
@@ -233,7 +235,9 @@
               "type": "string",
               "enum": [
                 "cs-pilot-source-r1",
-                "cs-pilot-unicode-r1"
+                "cs-pilot-unicode-r1",
+                "cs-pilot-source-r2",
+                "cs-pilot-unicode-r2"
               ]
             }
           },
