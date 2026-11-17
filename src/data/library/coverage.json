@@ -948,28 +948,34 @@
     {
       "book": "lenten-triodion",
       "language": "cu",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
         "pending",
         "partial",
-        "pending",
+        "done",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "80 HTML, 79 с киноварью; фрагменты в БД"
+        "label": "Опубликованы 80 сохранённых электронных разделов: 24414 блоков, 19807 красных прогонов; все 6698 текстовых записей и 3859 рубрик получили точные исходные абзацы (10597 связей). Включены Неделя сыропустная, Страстная седмица и седальны Октоиха. Единый печатный прототип, сплошная выверка и межъязыковая сверка не подтверждены; семантический разбор эвристический."
       },
       "tags": [],
       "evidence": [
         "raw/triod-postnaya",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "scripts/build_library_triod_cs.py",
+        "spec/library-triodia.md",
+        "reports/library/slavonic-lenten-triodion/build.json",
+        "reports/library/slavonic-lenten-triodion/verification.json",
+        "reports/deploy-lenten-triodion-cs-20261117/published.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17",
+      "alias": "lenten-triodion-cs"
     },
     {
       "book": "pentecostarion",
