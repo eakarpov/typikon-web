@@ -634,6 +634,10 @@
     {
       "id": "western-rite",
       "label": "Книги западного обряда"
+    },
+    {
+      "id": "margarit",
+      "label": "Маргарит"
     }
   ],
   "cells": [
@@ -742,9 +746,10 @@
       ],
       "evidence": [
         "rules/library/catalog.json",
-        "reports/library/post-romanian-wave/source-audit.json"
+        "reports/library/post-romanian-wave/source-audit.json",
+        "spec/library-corpus-pilot.md"
       ],
-      "updated_at": "2026-11-16",
+      "updated_at": "2026-11-17",
       "alias": "octoechos-cs-gr",
       "edition": "Церковнославянский (синодальный извод)"
     },
@@ -1029,9 +1034,10 @@
         "raw/menaion",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "spec/library-corpus-pilot.md"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "typikon",
@@ -2179,19 +2185,20 @@
         "done",
         "done",
         "pending",
-        "pending",
-        "pending",
+        "partial",
+        "partial",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "Сохранён корпус; язык, состав издания и киноварь требуют аудита"
+        "label": "В корпусном пилоте подключён акафист Николаю: 25 строф, без молитв; Unicode 17, без новой копии текста. Полнота Акафистника, сплошная выверка и межъязыковая сверка не подтверждены."
       },
       "tags": [],
       "evidence": [
-        "raw/akafisty"
+        "raw/akafisty",
+        "spec/library-corpus-pilot.md"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17"
     },
     {
       "book": "prologue",
@@ -2669,6 +2676,32 @@
         "reports/library/greek-horologion/remaining-pages-audit.json"
       ],
       "updated_at": "2026-11-17"
+    },
+    {
+      "book": "margarit",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "partial",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Корпусный пилот: только первая беседа «О непостижимем» из существующей библиотеки; исходные титла и PUA сохранены. Полный сборник, отдельная атрибуция главы, переводчик и сплошная выверка не подтверждены."
+      },
+      "tags": [
+        "Пилот: одна глава"
+      ],
+      "evidence": [
+        "spec/library-corpus-pilot.md"
+      ],
+      "updated_at": "2026-11-17",
+      "edition": "Маргарит · первая беседа о непостижимем"
     }
   ],
   "references": [
