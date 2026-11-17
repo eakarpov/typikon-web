@@ -1088,28 +1088,34 @@
     {
       "book": "lenten-triodion",
       "language": "ro",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
         "pending",
-        "pending",
-        "pending",
+        "partial",
+        "done",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "6 HTML с киноварью; нового разбора нет"
+        "label": "Опубликована электронная редакция по титулу 1946: шесть частей, 13361 блок, 13164 красных прогона, два орнамента; все 13072 непустых фрагмента связаны с БД. Второй язык Постной Триоди. Разметка отдельных песнопений и календарных соответствий, сплошная выверка и содержательная межъязыковая сверка ещё не завершены."
       },
       "tags": [],
       "evidence": [
         "raw/romanian/triod",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "scripts/build_library_romanian_triod.py",
+        "spec/library-triodia.md",
+        "reports/library/romanian-lenten-triodion/build.json",
+        "reports/library/romanian-lenten-triodion/verification.json",
+        "reports/deploy-lenten-triodion-ro-20261117/published.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17",
+      "alias": "lenten-triodion-ro"
     },
     {
       "book": "pentecostarion",
