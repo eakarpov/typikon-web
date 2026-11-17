@@ -1,6 +1,6 @@
 /** Full readers use the portal layout; corpus rendering stays in the reading service. */
 export const FULL_BOOK_ALIASES = new Set([
-    "chasoslov-cs-gr", "chasoslov-fr", "chasoslov-grc", "octoechos-ro", "common-menaion-ka", "octoechos-cs-gr", "octoechos-ka", "octoechos-et", "sluzhebnik-cs", "common-menaion-cs", "octoechos-ja", "octoechos-fr", "octoechos-cs-oldrite", "octoechos-grc",
+    "chasoslov-cs-gr", "chasoslov-fr", "chasoslov-grc", "pentecostarion-cs", "pentecostarion-ro", "lenten-triodion-cs", "lenten-triodion-ro", "octoechos-ro", "common-menaion-ka", "octoechos-cs-gr", "octoechos-ka", "octoechos-et", "sluzhebnik-cs", "common-menaion-cs", "octoechos-ja", "octoechos-fr", "octoechos-cs-oldrite", "octoechos-grc",
 ]);
 export type BookSearch = Record<string, string | string[] | undefined>;
 export function fullBookQuery(search: BookSearch = {}): string {

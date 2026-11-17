@@ -974,28 +974,32 @@
     {
       "book": "pentecostarion",
       "language": "cu",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
         "pending",
-        "partial",
-        "pending",
+        "done",
+        "done",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "58 HTML с киноварью; фрагменты в БД"
+        "label": "Опубликована электронная редакция: 58 разделов, 7069 блоков, 4990 красных прогонов. Все 3386 текстов и 1138 рубрик связаны с исходными абзацами (4524 перехода). Печатный прототип и сплошная выверка не подтверждены; межъязыковая пара с румынским Пентикостарионом готовится."
       },
       "tags": [],
       "evidence": [
         "raw/triod-tsvetnaya",
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json"
+        "reports/library/next-wave/source-audit.json",
+        "spec/library-triodia.md",
+        "reports/library/slavonic-pentecostarion/verification.json",
+        "reports/deploy-pentecostarion-cs-20261117/published.json"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-17",
+      "alias": "pentecostarion-cs"
     },
     {
       "book": "menaion",
