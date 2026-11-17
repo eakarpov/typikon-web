@@ -40,25 +40,13 @@ mkdir -p "$DEPLOY_ROOT/releases"
 exec 9>"$DEPLOY_ROOT/deploy.lock"
 flock -n 9 || fail 'Уже идёт другая выкладка или откат'
 
-# Keep only three complete release directories. current and previous always win over age.
+# Keep one live release; S3 recovery/retention runs after this deploy lock closes.
 prune_releases() {
-    "$NODE_BIN" - "$DEPLOY_ROOT" <<'PRUNE_RELEASES'
-const fs = require('node:fs');
-const path = require('node:path');
-const root = process.argv[2];
-const base = fs.realpathSync(path.join(root, 'releases'));
-const refs = ['current', 'previous'].map(name => fs.realpathSync(path.join(root, name)));
-const dirs = fs.readdirSync(base, {withFileTypes:true}).filter(d => d.isDirectory()).map(d => path.join(base,d.name)).sort().reverse();
-const keep = new Set(refs.filter(dir => path.dirname(dir) === base));
-for (const dir of dirs) if (keep.size < 3 && fs.existsSync(path.join(dir,'.next','BUILD_ID'))) keep.add(dir);
-for (const dir of dirs) {
-    if (keep.has(dir)) continue;
-    if (refs.includes(dir) || path.dirname(fs.realpathSync(dir)) !== base || fs.lstatSync(dir).isSymbolicLink()) throw Error('Unsafe release path: '+dir);
-    fs.rmSync(dir,{recursive:true});
-    console.log('Удалён старый релиз: '+path.basename(dir));
-}
-console.log('Хранение релизов: '+dirs.filter(dir=>keep.has(dir)).length+' (лимит 3)');
-PRUNE_RELEASES
+    if [[ "$DEPLOY_ROOT" == /var/www/typikon.su/typikon-web-releases ]] && sudo_run test -f /home/admin/typikon_release_recovery.py; then
+        sudo_run python3 /home/admin/typikon_release_recovery.py schedule
+    else
+        echo 'Проверяемая ротация S3 не настроена: локальные копии сохранены'
+    fi
 }
 
 # rename заменяет саму ссылку, а не каталог за ней. Атомарно на одной ФС.
@@ -161,6 +149,7 @@ old_current=$(readlink "$DEPLOY_ROOT/current")
 if [[ "$DEPLOY_ACTION" == rollback ]]; then
     [[ -L "$DEPLOY_ROOT/previous" ]] || fail 'Предыдущего релиза ещё нет'
     candidate=$(readlink "$DEPLOY_ROOT/previous")
+    [[ "$candidate" != "$(readlink "$DEPLOY_ROOT/current")" ]] || fail 'Предыдущая локальная версия удалена после S3-проверки; восстановите проверенную точку из S3'
     [[ "$candidate" == "$REMOTE_ROOT" || "$candidate" == "$DEPLOY_ROOT"/releases/* ]] || fail 'Неверный путь previous'
     [[ -f "$candidate/.next/BUILD_ID" && -f "$candidate/.env.production" ]] || fail 'Предыдущий релиз неполон'
 else
@@ -176,9 +165,18 @@ else
     mkdir "$candidate"
     git -C "$REMOTE_ROOT" archive "$commit" | tar -x -C "$candidate"
     cp "$DEPLOY_INPUT/.env.production" "$candidate/.env.production"
-    cp "$DEPLOY_INPUT/nobles.db" "$candidate/nobles.db"
+    if [[ "$DEPLOY_ROOT" == /var/www/typikon.su/typikon-web-releases ]]; then
+        shared_sqlite="${REMOTE_ROOT%/*}/shared/nobles.db"
+        mkdir -p "${shared_sqlite%/*}"
+        # Existing live data is changed only by an explicit data update.
+        [[ -f "$shared_sqlite" ]] || cp "$DEPLOY_INPUT/nobles.db" "$shared_sqlite"
+        ln -s "$shared_sqlite" "$candidate/nobles.db"
+    else
+        cp "$DEPLOY_INPUT/nobles.db" "$candidate/nobles.db"
+        shared_sqlite="$candidate/nobles.db"
+    fi
     # Приоритет последней строки dotenv: каждый релиз использует собственный снимок.
-    printf '\nSQLITE_DB=%s/nobles.db\n' "$candidate" >> "$candidate/.env.production"
+    printf '\nSQLITE_DB=%s\n' "$shared_sqlite" >> "$candidate/.env.production"
     printf '%s\n' "$commit" > "$candidate/REVISION"
     (
         cd "$candidate"
@@ -224,4 +222,4 @@ link_to "$old_current" previous
 switching=0
 prune_releases
 echo "Активен: $candidate"
-echo 'Откат: npm run release:rollback (с той же --target)'
+echo 'Восстановление предыдущей версии: проверенная точка S3 и проверка восстановленного кандидата'
