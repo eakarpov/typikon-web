@@ -55,7 +55,7 @@ const SECTIONS: Section[] = [
     {
         cap: "content",
         title: "Состояние собрания",
-        links: [["/admin/health", "Здоровье собрания: что не доделано"]],
+        links: [["/admin/library-coverage", "Покрытие книг и языков"], ["/admin/health", "Здоровье собрания: что не доделано"]],
     },
     {
         cap: "content",

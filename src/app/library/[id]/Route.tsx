@@ -10,14 +10,18 @@ import {breadcrumbs, pageMetadata} from "@/lib/seo/metadata";
 import {bookDescription, contentSchema} from "@/lib/seo/content";
 import JsonLd from "@/app/components/JsonLd";
 
+import FullBook, { fullBookMetadata } from "@/app/library/FullBook";
+import { FULL_BOOK_ALIASES } from "@/lib/fullBooks";
+
 type Props = {
     params: { id: string }
     searchParams: Record<string, string | string[] | undefined>
 }
 
 export async function generateMetadata(
-    { params }: Props,
+    { params, searchParams }: Props,
 ): Promise<Metadata> {
+    if (FULL_BOOK_ALIASES.has(params.id)) return fullBookMetadata(params.id, searchParams);
     const [item, error] = await getSummary(params.id);
     if (error) throw error;
     if (!item) return { title: "Книга не найдена", robots: { index: false } };
@@ -29,6 +33,10 @@ export async function generateMetadata(
 }
 
 const Library = async ({ params: { id }, searchParams, idRoute = false }: Props & { idRoute?: boolean }) => {
+    if (FULL_BOOK_ALIASES.has(id)) {
+        if (idRoute) redirect(withSearch(`/library/${id}`, searchParams));
+        return <FullBook alias={id} searchParams={searchParams} />;
+    }
     // Оглавление издания Библии — по канону, и живёт оно в своём разделе.
     const [bibleCode] = await getBibleEditionCode(id);
     if (bibleCode) permanentRedirect(withSearch(`/bible?v=${bibleCode}`, searchParams));

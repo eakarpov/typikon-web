@@ -1,0 +1,2666 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-17",
+  "scope_note": "Рабочий расширяемый перечень языков православных общин, исторических переводов и направлений поиска. Наличие колонки не утверждает существования перевода каждой книги. Включены также языки древневосточных традиций для учёта источников; традиция и издание уточняются в ячейке. Изводы и графики учитываются внутри языка.",
+  "stages": [
+    {
+      "id": 1,
+      "label": "Текст найден"
+    },
+    {
+      "id": 2,
+      "label": "Текст забран локально в raw"
+    },
+    {
+      "id": 3,
+      "label": "Текст распознан"
+    },
+    {
+      "id": 4,
+      "label": "Текст выверен"
+    },
+    {
+      "id": 5,
+      "label": "Текст разложен на фрагменты в БД"
+    },
+    {
+      "id": 6,
+      "label": "Книга собрана и загружена"
+    },
+    {
+      "id": 7,
+      "label": "Текст сопоставлен с другими языками"
+    }
+  ],
+  "languages": [
+    {
+      "id": "cu",
+      "label": "Церковнославянский"
+    },
+    {
+      "id": "grc",
+      "label": "Греческий (богослужебный)"
+    },
+    {
+      "id": "ka",
+      "label": "Грузинский"
+    },
+    {
+      "id": "ro",
+      "label": "Румынский"
+    },
+    {
+      "id": "en",
+      "label": "Английский"
+    },
+    {
+      "id": "fr",
+      "label": "Французский"
+    },
+    {
+      "id": "et",
+      "label": "Эстонский"
+    },
+    {
+      "id": "ja",
+      "label": "Японский"
+    },
+    {
+      "id": "ar",
+      "label": "Арабский"
+    },
+    {
+      "id": "zh_wy",
+      "label": "Китайский (вэньянь)"
+    },
+    {
+      "id": "zh",
+      "label": "Китайский (современный)"
+    },
+    {
+      "id": "ru",
+      "label": "Русский"
+    },
+    {
+      "id": "uk",
+      "label": "Украинский"
+    },
+    {
+      "id": "be",
+      "label": "Белорусский"
+    },
+    {
+      "id": "bg",
+      "label": "Болгарский"
+    },
+    {
+      "id": "sr",
+      "label": "Сербский"
+    },
+    {
+      "id": "mk",
+      "label": "Македонский"
+    },
+    {
+      "id": "el",
+      "label": "Греческий (современный)"
+    },
+    {
+      "id": "sq",
+      "label": "Албанский"
+    },
+    {
+      "id": "fi",
+      "label": "Финский"
+    },
+    {
+      "id": "sv",
+      "label": "Шведский"
+    },
+    {
+      "id": "no",
+      "label": "Норвежский"
+    },
+    {
+      "id": "da",
+      "label": "Датский"
+    },
+    {
+      "id": "is",
+      "label": "Исландский"
+    },
+    {
+      "id": "de",
+      "label": "Немецкий"
+    },
+    {
+      "id": "nl",
+      "label": "Нидерландский"
+    },
+    {
+      "id": "it",
+      "label": "Итальянский"
+    },
+    {
+      "id": "es",
+      "label": "Испанский"
+    },
+    {
+      "id": "pt",
+      "label": "Португальский"
+    },
+    {
+      "id": "ca",
+      "label": "Каталанский"
+    },
+    {
+      "id": "gl",
+      "label": "Галисийский"
+    },
+    {
+      "id": "eu",
+      "label": "Баскский"
+    },
+    {
+      "id": "pl",
+      "label": "Польский"
+    },
+    {
+      "id": "cs",
+      "label": "Чешский"
+    },
+    {
+      "id": "sk",
+      "label": "Словацкий"
+    },
+    {
+      "id": "sl",
+      "label": "Словенский"
+    },
+    {
+      "id": "hr",
+      "label": "Хорватский"
+    },
+    {
+      "id": "bs",
+      "label": "Боснийский"
+    },
+    {
+      "id": "hu",
+      "label": "Венгерский"
+    },
+    {
+      "id": "lt",
+      "label": "Литовский"
+    },
+    {
+      "id": "lv",
+      "label": "Латышский"
+    },
+    {
+      "id": "ga",
+      "label": "Ирландский"
+    },
+    {
+      "id": "cy",
+      "label": "Валлийский"
+    },
+    {
+      "id": "gd",
+      "label": "Шотландский гэльский"
+    },
+    {
+      "id": "la",
+      "label": "Латинский"
+    },
+    {
+      "id": "tr",
+      "label": "Турецкий"
+    },
+    {
+      "id": "gag",
+      "label": "Гагаузский"
+    },
+    {
+      "id": "az",
+      "label": "Азербайджанский"
+    },
+    {
+      "id": "hy",
+      "label": "Армянский"
+    },
+    {
+      "id": "syc",
+      "label": "Сирийский (классический)"
+    },
+    {
+      "id": "cop",
+      "label": "Коптский"
+    },
+    {
+      "id": "gez",
+      "label": "Геэз"
+    },
+    {
+      "id": "am",
+      "label": "Амхарский"
+    },
+    {
+      "id": "ti",
+      "label": "Тигринья"
+    },
+    {
+      "id": "he",
+      "label": "Иврит"
+    },
+    {
+      "id": "fa",
+      "label": "Персидский"
+    },
+    {
+      "id": "ur",
+      "label": "Урду"
+    },
+    {
+      "id": "hi",
+      "label": "Хинди"
+    },
+    {
+      "id": "bn",
+      "label": "Бенгальский"
+    },
+    {
+      "id": "ta",
+      "label": "Тамильский"
+    },
+    {
+      "id": "ml",
+      "label": "Малаялам"
+    },
+    {
+      "id": "ne",
+      "label": "Непальский"
+    },
+    {
+      "id": "ko",
+      "label": "Корейский"
+    },
+    {
+      "id": "vi",
+      "label": "Вьетнамский"
+    },
+    {
+      "id": "th",
+      "label": "Тайский"
+    },
+    {
+      "id": "lo",
+      "label": "Лаосский"
+    },
+    {
+      "id": "km",
+      "label": "Кхмерский"
+    },
+    {
+      "id": "my",
+      "label": "Бирманский"
+    },
+    {
+      "id": "id",
+      "label": "Индонезийский"
+    },
+    {
+      "id": "ms",
+      "label": "Малайский"
+    },
+    {
+      "id": "tl",
+      "label": "Тагальский"
+    },
+    {
+      "id": "ceb",
+      "label": "Себуанский"
+    },
+    {
+      "id": "mn",
+      "label": "Монгольский"
+    },
+    {
+      "id": "kk",
+      "label": "Казахский"
+    },
+    {
+      "id": "ky",
+      "label": "Киргизский"
+    },
+    {
+      "id": "uz",
+      "label": "Узбекский"
+    },
+    {
+      "id": "tt",
+      "label": "Татарский"
+    },
+    {
+      "id": "cv",
+      "label": "Чувашский"
+    },
+    {
+      "id": "mrj",
+      "label": "Горномарийский"
+    },
+    {
+      "id": "mhr",
+      "label": "Луговомарийский"
+    },
+    {
+      "id": "udm",
+      "label": "Удмуртский"
+    },
+    {
+      "id": "myv",
+      "label": "Эрзянский"
+    },
+    {
+      "id": "mdf",
+      "label": "Мокшанский"
+    },
+    {
+      "id": "kv",
+      "label": "Коми"
+    },
+    {
+      "id": "os",
+      "label": "Осетинский"
+    },
+    {
+      "id": "ab",
+      "label": "Абхазский"
+    },
+    {
+      "id": "sah",
+      "label": "Якутский"
+    },
+    {
+      "id": "alt",
+      "label": "Алтайский"
+    },
+    {
+      "id": "tyv",
+      "label": "Тувинский"
+    },
+    {
+      "id": "bua",
+      "label": "Бурятский"
+    },
+    {
+      "id": "evn",
+      "label": "Эвенкийский"
+    },
+    {
+      "id": "chp",
+      "label": "Чипевианский"
+    },
+    {
+      "id": "ale",
+      "label": "Алеутский"
+    },
+    {
+      "id": "alr",
+      "label": "Алюторский"
+    },
+    {
+      "id": "esu",
+      "label": "Центрально-юпикский"
+    },
+    {
+      "id": "ems",
+      "label": "Алютик"
+    },
+    {
+      "id": "ikt",
+      "label": "Инуиннактун"
+    },
+    {
+      "id": "iu",
+      "label": "Инуктитут"
+    },
+    {
+      "id": "tli",
+      "label": "Тлинкитский"
+    },
+    {
+      "id": "sw",
+      "label": "Суахили"
+    },
+    {
+      "id": "lg",
+      "label": "Луганда"
+    },
+    {
+      "id": "ny",
+      "label": "Чичева"
+    },
+    {
+      "id": "sn",
+      "label": "Шона"
+    },
+    {
+      "id": "zu",
+      "label": "Зулу"
+    },
+    {
+      "id": "xh",
+      "label": "Коса"
+    },
+    {
+      "id": "st",
+      "label": "Сесото"
+    },
+    {
+      "id": "ts",
+      "label": "Тсонга"
+    },
+    {
+      "id": "yo",
+      "label": "Йоруба"
+    },
+    {
+      "id": "ig",
+      "label": "Игбо"
+    },
+    {
+      "id": "ha",
+      "label": "Хауса"
+    },
+    {
+      "id": "rw",
+      "label": "Киньяруанда"
+    },
+    {
+      "id": "rn",
+      "label": "Кирунди"
+    },
+    {
+      "id": "ln",
+      "label": "Лингала"
+    },
+    {
+      "id": "kg",
+      "label": "Конго"
+    },
+    {
+      "id": "mg",
+      "label": "Малагасийский"
+    },
+    {
+      "id": "af",
+      "label": "Африкаанс"
+    }
+  ],
+  "books": [
+    {
+      "id": "octoechos",
+      "label": "Октоих"
+    },
+    {
+      "id": "chasoslov",
+      "label": "Часослов"
+    },
+    {
+      "id": "sluzhebnik",
+      "label": "Служебник"
+    },
+    {
+      "id": "common-menaion",
+      "label": "Общая Минея"
+    },
+    {
+      "id": "menaion",
+      "label": "Месячная Минея (12 месяцев)"
+    },
+    {
+      "id": "festal-menaion",
+      "label": "Праздничная Минея"
+    },
+    {
+      "id": "lenten-triodion",
+      "label": "Постная Триодь"
+    },
+    {
+      "id": "pentecostarion",
+      "label": "Цветная Триодь"
+    },
+    {
+      "id": "typikon",
+      "label": "Типикон"
+    },
+    {
+      "id": "psalter",
+      "label": "Псалтирь"
+    },
+    {
+      "id": "followed-psalter",
+      "label": "Следованная Псалтирь"
+    },
+    {
+      "id": "irmologion",
+      "label": "Ирмологий"
+    },
+    {
+      "id": "trebnik",
+      "label": "Требник"
+    },
+    {
+      "id": "euchologion",
+      "label": "Большой Евхологий"
+    },
+    {
+      "id": "archieratikon",
+      "label": "Чиновник архиерейский"
+    },
+    {
+      "id": "gospel",
+      "label": "Богослужебное Евангелие"
+    },
+    {
+      "id": "apostol",
+      "label": "Богослужебный Апостол"
+    },
+    {
+      "id": "prophetologion",
+      "label": "Паримийник"
+    },
+    {
+      "id": "prayer-book",
+      "label": "Молитвослов"
+    },
+    {
+      "id": "canon-book",
+      "label": "Канонник"
+    },
+    {
+      "id": "akathist-book",
+      "label": "Акафистник"
+    },
+    {
+      "id": "synaxarion",
+      "label": "Синаксарь"
+    },
+    {
+      "id": "prologue",
+      "label": "Пролог"
+    },
+    {
+      "id": "anthologion",
+      "label": "Анфологион"
+    },
+    {
+      "id": "troparion",
+      "label": "Тропарион"
+    },
+    {
+      "id": "katavasia",
+      "label": "Катавасийник"
+    },
+    {
+      "id": "theotokarion",
+      "label": "Богородичник"
+    },
+    {
+      "id": "passion",
+      "label": "Страстная седмица"
+    },
+    {
+      "id": "holy-week-easter",
+      "label": "Пасхальное последование"
+    },
+    {
+      "id": "funeral",
+      "label": "Погребальные последования"
+    },
+    {
+      "id": "communion",
+      "label": "Правило ко Причащению"
+    },
+    {
+      "id": "srbljak",
+      "label": "Србляк"
+    },
+    {
+      "id": "new-saints",
+      "label": "Службы новым святым"
+    },
+    {
+      "id": "western-rite",
+      "label": "Книги западного обряда"
+    }
+  ],
+  "cells": [
+    {
+      "book": "chasoslov",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Синодальный извод"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "chasoslov-cs-gr",
+      "edition": "Церковнославянский (синодальный извод)"
+    },
+    {
+      "book": "octoechos",
+      "language": "ro",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "done"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "octoechos-ro",
+      "edition": "Октоих"
+    },
+    {
+      "book": "common-menaion",
+      "language": "ka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Хуцури по умолчанию",
+        "Мхедрули"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "common-menaion-ka",
+      "edition": "Общая Минея"
+    },
+    {
+      "book": "octoechos",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "done"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Синодальный извод"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "octoechos-cs-gr",
+      "edition": "Церковнославянский (синодальный извод)"
+    },
+    {
+      "book": "octoechos",
+      "language": "ka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "done"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Хуцури по умолчанию",
+        "Мхедрули"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "octoechos-ka",
+      "edition": "Октоих"
+    },
+    {
+      "book": "octoechos",
+      "language": "et",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "done"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Только воскресный цикл; будней нет"
+      },
+      "tags": [
+        "Только воскресные службы"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "octoechos-et",
+      "edition": "Октоих"
+    },
+    {
+      "book": "sluzhebnik",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Синодальный извод"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "sluzhebnik-cs",
+      "edition": "Церковнославянский (синодальный извод)"
+    },
+    {
+      "book": "common-menaion",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Синодальный извод"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "common-menaion-cs",
+      "edition": "Церковнославянский (синодальный извод)"
+    },
+    {
+      "book": "octoechos",
+      "language": "ja",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "done"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Фуригана",
+        "Noto Serif JP"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "octoechos-ja",
+      "edition": "Октоих · 八調經"
+    },
+    {
+      "book": "octoechos",
+      "language": "fr",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "done"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/post-romanian-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "octoechos-fr",
+      "edition": "Октоих · Octoèque"
+    },
+    {
+      "book": "octoechos",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полная редакторская выверка не подтверждена"
+      },
+      "tags": [
+        "Старомосковский извод"
+      ],
+      "evidence": [
+        "rules/library/catalog.json",
+        "reports/library/oldrite-octoechos/local-application.json",
+        "reports/deploy-oldrite-octoechos-20261116/published.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Церковнославянский (старомосковский извод)",
+      "alias": "octoechos-cs-oldrite"
+    },
+    {
+      "book": "lenten-triodion",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "80 HTML, 79 с киноварью; фрагменты в БД"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/triod-postnaya",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "pentecostarion",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "58 HTML с киноварью; фрагменты в БД"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/triod-tsvetnaya",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "menaion",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "366 дней с киноварью; книжный слой не собран"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/menaion",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "typikon",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "63 части; правила разобраны частично"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/tipikon",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "irmologion",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Только часть 1: Богородичны всего лета"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/irmologij",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "lenten-triodion",
+      "language": "ro",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "6 HTML с киноварью; нового разбора нет"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/romanian/triod",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "pentecostarion",
+      "language": "ro",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "3 HTML с киноварью; нового разбора нет"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/romanian/penticostar",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "typikon",
+      "language": "ro",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "6 HTML с киноварью; объём выверить"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/romanian/tipicul",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "menaion",
+      "language": "ro",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "27 HTML с киноварью; полнота привязок не проверена"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/romanian/mineiele",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "sluzhebnik",
+      "language": "en",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Royster: 55 HTML, 50 с киноварью; отдельный разбор не сделан"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/ponomar/files/www.ponomar.net/data/royster",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "fr",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Пять HTML-разделов; отдельный источник от Chevetogne 1975"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/ponomar/files/www.ponomar.net/maktabah/HorologionFrench2000",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/horologion-next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Pages Orthodoxes 2000"
+    },
+    {
+      "book": "octoechos",
+      "language": "grc",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "done",
+        "partial"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Полный шаблон: 56 дней и 5 приложений; отдельное дополнение ресурсов. Выверка не завершена"
+      },
+      "tags": [
+        "AGES / ALWB",
+        "Печатный прототип не установлен",
+        "Шаблон Draft"
+      ],
+      "evidence": [
+        "raw/greek-ages",
+        "raw/greek-ages-reader/templates",
+        "reports/library/greek-octoechos/build.json",
+        "reports/library/greek-octoechos/existing-db-source-audit.json",
+        "reports/library/greek-octoechos/local-application.json",
+        "reports/library/greek-octoechos/parallels.json",
+        "reports/library/greek-octoechos/validation.json",
+        "reports/deploy-greek-octoechos-20261116/published.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Παρακλητική · электронная редакция AGES",
+      "alias": "octoechos-grc"
+    },
+    {
+      "book": "octoechos",
+      "language": "en",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "AGES: фрагменты нескольких переводов в БД; отдельная книга не собрана"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/english",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "common-menaion",
+      "language": "ja",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "done",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "27 HTML; киноварь не обнаружена в проверенном источнике"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/japanese",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "zh_wy",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Исторический перевод; киноварь не подтверждена"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/chinese",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json",
+        "reports/library/horologion-next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "sluzhebnik",
+      "language": "zh_wy",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Издание 1906; красного нет в проверенных HTML"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/ponomar/files/www.ponomar.net/maktabah/Sluzhebnik1906",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "pentecostarion",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Старообрядческий источник; 27 глав, киноварь"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/cu-md-oldrite",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Дополнительный источник"
+    },
+    {
+      "book": "psalter",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "28 глав; нужна отдельная сверка"
+      },
+      "tags": [
+        "Старомосковский извод"
+      ],
+      "evidence": [
+        "raw/cu-md-oldrite",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Псалтирь · SamStar"
+    },
+    {
+      "book": "festal-menaion",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Старообрядческий источник: 48 глав, киноварь"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/cu-md-oldrite",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Старообрядческий источник: нет 4 из 42 глав"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/cu-md-oldrite",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Дополнительный источник"
+    },
+    {
+      "book": "canon-book",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "165 файлов; ошибка XML-манифеста, состав не подтверждён"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/cu-md-oldrite",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "new-saints",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "2698 строк фрагментов; полнота книги не установлена"
+      },
+      "tags": [
+        "Есть фрагменты"
+      ],
+      "evidence": [
+        "src/data.db"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "octoechos",
+      "language": "ar",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "272 строк в группах БД; полнота и редакция не установлены"
+      },
+      "tags": [
+        "Есть фрагменты"
+      ],
+      "evidence": [
+        "src/data.db"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "menaion",
+      "language": "en",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "7325 строк в группах БД; полнота и редакция не установлены"
+      },
+      "tags": [
+        "Есть фрагменты"
+      ],
+      "evidence": [
+        "src/data.db"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "menaion",
+      "language": "grc",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "7761 строк в группах БД; полнота и редакция не установлены"
+      },
+      "tags": [
+        "Есть фрагменты"
+      ],
+      "evidence": [
+        "src/data.db"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "psalter",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "48 глав; нужна отдельная сверка"
+      },
+      "tags": [
+        "Старомосковский извод"
+      ],
+      "evidence": [
+        "raw/cu-md-oldrite",
+        "spec/library-source-readiness.md",
+        "spec/library-octoechos-completion.md",
+        "reports/library/next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Псалтирь · Уставщик"
+    },
+    {
+      "book": "chasoslov",
+      "language": "ja",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "149 страниц, хирагана; киноварь в проверенном PDF отсутствует"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/japanese/manifest.json",
+        "reports/library/horologion-next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "sluzhebnik",
+      "language": "ja",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "DL_reference.pdf: 35 страниц; киноварь не обнаружена"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/japanese/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "srbljak",
+      "language": "sr",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Собрание служб; есть церковнославянские файлы, язык каждого источника требует проверки"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/serbian-srbljak/README.md"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "western-rite",
+      "language": "en",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Saint Andrew Service Book, 2-е изд., 1996; PDF забран"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/western-rite/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "sluzhebnik",
+      "language": "en",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Hapgood 1906: PDF и OCR; выверка и киноварь не проверены"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/western-rite/manifest.json"
+      ],
+      "updated_at": "2026-11-16",
+      "edition": "Service Book · Hapgood 1906"
+    },
+    {
+      "book": "typikon",
+      "language": "grc",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Типикон Виолакиса: сохранены сканы и извлечённый текст; требуется выверка"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/greek-typikon-violakis/README.md"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "prayer-book",
+      "language": "ka",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Молитвы orthodox.ge; полнота отдельного издания не установлена"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/georgian/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "psalter",
+      "language": "ka",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Есть отдельные псалмы; полная Псалтирь не подтверждена"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/georgian/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "prayer-book",
+      "language": "ar",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранены молитвы и последования; полный состав издания не установлен"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/arabic/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "ar",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Есть вечерня, утреня, повечерие; полный Часослов не подтверждён"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/arabic/manifest.json",
+        "reports/library/horologion-next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "canon-book",
+      "language": "ar",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Есть отдельные каноны; полный Канонник не подтверждён"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/arabic/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "akathist-book",
+      "language": "ar",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Есть отдельные акафисты; полнота сборника не установлена"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/arabic/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "fi",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Есть неизменяемые части вечерни, утрени, часов; полнота книги и киноварь не проверены"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/finnish/manifest.json",
+        "reports/library/horologion-next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "funeral",
+      "language": "fi",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Hautaussäkeet и отдельные песнопения; состав полного последования не проверен"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/finnish/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "communion",
+      "language": "sq",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранён PDF последования подготовки ко Причащению"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/albanian/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "trebnik",
+      "language": "sq",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранены отдельные чины крещения и молитвы; полный Требник не установлен"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/albanian/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "holy-week-easter",
+      "language": "sq",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранён PDF пасхальной Литургии; полный пасхальный цикл не установлен"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/albanian/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "typikon",
+      "language": "sq",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Есть месячные богослужебные указания; это не полный Типикон"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/albanian/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "typikon",
+      "language": "et",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Богослужебные указания 2024 и 2025; не полный Типикон"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/estonian/manifest.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "apostol",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранён корпус; язык, состав издания и киноварь требуют аудита"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/apostol"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "gospel",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранён корпус; язык, состав издания и киноварь требуют аудита"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/evangelie"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "prayer-book",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранён корпус; язык, состав издания и киноварь требуют аудита"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/molitvoslov"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "akathist-book",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранён корпус; язык, состав издания и киноварь требуют аудита"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/akafisty"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "prologue",
+      "language": "cu",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Сохранён корпус; язык, состав издания и киноварь требуют аудита"
+      },
+      "tags": [],
+      "evidence": [
+        "raw/prolog-library"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "lenten-triodion",
+      "language": "ar",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "36 строк в группах БД; полнота книги и редакция не установлены"
+      },
+      "tags": [
+        "Есть фрагменты"
+      ],
+      "evidence": [
+        "src/data.db"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "lenten-triodion",
+      "language": "grc",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "1512 строк в группах БД; полнота книги и редакция не установлены"
+      },
+      "tags": [
+        "Есть фрагменты"
+      ],
+      "evidence": [
+        "src/data.db"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "pentecostarion",
+      "language": "ar",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "21 строк в группах БД; полнота книги и редакция не установлены"
+      },
+      "tags": [
+        "Есть фрагменты"
+      ],
+      "evidence": [
+        "src/data.db"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "octoechos",
+      "language": "en",
+      "edition": "octoechos-en-lambertsen",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Ламберцен: 8 PDF Пономаря; общее заявление CC есть, разновидность/условия не уточнены; найден также текстовый PDF 2026"
+      },
+      "tags": [],
+      "evidence": [
+        "spec/library-english-octoechos.md",
+        "reports/library/english-octoechos/source-selection.json",
+        "reports/library/english-octoechos/myrrh-bearers-catalog.json",
+        "reports/library/english-octoechos/ponomar-license-page.html"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "fr",
+      "edition": "Chevetogne 1975",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "done",
+        "done",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликовано: 527 стр. доступного скана; введения сверены; редакционная киноварь, Old Standard, БД и двусторонние связи. Неясности скана отмечены."
+      },
+      "tags": [
+        "Chevetogne 1975",
+        "Введения",
+        "Редакционная киноварь"
+      ],
+      "evidence": [
+        "reports/library/horologion-next-wave/source-audit.json",
+        "reports/chevetogne-introductions-ocr.md",
+        "raw/ponomar/ocr/horologion-chevetogne-1975/introductions/manifest.json",
+        "reports/library/french-horologion/README.md",
+        "reports/library/french-horologion/build.json",
+        "raw/ponomar/ocr/horologion-chevetogne-1975/introductions/proofreading.json",
+        "reports/library/french-horologion/verification.json",
+        "reports/deploy-french-horologion-20261116/published.json"
+      ],
+      "updated_at": "2026-11-16",
+      "alias": "chasoslov-fr"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "AGES",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "40 ресурсов; есть тестовые заглушки и неполные шаблоны служб. Полная книга и разбор в БД ещё не готовы"
+      },
+      "tags": [
+        "Неполный состав"
+      ],
+      "evidence": [
+        "reports/library/horologion-next-wave/source-audit.json",
+        "reports/library/greek-horologion/source-audit.json",
+        "reports/library/greek-horologion/orthodox-source-search.json",
+        "reports/library/greek-horologion/collation.json"
+      ],
+      "updated_at": "2026-11-17"
+    },
+    {
+      "book": "chasoslov",
+      "language": "en",
+      "edition": "Unabbreviated Horologion — Laurence",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "PDF и текст сохранены; полнота, киноварь и качество требуют приёмки"
+      },
+      "tags": [],
+      "evidence": [
+        "reports/library/horologion-next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "ro",
+      "edition": "Doxologia — отдельные службы",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Вечерня, великое повечерие, четыре часа; полный Часослов не подтверждён"
+      },
+      "tags": [],
+      "evidence": [
+        "reports/library/horologion-next-wave/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Рим, 1876",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "374 страницы цветного PDF; киноварь подтверждена выборочно. Нет текстового слоя; полнота и редакционные отличия не проверены"
+      },
+      "tags": [
+        "Римское издание",
+        "Киноварь в скане",
+        "Нужен OCR"
+      ],
+      "evidence": [
+        "raw/ponomar/manifest.json",
+        "reports/library/greek-horologion/source-audit.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Венеция, Феникс, 1845",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "done",
+        "done",
+        "done",
+        "partial"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликована электронная редакция 592 страниц доступного PDF; киноварь, 31 гравюра, 4161 единица БД и двусторонние связи. Утраченные листы и 160 восполнений (включая две вероятные реконструкции) отмечены; дословная полнота печатного тома не заявлена. Полная сверка с AGES не завершена."
+      },
+      "tags": [
+        "Киноварь вычитана по скану",
+        "Историческое издание",
+        "Выбрано основой",
+        "Маркированные восполнения",
+        "Неполный экземпляр",
+        "Черновик вне публикации"
+      ],
+      "evidence": [
+        "reports/library/greek-horologion/orthodox-source-search.json",
+        "raw/greek-horologion/vatopedi-1845/manifest.json",
+        "spec/library-greek-horologion.md",
+        "raw/greek-horologion/vatopedi-1845/ocr/manifest.json",
+        "scripts/ocr_data/greek-horologion-1845-review.json",
+        "reports/library/greek-horologion/draft-build.json",
+        "reports/library/greek-horologion/collation.json",
+        "scripts/ocr_data/greek-horologion-1845-daily-review.json",
+        "scripts/ocr_data/greek-horologion-1845-cycle-review.json",
+        "scripts/ocr_data/greek-horologion-1845-supplement-review.json",
+        "scripts/ocr_data/greek-horologion-1845-root-cycle-review.json",
+        "scripts/ocr_data/greek-horologion-1851-comparison-notes.json",
+        "scripts/ocr_data/greek-horologion-1851-cycle-comparison-root.json",
+        "scripts/ocr_data/greek-horologion-1851-daily-comparison.json",
+        "scripts/ocr_data/greek-horologion-1851-supplement-comparison.json",
+        "raw/greek-horologion/vatopedi-1845/illustrations/manifest.json",
+        "reports/library/greek-horologion/verification.json",
+        "reports/library/greek-horologion/remaining-pages-audit.json",
+        "scripts/ocr_data/greek-horologion-1845-editorial-reconstructions.json",
+        "reports/library/greek-horologion/publication-readiness.json",
+        "reports/library/greek-horologion/build.json",
+        "reports/deploy-greek-horologion-20261117/published.json"
+      ],
+      "updated_at": "2026-11-17",
+      "alias": "chasoslov-grc"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Венеция, Андреола, 1832",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Карточка Anemi: 594 страницы PDF. Сервер не отвечает; цвет и полнота файла не проверены"
+      },
+      "tags": [],
+      "evidence": [
+        "reports/library/greek-horologion/orthodox-source-search.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Венеция, Феникс, 1851",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "partial",
+        "partial",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Загружен 560-страничный чёрно-белый скан; отдельно вычитаны выбранные сноски, статьи и таблицы для маркированных восполнений 1845. Не является выбранной основой или самостоятельной полной книгой; киноварь 1845 по нему не восстанавливается. Дополнительно вычитаны Канонион и объяснение (PDF 555–556). Две карточки Internet Archive с годом 1838 по титулу оказались тем же изданием 1851; одна копия цветная, не независимый свидетель."
+      },
+      "tags": [
+        "Сверочный экземпляр",
+        "Чёрно-белый скан"
+      ],
+      "evidence": [
+        "reports/library/greek-horologion/orthodox-source-search.json",
+        "raw/greek-horologion/wikimedia-1851/manifest.json",
+        "scripts/ocr_data/greek-horologion-1851-comparison-notes.json",
+        "scripts/ocr_data/greek-horologion-1851-cycle-comparison-root.json",
+        "scripts/ocr_data/greek-horologion-1851-daily-comparison.json",
+        "scripts/ocr_data/greek-horologion-1851-supplement-comparison.json",
+        "reports/library/greek-horologion/remaining-pages-audit.json",
+        "scripts/ocr_data/greek-horologion-1845-editorial-reconstructions.json"
+      ],
+      "updated_at": "2026-11-17"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Венеция, 1884",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Найдено на Analogion / Google Books; полный цветной скан не подтверждён"
+      },
+      "tags": [],
+      "evidence": [
+        "reports/library/greek-horologion/orthodox-source-search.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Афины, Саливерос, около 1898",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Каталог Anemi: 630 страниц; цвет не подтверждён, сервер не отвечает"
+      },
+      "tags": [],
+      "evidence": [
+        "reports/library/greek-horologion/orthodox-source-search.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Аποστολική Διακονία — пересмотренное издание",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Православное издание подтверждено издателем; открытый полный PDF пока не найден"
+      },
+      "tags": [],
+      "evidence": [
+        "reports/library/greek-horologion/orthodox-source-search.json"
+      ],
+      "updated_at": "2026-11-16"
+    },
+    {
+      "book": "chasoslov",
+      "language": "grc",
+      "edition": "Венеция, Феникс, 1841",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Карточка пятого издания в Google Books; поисковый результат указывает 1842 на стр. 555. Изображения недоступны, PDF не получен; титул и чтения не проверены."
+      },
+      "tags": [
+        "Сверочный кандидат",
+        "Требуется скан"
+      ],
+      "evidence": [
+        "reports/library/greek-horologion/remaining-pages-audit.json"
+      ],
+      "updated_at": "2026-11-17"
+    }
+  ],
+  "references": [
+    {
+      "label": "История китайских переводов",
+      "url": "https://www.orthodox.cn/localchurch/translation_en.htm"
+    },
+    {
+      "label": "Богослужебные тексты OCA",
+      "url": "https://www.oca.org/liturgics/service-texts"
+    },
+    {
+      "label": "Источники и редакция AGES / DCS",
+      "url": "https://digitalchantstand.goarch.org/goa/dcs/about.html"
+    }
+  ]
+}
