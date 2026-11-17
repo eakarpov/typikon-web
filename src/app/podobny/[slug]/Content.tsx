@@ -1,3 +1,4 @@
+import { nativeChantHref } from '@/lib/reader/legacyLink';
 import React from "react";
 import Link from "next/link";
 import { PAGE_SIZE, type PodobenPageData } from "./api";
@@ -99,7 +100,7 @@ const Model = ({ data }: { data: PodobenPageData }) => {
             <ul className="mt-2 flex flex-col gap-1">
                 {data.model.map((candidate) => (
                     <li key={candidate.itemId} className="font-serif text-sm">
-                        <Link href={`/chants/${candidate.itemId}`}
+                        <Link href={nativeChantHref(candidate.itemId)}
                               className={`text-red-900 hover:underline ${fontFor(candidate.language)}`}>
                             {candidate.text.replace(/\//g, " ").slice(0, 70) || candidate.incipit}
                         </Link>

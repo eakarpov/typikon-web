@@ -1,0 +1,6 @@
+import Link from 'next/link';
+import { ReaderService } from '@/lib/reader/service';
+import { readerDb } from '@/lib/reader/registry';
+export const dynamic='force-dynamic';
+export const metadata={title:'Корпус ЦС — пилот',robots:{index:false,follow:false}};
+export default async function Pilot(){let items:any[]=[];let unavailable=false;try{items=(await new ReaderService(await readerDb()).catalog({pilotId:'cs-mvp-pilot-01'})).items;}catch{unavailable=true;}return <main className="max-w-3xl mx-auto p-4"><Link href="/opyty">← Опыты</Link><h1 className="text-2xl mt-4">Корпус церковнославянских текстов — пилот</h1><p className="my-4">Пять адресуемых материалов из существующих библиотеки и песнопений. Источники, авторские атрибуции и неизвестные сведения показаны отдельно. Вычитка ещё не завершена.</p>{unavailable?<p>Локальная публикация пока не активирована или недоступна.</p>:<ul className="space-y-3">{items.map(item=><li key={item.sourceId}><Link className="underline" href={new URL(item.canonicalUrl).pathname}>{item.title}</Link></li>)}</ul>}<p className="mt-6"><Link className="underline" href="/opyty/cs-reader/margarit">Читать Маргарит с паспортом и заметками</Link></p><p className="mt-6 text-sm">Ссылочный ирмос входит в выбранный канон; повторной копии его текста нет. Родной канон ирмоса пока не установлен.</p></main>}

@@ -1,3 +1,4 @@
+import { nativeIdForRequest, publicChant, legacyFailure } from '@/lib/reader/legacy';
 import { authorize } from "@/lib/api/v2/access";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { chantDetail } from "@/lib/api/v2/serialize";
@@ -29,15 +30,16 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string 
     }
 
     try {
-        const chant = getChant(number);
+        const chant = getChant(await nativeIdForRequest(number,new URL(request.url).searchParams.get('dataset')??undefined));
         // `null` здесь значит и «корпуса нет», и «такой строки нет», и различить
         // их изнутри `getChant` нечем. Для спрашивающего про одну строку верен
         // один ответ — `not_found`; про отсутствие корпуса прямо отвечает
         // ручка-список, как и у зачинов.
         if (!chant) return fail("not_found", "Такого песнопения в корпусе нет");
 
-        return respond(chantDetail(chant), { access, maxAge: revalidate });
+        return respond(chantDetail(await publicChant(chant)), { access, maxAge: revalidate });
     } catch (e) {
+        const legacy=legacyFailure(e);if(legacy)return legacy;
         reportError(e, { where: "app/api/v2/chants/[id]/route#GET", source: "api" });
         return fail("internal", "Не удалось открыть песнопение");
     }

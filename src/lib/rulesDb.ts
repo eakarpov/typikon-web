@@ -1,3 +1,4 @@
+import { statSync } from 'node:fs';
 import Database from 'better-sqlite3';
 import {reportError} from "@/lib/reportError";
 
@@ -23,6 +24,7 @@ type SqliteDb = ReturnType<typeof Database>;
 // приём, что для nobles.db в @/lib/sqlite и для MongoClient в @/lib/mongodb.
 
 let db: SqliteDb | undefined;
+let stamp: string | undefined;
 
 const open = (): SqliteDb | null => {
     const file = process.env.RULES_DB;
@@ -39,6 +41,11 @@ const open = (): SqliteDb | null => {
 };
 
 export const rulesDb = (): SqliteDb | null => {
+    try {
+        const file=process.env.RULES_DB; if(!file)return null;
+        const st=statSync(file); const next=file+":"+st.ino+":"+st.size+":"+st.mtimeMs;
+        if(next!==stamp){db?.close();if(global._rulesDb&&global._rulesDb!==db)global._rulesDb.close();db=undefined;global._rulesDb=undefined;stamp=next;}
+    } catch { return null; }
     if (process.env.NODE_ENV === 'development') {
         if (global._rulesDb === undefined) {
             global._rulesDb = open() ?? undefined;

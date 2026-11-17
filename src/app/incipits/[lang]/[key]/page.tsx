@@ -1,3 +1,4 @@
+import { nativeChantHref } from '@/lib/reader/legacyLink';
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -78,7 +79,7 @@ const WitnessRow = ({ w }: { w: Witness }) => {
 
     return (
         <li className="font-serif text-sm">
-            <Link href={`/chants/${w.id}`} className="text-red-900">
+            <Link href={nativeChantHref(w.id)} className="text-red-900">
                 {labelOf(UNIT_LABELS, w.unit) || "песнопение"}
             </Link>
             <span className="text-slate-500"> · {where.filter(Boolean).join(" · ")}</span>
@@ -89,7 +90,7 @@ const WitnessRow = ({ w }: { w: Witness }) => {
 const TranslationRow = ({ t }: { t: Translation }) => (
     <li className="flex flex-col">
         <div className="text-xs text-slate-500 font-serif">{bookLanguageLabel(t.language)}</div>
-        <Link href={`/chants/${t.id}`} className={`font-serif text-slate-800 ${fontFor(t.language)}`}>
+        <Link href={nativeChantHref(t.id)} className={`font-serif text-slate-800 ${fontFor(t.language)}`}>
             {t.text.replace(/\s*\/\s*/g, " ").trim().slice(0, 200)}
         </Link>
         {t.evidence && (

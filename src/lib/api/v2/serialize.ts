@@ -926,6 +926,9 @@ export const noteName = (name: any) => ({
  * `namesCount` — «было столько-то» переживает чистку нарочно.
  */
 export const zapiska = (note: any) => ({
+    ...(note.part ? {part:note.part} : {}),
+    ...(Array.isArray(note.partStatuses) ? {partStatuses:note.partStatuses.map((p:any)=>({part:p.part,namesCount:p.namesCount,readAt:iso(p.readAt),queueStatus:p.queueStatus,
+        assignment:p.assignment?{...p.assignment,startsAt:iso(p.assignment.startsAt)}:null}))}:{}),
     id: id(note._id ?? note.id),
     kind: note.kind,
     names: (note.names ?? []).map(noteName),
@@ -935,6 +938,11 @@ export const zapiska = (note: any) => ({
     readAt: iso(note.readAt),
     finishedAt: iso(note.finishedAt),
     sweptAt: iso(note.sweptAt),
+    queueStatus: note.queueStatus ?? null,
+    assignment: note.assignment ? { serviceId: note.assignment.serviceId,
+        startsAt: iso(note.assignment.startsAt), timeZone: note.assignment.timeZone,
+        title: note.assignment.title, place: note.assignment.place,
+        donationDetails: note.assignment.donationDetails } : null,
 });
 
 // --- Каноны, акафисты, молитвы ------------------------------------------------

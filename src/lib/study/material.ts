@@ -1,3 +1,7 @@
+import type { Db } from "mongodb";
+import { ReaderError } from "@/lib/reader/core";
+import { attachStudyReader } from "./reader";
+import { legacyNativeId, publicChant } from '@/lib/reader/legacy';
 import { textLinks } from "@/lib/textLinks";
 import { chapterPlaces, textPlaces } from "@/lib/places/query";
 import { bookLanguageLabel } from "@/utils/bookLanguages";
@@ -127,21 +131,22 @@ export async function catalog(bookId?: string) {
     })),
   };
 }
-export async function material(raw: Target): Promise<Material> {
+export async function material(raw: Target, options: {reader?: "pilot"; db?: Db} = {}): Promise<Material> {
   const t = validateTarget(raw),
-    db = await corpus();
+    db = options.db ?? await corpus();
   if (t.kind === "text") {
     const text = await db.collection("texts").findOne(aliasMatcher(t.id));
     if (
       !text ||
+      text.public === false ||
       !text.content?.trim() ||
       !["ready", "correcting", "texted"].includes(text.readiness)
     )
-      throw Error("Текст недоступен.");
+      throw options.reader ? new ReaderError("not_found",404,"Текст недоступен.") : Error("Текст недоступен.");
     const book = text.bookId
       ? await db.collection("books").findOne({ _id: text.bookId })
       : null;
-    if (book?.public === false) throw Error("Текст недоступен.");
+    if (book?.public === false) throw options.reader ? new ReaderError("not_found",404,"Текст недоступен.") : Error("Текст недоступен.");
     const id = String(text._id),
       edition = String(text.bookId ?? id);
     if (t.edition && t.edition !== edition)
@@ -156,7 +161,7 @@ export async function material(raw: Target): Promise<Material> {
     const missing = [...new Set(markers)]
       .filter((n) => !footnotes[n - footnoteBase]?.trim())
       .map((n) => "Сноска " + n);
-    return {
+    const value: Material = {
       target: {
         kind: "text",
         id,
@@ -184,7 +189,9 @@ export async function material(raw: Target): Promise<Material> {
       },
       missing,
     };
+    return options.reader ? attachStudyReader(value,t,content,db) : value;
   }
+  if (options.reader) throw new ReaderError("unsupported_source",422,"Для этого опыта выбрана глава Маргарита.");
   if (t.kind === "bible") {
     const e = await editionByCode(db, t.edition!);
     if (!e || e.public === false) throw Error("Издание Писания недоступно.");
@@ -227,7 +234,8 @@ export async function material(raw: Target): Promise<Material> {
       missing,
     };
   }
-  const chant = getChant(Number(t.id));
+  const rawChant = getChant(await legacyNativeId(Number(t.id)));
+  const chant = rawChant ? await publicChant(rawChant) : null;
   if (!chant?.text) throw Error("Песнопение недоступно.");
   if (t.edition && t.edition !== chant.sourceBook)
     throw Error("Указано другое издание песнопения.");

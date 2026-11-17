@@ -1,4 +1,5 @@
 "use client";
+import ReaderPassport from "./ReaderPassport";
 import FootnoteScope, { useFootnoteNumbers } from "@/app/components/FootnoteScope";
 import { footnoteNumbers, orderedFootnotes } from "@/lib/markup/footnoteNumbers";
 import NoteSharing from "@/app/components/NoteSharing";
@@ -97,7 +98,7 @@ function PlainSource({
     </div>
   );
 }
-export default function Client() {
+export default function Client({readerPilotTarget}: {readerPilotTarget?: Target} = {}) {
   const query = useSearchParams(),
     [tab, setTab] = useState(query?.get("tab") ?? "catalog"),
     [catalog, setCatalog] = useState<any>(null),
@@ -236,6 +237,12 @@ export default function Client() {
     const who = active.current,
       gen = generation.current;
     try {
+      // Experimental passports are fetched live, separately from old offline material caches.
+      if(path==="material"&&readerPilotTarget&&body?.target?.kind===readerPilotTarget.kind&&body.target.id===readerPilotTarget.id){
+        const d=await api(path,{...body,reader:"pilot"});
+        if(gen!==generation.current)throw Error("Вход изменился.");
+        return d;
+      }
       const d = await api(path, body);
       if (gen !== generation.current) throw Error("Вход изменился.");
       await writeCache(who, key, d);
@@ -272,7 +279,7 @@ export default function Client() {
   useEffect(() => {
     if (!ready || didOpen.current) return;
     didOpen.current = true;
-    const raw = query?.get("target");
+    const raw = query?.get("target") ?? (readerPilotTarget ? JSON.stringify(readerPilotTarget) : null);
     if (raw)
       try {
         void open(JSON.parse(raw));
@@ -1067,9 +1074,10 @@ export default function Client() {
               </button>
               <h2 className="text-xl">{material.title}</h2>
               <p>
-                {material.author} · {material.edition} ·{" "}
+                {material.reader?.passport.fields.authorship?.display ?? material.author} · {material.edition} ·{" "}
                 {bookLanguageLabel(material.language)}
               </p>
+              {material.reader && <ReaderPassport value={material.reader}/>}
               {material.missing.length > 0 && (
                 <p>Текст неполный: {material.missing.join(", ")}</p>
               )}
@@ -1335,7 +1343,7 @@ export default function Client() {
                     <>
                       <h3>Об издании</h3>
                       <p>
-                        {material.author} · {material.edition}
+                        {material.reader?.passport.fields.authorship?.display ?? material.author} · {material.edition}
                       </p>
                       <p>Язык: {bookLanguageLabel(material.language)}</p>
                       <TextLinkList value={material.metadata.sourceUrls ?? material.source} label="Источник / скан" />

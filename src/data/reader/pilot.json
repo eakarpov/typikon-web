@@ -1,0 +1,769 @@
+{
+  "pilotId": "cs-mvp-pilot-01",
+  "materials": [
+    {
+      "id": "P01",
+      "title": "Крестовоскресный канон Октоиха, глас 1, воскресная утреня",
+      "nativeRef": {
+        "kind": "canon",
+        "id": "oktoih-t1-krestovoskresny-utrenya"
+      },
+      "existingWorkId": "w-canon-oktoih-t1-krestovoskresny-utrenya",
+      "sourceUrls": [
+        "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/oktoih/2"
+      ],
+      "openQuestions": [
+        "Check heuristic source parsing against source",
+        "Confirm inherited irmos selection",
+        "Author attribution exists in work_attributions (Greek source locator); independently recheck witness",
+        "Creation/translation dates and translator unknown",
+        "Rights and exact edition linkage need review"
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Акафист святителю Николаю Чудотворцу",
+      "nativeRef": {
+        "kind": "akathist",
+        "id": "akafist-svjatitelju-nikolaju-chudotvorcu"
+      },
+      "existingWorkId": "w-akathist-akafist-svjatitelju-nikolaju-chudotvorcu",
+      "sourceUrls": [
+        "https://azbyka.ru/molitvoslov/akafist-svjatitelju-nikolaju-chudotvorcu.html"
+      ],
+      "openQuestions": [
+        "Printed edition not collated",
+        "Author, composition date and translation history unknown",
+        "chastny is an import default, not evidence of rejection or approval",
+        "Rights need review; do not import linked modern Russian translation"
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "Беседа первая о непостижимем",
+      "nativeRef": {
+        "kind": "text",
+        "id": "699c9ace0c51f1c698ea0492"
+      },
+      "sourceUrls": [
+        "https://lib-fond.ru/lib-rgb/304-i/f-304i-147"
+      ],
+      "openQuestions": [
+        "readiness=texted; proofread against scans",
+        "Only one block with current blocksOf; segment without silently changing original",
+        "67 private-use occurrences (65 BMP + 2 supplementary); verify glyphs and mapped transforms",
+        "Author inherited from collection, not chapter-specific source verification",
+        "Translation/creation/witness dates, exact folios, translator and rights unresolved"
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "Ирмос «Христос раждается»: песнь 1 выбранного канона",
+      "nativeRef": {
+        "kind": "chant",
+        "id": "132"
+      },
+      "sourceUrls": [
+        "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/irmologij-bogorodichny-vsego-leta/"
+      ],
+      "openQuestions": [
+        "Retain occurrence in Octoechos and text ownership in Irmologion separately",
+        "getChant.textItemId is null for a formula; add explicit formula owner",
+        "No duplicate content or edition created",
+        "Numeric item address must be checked across rebuilds"
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Тропарь святителю Николаю «Правило веры»",
+      "nativeRef": {
+        "kind": "chant",
+        "id": "77050"
+      },
+      "sourceUrls": [
+        "https://azbyka.ru/otechnik/Pravoslavnoe_Bogosluzhenie/mineja-dekabr/6"
+      ],
+      "openQuestions": [
+        "Author/composition date/translator unknown",
+        "Menaion edition row exists but source_book alone does not prove exact print witness",
+        "Source parsing and rights need review",
+        "Numeric item address must be checked across rebuilds"
+      ]
+    }
+  ],
+  "evidence": {
+    "subjects": [
+      {
+        "id": "sub:canon",
+        "entityRef": {
+          "namespace": "rules.works",
+          "id": "w-canon-oktoih-t1-krestovoskresny-utrenya"
+        },
+        "entityType": "work",
+        "resolution": "existing_native"
+      },
+      {
+        "id": "sub:akathist",
+        "entityRef": {
+          "namespace": "rules.works",
+          "id": "w-akathist-akafist-svjatitelju-nikolaju-chudotvorcu"
+        },
+        "entityType": "work",
+        "resolution": "existing_native"
+      },
+      {
+        "id": "sub:chapter",
+        "entityRef": null,
+        "entityType": "work",
+        "resolution": "unallocated",
+        "describedBy": {
+          "namespace": "typikon.texts",
+          "id": "699c9ace0c51f1c698ea0492"
+        }
+      },
+      {
+        "id": "sub:book",
+        "entityRef": {
+          "namespace": "typikon.books",
+          "id": "6992d190b9df99cbe01f6174"
+        },
+        "entityType": "digital_source",
+        "resolution": "existing_native"
+      },
+      {
+        "id": "sub:text",
+        "entityRef": {
+          "namespace": "typikon.texts",
+          "id": "699c9ace0c51f1c698ea0492"
+        },
+        "entityType": "digital_source",
+        "resolution": "existing_native"
+      },
+      {
+        "id": "sub:manuscript",
+        "entityRef": null,
+        "entityType": "witness",
+        "resolution": "unallocated",
+        "describedBy": {
+          "namespace": "typikon.sources",
+          "id": "6a9207f5f4a7d662d0b1bd47"
+        }
+      },
+      {
+        "id": "sub:irmos",
+        "entityRef": null,
+        "entityType": "text_unit",
+        "resolution": "unallocated",
+        "describedBy": {
+          "namespace": "rules.fixed_texts",
+          "id": "irmologij-irmosy-0003"
+        }
+      },
+      {
+        "id": "sub:edition",
+        "entityRef": {
+          "namespace": "rules.editions",
+          "id": "menaion-izdsovet-2002"
+        },
+        "entityType": "edition",
+        "resolution": "existing_native"
+      },
+      {
+        "id": "sub:ak-source",
+        "entityRef": {
+          "namespace": "rules.akathists",
+          "id": "akafist-svjatitelju-nikolaju-chudotvorcu"
+        },
+        "entityType": "digital_source",
+        "resolution": "existing_native"
+      }
+    ],
+    "sources": [
+      {
+        "id": "src:attribution",
+        "kind": "native_record",
+        "nativeRef": {
+          "namespace": "rules.work_attributions",
+          "key": {
+            "work_id": "w-canon-oktoih-t1-krestovoskresny-utrenya",
+            "role": "author",
+            "method": "greek"
+          }
+        },
+        "snapshot": "chant-evidence.json#/attributions/0"
+      },
+      {
+        "id": "src:greek",
+        "kind": "referenced_inscription",
+        "url": null,
+        "locator": "ocMA.C2, oc.m1.d1_gr_GR_cog.ares:421",
+        "sourceBook": "greek-ages",
+        "accessStatus": "not_collated"
+      },
+      {
+        "id": "src:book",
+        "kind": "native_record",
+        "nativeRef": {
+          "namespace": "typikon.books",
+          "id": "6992d190b9df99cbe01f6174"
+        },
+        "snapshot": "library-evidence.json#/book"
+      },
+      {
+        "id": "src:catalog-cache",
+        "kind": "cached_catalog",
+        "nativeRef": {
+          "namespace": "typikon.sources",
+          "id": "6a9207f5f4a7d662d0b1bd47"
+        },
+        "snapshot": "library-evidence.json#/cachedSource",
+        "url": "https://lib-fond.ru/lib-rgb/304-i/f-304i-147/",
+        "sourceFetchedAt": "2026-08-28T22:13:09.668Z"
+      },
+      {
+        "id": "src:text",
+        "kind": "native_record",
+        "nativeRef": {
+          "namespace": "typikon.texts",
+          "id": "699c9ace0c51f1c698ea0492"
+        },
+        "snapshot": "library-evidence.json#/text"
+      },
+      {
+        "id": "src:ak-source",
+        "kind": "native_record",
+        "nativeRef": {
+          "namespace": "rules.akathists",
+          "id": "akafist-svjatitelju-nikolaju-chudotvorcu"
+        },
+        "snapshot": "chant-evidence.json#/akathist"
+      },
+      {
+        "id": "src:structure",
+        "kind": "native_record",
+        "nativeRef": {
+          "namespace": "rules.content_items",
+          "id": "132"
+        },
+        "snapshot": "chant-evidence.json#/items/P04/0"
+      },
+      {
+        "id": "src:edition",
+        "kind": "native_record",
+        "nativeRef": {
+          "namespace": "rules.editions",
+          "id": "menaion-izdsovet-2002"
+        },
+        "snapshot": "chant-evidence.json#/editionCandidates/0"
+      }
+    ],
+    "observations": [
+      {
+        "id": "obs:attribution",
+        "sourceRef": "src:attribution",
+        "observationKind": "database_field",
+        "observationStatus": "record_read",
+        "recordedAt": "2026-11-13",
+        "locator": "work_id/role/method, person_id, raw_name, evidence",
+        "rawValue": {
+          "person_id": "kosma-mayumsky",
+          "raw_name": "Ποίημα Κοσμᾶ.",
+          "evidence": "ocMA.C2, oc.m1.d1_gr_GR_cog.ares:421"
+        },
+        "dependencyGroup": "dep:greek-attribution"
+      },
+      {
+        "id": "obs:greek-reference",
+        "sourceRef": "src:greek",
+        "observationKind": "source_inscription",
+        "observationStatus": "reference_only",
+        "recordedAt": "2026-11-13",
+        "locator": "ocMA.C2, oc.m1.d1_gr_GR_cog.ares:421",
+        "rawValue": null,
+        "dependencyGroup": "dep:greek-attribution",
+        "derivedFrom": [
+          "obs:attribution"
+        ]
+      },
+      {
+        "id": "obs:book-author",
+        "sourceRef": "src:book",
+        "observationKind": "database_field",
+        "observationStatus": "record_read",
+        "recordedAt": "2026-11-13",
+        "locator": "books.author",
+        "rawValue": "Иоанн Златоуст",
+        "dependencyGroup": "dep:book-attribution"
+      },
+      {
+        "id": "obs:catalog-title",
+        "sourceRef": "src:catalog-cache",
+        "observationKind": "cached_catalog_entry",
+        "observationStatus": "cache_read",
+        "recordedAt": "2026-11-13",
+        "locator": "sources.title",
+        "rawValue": "Ф.304/I №147. Маргарит свт. Иоанна Златоустаго, с прибавлениями",
+        "sourceFetchedAt": "2026-08-28T22:13:09.668Z",
+        "dependencyGroup": "dep:catalog-cache"
+      },
+      {
+        "id": "obs:empty-chapter-fields",
+        "sourceRef": "src:text",
+        "observationKind": "database_field",
+        "observationStatus": "record_read",
+        "recordedAt": "2026-11-13",
+        "locator": "texts.author, texts.translator, texts.ruLink",
+        "rawValue": {
+          "author": "",
+          "translator": "",
+          "ruLink": []
+        }
+      },
+      {
+        "id": "obs:technical-created",
+        "sourceRef": "src:text",
+        "observationKind": "database_field",
+        "observationStatus": "record_read",
+        "recordedAt": "2026-11-13",
+        "locator": "texts.createdAt",
+        "rawValue": "2026-02-23T18:22:06.311Z"
+      },
+      {
+        "id": "obs:ak-fields",
+        "sourceRef": "src:ak-source",
+        "observationKind": "database_field",
+        "observationStatus": "record_read",
+        "recordedAt": "2026-11-13",
+        "locator": "akathists.status, approved_*",
+        "rawValue": {
+          "status": "chastny",
+          "approved_journal": null,
+          "approved_at": null,
+          "approved_url": null
+        }
+      },
+      {
+        "id": "obs:irmos-reference",
+        "sourceRef": "src:structure",
+        "observationKind": "computed_structure",
+        "observationStatus": "record_read",
+        "recordedAt": "2026-11-13",
+        "locator": "content_items:132 → ref_text_id → fixed_texts",
+        "rawValue": {
+          "ownText": false,
+          "canonId": "oktoih-t1-krestovoskresny-utrenya",
+          "ode": 1,
+          "ref_text_id": "irmologij-irmosy-0003",
+          "sha256Utf8": "827f5238ae70f3eb641c6b32cf6da97373fa1944ad44fdf1965b63ee65511ae4"
+        }
+      },
+      {
+        "id": "obs:edition-year",
+        "sourceRef": "src:edition",
+        "observationKind": "database_field",
+        "observationStatus": "record_read",
+        "recordedAt": "2026-11-13",
+        "locator": "editions.year",
+        "rawValue": 2002
+      }
+    ],
+    "assertions": [
+      {
+        "id": "assert:canon-author",
+        "revision": 1,
+        "subjectId": "sub:canon",
+        "predicate": "authoredBy",
+        "polarity": "positive",
+        "value": {
+          "type": "entity",
+          "ref": {
+            "namespace": "rules.persons",
+            "id": "kosma-mayumsky"
+          },
+          "label": "Косма Маюмский",
+          "identityStatus": "existing_native"
+        },
+        "scope": {
+          "level": "work"
+        },
+        "origin": {
+          "kind": "imported",
+          "method": "greek",
+          "nativeRef": {
+            "namespace": "rules.work_attributions",
+            "key": {
+              "work_id": "w-canon-oktoih-t1-krestovoskresny-utrenya",
+              "role": "author",
+              "method": "greek"
+            }
+          }
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:attribution",
+            "role": "supports",
+            "directness": "reported",
+            "explanation": "Local attribution row read; referenced Greek inscription not collated."
+          },
+          {
+            "observationId": "obs:greek-reference",
+            "role": "context",
+            "directness": "reported",
+            "explanation": "Locator retained, not an independently observed inscription."
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      },
+      {
+        "id": "assert:chapter-author-candidate",
+        "revision": 1,
+        "subjectId": "sub:chapter",
+        "predicate": "authoredBy",
+        "polarity": "positive",
+        "value": {
+          "type": "entity",
+          "ref": null,
+          "label": "Иоанн Златоуст",
+          "identityStatus": "unresolved"
+        },
+        "scope": {
+          "level": "work",
+          "qualification": "Inherited candidate from collection; chapter identity and authorship require review."
+        },
+        "origin": {
+          "kind": "imported"
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:book-author",
+            "role": "supports",
+            "directness": "inherited",
+            "explanation": "Collection metadata, not chapter-specific evidence."
+          },
+          {
+            "observationId": "obs:catalog-title",
+            "role": "supports",
+            "directness": "inherited",
+            "explanation": "Cached collection title; independence from book attribution unknown."
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      },
+      {
+        "id": "assert:book-author-field",
+        "revision": 1,
+        "subjectId": "sub:book",
+        "predicate": "reportedField",
+        "polarity": "positive",
+        "value": {
+          "type": "literal",
+          "field": "author",
+          "value": "Иоанн Златоуст"
+        },
+        "scope": {
+          "level": "digital_source"
+        },
+        "origin": {
+          "kind": "imported"
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:book-author",
+            "role": "supports",
+            "directness": "direct",
+            "explanation": "Direct observation of stored field, not historical proof."
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      },
+      {
+        "id": "assert:technical-created",
+        "revision": 1,
+        "subjectId": "sub:text",
+        "predicate": "recordCreatedAt",
+        "polarity": "positive",
+        "value": {
+          "type": "timestamp",
+          "value": "2026-02-23T18:22:06.311Z"
+        },
+        "scope": {
+          "level": "digital_source"
+        },
+        "origin": {
+          "kind": "imported"
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:technical-created",
+            "role": "supports",
+            "directness": "direct",
+            "explanation": ""
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      },
+      {
+        "id": "assert:irmos-storage",
+        "revision": 1,
+        "subjectId": "sub:irmos",
+        "predicate": "storedAt",
+        "polarity": "positive",
+        "value": {
+          "type": "entity",
+          "ref": {
+            "namespace": "rules.fixed_texts",
+            "id": "irmologij-irmosy-0003"
+          },
+          "identityStatus": "existing_native"
+        },
+        "scope": {
+          "level": "text_unit"
+        },
+        "origin": {
+          "kind": "computed"
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:irmos-reference",
+            "role": "supports",
+            "directness": "direct",
+            "explanation": "Derived read model; body owner only, no historical origin claim."
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      },
+      {
+        "id": "assert:irmos-use",
+        "revision": 1,
+        "subjectId": "sub:irmos",
+        "predicate": "usedIn",
+        "polarity": "positive",
+        "value": {
+          "type": "entity",
+          "ref": {
+            "namespace": "example.occurrences",
+            "id": "example:occurrence:P01:132"
+          },
+          "identityStatus": "example_unregistered"
+        },
+        "scope": {
+          "level": "text_unit"
+        },
+        "origin": {
+          "kind": "computed"
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:irmos-reference",
+            "role": "supports",
+            "directness": "direct",
+            "explanation": "Occurrence in first ode of pilot canon, not proof of original composition."
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      },
+      {
+        "id": "assert:edition-year-field",
+        "revision": 1,
+        "subjectId": "sub:edition",
+        "predicate": "reportedField",
+        "polarity": "positive",
+        "value": {
+          "type": "literal",
+          "field": "year",
+          "value": 2002
+        },
+        "scope": {
+          "level": "edition"
+        },
+        "origin": {
+          "kind": "imported"
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:edition-year",
+            "role": "supports",
+            "directness": "direct",
+            "explanation": "Stored edition-year field; not a composition date or exact witness linkage for P05."
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      },
+      {
+        "id": "assert:ak-status-field",
+        "revision": 1,
+        "subjectId": "sub:ak-source",
+        "predicate": "reportedField",
+        "polarity": "positive",
+        "value": {
+          "type": "literal",
+          "field": "status",
+          "value": "chastny"
+        },
+        "scope": {
+          "level": "digital_source"
+        },
+        "origin": {
+          "kind": "imported"
+        },
+        "evidenceLinks": [
+          {
+            "observationId": "obs:ak-fields",
+            "role": "supports",
+            "directness": "direct",
+            "explanation": "Importer default; not evidence of disapproval or absence of approval."
+          }
+        ],
+        "reviewStatus": "unreviewed",
+        "validationStatus": "valid",
+        "lifecycle": "active"
+      }
+    ],
+    "questions": [
+      {
+        "id": "q:canon-created",
+        "subjectId": "sub:canon",
+        "predicate": "composedAt",
+        "status": "open",
+        "reason": "No composition date established by the selected evidence.",
+        "checkedObservationIds": [],
+        "candidateAssertionIds": []
+      },
+      {
+        "id": "q:canon-translation",
+        "subjectId": "sub:canon",
+        "predicate": "translationIdentity",
+        "status": "open",
+        "reason": "Identify translation before assigning translator or date.",
+        "checkedObservationIds": [],
+        "candidateAssertionIds": []
+      },
+      {
+        "id": "q:ak-author",
+        "subjectId": "sub:akathist",
+        "predicate": "authoredBy",
+        "status": "open",
+        "reason": "No author attribution for this work in the selected pilot extract; no negative assertion.",
+        "checkedObservationIds": [],
+        "candidateAssertionIds": []
+      },
+      {
+        "id": "q:ak-approval",
+        "subjectId": "sub:akathist",
+        "predicate": "approval",
+        "status": "open",
+        "reason": "Import default and empty approval fields do not settle approval history.",
+        "checkedObservationIds": [
+          "obs:ak-fields"
+        ],
+        "candidateAssertionIds": []
+      },
+      {
+        "id": "q:chapter-author",
+        "subjectId": "sub:chapter",
+        "predicate": "authoredBy",
+        "status": "open",
+        "reason": "Chapter-specific attribution needs investigation.",
+        "checkedObservationIds": [
+          "obs:book-author",
+          "obs:catalog-title",
+          "obs:empty-chapter-fields"
+        ],
+        "candidateAssertionIds": [
+          "assert:chapter-author-candidate"
+        ]
+      },
+      {
+        "id": "q:chapter-translator",
+        "subjectId": "sub:chapter",
+        "predicate": "translationIdentity",
+        "status": "open",
+        "reason": "Empty translator fields do not prove historical anonymity or absence of translation.",
+        "checkedObservationIds": [
+          "obs:empty-chapter-fields"
+        ],
+        "candidateAssertionIds": []
+      },
+      {
+        "id": "q:witness-date",
+        "subjectId": "sub:manuscript",
+        "predicate": "witnessedAt",
+        "status": "open",
+        "reason": "No witness dating in inspected cached title.",
+        "checkedObservationIds": [
+          "obs:catalog-title"
+        ],
+        "candidateAssertionIds": []
+      },
+      {
+        "id": "q:irmos-original",
+        "subjectId": "sub:irmos",
+        "predicate": "originalPartOf",
+        "status": "open",
+        "reason": "Original canon not established; incipit, storage and current use are insufficient.",
+        "checkedObservationIds": [
+          "obs:irmos-reference"
+        ],
+        "candidateAssertionIds": []
+      }
+    ],
+    "cases": [
+      {
+        "id": "case:chapter-author",
+        "subjectId": "sub:chapter",
+        "predicate": "authoredBy",
+        "assertionIds": [
+          "assert:chapter-author-candidate"
+        ],
+        "relationship": "requires_identity_review",
+        "status": "unresolved",
+        "preferredAssertionIds": [],
+        "reviewEventIds": []
+      },
+      {
+        "id": "case:irmos-origin",
+        "subjectId": "sub:irmos",
+        "predicate": "originalPartOf",
+        "assertionIds": [],
+        "relationship": "not_yet_established",
+        "status": "open",
+        "preferredAssertionIds": [],
+        "reviewEventIds": []
+      }
+    ],
+    "reviewEvents": [],
+    "sourceIndependence": [
+      {
+        "observationIds": [
+          "obs:attribution",
+          "obs:greek-reference"
+        ],
+        "status": "dependent",
+        "reason": "One local record and the external locator reported by that record."
+      },
+      {
+        "observationIds": [
+          "obs:book-author",
+          "obs:catalog-title"
+        ],
+        "status": "unknown",
+        "reason": "No independence claim inferred from two digital records."
+      }
+    ]
+  },
+  "expectedLibrarySha256": "9b908856543a0c9930d633d2c5f57337151fd38d19c29fca9b7a65224612896f"
+}

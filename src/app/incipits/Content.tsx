@@ -1,3 +1,4 @@
+import { nativeChantHref } from '@/lib/reader/legacyLink';
 import React from "react";
 import Link from "next/link";
 import type { IncipitsPageData } from "./api";
@@ -53,7 +54,7 @@ const Row = ({ item }: { item: IncipitsPageData["items"][number] }) => {
     const printed = item.text.replace(/\s*\/\s*/g, " ").trim();
     const target = item.uses > 1
         ? `/incipits/${item.language}/${encodeURIComponent(item.incipit)}`
-        : `/chants/${item.sampleId}`;
+        : nativeChantHref(item.sampleId);
 
     return (
         <div className="flex flex-col">

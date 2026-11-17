@@ -1,0 +1,176 @@
+{
+  "decisionDate": "2026-11-14",
+  "status": "deprecated-in-specification; runtime annotations pending implementation",
+  "operations": [
+    {
+      "path": "/api/v2/study/catalog",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "catalog",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/study/material",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "read",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/study/material",
+      "method": "POST",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "read",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/texts",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "catalog",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/texts/{id}",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "resolve + read",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/chants",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "search + catalog",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/chants/{id}",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "resolve + read",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/canons",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "catalog",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/canons/{id}",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "read",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/akathists",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "catalog",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/akathists/{id}",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "read",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/books",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "catalog",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    },
+    {
+      "path": "/api/v2/books/{id}",
+      "method": "GET",
+      "deprecated": true,
+      "replacementNamespace": "/api/v2/study/reader/v1/",
+      "replacement": "catalog + read",
+      "compatibilityAdapterRequired": true,
+      "retirementDate": null,
+      "replacementCoverage": "pilot first; full legacy use cases must migrate before removal"
+    }
+  ],
+  "deprecatedShapes": [
+    {
+      "name": "Target v1",
+      "replacement": "SourceAddress version 2"
+    },
+    {
+      "name": "Material v1",
+      "replacement": "ReadResponse with aggregate units/projections"
+    },
+    {
+      "name": "sourceHash/FNV as positional identity",
+      "replacement": "body/source revisions and mapped raw ranges"
+    },
+    {
+      "name": "native numeric item IDs as public identity",
+      "replacement": "stable sourceId + legacyPublicId adapter"
+    },
+    {
+      "name": "textItemId as only body-owner discriminator",
+      "replacement": "BodyRef with bodyId and native type"
+    }
+  ],
+  "notDeprecatedByThisChange": [
+    "/api/v2/cs/* dictionary contracts",
+    "study personal/change/publish/shared/plan without a replacement in this reader"
+  ],
+  "removalGate": [
+    "Reader replacement implemented for active legacy use cases",
+    "Client support/expiry matrix explicitly recorded",
+    "No remaining supported client requires old contract; route/version usage audited",
+    "Old public citation URLs retained through a minimal resolver/redirect",
+    "Sunset date and migration instructions published before removal"
+  ],
+  "runtimeHeaders": {
+    "Deprecation": "Structured Field date per RFC 9745, set when deployed; not boolean true",
+    "Link": "migration documentation with rel=deprecation",
+    "Sunset": null
+  },
+  "oldPublicUrls": "Preserved as lightweight redirects/resolver after legacy API controllers are retired",
+  "immediateDeletion": false
+}

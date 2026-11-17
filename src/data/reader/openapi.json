@@ -1,0 +1,4126 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Typikon shared pilot reader",
+    "version": "1.0.0-draft",
+    "description": "Specification only. New namespace; legacy responses unchanged and deprecated where replaced. No live routes asserted."
+  },
+  "servers": [
+    {
+      "url": "https://www.typikon.info/api/v2/study/reader/v1"
+    }
+  ],
+  "security": [
+    {},
+    {
+      "Bearer": []
+    },
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/capabilities": {
+      "get": {
+        "operationId": "readerV1Capabilities",
+        "summary": "Capabilities for the shared portal/Flutter reader",
+        "deprecated": false,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapabilitiesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/address/boundary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown object/revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ambiguous, stale map or cursor conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Removed/unavailable historical revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request/response budget exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported contract/profile/source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or quota limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Corpus/projection unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Use exact previously cached representation; no body."
+          }
+        }
+      },
+      "options": {
+        "summary": "Reader CORS preflight",
+        "responses": {
+          "204": {
+            "description": "GET/POST/OPTIONS allowed"
+          }
+        }
+      }
+    },
+    "/catalog": {
+      "get": {
+        "operationId": "readerV1Catalog",
+        "summary": "Catalog for the shared portal/Flutter reader",
+        "deprecated": false,
+        "parameters": [
+          {
+            "name": "pilotId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/address/boundary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown object/revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ambiguous, stale map or cursor conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Removed/unavailable historical revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request/response budget exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported contract/profile/source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or quota limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Corpus/projection unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Use exact previously cached representation; no body."
+          }
+        }
+      },
+      "options": {
+        "summary": "Reader CORS preflight",
+        "responses": {
+          "204": {
+            "description": "GET/POST/OPTIONS allowed"
+          }
+        }
+      }
+    },
+    "/resolve": {
+      "post": {
+        "operationId": "readerV1Resolve",
+        "summary": "Resolve for the shared portal/Flutter reader",
+        "deprecated": false,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/address/boundary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown object/revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ambiguous, stale map or cursor conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Removed/unavailable historical revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request/response budget exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported contract/profile/source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or quota limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Corpus/projection unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveRequest"
+              }
+            }
+          }
+        }
+      },
+      "options": {
+        "summary": "Reader CORS preflight",
+        "responses": {
+          "204": {
+            "description": "GET/POST/OPTIONS allowed"
+          }
+        }
+      }
+    },
+    "/read": {
+      "post": {
+        "operationId": "readerV1Read",
+        "summary": "Read for the shared portal/Flutter reader",
+        "deprecated": false,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/address/boundary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown object/revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ambiguous, stale map or cursor conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Removed/unavailable historical revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request/response budget exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported contract/profile/source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or quota limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Corpus/projection unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadRequest"
+              }
+            }
+          }
+        }
+      },
+      "options": {
+        "summary": "Reader CORS preflight",
+        "responses": {
+          "204": {
+            "description": "GET/POST/OPTIONS allowed"
+          }
+        }
+      }
+    },
+    "/passport/{sourceId}": {
+      "get": {
+        "operationId": "readerV1Passport",
+        "summary": "Passport for the shared portal/Flutter reader",
+        "deprecated": false,
+        "parameters": [
+          {
+            "name": "sourceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SourceId"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PassportRevision"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PassportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/address/boundary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown object/revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ambiguous, stale map or cursor conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Removed/unavailable historical revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request/response budget exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported contract/profile/source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or quota limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Corpus/projection unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Use exact previously cached representation; no body."
+          }
+        }
+      },
+      "options": {
+        "summary": "Reader CORS preflight",
+        "responses": {
+          "204": {
+            "description": "GET/POST/OPTIONS allowed"
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "operationId": "readerV1Search",
+        "summary": "Search for the shared portal/Flutter reader",
+        "deprecated": false,
+        "parameters": [
+          {
+            "name": "pilotId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "profileSetId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/address/boundary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown object/revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ambiguous, stale map or cursor conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Removed/unavailable historical revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request/response budget exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported contract/profile/source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or quota limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Corpus/projection unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "options": {
+        "summary": "Reader CORS preflight",
+        "responses": {
+          "204": {
+            "description": "GET/POST/OPTIONS allowed"
+          }
+        }
+      }
+    },
+    "/lookup": {
+      "post": {
+        "operationId": "readerV1Lookup",
+        "summary": "Lookup for the shared portal/Flutter reader",
+        "deprecated": false,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/address/boundary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown object/revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ambiguous, stale map or cursor conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Removed/unavailable historical revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request/response budget exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported contract/profile/source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or quota limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Corpus/projection unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LookupRequest"
+              }
+            }
+          }
+        }
+      },
+      "options": {
+        "summary": "Reader CORS preflight",
+        "responses": {
+          "204": {
+            "description": "GET/POST/OPTIONS allowed"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SourceId": {
+        "type": "string",
+        "pattern": "^src_[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$"
+      },
+      "OccurrenceId": {
+        "type": "string",
+        "pattern": "^occ_[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$"
+      },
+      "FragmentId": {
+        "type": "string",
+        "pattern": "^frg_[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$"
+      },
+      "BodyId": {
+        "type": "string",
+        "pattern": "^bdy_[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$"
+      },
+      "SourceRevision": {
+        "type": "string",
+        "pattern": "^sr1_[a-f0-9]{64}$"
+      },
+      "BodyRevision": {
+        "type": "string",
+        "pattern": "^br1_[a-f0-9]{64}$"
+      },
+      "PassportRevision": {
+        "type": "string",
+        "pattern": "^pr1_[a-f0-9]{64}$"
+      },
+      "DatasetRevision": {
+        "type": "string",
+        "pattern": "^ds1_[a-f0-9]{64}$"
+      },
+      "MapId": {
+        "type": "string",
+        "pattern": "^map1_[a-f0-9]{64}$"
+      },
+      "TokenId": {
+        "type": "string",
+        "pattern": "^tok1_[a-f0-9]{64}$"
+      },
+      "ProjectionId": {
+        "type": "string",
+        "pattern": "^proj1_[a-f0-9]{64}$"
+      },
+      "Range": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "minItems": 2,
+        "maxItems": 2,
+        "description": "UTF-16 half-open; start<=end and grapheme boundaries checked semantically."
+      },
+      "NativeRef": {
+        "type": "object",
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "namespace",
+          "id"
+        ],
+        "additionalProperties": true
+      },
+      "Selector": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "occurrence"
+              },
+              "occurrenceId": {
+                "$ref": "#/components/schemas/OccurrenceId"
+              }
+            },
+            "required": [
+              "kind",
+              "occurrenceId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "fragment"
+              },
+              "fragmentId": {
+                "$ref": "#/components/schemas/FragmentId"
+              }
+            },
+            "required": [
+              "kind",
+              "fragmentId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "range"
+              },
+              "startFragmentId": {
+                "$ref": "#/components/schemas/FragmentId"
+              },
+              "endFragmentId": {
+                "$ref": "#/components/schemas/FragmentId"
+              }
+            },
+            "required": [
+              "kind",
+              "startFragmentId",
+              "endFragmentId"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "SourceAddress": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "const": 2
+          },
+          "sourceId": {
+            "$ref": "#/components/schemas/SourceId"
+          },
+          "sourceRevision": {
+            "$ref": "#/components/schemas/SourceRevision"
+          },
+          "passportRevision": {
+            "$ref": "#/components/schemas/PassportRevision"
+          },
+          "selector": {
+            "$ref": "#/components/schemas/Selector"
+          }
+        },
+        "required": [
+          "version",
+          "sourceId"
+        ],
+        "additionalProperties": false
+      },
+      "LegacyTarget": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "bible",
+              "chant"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edition": {
+            "type": "string"
+          },
+          "chapter": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "verseFrom": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "verseTo": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "blockId": {
+            "type": "string"
+          },
+          "endBlockId": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "suffix": {
+            "type": "string"
+          },
+          "sourceHash": {
+            "type": "string"
+          },
+          "occurrence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "statia": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": true
+      },
+      "Warning": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string"
+          },
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "rawRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Range"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": true
+      },
+      "ReaderError": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string"
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "details": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "error"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "data"
+          ]
+        }
+      },
+      "SourceRights": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "unresolved",
+              "declared"
+            ]
+          },
+          "licenseId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "licenseUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "licenseId",
+          "licenseUrl",
+          "conditions"
+        ],
+        "additionalProperties": true
+      },
+      "SourceSummary": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "$ref": "#/components/schemas/SourceId"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "bible",
+              "chant",
+              "canon",
+              "akathist"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "editorialStatus": {
+            "type": "string"
+          },
+          "sourceRights": {
+            "$ref": "#/components/schemas/SourceRights"
+          },
+          "legacyTarget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LegacyTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "sourceId",
+          "kind",
+          "title",
+          "canonicalUrl",
+          "editorialStatus",
+          "sourceRights",
+          "legacyTarget"
+        ],
+        "additionalProperties": true
+      },
+      "Snapshot": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "$ref": "#/components/schemas/SourceId"
+          },
+          "sourceRevision": {
+            "$ref": "#/components/schemas/SourceRevision"
+          },
+          "passportRevision": {
+            "$ref": "#/components/schemas/PassportRevision"
+          },
+          "datasetRevisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatasetRevision"
+            },
+            "minItems": 1
+          },
+          "passportPolicy": {
+            "type": "string",
+            "enum": [
+              "current",
+              "pinned"
+            ]
+          }
+        },
+        "required": [
+          "sourceId",
+          "sourceRevision",
+          "passportRevision",
+          "datasetRevisions",
+          "passportPolicy"
+        ],
+        "additionalProperties": true
+      },
+      "ProfileSet": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profiles": {
+            "type": "object",
+            "properties": {
+              "markup": {
+                "type": "string"
+              },
+              "display": {
+                "type": "string"
+              },
+              "tokenizer": {
+                "type": "string"
+              },
+              "lookup": {
+                "type": "string"
+              },
+              "search": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "markup",
+              "display",
+              "tokenizer",
+              "lookup",
+              "search"
+            ],
+            "additionalProperties": true
+          },
+          "versions": {
+            "type": "object",
+            "properties": {
+              "unicode": {
+                "type": "string"
+              },
+              "segmenter": {
+                "type": "string"
+              },
+              "puaTableSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "letterTableSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "unicode",
+              "segmenter",
+              "puaTableSha256",
+              "letterTableSha256"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "profiles",
+          "versions"
+        ],
+        "additionalProperties": true
+      },
+      "CapabilitiesData": {
+        "type": "object",
+        "properties": {
+          "addressVersion": {
+            "const": 2
+          },
+          "profileSets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileSet"
+            },
+            "minItems": 1
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "catalogDefault": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "catalogMax": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "searchDefault": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "searchMax": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "readDefaultUnits": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "readMaxUnits": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "lookupMaxTokens": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "maxRequestBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "maxRawWindowUtf16": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "maxResponseBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "maxManifestUnits": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "catalogDefault",
+              "catalogMax",
+              "searchDefault",
+              "searchMax",
+              "readDefaultUnits",
+              "readMaxUnits",
+              "lookupMaxTokens",
+              "maxRequestBytes",
+              "maxRawWindowUtf16",
+              "maxResponseBytes",
+              "maxManifestUnits"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "addressVersion",
+          "profileSets",
+          "features",
+          "limits"
+        ],
+        "additionalProperties": true
+      },
+      "CatalogData": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceSummary"
+            }
+          },
+          "catalogRevision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "catalogRevision",
+          "nextCursor"
+        ],
+        "additionalProperties": true
+      },
+      "ResolveRequest": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1
+          },
+          "legacyTarget": {
+            "$ref": "#/components/schemas/LegacyTarget"
+          },
+          "address": {
+            "$ref": "#/components/schemas/SourceAddress"
+          }
+        },
+        "required": [
+          "contract"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "url"
+            ]
+          },
+          {
+            "required": [
+              "legacyTarget"
+            ]
+          },
+          {
+            "required": [
+              "address"
+            ]
+          }
+        ]
+      },
+      "ResolveData": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "string",
+                "enum": [
+                  "resolved",
+                  "relocated"
+                ]
+              },
+              "source": {
+                "$ref": "#/components/schemas/SourceSummary"
+              },
+              "resolvedAddress": {
+                "$ref": "#/components/schemas/SourceAddress"
+              },
+              "snapshot": {
+                "$ref": "#/components/schemas/Snapshot"
+              },
+              "canonicalUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "legacyTarget": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LegacyTarget"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "result",
+              "source",
+              "resolvedAddress",
+              "snapshot",
+              "canonicalUrl",
+              "legacyTarget"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "required": [
+              "result",
+              "container",
+              "resolvedAddress",
+              "canonicalUrl",
+              "legacyTarget"
+            ],
+            "properties": {
+              "result": {
+                "const": "container"
+              },
+              "container": {
+                "$ref": "#/components/schemas/ContainerSummary"
+              },
+              "resolvedAddress": {
+                "type": "null"
+              },
+              "canonicalUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "legacyTarget": {
+                "type": "null"
+              }
+            },
+            "additionalProperties": true
+          }
+        ]
+      },
+      "Window": {
+        "type": "object",
+        "properties": {
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "rawRange": {
+            "$ref": "#/components/schemas/Range"
+          }
+        },
+        "required": [
+          "bodyId",
+          "rawRange"
+        ],
+        "additionalProperties": false
+      },
+      "ReadRequest": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "address": {
+            "$ref": "#/components/schemas/SourceAddress"
+          },
+          "profileSetId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          }
+        },
+        "required": [
+          "contract",
+          "address",
+          "profileSetId"
+        ],
+        "additionalProperties": false,
+        "not": {
+          "required": [
+            "cursor",
+            "window"
+          ]
+        }
+      },
+      "Placement": {
+        "type": "object",
+        "properties": {
+          "ode": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "stanzaKind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stanza": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "marker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ode",
+          "unit",
+          "stanzaKind",
+          "stanza",
+          "marker"
+        ],
+        "additionalProperties": true
+      },
+      "DescriptorUnit": {
+        "type": "object",
+        "properties": {
+          "occurrenceId": {
+            "$ref": "#/components/schemas/OccurrenceId"
+          },
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "bodyRevision": {
+            "$ref": "#/components/schemas/BodyRevision"
+          },
+          "placement": {
+            "$ref": "#/components/schemas/Placement"
+          },
+          "repeatCount": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "rubricRevision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BodyRevision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "occurrenceId",
+          "bodyId",
+          "bodyRevision",
+          "placement",
+          "repeatCount",
+          "rubricRevision"
+        ],
+        "additionalProperties": true
+      },
+      "BodyRef": {
+        "type": "object",
+        "properties": {
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "bodyRevision": {
+            "$ref": "#/components/schemas/BodyRevision"
+          }
+        },
+        "required": [
+          "bodyId",
+          "bodyRevision"
+        ],
+        "additionalProperties": true
+      },
+      "SourceDescriptor": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "const": "source-r1"
+          },
+          "sourceId": {
+            "$ref": "#/components/schemas/SourceId"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "bible",
+              "chant",
+              "canon",
+              "akathist"
+            ]
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DescriptorUnit"
+            },
+            "maxItems": 256
+          },
+          "footnotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BodyRef"
+            }
+          }
+        },
+        "required": [
+          "profile",
+          "sourceId",
+          "kind",
+          "units",
+          "footnotes"
+        ],
+        "additionalProperties": true
+      },
+      "ReadUnit": {
+        "type": "object",
+        "properties": {
+          "occurrenceId": {
+            "$ref": "#/components/schemas/OccurrenceId"
+          },
+          "bodyRef": {
+            "$ref": "#/components/schemas/BodyRef"
+          },
+          "placement": {
+            "$ref": "#/components/schemas/Placement"
+          },
+          "projectionIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectionId"
+            }
+          }
+        },
+        "required": [
+          "occurrenceId",
+          "bodyRef",
+          "placement",
+          "projectionIds"
+        ],
+        "additionalProperties": true
+      },
+      "MapSegment": {
+        "type": "object",
+        "properties": {
+          "rawRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Range"
+            }
+          },
+          "outRange": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "copy",
+              "replace",
+              "delete",
+              "insert"
+            ]
+          },
+          "ruleId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fidelity": {
+            "type": "string",
+            "enum": [
+              "preserved",
+              "folded",
+              "unresolved",
+              "generated"
+            ]
+          },
+          "rawAnchor": {
+            "type": "object",
+            "properties": {
+              "offset": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "bias": {
+                "type": "string",
+                "enum": [
+                  "before",
+                  "after"
+                ]
+              }
+            },
+            "required": [
+              "offset",
+              "bias"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "rawRanges",
+          "outRange",
+          "operation",
+          "ruleId",
+          "fidelity"
+        ],
+        "additionalProperties": true
+      },
+      "OffsetMap": {
+        "type": "object",
+        "properties": {
+          "mapId": {
+            "$ref": "#/components/schemas/MapId"
+          },
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "bodyRevision": {
+            "$ref": "#/components/schemas/BodyRevision"
+          },
+          "profileSetId": {
+            "type": "string"
+          },
+          "inputProfileId": {
+            "const": "raw-r1"
+          },
+          "outputProfileId": {
+            "type": "string"
+          },
+          "rawWindow": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "outputLengthUtf16": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapSegment"
+            }
+          }
+        },
+        "required": [
+          "mapId",
+          "bodyId",
+          "bodyRevision",
+          "profileSetId",
+          "inputProfileId",
+          "outputProfileId",
+          "rawWindow",
+          "outputLengthUtf16",
+          "segments"
+        ],
+        "additionalProperties": true
+      },
+      "LookupKey": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profileId",
+          "value"
+        ],
+        "additionalProperties": true
+      },
+      "SearchKey": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "matchKind": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "folded",
+              "abbreviation_skeleton"
+            ]
+          }
+        },
+        "required": [
+          "profileId",
+          "value",
+          "matchKind"
+        ],
+        "additionalProperties": true
+      },
+      "Token": {
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "$ref": "#/components/schemas/TokenId"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "word",
+              "numberCandidate",
+              "punctuation",
+              "space",
+              "linebreak",
+              "unresolved"
+            ]
+          },
+          "rawRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Range"
+            },
+            "minItems": 1
+          },
+          "surfaceRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Range"
+            }
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tokenizerProfileId": {
+            "type": "string"
+          },
+          "lookupKey": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LookupKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "searchKeys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchKey"
+            }
+          },
+          "blockedReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "tokenId",
+          "type",
+          "rawRanges",
+          "surfaceRanges",
+          "flags",
+          "tokenizerProfileId",
+          "lookupKey",
+          "searchKeys",
+          "blockedReason"
+        ],
+        "additionalProperties": true
+      },
+      "Run": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "linebreak",
+              "footnote_ref",
+              "link"
+            ]
+          },
+          "viewRange": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "styles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "target": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "type",
+          "viewRange",
+          "styles"
+        ],
+        "additionalProperties": true
+      },
+      "BodyProjection": {
+        "type": "object",
+        "properties": {
+          "projectionId": {
+            "$ref": "#/components/schemas/ProjectionId"
+          },
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "bodyRevision": {
+            "$ref": "#/components/schemas/BodyRevision"
+          },
+          "profileSetId": {
+            "type": "string"
+          },
+          "bodyLengthUtf16": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "rawWindow": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "rawText": {
+            "type": "string"
+          },
+          "viewText": {
+            "type": "string"
+          },
+          "map": {
+            "$ref": "#/components/schemas/OffsetMap"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Token"
+            }
+          },
+          "runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Run"
+            }
+          }
+        },
+        "required": [
+          "projectionId",
+          "bodyId",
+          "bodyRevision",
+          "profileSetId",
+          "bodyLengthUtf16",
+          "rawWindow",
+          "rawText",
+          "viewText",
+          "map",
+          "tokens",
+          "runs"
+        ],
+        "additionalProperties": true
+      },
+      "ReadData": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/SourceSummary"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/Snapshot"
+          },
+          "resolvedAddress": {
+            "$ref": "#/components/schemas/SourceAddress"
+          },
+          "profileSet": {
+            "$ref": "#/components/schemas/ProfileSet"
+          },
+          "sourceDescriptor": {
+            "$ref": "#/components/schemas/SourceDescriptor"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadUnit"
+            }
+          },
+          "projections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BodyProjection"
+            }
+          },
+          "focus": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "resolved",
+                  "relocated"
+                ]
+              },
+              "occurrenceId": {
+                "$ref": "#/components/schemas/OccurrenceId"
+              },
+              "bodyId": {
+                "$ref": "#/components/schemas/BodyId"
+              },
+              "rawRanges": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Range"
+                }
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": true
+          },
+          "coverage": {
+            "type": "string",
+            "enum": [
+              "whole",
+              "window",
+              "page"
+            ]
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "nextCursor": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "selectionComplete": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "nextCursor",
+              "selectionComplete"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "source",
+          "snapshot",
+          "resolvedAddress",
+          "profileSet",
+          "sourceDescriptor",
+          "units",
+          "projections",
+          "focus",
+          "coverage",
+          "page"
+        ],
+        "additionalProperties": true
+      },
+      "SummaryField": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "candidate",
+              "disputed",
+              "unknown"
+            ]
+          },
+          "display": {
+            "type": "string"
+          },
+          "assertionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "questionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "state",
+          "display",
+          "assertionIds",
+          "questionIds"
+        ],
+        "additionalProperties": true
+      },
+      "PassportData": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "$ref": "#/components/schemas/SourceId"
+          },
+          "passportRevision": {
+            "$ref": "#/components/schemas/PassportRevision"
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SummaryField"
+            }
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PassportSubject"
+            }
+          },
+          "assertions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Assertion"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceReference"
+            }
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceObservation"
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchQuestion"
+            }
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttributionCase"
+            }
+          },
+          "reviewEvents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewEvent"
+            }
+          },
+          "passportDescriptor": {
+            "$ref": "#/components/schemas/PassportDescriptor"
+          }
+        },
+        "required": [
+          "sourceId",
+          "passportRevision",
+          "fields",
+          "subjects",
+          "assertions",
+          "sources",
+          "observations",
+          "questions",
+          "cases",
+          "reviewEvents"
+        ],
+        "additionalProperties": true
+      },
+      "TokenReference": {
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "$ref": "#/components/schemas/TokenId"
+          },
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "bodyRevision": {
+            "$ref": "#/components/schemas/BodyRevision"
+          },
+          "tokenizerProfileId": {
+            "type": "string"
+          },
+          "rawRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Range"
+            },
+            "minItems": 1
+          },
+          "occurrenceId": {
+            "$ref": "#/components/schemas/OccurrenceId"
+          }
+        },
+        "required": [
+          "tokenId",
+          "bodyId",
+          "bodyRevision",
+          "tokenizerProfileId",
+          "rawRanges"
+        ],
+        "additionalProperties": false
+      },
+      "LookupRequest": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceAddress"
+              },
+              {
+                "required": [
+                  "sourceRevision"
+                ]
+              }
+            ]
+          },
+          "profileSetId": {
+            "type": "string"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenReference"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "contract",
+          "address",
+          "profileSetId",
+          "tokens"
+        ],
+        "additionalProperties": false
+      },
+      "LexemeCandidate": {
+        "type": "object",
+        "properties": {
+          "lexemeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string"
+          },
+          "basis": {
+            "type": "string"
+          },
+          "reviewStatus": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lexemeId",
+          "label",
+          "basis",
+          "reviewStatus"
+        ],
+        "additionalProperties": true
+      },
+      "LookupResult": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tokenId": {
+                "$ref": "#/components/schemas/TokenId"
+              },
+              "status": {
+                "const": "linked"
+              },
+              "lexemeId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidenceAssertionIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "tokenId",
+              "status",
+              "lexemeId",
+              "evidenceAssertionIds"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tokenId": {
+                "$ref": "#/components/schemas/TokenId"
+              },
+              "status": {
+                "const": "candidates"
+              },
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/LexemeCandidate"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "tokenId",
+              "status",
+              "candidates"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tokenId": {
+                "$ref": "#/components/schemas/TokenId"
+              },
+              "status": {
+                "const": "not_found"
+              }
+            },
+            "required": [
+              "tokenId",
+              "status"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tokenId": {
+                "$ref": "#/components/schemas/TokenId"
+              },
+              "status": {
+                "const": "blocked"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "tokenId",
+              "status",
+              "reason"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "LookupData": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LookupResult"
+            }
+          },
+          "sourceRevision": {
+            "$ref": "#/components/schemas/SourceRevision"
+          },
+          "profileSetId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "results",
+          "sourceRevision",
+          "profileSetId"
+        ],
+        "additionalProperties": true
+      },
+      "SearchHit": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/SourceAddress"
+          },
+          "bodyId": {
+            "$ref": "#/components/schemas/BodyId"
+          },
+          "bodyRevision": {
+            "$ref": "#/components/schemas/BodyRevision"
+          },
+          "rawRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Range"
+            },
+            "minItems": 1
+          },
+          "matchKind": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "folded",
+              "abbreviation_skeleton"
+            ]
+          },
+          "snippet": {
+            "$ref": "#/components/schemas/BodyProjection"
+          },
+          "snippetHighlightRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Range"
+            }
+          }
+        },
+        "required": [
+          "address",
+          "bodyId",
+          "bodyRevision",
+          "rawRanges",
+          "matchKind",
+          "snippet",
+          "snippetHighlightRanges"
+        ],
+        "additionalProperties": true
+      },
+      "SearchData": {
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            }
+          },
+          "indexRevision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profileSetId": {
+            "type": "string"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "hits",
+          "indexRevision",
+          "profileSetId",
+          "nextCursor"
+        ],
+        "additionalProperties": true
+      },
+      "CapabilitiesResponse": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CapabilitiesData"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "data",
+          "warnings"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      },
+      "CatalogResponse": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CatalogData"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "data",
+          "warnings"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      },
+      "ResolveResponse": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResolveData"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "data",
+          "warnings"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      },
+      "ReadResponse": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReadData"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "data",
+          "warnings"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      },
+      "PassportResponse": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PassportData"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "data",
+          "warnings"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      },
+      "LookupResponse": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LookupData"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "data",
+          "warnings"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "cs-reader/1"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SearchData"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "data",
+          "warnings"
+        ],
+        "additionalProperties": true,
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      },
+      "ContainerSummary": {
+        "type": "object",
+        "required": [
+          "nativeRef",
+          "title",
+          "canonicalUrl"
+        ],
+        "properties": {
+          "nativeRef": {
+            "$ref": "#/components/schemas/NativeRef"
+          },
+          "title": {
+            "type": "string"
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "additionalProperties": true
+      },
+      "NativeRecordRef": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NativeRef"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "namespace",
+              "key"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "PassportSubject": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entityRef": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "describedBy": {
+            "$ref": "#/components/schemas/NativeRef"
+          }
+        },
+        "required": [
+          "id",
+          "entityRef",
+          "entityType",
+          "resolution"
+        ],
+        "additionalProperties": true
+      },
+      "HistoricalDate": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "minimum": -999999,
+            "maximum": 999999,
+            "not": {
+              "const": 0
+            }
+          },
+          "month": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 31
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "additionalProperties": true,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "day"
+              ]
+            },
+            "then": {
+              "required": [
+                "month"
+              ]
+            }
+          }
+        ]
+      },
+      "DateBound": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/HistoricalDate"
+          },
+          "inclusive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "date",
+          "inclusive"
+        ],
+        "additionalProperties": true
+      },
+      "HistoricalDateValue": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "historical_date"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "point",
+              "interval",
+              "bounds"
+            ]
+          },
+          "calendar": {
+            "type": "string",
+            "enum": [
+              "julian",
+              "gregorian",
+              "unknown"
+            ]
+          },
+          "precision": {
+            "type": "string",
+            "enum": [
+              "day",
+              "month",
+              "year",
+              "decade",
+              "century",
+              "unspecified"
+            ]
+          },
+          "approximate": {
+            "type": "boolean"
+          },
+          "rawLabel": {
+            "type": "string"
+          },
+          "point": {
+            "$ref": "#/components/schemas/HistoricalDate"
+          },
+          "from": {
+            "$ref": "#/components/schemas/HistoricalDate"
+          },
+          "to": {
+            "$ref": "#/components/schemas/HistoricalDate"
+          },
+          "lower": {
+            "$ref": "#/components/schemas/DateBound"
+          },
+          "upper": {
+            "$ref": "#/components/schemas/DateBound"
+          }
+        },
+        "required": [
+          "type",
+          "kind",
+          "calendar",
+          "precision",
+          "approximate",
+          "rawLabel"
+        ],
+        "additionalProperties": true,
+        "oneOf": [
+          {
+            "properties": {
+              "kind": {
+                "const": "point"
+              }
+            },
+            "required": [
+              "point"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "from"
+                  ]
+                },
+                {
+                  "required": [
+                    "to"
+                  ]
+                },
+                {
+                  "required": [
+                    "lower"
+                  ]
+                },
+                {
+                  "required": [
+                    "upper"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "properties": {
+              "kind": {
+                "const": "interval"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "point"
+                  ]
+                },
+                {
+                  "required": [
+                    "lower"
+                  ]
+                },
+                {
+                  "required": [
+                    "upper"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "properties": {
+              "kind": {
+                "const": "bounds"
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "lower"
+                ]
+              },
+              {
+                "required": [
+                  "upper"
+                ]
+              }
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "point"
+                  ]
+                },
+                {
+                  "required": [
+                    "from"
+                  ]
+                },
+                {
+                  "required": [
+                    "to"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "EntityValue": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "entity"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "identityStatus": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "ref",
+          "identityStatus"
+        ],
+        "additionalProperties": true
+      },
+      "LiteralValue": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "literal"
+          },
+          "value": {},
+          "field": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "additionalProperties": true
+      },
+      "TimestampValue": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "timestamp"
+          },
+          "value": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "additionalProperties": true
+      },
+      "OpaqueValue": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "not": {
+              "enum": [
+                "entity",
+                "literal",
+                "timestamp",
+                "historical_date"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      "AssertionValue": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/EntityValue"
+          },
+          {
+            "$ref": "#/components/schemas/LiteralValue"
+          },
+          {
+            "$ref": "#/components/schemas/TimestampValue"
+          },
+          {
+            "$ref": "#/components/schemas/HistoricalDateValue"
+          },
+          {
+            "$ref": "#/components/schemas/OpaqueValue"
+          }
+        ]
+      },
+      "AssertionScope": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "work",
+              "translation",
+              "redaction",
+              "witness",
+              "edition",
+              "digital_source",
+              "text_unit",
+              "occurrence"
+            ]
+          },
+          "qualification": {
+            "type": "string"
+          },
+          "sourceRevision": {
+            "$ref": "#/components/schemas/SourceRevision"
+          },
+          "address": {
+            "$ref": "#/components/schemas/SourceAddress"
+          }
+        },
+        "required": [
+          "level"
+        ],
+        "additionalProperties": true
+      },
+      "AssertionOrigin": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "imported",
+              "manual",
+              "computed"
+            ]
+          },
+          "nativeRef": {
+            "$ref": "#/components/schemas/NativeRecordRef"
+          },
+          "nativeRevision": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": true
+      },
+      "EvidenceLink": {
+        "type": "object",
+        "properties": {
+          "observationId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "supports",
+              "opposes",
+              "mentions",
+              "context"
+            ]
+          },
+          "directness": {
+            "type": "string",
+            "enum": [
+              "direct",
+              "inherited",
+              "reported",
+              "inference"
+            ]
+          },
+          "explanation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "observationId",
+          "role",
+          "directness",
+          "explanation"
+        ],
+        "additionalProperties": true
+      },
+      "Assertion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "predicate": {
+            "type": "string"
+          },
+          "polarity": {
+            "type": "string",
+            "enum": [
+              "positive",
+              "negative"
+            ]
+          },
+          "value": {
+            "$ref": "#/components/schemas/AssertionValue"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AssertionScope"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/AssertionOrigin"
+          },
+          "evidenceLinks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLink"
+            }
+          },
+          "reviewStatus": {
+            "type": "string",
+            "enum": [
+              "unreviewed",
+              "in_review",
+              "accepted",
+              "deferred",
+              "rejected"
+            ]
+          },
+          "validationStatus": {
+            "type": "string",
+            "enum": [
+              "unchecked",
+              "valid",
+              "invalid"
+            ]
+          },
+          "lifecycle": {
+            "type": "string",
+            "enum": [
+              "active",
+              "superseded",
+              "withdrawn"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "subjectId",
+          "predicate",
+          "polarity",
+          "value",
+          "scope",
+          "origin",
+          "evidenceLinks",
+          "reviewStatus",
+          "validationStatus",
+          "lifecycle"
+        ],
+        "additionalProperties": true
+      },
+      "SourceReference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "nativeRef": {
+            "$ref": "#/components/schemas/NativeRecordRef"
+          },
+          "snapshot": {
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "locator": {
+            "type": "string"
+          },
+          "sourceFetchedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind"
+        ],
+        "additionalProperties": true
+      },
+      "ObservationTime": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "type": "string",
+            "format": "date-time"
+          }
+        ]
+      },
+      "SourceObservation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sourceRef": {
+            "type": "string"
+          },
+          "observationKind": {
+            "type": "string"
+          },
+          "observationStatus": {
+            "type": "string",
+            "enum": [
+              "record_read",
+              "cache_read",
+              "source_collated",
+              "reference_only",
+              "unavailable"
+            ]
+          },
+          "recordedAt": {
+            "$ref": "#/components/schemas/ObservationTime"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "rawValue": {},
+          "sourceFetchedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "derivedFrom": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dependencyGroup": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "sourceRef",
+          "observationKind",
+          "observationStatus",
+          "recordedAt",
+          "locator",
+          "rawValue"
+        ],
+        "additionalProperties": true
+      },
+      "ResearchQuestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "predicate": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "checkedObservationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "candidateAssertionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "subjectId",
+          "predicate",
+          "status",
+          "reason",
+          "checkedObservationIds",
+          "candidateAssertionIds"
+        ],
+        "additionalProperties": true
+      },
+      "AttributionCase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "predicate": {
+            "type": "string"
+          },
+          "assertionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "relationship": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "unresolved",
+              "provisionally_resolved",
+              "resolved"
+            ]
+          },
+          "preferredAssertionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewEventIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "subjectId",
+          "predicate",
+          "assertionIds",
+          "relationship",
+          "status",
+          "preferredAssertionIds",
+          "reviewEventIds"
+        ],
+        "additionalProperties": true
+      },
+      "ReviewEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "actorRef": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/components/schemas/NativeRef"
+              }
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "assertionId": {
+            "type": "string"
+          },
+          "assertionRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "caseRevision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "actorRef",
+          "timestamp",
+          "action",
+          "reason"
+        ],
+        "additionalProperties": true,
+        "oneOf": [
+          {
+            "required": [
+              "assertionId",
+              "assertionRevision"
+            ],
+            "not": {
+              "required": [
+                "caseId"
+              ]
+            }
+          },
+          {
+            "required": [
+              "caseId",
+              "caseRevision"
+            ],
+            "not": {
+              "required": [
+                "assertionId"
+              ]
+            }
+          }
+        ]
+      },
+      "MetadataVersionRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "revision"
+        ],
+        "additionalProperties": true
+      },
+      "PassportDescriptor": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "const": "passport-r1"
+          },
+          "sourceId": {
+            "$ref": "#/components/schemas/SourceId"
+          },
+          "assertions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetadataVersionRef"
+            }
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetadataVersionRef"
+            }
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetadataVersionRef"
+            }
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetadataVersionRef"
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetadataVersionRef"
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetadataVersionRef"
+            }
+          }
+        },
+        "required": [
+          "profile",
+          "sourceId",
+          "assertions",
+          "observations",
+          "cases",
+          "decisions",
+          "questions",
+          "fields"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key"
+      }
+    }
+  },
+  "x-legacy-deprecations": "legacy-reader-deprecations.json",
+  "x-semantic-validation": [
+    "revision/profile equality",
+    "source membership",
+    "UTF-16 and grapheme boundaries",
+    "descriptor/projection/token digests",
+    "no mixed snapshots",
+    "source authorization",
+    "cursor affinity"
+  ],
+  "x-status": "specified-not-implemented"
+}

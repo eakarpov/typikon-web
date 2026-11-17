@@ -1,3 +1,4 @@
+import { legacyPublicIds } from "@/lib/reader/legacy";
 import { NextResponse } from "next/server";
 import { clientIpFromHeaders, consume } from "@/lib/rateLimit";
 import { razbor } from "@/lib/razbor/lookup";
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     try {
-        return NextResponse.json(razbor(text));
+        const result=razbor(text);const ids=await legacyPublicIds(result.lines.flatMap(l=>l.found?[l.found.itemId]:[]));for(const line of result.lines)if(line.found)line.found.itemId=ids.get(line.found.itemId)!;return NextResponse.json(result);
     } catch (e) {
         reportError(e, { where: "api/razbor: не удалось разобрать текст", source: "api" });
         return NextResponse.json({ error: "Не удалось разобрать текст" }, { status: 500 });

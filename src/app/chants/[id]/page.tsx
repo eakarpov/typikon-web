@@ -1,3 +1,4 @@
+import { nativeIdForRequest } from '@/lib/reader/legacy';
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -30,10 +31,10 @@ const idOf = (raw: string): number | null => {
 };
 
 export async function generateMetadata(
-    { params }: { params: { id: string } },
+    { params, searchParams = {} }: { params: { id: string }; searchParams?: Record<string,string|undefined> },
 ): Promise<Metadata> {
     const id = idOf(params.id);
-    const chant = id ? getChant(id) : null;
+    const chant = id ? getChant(await nativeIdForRequest(id,searchParams.dataset)) : null;
     if (!chant) return { title: "Песнопение не найдено — Уставные чтения" };
 
     const name = labelOf(UNIT_LABELS, chant.unit);
@@ -97,14 +98,14 @@ const Badges = ({ chant }: { chant: ChantDetail }) => {
     );
 };
 
-const ChantPage = ({
+const ChantPage = async ({
     params, searchParams,
 }: {
     params: { id: string };
     searchParams: Record<string, string | undefined>;
 }) => {
     const id = idOf(params.id);
-    const chant = id ? getChant(id) : null;
+    const chant = id ? getChant(await nativeIdForRequest(id,searchParams.dataset)) : null;
     if (!chant) notFound();
 
     // Смещения цитат посчитаны по той строке, у которой текст СВОЙ: Минея

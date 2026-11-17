@@ -1,3 +1,4 @@
+import { readerDeprecationHeaders } from '@/lib/reader/deprecation';
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { countV1Request, deprecationHeaders } from "@/lib/api/v1Deprecation";
@@ -38,6 +39,15 @@ export function middleware(request: NextRequest) {
                 response.headers.set(name, value);
             }
         }
+        return response;
+    }
+
+    const readerHeaders = readerDeprecationHeaders(request.nextUrl.pathname);
+    if (Object.keys(readerHeaders).length) {
+        const response=NextResponse.next();
+        const annotations={...(legacy?legacyHostHeaders():{}),...readerHeaders};
+        if(legacy)annotations.Link=[readerHeaders.Link,legacyHostHeaders().Link].join(", ");
+        for(const [key,value] of Object.entries(annotations))response.headers.set(key,value);
         return response;
     }
 

@@ -1,3 +1,4 @@
+import { legacyPublicIds, legacyFailure } from '@/lib/reader/legacy';
 import { fail, preflight, respondCollection } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { readEnum, readPage } from "@/lib/api/v2/params";
@@ -63,9 +64,11 @@ export async function GET(request: Request) {
             return fail("corpus_unavailable", "Корпус певческих текстов на этом сервере недоступен");
         }
 
-        return respondCollection(found.items.map(incipitSummary),
+        const ids=await legacyPublicIds(found.items.map(item=>item.sampleId));
+        return respondCollection(found.items.map(item=>incipitSummary({...item,sampleId:ids.get(item.sampleId)})),
             { total: found.total, limit, offset }, { maxAge: 300, access });
     } catch (e) {
+        const legacy=legacyFailure(e);if(legacy)return legacy;
         reportError(e, { where: "app/api/v2/incipits/route#GET", source: "api" });
         return fail("internal", "Поиск по указателю не удался");
     }

@@ -1,3 +1,4 @@
+import { legacyPublicIds, legacyFailure } from "@/lib/reader/legacy";
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { memoryIdsOf, dneslovIdsOf, getSaintByAddress } from "@/lib/saints";
@@ -70,6 +71,7 @@ export async function GET(
         // Акафист подписан одним номером, а не набором: связка ведётся по памяти.
         const works = corpus ? saintWorks(corpus,
             [...memoryIdsOf(saint), ...memories.map(m => m.memoryId)], ids) : null;
+        if(works){const ids=await legacyPublicIds(works.items.filter(w=>w.reader==="chant").map(w=>Number(w.id)));works.items=works.items.map(w=>w.reader==="chant"?{...w,id:String(ids.get(Number(w.id)))}:w);}
         const akathists = corpus ? akathistsOfSaint(ids, works?.memoryIds ?? memoryIdsOf(saint)) : null;
 
         return respond(
@@ -79,6 +81,7 @@ export async function GET(
             { access, maxAge: corpus ? revalidate : 0 },
         );
     } catch (e) {
+        const denied=legacyFailure(e);if(denied)return denied;
         reportError(e, { where: "app/api/v2/saints/dossier/[address]/route#GET", source: "api" });
         return fail("internal", "Не удалось собрать досье святого");
     }

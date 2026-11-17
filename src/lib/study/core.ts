@@ -1,3 +1,4 @@
+import type { StudyReaderAttachment } from "./reader-contract";
 /** Shared wire model. Anchors refer to the source, never a transformed display. */
 export interface Target {
   kind: "text" | "bible" | "chant";
@@ -26,6 +27,7 @@ export interface Block {
   editionVerse?: number;
 }
 export interface Material {
+  reader?: StudyReaderAttachment;
   target: Target;
   title: string;
   author?: string;

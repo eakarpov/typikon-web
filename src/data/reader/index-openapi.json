@@ -1,0 +1,349 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Corpus pilot index",
+    "version": "cs-index/1"
+  },
+  "paths": {
+    "/index/capabilities": {
+      "get": {
+        "operationId": "corpusIndexCapabilities",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "cs-index/1; snapshot I/C/D/P and SourceAddress v2. Candidates excluded from occurrences.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contract",
+                    "data",
+                    "warnings"
+                  ],
+                  "properties": {
+                    "contract": {
+                      "type": "string",
+                      "enum": [
+                        "cs-index/1"
+                      ]
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/cursor syntax"
+          },
+          "404": {
+            "description": "Unknown pilot/source"
+          },
+          "409": {
+            "description": "I/C/D/P/visibility mismatch or stale raw"
+          },
+          "410": {
+            "description": "Explicitly retired index"
+          },
+          "413": {
+            "description": "Minimal response exceeds 1 MiB"
+          },
+          "422": {
+            "description": "Unsupported profile/unknown query PUA"
+          },
+          "429": {
+            "description": "Rate limited; Retry-After"
+          },
+          "503": {
+            "description": "Not published"
+          }
+        }
+      }
+    },
+    "/index/search": {
+      "get": {
+        "operationId": "corpusIndexSearch",
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pilotId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cs-mvp-pilot-01"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "profileSetId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cs-pilot-source-r1",
+                "cs-pilot-unicode-r1"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "mode",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "word",
+                "phrase"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "in": "query",
+            "name": "indexRevision",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^ix1_[a-f0-9]{64}$"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "cs-index/1; snapshot I/C/D/P and SourceAddress v2. Candidates excluded from occurrences.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contract",
+                    "data",
+                    "warnings"
+                  ],
+                  "properties": {
+                    "contract": {
+                      "type": "string",
+                      "enum": [
+                        "cs-index/1"
+                      ]
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/cursor syntax"
+          },
+          "404": {
+            "description": "Unknown pilot/source"
+          },
+          "409": {
+            "description": "I/C/D/P/visibility mismatch or stale raw"
+          },
+          "410": {
+            "description": "Explicitly retired index"
+          },
+          "413": {
+            "description": "Minimal response exceeds 1 MiB"
+          },
+          "422": {
+            "description": "Unsupported profile/unknown query PUA"
+          },
+          "429": {
+            "description": "Rate limited; Retry-After"
+          },
+          "503": {
+            "description": "Not published"
+          }
+        }
+      }
+    },
+    "/index/occurrences": {
+      "get": {
+        "operationId": "corpusIndexOccurrences",
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pilotId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cs-mvp-pilot-01"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "profileSetId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cs-pilot-source-r1",
+                "cs-pilot-unicode-r1"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "lexemeId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "in": "query",
+            "name": "dictionaryVersion",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          {
+            "in": "query",
+            "name": "indexRevision",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^ix1_[a-f0-9]{64}$"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "cs-index/1; snapshot I/C/D/P and SourceAddress v2. Candidates excluded from occurrences.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contract",
+                    "data",
+                    "warnings"
+                  ],
+                  "properties": {
+                    "contract": {
+                      "type": "string",
+                      "enum": [
+                        "cs-index/1"
+                      ]
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request/cursor syntax"
+          },
+          "404": {
+            "description": "Unknown pilot/source"
+          },
+          "409": {
+            "description": "I/C/D/P/visibility mismatch or stale raw"
+          },
+          "410": {
+            "description": "Explicitly retired index"
+          },
+          "413": {
+            "description": "Minimal response exceeds 1 MiB"
+          },
+          "422": {
+            "description": "Unsupported profile/unknown query PUA"
+          },
+          "429": {
+            "description": "Rate limited; Retry-After"
+          },
+          "503": {
+            "description": "Not published"
+          }
+        }
+      }
+    }
+  }
+}

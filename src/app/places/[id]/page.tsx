@@ -1,3 +1,4 @@
+import { nativeChantHref } from '@/lib/reader/legacyLink';
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -288,7 +289,7 @@ const PlacePage = async ({ params }: Props) => {
                     <ul className="space-y-2">
                         {chants.items.map((c) => (
                             <li key={c.id} className="font-serif">
-                                <Link href={`/chants/${c.id}`} className="text-red-900 hover:underline">{c.unit}</Link>
+                                <Link href={nativeChantHref(c.id)} className="text-red-900 hover:underline">{c.unit}</Link>
                                 {c.memory && <span className="text-slate-500 text-sm"> — {c.memory}</span>}
                                 <div className="text-sm">«…{c.context}…»</div>
                             </li>

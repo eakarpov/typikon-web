@@ -1,0 +1,32 @@
+import '@/scripts/lib/env';
+import { BSON } from 'mongodb';
+import { writeFileSync } from 'node:fs';
+import { readerDb } from '@/lib/reader/registry';
+import { ReaderService } from '@/lib/reader/service';
+import { PILOT, sha, type Obj } from '@/lib/reader/core';
+async function main() {
+    if (!['localhost', '127.0.0.1', '[::1]'].includes(new URL(process.env.MONGODB_URI ?? '').hostname)) throw Error('Local read-only export only');
+    const at = process.argv.indexOf('--output'); if (at < 0) throw Error('--output required');
+    const db = await readerDb(), { state, release } = await new ReaderService(db).release(), sourceIds = release.entries.map((e: Obj) => e.sourceId);
+    const collections: Record<string, Obj[]> = {};
+    collections.readerPilots = [state];
+    collections.readerReleases = await db.collection<any>('readerReleases').find({ _id: { $in: state.history ?? [state.activeRelease] } }).toArray();
+    if (collections.readerReleases.some(r => r.entries.some((e: Obj) => !sourceIds.includes(e.sourceId)))) throw Error('Export must not expand pilot allowlist');
+    const entries = collections.readerReleases.flatMap(r => r.entries);
+    collections.readerSources = await db.collection<any>('readerSources').find({ _id: { $in: sourceIds } }).toArray();
+    collections.readerSourceVersions = await db.collection<any>('readerSourceVersions').find({ _id: { $in: entries.map(e => e.sourceRevision) } }).toArray();
+    collections.readerPassports = await db.collection<any>('readerPassports').find({ sourceId: { $in: sourceIds } }).toArray();
+    collections.readerBodyBindings = await db.collection<any>('readerBodyBindings').find({ _id: { $in: entries.flatMap(e => e.bodyBindingIds) } }).toArray();
+    collections.readerFragments = await db.collection<any>('readerFragments').find({ sourceId: { $in: sourceIds } }).toArray();
+    collections.readerFragmentBindings = await db.collection<any>('readerFragmentBindings').find({ _id: { $in: collections.readerFragments.flatMap(f => entries.filter(e => e.sourceId === f.sourceId).map(e => f._id + ':' + e.sourceRevision)) } }).toArray();
+    collections.readerProfiles = await db.collection<any>('readerProfiles').find({}).toArray();
+    const identities = [...sourceIds, ...collections.readerSourceVersions.flatMap(s => s.descriptor.units.flatMap((u: Obj) => [u.bodyId, u.occurrenceId])), ...collections.readerFragments.map(f => f._id)];
+    collections.readerIdentities = await db.collection<any>('readerIdentities').find({ id: { $in: identities } }).toArray();
+    const publicIds = entries.flatMap(e => e.source.legacyTarget?.kind === 'chant' ? [Number(e.source.legacyTarget.id)] : []);
+    collections.readerLegacyBindings = await db.collection<any>('readerLegacyBindings').find({ publicId: { $in: publicIds } }).toArray();
+    for (const row of collections.readerBodyBindings) if (['raw', 'rawText', 'content', 'viewText'].some(k => k in row)) throw Error('Refusing textual snapshot');
+    const output = BSON.EJSON.stringify({ format: 'cs-reader-registry-export/1', pilotId: PILOT, corpusRelease: release._id, runtimeUnicode: process.versions.unicode, fullBodiesStored: false, collections }, { relaxed: false });
+    writeFileSync(process.argv[at + 1], output + '\n');
+    console.log(JSON.stringify({ corpusRelease: release._id, sha256: sha(output + '\n'), collections: Object.fromEntries(Object.entries(collections).map(([k, v]) => [k, v.length])), fullBodiesStored: false }, null, 2));
+}
+main().catch(e => { console.error(e); process.exitCode = 1; }).finally(async () => { const { default: client } = await import('@/lib/mongodb'); await (await client).close(); });

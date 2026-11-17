@@ -1,3 +1,4 @@
+import { nativeChantHref } from "@/lib/reader/legacyLink";
 import Link from "next/link";
 import type { SaintWork } from "@/lib/saintWorks";
 import { needsChurchFont, bookLanguageShort } from "@/utils/bookLanguages";
@@ -8,7 +9,7 @@ export default function Works({ items }: { items: SaintWork[] }) {
     return <section className="my-5 space-y-3" aria-label="Службы и песнопения святого">
         <h2 className="font-serif font-bold text-lg">Службы и песнопения</h2>
         {items.map(work => <article key={`${work.reader}:${work.id}:${work.language}`} className="border-l-2 border-amber-800 pl-3">
-            <Link className="font-serif text-amber-800 underline" href={saintWorkHref(work)}>
+            <Link className="font-serif text-amber-800 underline" href={work.reader === "chant" ? nativeChantHref(Number(work.id)) : saintWorkHref(work)}>
                 {SAINT_WORK_LABELS[work.genre] || work.genre}{work.reader === "service" || work.reader === "canon" ? `: ${work.title}` : ""}
             </Link>
             <p className="font-serif text-sm text-slate-500">{[work.subtitle, bookLanguageShort(work.language)].filter(Boolean).join(" · ")}</p>

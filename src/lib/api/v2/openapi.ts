@@ -1,4 +1,5 @@
 import {priestPaths, priestSchemas} from '@/lib/pomyannik/priestOpenapi';
+import { withReaderApi } from '@/lib/reader/openapi';
 import {csPaths,csSchemas} from '@/lib/csDictionary/openapi';
 import {studyPaths,studySchemas} from '@/lib/study/openapi';
 import {notePaths, noteSchemas} from '@/lib/notes/openapi';
@@ -80,7 +81,7 @@ const needsSession = errorResponse(
 );
 const personal = [{ apiKey: [], cookieAuth: [] }];
 
-export const openapi = () => ({
+const baseOpenapi = () => ({
     openapi: "3.1.0",
     info: {
         title: "Уставные чтения — API",
@@ -3713,3 +3714,5 @@ export const openapi = () => ({
         },
     },
 });
+
+export const openapi = () => withReaderApi(baseOpenapi());

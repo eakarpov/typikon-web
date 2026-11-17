@@ -1,3 +1,4 @@
+import { ReaderError } from "@/lib/reader/core";
 import { authorize } from "@/lib/api/v2/access";
 import { authorizeUser } from "@/lib/api/v2/user";
 import { respondPrivate, fail, preflight } from "@/lib/api/v2/http";
@@ -18,6 +19,7 @@ export async function handle(req: Request, action: string) {
     ? await authorizeUser(req, "texts")
     : await authorize(req, "texts");
   if (access.denied) return access.denied;
+  let readerPilot = false;
   try {
     const url = new URL(req.url);
     let b: any = {};
@@ -37,9 +39,13 @@ export async function handle(req: Request, action: string) {
       case "catalog":
         result = await catalog(url.searchParams.get("book") ?? undefined);
         break;
-      case "material":
-        result = await material(target());
+      case "material": {
+        const requested=b.reader??url.searchParams.get("reader")??undefined;
+        if(url.searchParams.getAll("reader").length>1||(requested!==undefined&&requested!=="pilot"))return fail("bad_request","Неизвестный режим reader.");
+        readerPilot=requested==="pilot";
+        result=await material(target(),{reader:readerPilot?"pilot":undefined});
         break;
+      }
       case "related":
         result = await related(target());
         break;
@@ -116,6 +122,7 @@ export async function handle(req: Request, action: string) {
     }
     return respondPrivate(result, { access });
   } catch (e) {
+    if(readerPilot&&e instanceof ReaderError)return new Response(JSON.stringify({error:{code:e.code,message:e.message}}),{status:e.status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"private,no-store","Access-Control-Allow-Origin":"*",...access.headers}});
     const message = (e as Error).message;
     if (message === "conflict")
       return new Response(

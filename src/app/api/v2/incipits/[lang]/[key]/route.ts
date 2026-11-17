@@ -1,3 +1,4 @@
+import { legacyPublicIds, legacyFailure } from '@/lib/reader/legacy';
 import { fail, preflight, respond } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { incipitDetail } from "@/lib/api/v2/serialize";
@@ -48,8 +49,12 @@ export async function GET(
         // видно по ручке-списку, которая отвечает про него прямо.
         if (!found) return fail("not_found", "Зачин не найден");
 
-        return respond(incipitDetail(found), { maxAge: 3600, access });
+        const all=[...(found.witnesses??[]),...(found.declared??[]),...(found.supposed??[])];
+        const ids=await legacyPublicIds(all.map(item=>item.id));
+        const convert=(items:any[])=>items.map(item=>({...item,id:ids.get(item.id)}));
+        return respond(incipitDetail({...found,witnesses:convert(found.witnesses??[]),declared:convert(found.declared??[]),supposed:convert(found.supposed??[])}), { maxAge: 3600, access });
     } catch (e) {
+        const legacy=legacyFailure(e);if(legacy)return legacy;
         reportError(e, { where: "app/api/v2/incipits/[lang]/[key]/route#GET", source: "api" });
         return fail("internal", "Не удалось собрать зачин");
     }

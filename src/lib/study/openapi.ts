@@ -22,7 +22,18 @@ const reply = {
     "Результат операции. Личные данные имеют Cache-Control: private,no-store.",
   content: { "application/json": { schema: { type: "object" } } },
 };
-export const studySchemas = { StudyTarget: target };
+export const studySchemas = {
+  StudyTarget: target,
+  StudyReaderAttachment: {
+    type:"object",required:["contract","sourceId","address","snapshot","bodyRef","permanentUrl","versionUrl","fragment","passportUrl","editorialStatus","passport"],
+    properties:{contract:{const:"cs-reader/1"},sourceId:{$ref:"#/components/schemas/ReaderV1SourceId"},
+      address:{$ref:"#/components/schemas/ReaderV1SourceAddress"},snapshot:{$ref:"#/components/schemas/ReaderV1Snapshot"},bodyRef:{$ref:"#/components/schemas/ReaderV1BodyRef"},
+      permanentUrl:{type:"string",format:"uri"},versionUrl:{type:"string",format:"uri"},passportUrl:{type:"string"},editorialStatus:{type:"string"},
+      fragment:{type:"object",required:["address","url","label"],properties:{address:{$ref:"#/components/schemas/ReaderV1SourceAddress"},url:{type:"string",format:"uri"},label:{type:"string"}}},
+      passport:{$ref:"#/components/schemas/ReaderV1PassportData"}},additionalProperties:true,
+  },
+  StudyMaterialWithReader: {type:"object",required:["target","sourceHash","blocks","metadata","reader"],properties:{target:{$ref:"#/components/schemas/StudyTarget"},sourceHash:{type:"string"},blocks:{type:"array",items:{type:"object"}},metadata:{type:"object"},reader:{$ref:"#/components/schemas/StudyReaderAttachment"}},additionalProperties:true},
+};
 export function studyPaths(personal: any) {
   const paths: any = {};
   const summaries: Record<string, string> = {
@@ -116,6 +127,13 @@ export function studyPaths(personal: any) {
           },
         },
       };
+  }
+  const material=paths["/api/v2/study/material"];
+  material.get.parameters.push({name:"reader",in:"query",required:false,schema:{type:"string",enum:["pilot"]},description:"Совместимое расширение только для выбранной главы Маргарита. Без параметра прежний ответ не меняется."});
+  material.post.requestBody.content["application/json"].schema.properties.reader={type:"string",enum:["pilot"]};
+  for(const operation of [material.get,material.post]){
+    operation.description+=" reader=pilot добавляет reader: паспорт, pinned адрес и ссылку на фрагмент главы без копирования тела. Старый маршрут остаётся deprecated.";
+    operation.responses={...operation.responses,"200":{...reply,content:{"application/json":{schema:{oneOf:[{type:"object",not:{required:["reader"]}},{$ref:"#/components/schemas/StudyMaterialWithReader"}]}}}},"404":{description:"Пилотный источник закрыт или не найден"},"410":{description:"Тело изменилось после публикации"},"422":{description:"Этот источник не подключён к опыту"},"503":{description:"Публикация или привязка недоступна"}};
   }
   return paths;
 }

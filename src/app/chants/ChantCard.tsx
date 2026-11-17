@@ -1,3 +1,4 @@
+import { nativeChantHref } from '@/lib/reader/legacyLink';
 import React from "react";
 import Link from "next/link";
 import type { ChantHit } from "@/lib/chants";
@@ -98,7 +99,7 @@ export const ChantCard = ({ hit, children }: { hit: ChantHit; children?: React.R
         {/* Показан фрагмент, а песнопение поётся целиком: за полным текстом
             и напевом — на страницу песнопения. */}
         <Link
-            href={`/chants/${hit.id}`}
+            href={nativeChantHref(hit.id)}
             className="font-serif text-xs text-red-900 inline-block mt-1"
         >
             целиком и с напевом →

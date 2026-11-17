@@ -1,3 +1,4 @@
+import { nativeChantHref } from "@/lib/reader/legacyLink";
 import React from "react";
 import Link from "next/link";
 import type { ChantDetail } from "@/lib/chants";
@@ -30,7 +31,7 @@ const linkTo = (id: number, params: Params, patch: Params) => {
     const next = new URLSearchParams();
     for (const [k, v] of Object.entries({ ...params, ...patch })) if (v) next.set(k, v);
     const query = next.toString();
-    return `/chants/${id}${query ? `?${query}` : ""}`;
+    return nativeChantHref(id) + (query ? `&${query}` : "");
 };
 
 /** Пилюля выбора. Недоступный вариант не прячем, а гасим: см. tuneOffers. */
