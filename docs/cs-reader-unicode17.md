@@ -21,7 +21,11 @@ Scripts:
 - `reader-unicode-import.ts`: server preflight against exact native dataset and D;
   without flags writes only the isolated sidecar registry; `--prepare` inserts
   conflict-checked immutable production records without activation; `--activate`
-  separately swaps the allowlisted pilot state after validation. Use `--backup`
+  separately swaps the allowlisted pilot state after validation. If the server native
+  artifact differs in its container bytes, `--rebind-native --baseline <Unicode16 report>`
+  requires the exact old raw hashes and repeats all 201 token/map/display comparisons
+  before writing a new audited `--export`. It never treats a dataset mismatch as
+  implicit compatibility. Use `--backup`
   once to preserve the prior pilot state before activation.
 
 `CS_READER_REGISTRY_DB` may only name `typikon_reader_*`. It routes reader*

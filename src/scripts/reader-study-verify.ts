@@ -1,3 +1,4 @@
+import { profileSets } from '@/lib/reader/projection';
 import '@/scripts/lib/env';
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
@@ -29,7 +30,7 @@ async function main(){
   const passport=await request(reader.passportUrl);assert.equal(passport.status,200);assert.deepEqual((await passport.json()).data,reader.passport);
   const fragmentUrl=new URL(reader.fragment.url);const fragment=await request(fragmentUrl.pathname+fragmentUrl.search);assert.equal(fragment.status,200);assert.match(fragment.headers.get('x-robots-tag')??'',/noindex/);assert.ok((await fragment.text()).includes(material.title));
   const address=await request('/api/v2/study/reader/v1/resolve',{contract:'cs-reader/1',url:reader.fragment.url});assert.equal(address.status,200);const resolved=(await address.json()).data;assert.equal(resolved.resolvedAddress.selector.fragmentId,reader.fragment.address.selector.fragmentId);
-  const read=await request('/api/v2/study/reader/v1/read',{contract:'cs-reader/1',address:reader.fragment.address,profileSetId:'cs-pilot-source-r1'});assert.equal(read.status,200);const data=(await read.json()).data;checkRead(data);assert.equal(data.units[0].bodyRef.bodyRevision,reader.bodyRef.bodyRevision);
+  const read=await request('/api/v2/study/reader/v1/read',{contract:'cs-reader/1',address:reader.fragment.address,profileSetId:profileSets[0].id});assert.equal(read.status,200);const data=(await read.json()).data;checkRead(data);assert.equal(data.units[0].bodyRef.bodyRevision,reader.bodyRef.bodyRevision);
   const raw=await db.collection('texts').findOne({_id:new(await import('mongodb')).ObjectId(target.id)});assert.equal(sha(raw!.content),'9b908856543a0c9930d633d2c5f57337151fd38d19c29fca9b7a65224612896f');assert.equal(data.projections[0].rawText,raw!.content);
   const page=await request('/opyty/cs-reader/margarit');assert.equal(page.status,200);assert.match(await page.text(),/noindex/);
   const index=await request('/opyty/cs-reader');assert.equal(index.status,200);assert.ok((await index.text()).includes('/opyty/cs-reader/margarit'));
