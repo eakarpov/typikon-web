@@ -52,10 +52,15 @@ export async function loadBody(db: Db, binding: Obj): Promise<string> {
     } else {
         const current = rules(); let ref = binding.nativeRef;
         if (current.datasetRevision !== binding.datasetRevision) {
-            // Only an audited explicit bridge may reuse unchanged bytes from a newer native artifact.
+            // Explicit bridges relocate a body; the original reference is always content-verified.
             const bridge = await db.collection<any>('readerBodyRebindings').findOne({ _id: binding._id + ':' + current.datasetRevision, bodyId: binding.bodyId, bodyRevision: binding.bodyRevision, fromDatasetRevision: binding.datasetRevision, datasetRevision: current.datasetRevision });
-            if (!bridge || bridge.nativeRef.namespace !== binding.nativeRef.namespace) fail('revision_unavailable', 410, 'Для этой ревизии нужна прежняя сборка или проверенная привязка.');
-            ref = bridge.nativeRef;
+            if (bridge) {
+                if (bridge.nativeRef.namespace !== binding.nativeRef.namespace) fail('revision_unavailable', 410, 'Несовместимая привязка тела.');
+                ref = bridge.nativeRef;
+            }
+            // An unrelated book changes the container hash, not this immutable body.
+            // Original coordinates remain usable ONLY when the final raw SHA256 matches.
+            // Relocation still needs an explicit bridge; never guess a row or new revision.
         }
         const table = ref.namespace === 'rules.fixed_texts' ? 'fixed_texts' : 'content_items'; const key = table === 'fixed_texts' ? 'text_id' : 'item_id';
         const row: any = current.db.prepare(`SELECT text FROM ${table} WHERE ${key}=?`).get(ref.id); raw = row?.text;

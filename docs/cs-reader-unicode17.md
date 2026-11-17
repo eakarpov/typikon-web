@@ -32,9 +32,10 @@ Scripts:
 collections to an acceptance namespace while canonical texts/books remain in
 `typikon`. Production uses the default namespace. No canonical text is copied.
 
-`readerBodyRebindings` permits old raw revisions to resolve through an explicitly
-audited native artifact bridge only; raw SHA256 is still checked at every read.
-No bridge or different bytes retains 410. Profiles do not permit old offsets to
+`readerBodyRebindings` explicitly relocates old raw bodies when their native reference
+changes. An original reference remains readable across unrelated container updates
+only when its raw SHA256 is exactly the pinned bodyRevision. Missing/changed bytes
+retain 410; relocation is never guessed. Raw SHA256 is checked at every read. Profiles do not permit old offsets to
 be applied to new raw bytes. Previous source revisions and address IDs remain.
 
 Pilot state sets `legacyRegistryActive:false`: publishing a five-source corpus
