@@ -1,3 +1,4 @@
+import {fetchOrdo} from "./ordoTransport";
 // Серверное чтение пакета `.ordo` — формата обмена последованием
 // (typikon-rules, spec/package.md). Просмотрщик /posledovanie читает службу
 // отсюда, а не из JSON-ручки /sutki: пакет и есть внешний формат, и читая
@@ -41,31 +42,14 @@ type Asked<T> = { data: T; error: null; version: string | null }
 
 const base = () => process.env.ORDO_SERVICE_URL || "";
 
-// ОДИН ПОВТОР на обрыв соединения — та же причина, что в lib/ordo.ts:
-// служба отвечает по HTTP/1.0 и закрывает сокет после ответа, и клиент,
-// спрашивающий её разом многими запросами (суточный круг — десяток служб,
-// к каждой пакет и указания), изредка попадает в уже закрытое соединение.
-// «fetch failed» тут значит «до службы не дошло», и один повтор дешевле
-// ложной «не собралась». Тайм-аут не повторяем: служба занята, и второй
-// заход её не разгрузит.
+// A shared queue covers JSON and package requests, including body consumption.
 const fetchOk = async (url: URL, timeoutMs: number): Promise<Response> => {
-    for (let attempt = 1; ; attempt++) {
-        try {
-            const response = await fetch(url, {
-                signal: AbortSignal.timeout(timeoutMs),
-                cache: "no-store",
-            });
-            if (!response.ok) {
-                const said = await response.json().then(b => b?.error, () => null);
-                throw new Error(`${response.status}${said ? `: ${said}` : ""}`);
-            }
-            return response;
-        } catch (e) {
-            const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
-            if (attempt < 2 && !timedOut) continue;
-            throw e;
-        }
+    const response = await fetchOrdo(url, timeoutMs);
+    if (!response.ok) {
+        const said = await response.json().then(b => b?.error, () => null);
+        throw new Error(`${response.status}${said ? `: ${said}` : ""}`);
     }
+    return response;
 };
 
 const transferParam = (t: OrdoTransfer): [string, string] =>

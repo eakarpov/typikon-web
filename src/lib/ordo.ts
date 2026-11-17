@@ -1,5 +1,5 @@
 // Клиент к службе сборки последования (проект typikon-rules, src/ordo_service.py).
-import {requestQueue} from "./ordoQueue";
+import {fetchOrdo, type OrdoPriority} from "./ordoTransport";
 import {reportError} from "@/lib/reportError";
 //
 // Почему служба, а не свой код. Устав — не выборка, а конструктор: какие
@@ -72,13 +72,14 @@ type Asked<T> =
     | { data: T; error: null; status: number; version: string | null }
     | { data: null; error: { status: number | null; message: string }; version: string | null };
 
-const unpooledRequest = async <T>(
+const request = async <T>(
     path: string,
     params?: Record<string, string>,
     // Повторяемые параметры отдельно: престолов у храма бывает несколько, а
     // Record такого не выражает — второй ключ затёр бы первый молча.
     repeated?: [string, string][],
     timeoutMs: number = ORDO_TIMEOUT_MS,
+    priority: OrdoPriority = 'interactive',
 ): Promise<Asked<T>> => {
     const root = base();
     if (!root) {
@@ -93,28 +94,9 @@ const unpooledRequest = async <T>(
         if (v) url.searchParams.append(k, v);
     }
 
-    // ОДИН ПОВТОР на обрыв соединения. Служба отвечает по HTTP/1.0 и
-    // закрывает сокет после ответа, а клиент, спрашивающий её разом многими
-    // запросами (суточный круг — десяток служб), изредка попадает в уже
-    // закрытое соединение: «fetch failed», хотя до службы запрос не дошёл
-    // вовсе. Тайм-аут не повторяем — служба занята, и второй заход её не
-    // разгрузит.
-    for (let attempt = 1, busyRetries=0; ; attempt++) {
-        try {
-            const response = await fetch(url, {
-                signal: AbortSignal.timeout(timeoutMs),
-                // Последование зависит от десятка параметров разом, и кэшировать
-                // его по адресу незачем: сборка стоит миллисекунды, а вариантов
-                // столько, что кэш всё равно не прогреется.
-                cache: "no-store",
-            });
+    try {
+            const response = await fetchOrdo(url, timeoutMs, priority);
             const version = response.headers.get("x-ordo-version");
-            if(response.status===503&&busyRetries<3){
-                const delay=Math.min(2000,Math.max(100,Number(response.headers.get('retry-after')??2)*1000));
-                await response.body?.cancel();
-                await new Promise(resolve=>setTimeout(resolve,Number.isFinite(delay)?delay:2000));
-                busyRetries++;attempt--;continue;
-            }
             if (!response.ok) {
                 const said = await response.json().then(b => b?.error, () => null);
                 const message = `${response.status}${said ? `: ${said}` : ""}`;
@@ -124,7 +106,6 @@ const unpooledRequest = async <T>(
             return { data: await response.json() as T, error: null, status: response.status, version };
         } catch (e) {
             const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
-            if (attempt < 2 && !timedOut) continue;
             reportError(e, { where: "lib/ordo: служба устава недоступна", extra: { path: url.pathname } });
             const cause = e instanceof Error && e.cause instanceof Error ? ` (${e.cause.message})` : "";
             return {
@@ -136,13 +117,8 @@ const unpooledRequest = async <T>(
                 },
                 version: null,
             };
-        }
     }
 };
-
-const calendarQueue=requestQueue(2);
-const request=<T>(path:string,params?:Record<string,string>,repeated?:[string,string][],timeoutMs=ORDO_TIMEOUT_MS):Promise<Asked<T>>=>
-    calendarQueue.run(JSON.stringify([base(),path,params,repeated,timeoutMs]),()=>unpooledRequest<T>(path,params,repeated,timeoutMs));
 
 /**
  * Запрос к службе. Возвращает null, когда её нет: последование — раздел,
@@ -309,14 +285,7 @@ export interface OrdoTransfer {
     primary: boolean;
 }
 
-/** Строка адреса `ID` или `ID:primary` — так перенос лежит в адресе страницы. */
-export const parseTransfer = (raw: string): OrdoTransfer | null => {
-    const [memoryId, flag] = raw.split(":");
-    return memoryId?.trim() ? { memoryId: memoryId.trim(), primary: flag === "primary" } : null;
-};
-
-export const formatTransfer = (t: OrdoTransfer) =>
-    t.primary ? `${t.memoryId}:primary` : t.memoryId;
+export { parseTransfer, formatTransfer } from "./ordoTransfers";
 
 export interface OrdoMemory {
     memoryId: string;
@@ -537,14 +506,14 @@ export interface OrdoDayDetailed {
 
 export const ordoDayDetailed = async (
     date: string,
-    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[]; memories?:string[]; serviceSign?:string },
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[]; memories?:string[]; serviceSign?:string; priority?: OrdoPriority },
 ): Promise<OrdoDayDetailed> => {
     const params: Record<string, string> = { date, ustav: opts?.ustav ?? "", service_sign:opts?.serviceSign??"" };
     const { data: raw, error, version } = await request<any>("/day", params, [
         ...(opts?.prestoly ?? []).map(prestolParam),
         ...(opts?.transfers ?? []).map(transferParam),
         ...(opts?.memories??[]).map(id=>["memories",id] as [string,string]),
-    ]);
+    ], ORDO_TIMEOUT_MS, opts?.priority);
     if (!raw || raw.error || !raw.day) {
         return {
             day: null,
@@ -563,7 +532,7 @@ export const ordoDayDetailed = async (
  */
 export const ordoDay = async (
     date: string,
-    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[]; memories?:string[]; serviceSign?:string },
+    opts?: { ustav?: string; prestoly?: OrdoPrestol[]; transfers?: OrdoTransfer[]; memories?:string[]; serviceSign?:string; priority?: OrdoPriority },
 ): Promise<OrdoDay | null> => (await ordoDayDetailed(date, opts)).day;
 
 // —— Кафизмы дня —————————————————————————————————————————————————
@@ -640,7 +609,7 @@ export const ordoRange = async (
     const days = new Map<string, OrdoDay>();
     const ask = async (d: string) => {
         try {
-            return await ordoDay(d, { ustav: opts?.ustav ?? undefined, prestoly: opts?.prestoly });
+            return await ordoDay(d, { ustav: opts?.ustav ?? undefined, prestoly: opts?.prestoly, priority: 'background' });
         } catch (e) {
             reportError(e, { where: "lib/ordo: не удалось спросить устав про день", extra: { date: d } });
             return null;

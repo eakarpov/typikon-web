@@ -1,10 +1,8 @@
 'use client';
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-    formatTransfer, parseTransfer,
-    type OrdoDay, type OrdoMemoryFound, type OrdoTransfer,
-} from "@/lib/ordo";
+import type { OrdoDay, OrdoMemoryFound, OrdoTransfer } from "@/lib/ordo";
+import { formatTransfer, parseTransfer } from "@/lib/ordoTransfers";
 
 // Памяти дня и чем их можно поправить.
 //

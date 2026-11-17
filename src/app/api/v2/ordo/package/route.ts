@@ -1,3 +1,4 @@
+import {fetchOrdo} from "@/lib/ordoTransport";
 import { fail, preflight, respondFile } from "@/lib/api/v2/http";
 import { authorize } from "@/lib/api/v2/access";
 import { parseOrdoPackage } from "@/lib/api/v2/ordoParams";
@@ -39,10 +40,7 @@ export async function GET(request: Request) {
     }
 
     try {
-        const response = await fetch(url, {
-            signal: AbortSignal.timeout(25_000),
-            cache: "no-store",
-        });
+        const response = await fetchOrdo(url, 25_000);
         if (!response.ok) {
             const said = await response.json().then(b => b?.error, () => null);
             if (response.status === 404) return fail("not_found", said ?? "Пакет не найден");

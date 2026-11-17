@@ -1,3 +1,4 @@
+import {fetchOrdo} from "@/lib/ordoTransport";
 import { NextResponse } from "next/server";
 import { parseOrdoDownload } from "@/lib/api/v2/ordoParams";
 
@@ -15,25 +16,16 @@ export const dynamic = "force-dynamic";
 
 const base = () => process.env.ORDO_SERVICE_URL || "";
 
-// Один повтор на обрыв: служба отвечает по HTTP/1.0 и закрывает сокет
-// (та же причина, что в lib/ordo.ts и lib/ordoPackage.ts).
+// The app download shares admission and retries with the web reader.
 const fetchBytes = async (url: URL, timeoutMs = 25_000): Promise<Uint8Array> => {
-    for (let attempt = 1; ; attempt++) {
-        try {
-            const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), cache: "no-store" });
-            if (!response.ok) {
-                const said = await response.json().then(b => b?.error, () => null);
-                const err = new Error(`${response.status}${said ? `: ${said}` : ""}`);
-                (err as any).status = response.status;
-                throw err;
-            }
-            return new Uint8Array(await response.arrayBuffer());
-        } catch (e) {
-            const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
-            if (attempt < 2 && !timedOut) continue;
-            throw e;
-        }
+    const response = await fetchOrdo(url, timeoutMs);
+    if (!response.ok) {
+        const said = await response.json().then(b => b?.error, () => null);
+        const error = new Error(`${response.status}${said ? `: ${said}` : ""}`);
+        (error as any).status = response.status;
+        throw error;
     }
+    return new Uint8Array(await response.arrayBuffer());
 };
 
 const fail = (status: number, error: string) =>
