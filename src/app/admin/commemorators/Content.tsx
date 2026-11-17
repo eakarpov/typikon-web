@@ -1,5 +1,7 @@
 'use client';
 import React from "react";
+import DirectGrant from "./DirectGrant";
+import PriestList from "./PriestList";
 import type { ClaimRow } from "./api";
 
 // РАЗБОР ЗАЯВОК НА ПРИЁМ ЗАПИСОК.
@@ -24,7 +26,7 @@ const MATCH_COLOR: Record<string, string> = {
     unknown: "text-amber-700",
 };
 
-const Content = ({ claims }: { claims: ClaimRow[] }) => {
+const Claims = ({ claims }: { claims: ClaimRow[] }) => {
     const [rows, setRows] = React.useState(claims);
     const [busy, setBusy] = React.useState<string | null>(null);
     const [notes, setNotes] = React.useState<Record<string, string>>({});
@@ -63,13 +65,11 @@ const Content = ({ claims }: { claims: ClaimRow[] }) => {
         }
     };
 
-    if (!rows.length) {
-        return <p className="font-serif text-slate-600 pt-4">Неразобранных заявок нет.</p>;
-    }
-
     return (
         <div className="flex flex-col gap-6 pt-4">
-            <h1 className="font-bold font-serif">Заявки на приём записок</h1>
+
+            <h2 className="font-bold font-serif">Заявки</h2>
+            {!rows.length && <p className="font-serif text-slate-600">Неразобранных заявок нет.</p>}
 
             {rows.map(claim => (
                 <section key={claim.userId} className="border rounded p-4 flex flex-col gap-2 max-w-3xl">
@@ -154,4 +154,16 @@ const Content = ({ claims }: { claims: ClaimRow[] }) => {
     );
 };
 
-export default Content;
+export default function Content({claims,canGrant=false}: {claims:ClaimRow[];canGrant?:boolean}) {
+    const [tab,setTab]=React.useState(0);
+    const labels=['Заявки','Создать заявку вручную','Список иереев'];
+    return <div className="flex flex-col gap-5">
+        <h1 className="font-serif text-xl font-bold">Иереи · приём записок</h1>
+        <div role="tablist" aria-label="Управление иереями" className="flex flex-wrap gap-2 border-b pb-3">
+            {labels.map((label,i)=><button key={label} id={`priest-tab-${i}`} role="tab" aria-selected={tab===i} aria-controls={`priest-panel-${i}`} className={BUTTON+(tab===i?' bg-slate-200 font-bold':'')} onClick={()=>setTab(i)}>{label}</button>)}
+        </div>
+        <section id="priest-panel-0" role="tabpanel" aria-labelledby="priest-tab-0" hidden={tab!==0}><Claims claims={claims}/></section>
+        <section id="priest-panel-1" role="tabpanel" aria-labelledby="priest-tab-1" hidden={tab!==1}>{tab===1&&(canGrant?<DirectGrant/>:<p>Для назначения без подтверждения нужны права администратора.</p>)}</section>
+        <section id="priest-panel-2" role="tabpanel" aria-labelledby="priest-tab-2" hidden={tab!==2}>{tab===2&&<PriestList/>}</section>
+    </div>;
+}

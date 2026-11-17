@@ -1,3 +1,10 @@
+import { WeeklyQuotaError } from '@/lib/pomyannik/weeklyQuota';
+import { canSubmitNoteKind, SUBMISSION_KIND_MESSAGE } from '@/lib/pomyannik/submissionKinds';
+import { createHash } from 'node:crypto';
+import { priorSubmission } from '@/lib/pomyannik/priestSubmissions';
+import clientPromise from '@/lib/mongodb';
+import { ensureQueueIndexes, enrichAssignment } from '@/lib/pomyannik/priestQueue';
+import { SERVICE_KINDS } from '@/lib/pomyannik/priestQueueRules';
 import { authorizeUser } from "@/lib/api/v2/user";
 import { fail, respondPrivate, respondPrivateCollection } from "@/lib/api/v2/http";
 import { readPage } from "@/lib/api/v2/params";
@@ -33,7 +40,8 @@ export async function GET(request: Request) {
     try {
         const notes = await notesFrom(access.userId);
         return respondPrivateCollection(
-            notes.slice(offset, offset + limit).map(serializeNote),
+            await Promise.all(notes.slice(offset, offset + limit).map(async note => serializeNote(
+                await enrichAssignment((await clientPromise).db("typikon-users"), note)))),
             { total: notes.length, limit, offset },
             { access },
         );
@@ -62,18 +70,29 @@ export async function POST(request: Request) {
     const code = String((body as any)?.code ?? "").trim();
     const slug = String((body as any)?.slug ?? "").trim();
 
+    const requestId = String((body as any)?.requestId ?? '');
+    if (requestId && !/^[a-f0-9]{32}$/.test(requestId)) return fail('bad_request', 'Неверный идентификатор подачи');
+    const submission = requestId ? { id: requestId, fingerprint: createHash('sha256').update(JSON.stringify({
+        kind, ids: [...new Set(ids)].sort(), code, slug, queue: (body as any)?.queue === true })).digest('hex') } : undefined;
     if (!NOTE_KIND_BY_KEY[kind]) return fail("bad_request", "Такого поминовения мы не знаем");
 
+    if (!canSubmitNoteKind(kind)) return fail('bad_request', SUBMISSION_KIND_MESSAGE);
+
     try {
+        const db = (await clientPromise).db('typikon-users');
+        const prior = submission ? await priorSubmission(db, access.userId, submission) : null;
+        if (prior) return respondPrivate({ note: serializeNote(await enrichAssignment(db, prior)), to: null }, { access, status: 201 });
         const to = code ? await commemoratorByCode(code)
                  : slug ? await commemoratorBySlug(slug)
                  : null;
-        if (!to) return fail("not_found", "Приём не найден");
-        if (to.userId === access.userId) return fail("bad_request", "Себе записку не подают");
+        const queued = (body as any)?.queue === true || (!!to?.queueConfigured && SERVICE_KINDS.includes(kind as never));
+        if (!to && (!queued || code || slug)) return fail("not_found", "Приём не найден");
+        if (queued && !SERVICE_KINDS.includes(kind as never)) return fail("bad_request", "Для этого поминовения выберите иерея по коду");
+        if (to?.userId === access.userId) return fail("bad_request", "Себе записку не подают");
 
         // Священник мог оставить только часть видов: пустой перечень значит
         // «принимаю всё», непустой — ровно то, что в нём названо.
-        if (to.accepts.length && !to.accepts.includes(kind as never)) {
+        if (!queued && to && to.accepts.length && !to.accepts.includes(kind as never)) {
             return fail("bad_request", "Этого поминовения он не принимает");
         }
 
@@ -82,13 +101,17 @@ export async function POST(request: Request) {
         if (!chosen.length) return fail("bad_request", "В записке нет ни одного имени");
 
         const slavonic = await slavonicNames(chosen.map(p => p.churchName || p.name));
-        const note = await sendNote(access.userId, to.userId, kind as never, chosen, slavonic);
+        if (queued) await ensureQueueIndexes(db);
+        const note = await sendNote(access.userId, queued ? '' : to!.userId, kind as never, chosen, slavonic,
+            queued ? { targetUserId: to?.userId ?? null } : undefined, submission);
+        const enriched = await enrichAssignment(db, { ...note, queueRequested: queued });
 
         return respondPrivate(
-            { note: serializeNote(note), to: { title: to.title } },
+            { note: serializeNote(enriched), to: to ? { title: to.title } : null },
             { access, status: 201 },
         );
     } catch (e) {
+        if (e instanceof WeeklyQuotaError) return fail("conflict", e.message);
         if (e instanceof NoteError) return fail("bad_request", e.message);
         reportError(e, { where: "app/api/v2/pomyannik/zapiski/route#POST", source: "api" });
         return fail("internal", "Не удалось подать записку");

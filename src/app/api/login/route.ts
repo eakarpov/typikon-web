@@ -1,3 +1,6 @@
+import clientPromise from '@/lib/mongodb';
+import { activatePriestEmailGrant } from '@/lib/pomyannik/directGrant';
+import { reportError } from '@/lib/reportError';
 import {
     getUserByGoogleId, getUserByTelegramId,
     registerNewUserWithGoogle, registerNewUserWithTelegram,
@@ -25,6 +28,7 @@ const enter = async (
     findUser: (id: string) => Promise<any>,
     registerUser: (id: string) => Promise<unknown>,
     deviceId: string,
+    verifiedGoogle?: { email?: string; email_verified?: boolean },
 ) => {
     let user = await findUser(providerUserId);
     if (!user) {
@@ -33,6 +37,14 @@ const enter = async (
     }
     if (!user?._id) return new NextResponse(null, { status: 500 });
 
+    if (provider === 'Google' && verifiedGoogle?.email_verified === true) {
+        try {
+            const db = (await clientPromise).db('typikon-users');
+            await db.collection('users').updateOne({ _id: user._id, 'auth.google.userId': providerUserId },
+                { $set: { 'auth.google.verifiedEmail': verifiedGoogle.email?.trim().toLowerCase() ?? '' } });
+            await activatePriestEmailGrant(db, String(user._id), verifiedGoogle.email, verifiedGoogle.email_verified);
+        } catch (e) { reportError(e, { where: 'login/activate-priest-grant', source: 'api' }); }
+    }
     const expiresAt = await createNewSession(
         user._id.toString(),
         { user_id: providerUserId },
@@ -77,7 +89,7 @@ export async function POST(request: NextRequest) {
         if (!payload?.sub) {
             return new NextResponse(null, { status: 401 });
         }
-        return enter("Google", payload.sub, getUserByGoogleId, registerNewUserWithGoogle, deviceId);
+        return enter("Google", payload.sub, getUserByGoogleId, registerNewUserWithGoogle, deviceId, payload);
     }
 
     if (body.type === "Telegram") {

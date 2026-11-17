@@ -1,6 +1,11 @@
+import { canSubmitNoteKind, SUBMISSION_KIND_MESSAGE } from './submissionKinds';
+import { type NoteSubmission } from './priestSubmissions';
+import { insertWithinWeeklyQuota } from './weeklyQuota';
+import { SERVICE_KINDS } from './priestQueueRules';
+import { dispatchWaiting, ensureQueueIndexes, markQueued, slotsOf, queueNotes } from './priestQueue';
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
-import { expiresAt, snapshot, validateNote, type NoteName } from "@/lib/pomyannik/note";
+import { NoteError, expiresAt, snapshot, validateNote, type NoteName } from "@/lib/pomyannik/note";
 import { spanOf } from "@/lib/pomyannik/note";
 import type { NoteKind } from "@/lib/pomyannik/types";
 
@@ -32,6 +37,8 @@ export interface Zapiska {
     names: NoteName[];
     /** Сколько имён было. Переживает чистку, когда сами имена уже стёрты. */
     namesCount: number;
+    queueRequested?: boolean;
+    targetUserId?: string | null;
     /** Срок длящегося поминовения. У разового null. */
     span: { from: string; to: string } | null;
     createdAt: Date;
@@ -61,18 +68,34 @@ export const sendNote = async (
     kind: NoteKind,
     persons: Array<Parameters<typeof snapshot>[0]>,
     slavonic: Record<string, { genitive: string; source: "lexicon" | "accents" | "plain" | "manual" }>,
+    queue?: { targetUserId: string | null },
+    submission?: NoteSubmission,
 ): Promise<Zapiska> => {
+    if (!canSubmitNoteKind(kind)) throw new NoteError(SUBMISSION_KIND_MESSAGE);
     const names = validateNote(kind, persons.map(p =>
         snapshot(p, slavonic[p.churchName || p.name] ?? null)));
 
+    const database = (await clientPromise).db('typikon-users');
+    if (!queue && toUserId && SERVICE_KINDS.includes(kind as never)) {
+        const priest = await database.collection('commemorators').findOne({ userId: toUserId, queueConfigured: true });
+        if (priest) queue = { targetUserId: toUserId };
+    }
+    if (queue) {
+        await ensureQueueIndexes(database);
+        toUserId = '';
+    }
     const createdAt = new Date();
     const doc: Omit<Zapiska, "id"> = {
         fromUserId, toUserId, kind, names, namesCount: names.length,
         span: spanOf(kind, createdAt),
         createdAt, readAt: null, finishedAt: null, sweptAt: null,
+        ...(queue ? { queueRequested: true, targetUserId: queue.targetUserId } : {}),
     };
-    const result = await (await collection()).insertOne(doc as any);
-    return out({ ...doc, _id: result.insertedId });
+    const note = out(await insertWithinWeeklyQuota(database, doc, submission));
+    // Submission shares the oldest-first allocator with cron; it cannot jump
+    // ahead of notes accumulated while no service could receive them.
+    if (queue) await dispatchWaiting(database);
+    return note;
 };
 
 /** Что подали этому священнику. Неразобранные сверху — за ними и приходят. */
@@ -82,7 +105,10 @@ export const notesFor = async (toUserId: string): Promise<Zapiska[]> => {
         .sort({ readAt: 1, createdAt: -1 })
         .limit(500)
         .toArray();
-    return docs.map(out);
+    const database = (await clientPromise).db('typikon-users');
+    const slots = await slotsOf(database).find({ userId: toUserId }).toArray();
+    const queued = (await Promise.all(slots.map(s => queueNotes(database, s)))).flat() as any[];
+    return [...docs.map(out), ...queued].sort((a, b) => Number(!!a.readAt) - Number(!!b.readAt));
 };
 
 /** Что подавал этот человек. После чистки останется запись без имён. */
@@ -96,7 +122,7 @@ export const notesFrom = async (fromUserId: string): Promise<Zapiska[]> => {
 };
 
 export const countUnread = async (toUserId: string): Promise<number> =>
-    (await collection()).countDocuments({ toUserId, readAt: null });
+    (await notesFor(toUserId)).filter(n => !n.readAt).length;
 
 /**
  * Отметить прочитанной или оконченной.
@@ -109,6 +135,7 @@ export const markNote = async (
     toUserId: string, id: string, what: "read" | "finished",
 ): Promise<boolean> => {
     if (!ObjectId.isValid(id)) return false;
+    if (what === 'read' && await markQueued((await clientPromise).db('typikon-users'), toUserId, id)) return true;
     const field = what === "read" ? "readAt" : "finishedAt";
     const result = await (await collection()).updateOne(
         { _id: new ObjectId(id), toUserId, [field]: null },

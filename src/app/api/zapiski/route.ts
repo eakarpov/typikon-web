@@ -1,3 +1,5 @@
+import { canSubmitNoteKind, SUBMISSION_KIND_MESSAGE } from '@/lib/pomyannik/submissionKinds';
+import { SERVICE_KINDS } from '@/lib/pomyannik/priestQueueRules';
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/authorize/sessions";
 import { commemoratorByCode, commemoratorBySlug } from "@/lib/pomyannik/commemorators";
@@ -44,6 +46,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "такого поминовения мы не знаем" }, { status: 400 });
     }
 
+    if (!canSubmitNoteKind(kind)) return NextResponse.json({error:SUBMISSION_KIND_MESSAGE},{status:400});
+
     const to = code ? await commemoratorByCode(code)
              : slug ? await commemoratorBySlug(slug)
              : null;
@@ -53,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
     // Священник мог оставить только часть видов поминовения: пустой перечень
     // значит «принимаю всё», а непустой — ровно то, что в нём названо.
-    if (to.accepts.length && !to.accepts.includes(kind as never)) {
+    if (!(to.queueConfigured && SERVICE_KINDS.includes(kind as never)) && to.accepts.length && !to.accepts.includes(kind as never)) {
         return NextResponse.json(
             { error: "этого поминовения он не принимает" }, { status: 400 });
     }

@@ -1,9 +1,10 @@
 'use client';
+import { SUBMITTABLE_NOTE_KINDS } from '@/lib/pomyannik/submissionKinds';
 import { effectiveRank, effectiveRanks } from "@/lib/pomyannik/marks";
 import React from "react";
 import Link from "next/link";
 import type { PomyannikPerson, NoteKind } from "@/lib/pomyannik/types";
-import { MAX_NAMES_IN_NOTE, NOTE_KINDS, NOTE_KIND_BY_KEY } from "@/lib/pomyannik/types";
+import { MAX_NAMES_IN_NOTE, NOTE_KIND_BY_KEY } from "@/lib/pomyannik/types";
 import { displayName, rankChurchGenitive, rankGenitive } from "@/app/pomyannik/labels";
 import NoteSheet, { type SheetName } from "@/app/pomyannik/NoteSheet";
 import type { SlavonicName } from "@/lib/pomyannik/slavonic";
@@ -50,7 +51,7 @@ const Zapiska = ({ persons, slavonic, to }: {
     to?: Recipient;
 }) => {
     const offered = React.useMemo(
-        () => to?.accepts.length ? NOTE_KINDS.filter(k => to.accepts.includes(k.key)) : NOTE_KINDS,
+        () => to?.accepts.length ? SUBMITTABLE_NOTE_KINDS.filter(k => to.accepts.includes(k.key)) : SUBMITTABLE_NOTE_KINDS,
         [to],
     );
     const [kind, setKind] = React.useState<NoteKind>(offered[0]?.key ?? "proskomidia");

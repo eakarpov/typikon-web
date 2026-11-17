@@ -1,3 +1,4 @@
+import {priestPaths, priestSchemas} from '@/lib/pomyannik/priestOpenapi';
 import {csPaths,csSchemas} from '@/lib/csDictionary/openapi';
 import {studyPaths,studySchemas} from '@/lib/study/openapi';
 import {notePaths, noteSchemas} from '@/lib/notes/openapi';
@@ -135,6 +136,7 @@ export const openapi = () => ({
     paths: {
         ...studyPaths(personal),
         ...notePaths(personal),
+        ...priestPaths(personal),
         ...csPaths,
         "/api/v2": {
             get: {
@@ -1309,6 +1311,13 @@ export const openapi = () => ({
                 },
             },
         },
+        "/api/v2/pomyannik/zapiski/quota": {
+            get: {
+                tags: ["Помянник"], summary: "Недельный лимит подачи имён", security: personal,
+                description: "Общий для всех видов записок и получателей. По умолчанию 20 имён; сброс в воскресенье в 15:00 по Москве. Настраивается в админке.",
+                responses: { "200": ok("#/components/schemas/NoteQuota"), "401": needsSession },
+            },
+        },
         "/api/v2/pomyannik/zapiski": {
             get: {
                 tags: ["Помянник"],
@@ -1336,6 +1345,7 @@ export const openapi = () => ({
                     ),
                     "401": needsSession,
                     "404": errorResponse("Приём не найден"),
+                    "409": errorResponse("Недельный лимит имён превышен"),
                     "429": errorResponse("Слишком часто: записок принимается двадцать в час"),
                 },
             },
@@ -1634,6 +1644,7 @@ export const openapi = () => ({
         schemas: {
             ...studySchemas,
             ...noteSchemas,
+            ...priestSchemas,
             ...csSchemas,
             PrayerCircleConfig: { type:"object",required:["variants","activeId","gender","lang","timeZone","reminders"], properties:{
                 variants:{type:"array",minItems:1,maxItems:32,items:{type:"object",required:["id","title","blocks"],properties:{id:{type:"string"},title:{type:"string"},basedOn:{type:"string"},blocks:{type:"array",maxItems:60,items:{$ref:"#/components/schemas/PrayerCircleBlock"}}}}},
@@ -2236,11 +2247,23 @@ export const openapi = () => ({
                     personIds: { type: "array", items: { type: "string" }, maxItems: 20 },
                 },
             },
+            NoteQuota: {
+                type: "object", required: ["namesLimit", "used", "remaining", "resetsAt", "timeZone"],
+                properties: {
+                    namesLimit: { type: "integer", minimum: 1 }, used: { type: "integer", minimum: 0 },
+                    remaining: { type: "integer", minimum: 0 }, periodStart: { type: "string", format: "date-time" },
+                    resetsAt: { type: "string", format: "date-time" }, timeZone: { type: "string", enum: ["Europe/Moscow"] },
+                    resetDay: { type: "integer", minimum: 1, maximum: 7 }, resetHour: { type: "integer", minimum: 0, maximum: 23 },
+                    resetMinute: { type: "integer", minimum: 0, maximum: 59 },
+                },
+            },
             NoteRequest: {
                 type: "object",
                 required: ["kind", "personIds"],
-                description: "Кому подаётся — кодом-приглашением или слугом открытой страницы",
+                description: "Кому подаётся — кодом-приглашением, слугом открытой страницы или в общую очередь (queue=true)",
                 properties: {
+                    requestId: { type: 'string', pattern: '^[a-f0-9]{32}$', description: 'Идемпотентный ключ одной подачи; повтор возвращает тот же снимок' },
+                    queue: { type: 'boolean', default: false, description: 'Общая очередь разовых записок; без code/slug получателя выбирает сервер' },
                     kind: { type: "string" },
                     personIds: { type: "array", items: { type: "string" }, maxItems: 20 },
                     code: { type: "string", description: "Код-приглашение, какой священник раздаёт сам" },
@@ -2276,6 +2299,10 @@ export const openapi = () => ({
                     "Поданная записка. Стёртая по сроку приходит с пустыми именами и непустым "
                     + "`namesCount`: «было столько-то» переживает чистку нарочно, а сами имена — нет.",
                 properties: {
+                    queueStatus: { type: ['string', 'null'], enum: ['waiting', 'assigned', 'partially-read', 'read', 'expired', null] },
+                    assignment: { $ref: '#/components/schemas/NoteAssignment' },
+                    part: { enum: ['living','departed'] },
+                    partStatuses: { type:'array', items:{ $ref:'#/components/schemas/NotePartStatus' } },
                     id: { type: "string" },
                     kind: { type: "string" },
                     names: { type: "array", items: { $ref: "#/components/schemas/NoteName" } },
@@ -2298,7 +2325,7 @@ export const openapi = () => ({
                 type: "object",
                 properties: {
                     note: { $ref: "#/components/schemas/Zapiska" },
-                    to: { type: "object", properties: { title: { type: "string" } } },
+                    to: { type: ["object", "null"], properties: { title: { type: "string" } } },
                 },
             },
             Prinyatye: {

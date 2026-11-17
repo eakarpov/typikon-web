@@ -121,7 +121,8 @@
     "corpus:build": "tsx src/scripts/build-kruczie-corpus.ts",
     "corpus:audit": "tsx src/scripts/audit-kruczie-neumes.ts",
     "push:reading-plan": "tsx src/scripts/send-reading-plan-push.ts",
-    "db:text-links": "tsx src/scripts/migrate-text-links.ts"
+    "db:text-links": "tsx src/scripts/migrate-text-links.ts",
+    "priest:dispatch": "tsx src/scripts/dispatch-priest-queue.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.14",

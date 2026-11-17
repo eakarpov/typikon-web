@@ -84,7 +84,7 @@ const NoteSheet = ({ title, groups, cross = true }: {
                         <Cross />
                     </p>
                 )}
-                <p className="font-sans-serif text-center text-lg">{HEADING[section]}</p>
+                <p className="font-sans-serif text-center text-lg text-red-800">{HEADING[section]}</p>
                 {/* Отступ между надписанием и именами: на бумаге они разделены,
                     и слитая строка читается как продолжение заголовка */}
                 <ul className="font-sans-serif text-xl text-center leading-relaxed mt-4">

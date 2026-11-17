@@ -43,7 +43,10 @@ const main = async () => {
     }
 
     const now = new Date();
-    const devices = await devicesAtLocalHour(HOUR, now);
+    const morningDevices = await devicesAtLocalHour(HOUR, now);
+    const eveningDevices = await devicesAtLocalHour(18, now);
+    const devices = [...morningDevices.map(device => ({ device, evening: false })),
+        ...eveningDevices.map(device => ({ device, evening: true }))];
     if (!devices.length) {
         console.log(`${now.toISOString()}: устройств с местным ${HOUR}-м часом нет`);
         return;
@@ -54,16 +57,21 @@ const main = async () => {
     const hasToday = new Map<string, boolean>();
     let sent = 0, quiet = 0, forgotten = 0, failed = 0;
 
-    for (const device of devices) {
-        const date = localDate(device.timeZone, now);
+    for (const { device, evening } of devices) {
+        let date = localDate(device.timeZone, now);
         if (!date) continue;
-
-        const key = `${device.userId}|${date}`;
+        if (evening) {
+            const tomorrow = new Date(`${date}T12:00:00Z`);
+            tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+            date = tomorrow.toISOString().slice(0, 10);
+        }
+        const key = `${device.userId}|${date}|${evening}`;
         if (!hasToday.has(key)) {
             const persons = await listPersons(device.userId);
             // Один день, а не окно: спрашиваем ровно про сегодня по месту
             // устройства.
-            hasToday.set(key, upcoming(persons, date, 0).length > 0);
+            hasToday.set(key, upcoming(persons, date, 0).some(event =>
+                !evening || event.kind === 'birthday' || event.kind === 'nameday'));
         }
 
         if (!hasToday.get(key)) {

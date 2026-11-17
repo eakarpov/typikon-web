@@ -14,6 +14,7 @@ import type { Capability } from "@/lib/rights";
 interface Section { cap: Capability; title: string; links: [string, string][] }
 
 const SECTIONS: Section[] = [
+    { cap: "commemoration.claims", title: "Поминовения", links: [["/admin/commemorators", "Священники и заявки на приём записок"], ["/admin/note-limits", "Лимит подачи имён"]] },
     {
         cap: "parish.claims",
         title: "Приходы",

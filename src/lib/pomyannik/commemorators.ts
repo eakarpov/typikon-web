@@ -96,6 +96,13 @@ export interface Commemorator {
     inviteCode: string;
     accepts: NoteKind[];
     about: string | null;
+    rank?: string | null;
+    name?: string | null;
+    diocese?: string | null;
+    confirmationMethod?: string;
+    directGrantId?: string;
+    donationDetails?: string | null;
+    queueConfigured?: boolean;
     confirmedBy: string | null;
     confirmedAt: Date | null;
     createdAt: Date;
@@ -188,9 +195,11 @@ export const createCommemorator = async (
 
     const doc: Commemorator = {
         userId: claim.userId,
-        title: claim.title,
+        title: existing?.confirmationMethod === "administrator" ? existing.title : claim.title,
+        rank: existing?.rank ?? null, name: existing?.name ?? null, diocese: existing?.diocese ?? null,
+        ...(existing?.confirmationMethod ? { confirmationMethod: existing.confirmationMethod, directGrantId: existing.directGrantId } : {}),
         place: existing?.place ?? null,
-        dioceseUrl: claim.dioceseUrl,
+        dioceseUrl: existing?.confirmationMethod === "administrator" ? existing.dioceseUrl : claim.dioceseUrl,
         // Открывать приём для всех — его решение, а не наше: принятая заявка
         // даёт право принимать, а не обязанность стоять в общем списке.
         public: existing?.public ?? false,
@@ -198,6 +207,8 @@ export const createCommemorator = async (
         inviteCode: existing?.inviteCode ?? newInviteCode(),
         accepts: existing?.accepts ?? [],
         about: existing?.about ?? null,
+        donationDetails: existing?.donationDetails ?? null,
+        queueConfigured: existing?.queueConfigured ?? false,
         confirmedBy,
         confirmedAt: new Date(),
         createdAt: existing?.createdAt ?? new Date(),
