@@ -177,6 +177,7 @@ else
     fi
     # Приоритет последней строки dotenv: каждый релиз использует собственный снимок.
     printf '\nSQLITE_DB=%s\n' "$shared_sqlite" >> "$candidate/.env.production"
+    "$NODE_BIN" "$candidate/scripts/preserve-reader-publication.mjs" "$old_current" "$candidate"
     printf '%s\n' "$commit" > "$candidate/REVISION"
     (
         cd "$candidate"
