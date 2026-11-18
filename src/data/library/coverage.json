@@ -686,6 +686,10 @@
     {
       "id": "margarit",
       "label": "Маргарит"
+    },
+    {
+      "id": "typikon-violakis",
+      "label": "Типикон Виолакиса"
     }
   ],
   "cells": [
@@ -1063,19 +1067,19 @@
     {
       "book": "typikon",
       "language": "cu",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
         "pending",
-        "pending",
-        "pending",
-        "pending"
+        "partial",
+        "done",
+        "partial"
       ],
       "quality": {
         "percent": null,
-        "label": "Все 63/63 части HTML на месте; в манифесте издание М., 2002. Правила разобраны частично, книжные адреса и связи по главам не собраны."
+        "label": "Все 63 части электронного церковнославянского Типикона, включая месяцеслов, храмовые главы и приложения. Гражданский шрифт, киноварь и таблицы; сверка с печатным изданием М., 2002 не сплошная. 8962 адресуемых фрагментов. Сопоставлены главы и основные разделы двух редакций."
       },
       "tags": [],
       "evidence": [
@@ -1083,9 +1087,12 @@
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
         "reports/library/next-wave/source-audit.json",
-        "reports/library/after-triodia-20261117/source-audit.json"
+        "reports/library/after-triodia-20261117/source-audit.json",
+        "spec/library-typikon-cs-ro.md",
+        "rules/library/typikon-parallels.json"
       ],
-      "updated_at": "2026-11-17"
+      "updated_at": "2026-11-18",
+      "alias": "typikon-cs"
     },
     {
       "book": "irmologion",
@@ -1180,19 +1187,19 @@
     {
       "book": "typikon",
       "language": "ro",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
         "pending",
-        "pending",
-        "pending",
-        "pending"
+        "partial",
+        "done",
+        "partial"
       ],
       "quality": {
         "percent": null,
-        "label": "Все 6 HTML на месте, киноварь присутствует. Серии 1–6 сохранены в порядке загрузки; нужны порядок книги, приёмка состава и связи правил с главами."
+        "label": "Иерусалимский Типикон святого Саввы, румынская редакция Ясс 1816 по греческой и славянской основам. Шесть серий в восьми веб-частях; месяцеслов с сентября по август, киноварь и орнаменты. Печатный прототип электронной транскрипции не установлен. 3799 адресуемых фрагментов. Сопоставлены главы и основные разделы двух редакций."
       },
       "tags": [],
       "evidence": [
@@ -1200,9 +1207,12 @@
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
         "reports/library/next-wave/source-audit.json",
-        "reports/library/after-triodia-20261117/source-audit.json"
+        "reports/library/after-triodia-20261117/source-audit.json",
+        "spec/library-typikon-cs-ro.md",
+        "rules/library/typikon-parallels.json"
       ],
-      "updated_at": "2026-11-17"
+      "updated_at": "2026-11-18",
+      "alias": "typikon-ro"
     },
     {
       "book": "sluzhebnik",
@@ -1786,7 +1796,7 @@
       "edition": "Service Book · Hapgood 1906"
     },
     {
-      "book": "typikon",
+      "book": "typikon-violakis",
       "language": "grc",
       "status": "in_progress",
       "stages": [
@@ -1800,13 +1810,14 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Типикон Виолакиса: сохранены сканы и извлечённый текст; требуется выверка"
+        "label": "Отдельная константинопольская редакция Георгия Виолакиса, 1888. Сохранены сканы и извлечённый текст; требуется выверка."
       },
       "tags": [],
       "evidence": [
-        "raw/greek-typikon-violakis/README.md"
+        "raw/greek-typikon-violakis/README.md",
+        "spec/library-typikon-cs-ro.md"
       ],
-      "updated_at": "2026-11-16"
+      "updated_at": "2026-11-18"
     },
     {
       "book": "prayer-book",
