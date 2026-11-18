@@ -1514,19 +1514,19 @@
     {
       "book": "festal-menaion",
       "language": "cu",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
-        "pending",
-        "pending",
-        "pending",
+        "partial",
+        "partial",
+        "done",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "Все 48/48 глав Markdown на месте, киноварь присутствует. Обнаружено расхождение даты в манифесте с заголовком текста; календарные подписи и библиография требуют выверки."
+        "label": "Все 48 глав SamStar, включая исходное оглавление; 3543 адресуемых абзацев, киноварь. В навигации исправлена дата Рождества Богородицы по заголовку службы. Печатный прототип не установлен."
       },
       "tags": [],
       "evidence": [
@@ -1534,9 +1534,15 @@
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
         "reports/library/next-wave/source-audit.json",
-        "reports/library/after-triodia-20261117/source-audit.json"
+        "reports/library/after-triodia-20261117/source-audit.json",
+        "raw/cu-md-oldrite/FestalMenaion-SamStar/Manifest.xml",
+        "spec/library-festal-menaion-oldrite.md",
+        "https://samstar-biblio.ucoz.ru/load/mineja_prazdnichnaja/9-1-0-756",
+        "https://rpsc.ru/publications/tradition/prazdniki/"
       ],
-      "updated_at": "2026-11-17"
+      "updated_at": "2026-11-18",
+      "edition": "Праздничная Минея · SamStar",
+      "alias": "festal-menaion-cs-oldrite"
     },
     {
       "book": "chasoslov",
