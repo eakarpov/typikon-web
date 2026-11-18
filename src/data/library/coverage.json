@@ -3544,6 +3544,126 @@
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-12-ro"
+    },
+    {
+      "book": "menaion-02",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "partial",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "34 глав, из них 29 дневных; киноварь и приложения сохранены. 33 якорей, 37 подтверждённых привязок, 2 в реестре проверки. Москва, Единоверческая типография, 1832 (по манифесту)."
+      },
+      "tags": [
+        "Старомосковский извод"
+      ],
+      "evidence": [
+        "raw/cu-md-oldrite/MenaionFebruary-SamStar/Manifest.xml",
+        "scripts/build_library_monthly_menaion_oldrite.py",
+        "rules/library/monthly-menaia-oldrite-memories.json",
+        "spec/library-monthly-menaia-oldrite.md"
+      ],
+      "updated_at": "2026-11-18",
+      "edition": "Старомосковский извод · SamStar",
+      "alias": "menaion-02-cs-oldrite"
+    },
+    {
+      "book": "menaion-03",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "partial",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "36 глав, из них 31 дневных; киноварь и приложения сохранены. 33 якорей, 34 подтверждённых привязок, 2 в реестре проверки. Москва, Единоверческая типография, 1832 (по манифесту)."
+      },
+      "tags": [
+        "Старомосковский извод"
+      ],
+      "evidence": [
+        "raw/cu-md-oldrite/MenaionMarch-SamStar/Manifest.xml",
+        "scripts/build_library_monthly_menaion_oldrite.py",
+        "rules/library/monthly-menaia-oldrite-memories.json",
+        "spec/library-monthly-menaia-oldrite.md"
+      ],
+      "updated_at": "2026-11-18",
+      "edition": "Старомосковский извод · SamStar",
+      "alias": "menaion-03-cs-oldrite"
+    },
+    {
+      "book": "menaion-11",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "partial",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "34 глав, из них 30 дневных; киноварь и приложения сохранены. 38 якорей, 53 подтверждённых привязок, 3 в реестре проверки. Издатель и год в манифесте не установлены."
+      },
+      "tags": [
+        "Старомосковский извод"
+      ],
+      "evidence": [
+        "raw/cu-md-oldrite/MenaionNovember-SamStar/Manifest.xml",
+        "scripts/build_library_monthly_menaion_oldrite.py",
+        "rules/library/monthly-menaia-oldrite-memories.json",
+        "spec/library-monthly-menaia-oldrite.md"
+      ],
+      "updated_at": "2026-11-18",
+      "edition": "Старомосковский извод · SamStar",
+      "alias": "menaion-11-cs-oldrite"
+    },
+    {
+      "book": "menaion-12",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "partial",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "39 глав, из них 31 дневных; киноварь и приложения сохранены. 37 якорей, 48 подтверждённых привязок, 6 в реестре проверки. Издатель и год в манифесте не установлены."
+      },
+      "tags": [
+        "Старомосковский извод"
+      ],
+      "evidence": [
+        "raw/cu-md-oldrite/MenaionDecember-SamStar/Manifest.xml",
+        "scripts/build_library_monthly_menaion_oldrite.py",
+        "rules/library/monthly-menaia-oldrite-memories.json",
+        "spec/library-monthly-menaia-oldrite.md"
+      ],
+      "updated_at": "2026-11-18",
+      "edition": "Старомосковский извод · SamStar",
+      "alias": "menaion-12-cs-oldrite"
     }
   ],
   "references": [
