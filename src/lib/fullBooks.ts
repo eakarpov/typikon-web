@@ -7,6 +7,7 @@ export const FULL_BOOK_ALIASES = new Set([
     "psalter-cs", "psalter-cs-oldrite",
     "menaion-02-cs-oldrite", "menaion-03-cs-oldrite", "menaion-11-cs-oldrite", "menaion-12-cs-oldrite",
     "sluzhebnik-en",
+    "festal-menaion-cs-oldrite",
 ]);
 export type BookSearch = Record<string, string | string[] | undefined>;
 export function fullBookQuery(search: BookSearch = {}): string {
