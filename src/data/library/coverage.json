@@ -2721,14 +2721,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 31 дневных разделов электронного источника: 14526 блоков, 16492 красных прогонов, 0 изображений; 14393 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 14526 блоков, 16492 красных прогонов, 0 изображений; 14393 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (39 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/01-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-01-cs"
@@ -2749,14 +2751,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 29 дневных разделов электронного источника: 8877 блоков, 11049 красных прогонов, 0 изображений; 8796 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 29 дневных разделов электронного источника: 8877 блоков, 11049 красных прогонов, 0 изображений; 8796 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (25 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/02-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-02-cs"
@@ -2777,14 +2781,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 31 дневных разделов электронного источника: 8038 блоков, 7079 красных прогонов, 0 изображений; 7953 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 8038 блоков, 7079 красных прогонов, 0 изображений; 7953 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (23 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/03-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-03-cs"
@@ -2805,14 +2811,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 30 дневных разделов электронного источника: 6781 блоков, 5505 красных прогонов, 0 изображений; 6703 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 6781 блоков, 5505 красных прогонов, 0 изображений; 6703 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (29 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/04-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-04-cs"
@@ -2833,14 +2841,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 31 дневных разделов электронного источника: 12732 блоков, 10407 красных прогонов, 0 изображений; 12605 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 12732 блоков, 10407 красных прогонов, 0 изображений; 12605 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (54 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/05-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-05-cs"
@@ -2861,14 +2871,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 30 дневных разделов электронного источника: 12736 блоков, 10207 красных прогонов, 0 изображений; 12610 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 12736 блоков, 10207 красных прогонов, 0 изображений; 12610 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (42 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/06-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-06-cs"
@@ -2889,14 +2901,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 31 дневных разделов электронного источника: 15479 блоков, 12169 красных прогонов, 0 изображений; 15340 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 15479 блоков, 12169 красных прогонов, 0 изображений; 15340 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (44 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/07-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-07-cs"
@@ -2917,14 +2931,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 31 дневных разделов электронного источника: 12456 блоков, 10309 красных прогонов, 0 изображений; 12353 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 12456 блоков, 10309 красных прогонов, 0 изображений; 12353 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (26 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/08-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-08-cs"
@@ -2945,14 +2961,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 30 дневных разделов электронного источника: 10423 блоков, 9453 красных прогонов, 28 изображений; 10355 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 10423 блоков, 9453 красных прогонов, 28 изображений; 10355 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (33 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/09-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-09-cs"
@@ -2973,14 +2991,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 31 дневных разделов электронного источника: 9483 блоков, 8164 красных прогонов, 0 изображений; 9354 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 9483 блоков, 8164 красных прогонов, 0 изображений; 9354 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (32 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/10-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-10-cs"
@@ -3001,14 +3021,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 30 дневных разделов электронного источника: 11554 блоков, 9468 красных прогонов, 0 изображений; 11465 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 11554 блоков, 9468 красных прогонов, 0 изображений; 11465 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (36 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/11-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-11-cs"
@@ -3029,14 +3051,16 @@
       ],
       "quality": {
         "percent": null,
-        "label": "Опубликованы все 31 дневных разделов электронного источника: 12001 блоков, 10761 красных прогонов, 0 изображений; 11872 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 12001 блоков, 10761 красных прогонов, 0 изображений; 11872 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены. К подтверждённым памятям добавлены ссылки каталога святых (35 привязок по memoryId)."
       },
       "evidence": [
         "raw/menaion",
         "spec/library-monthly-menaia.md",
         "reports/library/monthly-menaia-cs/12-build.json",
         "reports/library/monthly-menaia-cs/verification.json",
-        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+        "reports/deploy-monthly-menaia-cs-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-12-cs"
@@ -3057,7 +3081,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1926 года. Сохранены все 31 дневных разделов (3 HTML-части с киноварью). Пропущенная ранее дата восстановлена в разборе и включена в книгу. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 8409 связанных абзацев. Якорей памятей 31, подтверждённых связей с memoryId 40."
+        "label": "По электронному титулу издание 1926 года. Сохранены все 31 дневных разделов (3 HTML-части с киноварью). Пропущенная ранее дата восстановлена в разборе и включена в книгу. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 8409 связанных абзацев. Якорей памятей 31, подтверждённых связей с memoryId 40. К подтверждённым памятям добавлены ссылки каталога святых (4 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3067,7 +3091,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-01-ro"
@@ -3088,7 +3114,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1929 года. Сохранены все 29 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 29. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 29 дневных глав и 5209 связанных абзацев. Якорей памятей 30, подтверждённых связей с memoryId 33. В книгу включены службы из раздела Adaosuri: 1."
+        "label": "По электронному титулу издание 1929 года. Сохранены все 29 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 29. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 29 дневных глав и 5209 связанных абзацев. Якорей памятей 30, подтверждённых связей с memoryId 33. В книгу включены службы из раздела Adaosuri: 1. К подтверждённым памятям добавлены ссылки каталога святых (5 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3097,7 +3123,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-02-ro"
@@ -3118,7 +3146,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1930 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 4675 связанных абзацев. Якорей памятей 31, подтверждённых связей с memoryId 29."
+        "label": "По электронному титулу издание 1930 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 4675 связанных абзацев. Якорей памятей 31, подтверждённых связей с memoryId 29. К подтверждённым памятям добавлены ссылки каталога святых (5 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3127,7 +3155,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-03-ro"
@@ -3148,7 +3178,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1929 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 4799 связанных абзацев. Якорей памятей 30, подтверждённых связей с memoryId 34."
+        "label": "По электронному титулу издание 1929 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 4799 связанных абзацев. Якорей памятей 30, подтверждённых связей с memoryId 34. К подтверждённым памятям добавлены ссылки каталога святых (6 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3157,7 +3187,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-04-ro"
@@ -3178,7 +3210,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 2, 3, 12. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 5441 связанных абзацев. Якорей памятей 34, подтверждённых связей с memoryId 32. В книгу включены службы из раздела Adaosuri: 3."
+        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 2, 3, 12. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 5441 связанных абзацев. Якорей памятей 34, подтверждённых связей с memoryId 32. В книгу включены службы из раздела Adaosuri: 3. К подтверждённым памятям добавлены ссылки каталога святых (6 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3187,7 +3219,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-05-ro"
@@ -3208,7 +3242,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1927 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 5513 связанных абзацев. Якорей памятей 30, подтверждённых связей с memoryId 36."
+        "label": "По электронному титулу издание 1927 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 5513 связанных абзацев. Якорей памятей 30, подтверждённых связей с memoryId 36. К подтверждённым памятям добавлены ссылки каталога святых (5 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3217,7 +3251,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-06-ro"
@@ -3238,7 +3274,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1928 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6663 связанных абзацев. Якорей памятей 39, подтверждённых связей с memoryId 36."
+        "label": "По электронному титулу издание 1928 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6663 связанных абзацев. Якорей памятей 39, подтверждённых связей с memoryId 36. К подтверждённым памятям добавлены ссылки каталога святых (8 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3247,7 +3283,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-07-ro"
@@ -3268,7 +3306,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 7, 11. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6463 связанных абзацев. Якорей памятей 33, подтверждённых связей с memoryId 37. В книгу включены службы из раздела Adaosuri: 2."
+        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 7, 11. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6463 связанных абзацев. Якорей памятей 33, подтверждённых связей с memoryId 37. В книгу включены службы из раздела Adaosuri: 2. К подтверждённым памятям добавлены ссылки каталога святых (9 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3277,7 +3315,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-08-ro"
@@ -3298,7 +3338,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1929 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Пропущенная ранее дата восстановлена в разборе и включена в книгу. На странице дополнений есть службы на следующие числа: 15. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 6628 связанных абзацев. Якорей памятей 31, подтверждённых связей с memoryId 33. В книгу включены службы из раздела Adaosuri: 1."
+        "label": "По электронному титулу издание 1929 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Пропущенная ранее дата восстановлена в разборе и включена в книгу. На странице дополнений есть службы на следующие числа: 15. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 6628 связанных абзацев. Якорей памятей 31, подтверждённых связей с memoryId 33. В книгу включены службы из раздела Adaosuri: 1. К подтверждённым памятям добавлены ссылки каталога святых (3 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3307,7 +3347,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-09-ro"
@@ -3328,7 +3370,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6871 связанных абзацев. Якорей памятей 35, подтверждённых связей с memoryId 43."
+        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6871 связанных абзацев. Якорей памятей 35, подтверждённых связей с memoryId 43. К подтверждённым памятям добавлены ссылки каталога святых (5 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3337,7 +3379,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-10-ro"
@@ -3358,7 +3402,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1927 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Пропущенная ранее дата восстановлена в разборе и включена в книгу. На странице дополнений есть службы на следующие числа: 15, 23. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 7864 связанных абзацев. Якорей памятей 32, подтверждённых связей с memoryId 35. В книгу включены службы из раздела Adaosuri: 2."
+        "label": "По электронному титулу издание 1927 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Пропущенная ранее дата восстановлена в разборе и включена в книгу. На странице дополнений есть службы на следующие числа: 15, 23. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 7864 связанных абзацев. Якорей памятей 32, подтверждённых связей с memoryId 35. В книгу включены службы из раздела Adaosuri: 2. К подтверждённым памятям добавлены ссылки каталога святых (7 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3367,7 +3411,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-11-ro"
@@ -3388,7 +3434,7 @@
       ],
       "quality": {
         "percent": null,
-        "label": "По электронному титулу издание 1927 года. Сохранены все 31 дневных разделов (3 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 18. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 8803 связанных абзацев. Якорей памятей 32, подтверждённых связей с memoryId 38. В книгу включены службы из раздела Adaosuri: 1."
+        "label": "По электронному титулу издание 1927 года. Сохранены все 31 дневных разделов (3 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 18. Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 8803 связанных абзацев. Якорей памятей 32, подтверждённых связей с memoryId 38. В книгу включены службы из раздела Adaosuri: 1. К подтверждённым памятям добавлены ссылки каталога святых (8 привязок по memoryId)."
       },
       "evidence": [
         "raw/romanian/mineiele/manifest.json",
@@ -3398,7 +3444,9 @@
         "spec/library-monthly-menaia-ro-audit.md",
         "scripts/audit_romanian_monthly_menaia.py",
         "rules/library/monthly-menaia-ro-memories.json",
-        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json"
+        "reports/deploy-monthly-menaia-ro-complete-20261118/published.json",
+        "rules/library/monthly-menaion-saints.json",
+        "spec/library-monthly-menaion-saints.md"
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-12-ro"
