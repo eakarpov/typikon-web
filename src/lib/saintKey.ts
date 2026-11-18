@@ -5,6 +5,7 @@
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { byExternal, SAINT_SOURCES } from "@/lib/saintSources";
+import { findSaintByUri, isSaintUri } from "@/lib/saintUris";
 
 /**
  * Адреса, как их вставляет человек: ссылка на страницу сайта или сам адрес.
@@ -13,6 +14,7 @@ import { byExternal, SAINT_SOURCES } from "@/lib/saintSources";
  */
 export const lastSegment = (raw: unknown): string => {
     const s = String(raw ?? "").trim();
+    if (isSaintUri(s)) return s;
     try {
         const u = new URL(s);
         return decodeURIComponent(u.pathname.split("/").filter(Boolean).pop() ?? "");
@@ -29,6 +31,10 @@ export const saintIdOf = async (raw: unknown): Promise<string | null> => {
     const address = lastSegment(raw);
     if (!address) return null;
     const saints = (await clientPromise).db("typikon").collection("saints");
+    if (isSaintUri(address)) {
+        const saint = await findSaintByUri(saints, address);
+        return saint ? String(saint._id) : null;
+    }
     if (/^[a-f0-9]{24}$/.test(address)) {
         return (await saints.findOne({ _id: new ObjectId(address) }, { projection: { _id: 1 } })) ? address : null;
     }

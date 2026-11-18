@@ -14,6 +14,7 @@ import { SAINT_SOURCES, byExternal, type SaintExternal } from "@/lib/saintSource
 
 import { isCanonicalDneslovSnapshot } from "@/lib/dneslovIdentity";
 import { durableDneslovMemory } from "@/lib/dneslovDay";
+import { findSaintByUri, isSaintUri } from "@/lib/saintUris";
 
 const DNESLOV = SAINT_SOURCES.dneslov.code;
 
@@ -102,6 +103,8 @@ export const getSaintByAddress = cached(async (address: string): Promise<Saint |
     if (!address) return null;
     const saints = await collection();
 
+    if (isSaintUri(address)) return await findSaintByUri(saints, address) as unknown as Saint | null;
+
     const bySlug = await saints.findOne({ slug: address });
     if (bySlug) return bySlug as unknown as Saint;
 
@@ -130,7 +133,7 @@ export const getSaintByAddress = cached(async (address: string): Promise<Saint |
         memoryDates: [], imageUrl: null, roundelUrl: details.roundel_url ?? null,
         images: snapshot?.images ?? [], externals: [{ source: DNESLOV, id: canonicalId, slug: snapshot?.slug ?? details.slug ?? null }],
     } as Saint;
-}, ["saint-by-address:v4"], [CacheTag.SAINTS]);
+}, ["saint-by-address:v5"], [CacheTag.SAINTS]);
 
 /**
  * Общий разбор выборки «пачка номеров святцев -> поле каталога». Ключей одного
