@@ -1413,19 +1413,19 @@
     {
       "book": "pentecostarion",
       "language": "cu",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
         "pending",
-        "pending",
-        "pending",
+        "partial",
+        "done",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "SamStar: все 27/27 глав Markdown на месте, киноварь присутствует. Дополнительное старообрядческое издание; библиография и связи ещё не приняты."
+        "label": "Все 27 глав электронной редакции SamStar от Лазаревой субботы до Недели всех святых. Киноварь сохранена, 3107 адресуемых абзацев. Печатный прототип не установлен, полной вычитки и сопоставления песнопений между изводами нет."
       },
       "tags": [],
       "evidence": [
@@ -1433,10 +1433,13 @@
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
         "reports/library/next-wave/source-audit.json",
-        "reports/library/after-triodia-20261117/source-audit.json"
+        "reports/library/after-triodia-20261117/source-audit.json",
+        "raw/cu-md-oldrite/TriodCvetnaya-SamStar/Manifest.xml",
+        "spec/library-pentecostarion-oldrite.md"
       ],
-      "updated_at": "2026-11-17",
-      "edition": "Дополнительный источник"
+      "updated_at": "2026-11-18",
+      "edition": "Церковнославянский (старомосковский извод)",
+      "alias": "pentecostarion-cs-oldrite"
     },
     {
       "book": "psalter",
