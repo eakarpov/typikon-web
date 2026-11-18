@@ -1444,19 +1444,48 @@
     {
       "book": "psalter",
       "language": "cu",
-      "status": "in_progress",
+      "edition": "Псалтирь · Синодальный извод",
+      "quality": {
+        "percent": null,
+        "label": "20 кафизм, псалмы 1–151, молитвы до и после чтения. 84 связи с существующими записями тропарей и молитв после кафизм, 624 отдельных фрагмента электронной книги. Печатный прототип не установлен."
+      },
+      "tags": [
+        "Гражданское начертание"
+      ],
+      "evidence": [
+        "raw/psalter-synodal/azbyka.html",
+        "rules/texts/psaltir-kafizmy.yaml",
+        "spec/library-psalter.md"
+      ],
+      "status": "published",
+      "updated_at": "2026-11-18",
       "stages": [
         "done",
         "done",
         "done",
         "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "alias": "psalter-cs"
+    },
+    {
+      "book": "psalter",
+      "language": "cu",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
         "pending",
-        "pending",
+        "partial",
+        "done",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "Все 28/28 глав Markdown на месте, во всех есть маркеры киновари; нужны приёмка состава, библиография и книжные связи."
+        "label": "Все 28 глав SamStar, включая 20 кафизм, Псалом 151, библейские песни и отдельный раздел молитв по кафизмам. Киноварь сохранена; 702 адресуемых абзаца. Печатный прототип не установлен."
       },
       "tags": [
         "Старомосковский извод"
@@ -1466,10 +1495,13 @@
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
         "reports/library/next-wave/source-audit.json",
-        "reports/library/after-triodia-20261117/source-audit.json"
+        "reports/library/after-triodia-20261117/source-audit.json",
+        "raw/cu-md-oldrite/Psalter-SamStar/Manifest.xml",
+        "spec/library-psalter.md"
       ],
-      "updated_at": "2026-11-17",
-      "edition": "Псалтирь · SamStar"
+      "updated_at": "2026-11-18",
+      "edition": "Псалтирь · SamStar",
+      "alias": "psalter-cs-oldrite"
     },
     {
       "book": "festal-menaion",
