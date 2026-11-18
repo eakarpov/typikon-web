@@ -1205,33 +1205,6 @@
       "updated_at": "2026-11-17"
     },
     {
-      "book": "menaion",
-      "language": "ro",
-      "status": "in_progress",
-      "stages": [
-        "done",
-        "done",
-        "done",
-        "pending",
-        "partial",
-        "pending",
-        "pending"
-      ],
-      "quality": {
-        "percent": null,
-        "label": "27 HTML с киноварью: индекс и помесячные части, представлены 12 месяцев. Границы частей, полноту дат и книжные привязки нужно принимать помесячно."
-      },
-      "tags": [],
-      "evidence": [
-        "raw/romanian/mineiele",
-        "spec/library-source-readiness.md",
-        "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json",
-        "reports/library/after-triodia-20261117/source-audit.json"
-      ],
-      "updated_at": "2026-11-17"
-    },
-    {
       "book": "sluzhebnik",
       "language": "en",
       "status": "in_progress",
@@ -3067,6 +3040,341 @@
       ],
       "updated_at": "2026-11-18",
       "alias": "menaion-12-cs"
+    },
+    {
+      "book": "menaion-01",
+      "language": "ro",
+      "edition": "menaion-01-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1926 года. Сохранены все 31 дневных разделов (3 HTML-части с киноварью). Пропуск текущего разбора: 25-е число. Служба есть в HTML под заголовком ÎN ZIUA. Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/06-Mineiul-pe-ianuarie.html",
+        "raw/romanian/mineiele/html/19-Mineiul-10-20-Ianuarie.html",
+        "raw/romanian/mineiele/html/20-Mineiul-21-31-Ianuarie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-02",
+      "language": "ro",
+      "edition": "menaion-02-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1929 года. Сохранены все 29 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 29. Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/05-Mineiul-pe-februarie.html",
+        "raw/romanian/mineiele/html/18-Mineiul-15-29-Februarie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-03",
+      "language": "ro",
+      "edition": "menaion-03-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1930 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/10-Mineiul-pe-martie.html",
+        "raw/romanian/mineiele/html/24-Mineiul-16-31-Martie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-04",
+      "language": "ro",
+      "edition": "menaion-04-ro-teologie",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "partial"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1929 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 30 дневных глав и 4799 связанных абзацев. Якорей памятей 30, подтверждённых связей с memoryId 34."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/02-Mineiul-pe-aprilie.html",
+        "raw/romanian/mineiele/html/14-Mineiul-16-30-Aprilie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py",
+        "rules/library/monthly-menaia-ro-memories.json",
+        "reports/deploy-monthly-menaia-ro-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-04-ro"
+    },
+    {
+      "book": "menaion-05",
+      "language": "ro",
+      "edition": "menaion-05-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 2, 3, 12. Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/09-Mineiul-pe-mai.html",
+        "raw/romanian/mineiele/html/23-Mineiul-16-31-Mai.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-06",
+      "language": "ro",
+      "edition": "menaion-06-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1927 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/08-Mineiul-pe-iunie.html",
+        "raw/romanian/mineiele/html/22-Mineiul-16-30-Iunie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-07",
+      "language": "ro",
+      "edition": "menaion-07-ro-teologie",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "partial"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1928 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6663 связанных абзацев. Якорей памятей 39, подтверждённых связей с memoryId 36."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/07-Mineiul-pe-iulie.html",
+        "raw/romanian/mineiele/html/21-Mineiul-16-31-Iulie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py",
+        "rules/library/monthly-menaia-ro-memories.json",
+        "reports/deploy-monthly-menaia-ro-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-07-ro"
+    },
+    {
+      "book": "menaion-08",
+      "language": "ro",
+      "edition": "menaion-08-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 7, 11. Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/03-Mineiul-pe-august.html",
+        "raw/romanian/mineiele/html/15-Mineiul-16-31-August.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-09",
+      "language": "ro",
+      "edition": "menaion-09-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1929 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Пропуск текущего разбора: 30-е число. Служба есть в HTML под заголовком ÎN ZIUA. На странице дополнений есть службы на следующие числа: 15. Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/13-Mineiul-pe-septembrie.html",
+        "raw/romanian/mineiele/html/27-Mineiul-15-30-Septembrie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-10",
+      "language": "ro",
+      "edition": "menaion-10-ro-teologie",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "partial"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1929 года. Сохранены все 31 дневных разделов (2 HTML-части с киноварью). Сплошная сверка с печатным томом и полное сопоставление служб предстоят. Опубликовано 31 дневных глав и 6871 связанных абзацев. Якорей памятей 35, подтверждённых связей с memoryId 43."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/12-Mineiul-pe-octombrie.html",
+        "raw/romanian/mineiele/html/26-Mineiul-16-31-Octombrie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py",
+        "rules/library/monthly-menaia-ro-memories.json",
+        "reports/deploy-monthly-menaia-ro-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-10-ro"
+    },
+    {
+      "book": "menaion-11",
+      "language": "ro",
+      "edition": "menaion-11-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1927 года. Сохранены все 30 дневных разделов (2 HTML-части с киноварью). Пропуск текущего разбора: 25-е число. Служба есть в HTML под заголовком ÎN ZIUA. На странице дополнений есть службы на следующие числа: 15, 23. Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/11-Mineiul-pe-noiembrie.html",
+        "raw/romanian/mineiele/html/25-Mineiul-16-30-Noiembrie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
+    },
+    {
+      "book": "menaion-12",
+      "language": "ro",
+      "edition": "menaion-12-ro-teologie",
+      "status": "in_progress",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "pending",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "По электронному титулу издание 1927 года. Сохранены все 31 дневных разделов (3 HTML-части с киноварью). На странице дополнений есть службы на следующие числа: 18. Сплошная сверка с печатным томом, книжная сборка и межъязыковые привязки предстоят."
+      },
+      "evidence": [
+        "raw/romanian/mineiele/manifest.json",
+        "raw/romanian/mineiele/html/04-Mineiul-pe-decembrie.html",
+        "raw/romanian/mineiele/html/16-Mineiul-11-20-Decembrie.html",
+        "raw/romanian/mineiele/html/17-Mineiul-21-31-Decembrie.html",
+        "spec/library-monthly-menaia-ro-audit.md",
+        "scripts/audit_romanian_monthly_menaia.py"
+      ],
+      "updated_at": "2026-11-18"
     }
   ],
   "references": [
