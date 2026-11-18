@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-17",
+  "updated_at": "2026-11-18",
   "scope_note": "Рабочий расширяемый перечень языков православных общин, исторических переводов и направлений поиска. Наличие колонки не утверждает существования перевода каждой книги. Включены также языки древневосточных традиций для учёта источников; традиция и издание уточняются в ячейке. Изводы и графики учитываются внутри языка.",
   "stages": [
     {
@@ -517,7 +517,55 @@
     },
     {
       "id": "menaion",
-      "label": "Месячная Минея (12 месяцев)"
+      "label": "Месячные Минеи · источники без помесячной атрибуции"
+    },
+    {
+      "id": "menaion-01",
+      "label": "Минея · Январь"
+    },
+    {
+      "id": "menaion-02",
+      "label": "Минея · Февраль"
+    },
+    {
+      "id": "menaion-03",
+      "label": "Минея · Март"
+    },
+    {
+      "id": "menaion-04",
+      "label": "Минея · Апрель"
+    },
+    {
+      "id": "menaion-05",
+      "label": "Минея · Май"
+    },
+    {
+      "id": "menaion-06",
+      "label": "Минея · Июнь"
+    },
+    {
+      "id": "menaion-07",
+      "label": "Минея · Июль"
+    },
+    {
+      "id": "menaion-08",
+      "label": "Минея · Август"
+    },
+    {
+      "id": "menaion-09",
+      "label": "Минея · Сентябрь"
+    },
+    {
+      "id": "menaion-10",
+      "label": "Минея · Октябрь"
+    },
+    {
+      "id": "menaion-11",
+      "label": "Минея · Ноябрь"
+    },
+    {
+      "id": "menaion-12",
+      "label": "Минея · Декабрь"
     },
     {
       "id": "festal-menaion",
@@ -1011,34 +1059,6 @@
       ],
       "updated_at": "2026-11-17",
       "alias": "pentecostarion-cs"
-    },
-    {
-      "book": "menaion",
-      "language": "cu",
-      "status": "in_progress",
-      "stages": [
-        "done",
-        "done",
-        "done",
-        "pending",
-        "partial",
-        "pending",
-        "pending"
-      ],
-      "quality": {
-        "percent": null,
-        "label": "Все 12 месяцев и 366 дат по манифестам сохранены без пропусков файлов, киноварь подтверждена прежним аудитом; книжный слой принимать помесячно."
-      },
-      "tags": [],
-      "evidence": [
-        "raw/menaion",
-        "spec/library-source-readiness.md",
-        "spec/library-octoechos-completion.md",
-        "reports/library/next-wave/source-audit.json",
-        "spec/library-corpus-pilot.md",
-        "reports/library/after-triodia-20261117/source-audit.json"
-      ],
-      "updated_at": "2026-11-17"
     },
     {
       "book": "typikon",
@@ -2711,6 +2731,342 @@
       ],
       "updated_at": "2026-11-17",
       "edition": "Маргарит · первая беседа о непостижимем"
+    },
+    {
+      "book": "menaion-01",
+      "language": "cu",
+      "edition": "menaion-01-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 14526 блоков, 16492 красных прогонов, 0 изображений; 14393 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/01-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-01-cs"
+    },
+    {
+      "book": "menaion-02",
+      "language": "cu",
+      "edition": "menaion-02-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 29 дневных разделов электронного источника: 8877 блоков, 11049 красных прогонов, 0 изображений; 8796 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/02-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-02-cs"
+    },
+    {
+      "book": "menaion-03",
+      "language": "cu",
+      "edition": "menaion-03-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 8038 блоков, 7079 красных прогонов, 0 изображений; 7953 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/03-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-03-cs"
+    },
+    {
+      "book": "menaion-04",
+      "language": "cu",
+      "edition": "menaion-04-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 6781 блоков, 5505 красных прогонов, 0 изображений; 6703 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/04-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-04-cs"
+    },
+    {
+      "book": "menaion-05",
+      "language": "cu",
+      "edition": "menaion-05-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 12732 блоков, 10407 красных прогонов, 0 изображений; 12605 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/05-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-05-cs"
+    },
+    {
+      "book": "menaion-06",
+      "language": "cu",
+      "edition": "menaion-06-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 12736 блоков, 10207 красных прогонов, 0 изображений; 12610 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/06-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-06-cs"
+    },
+    {
+      "book": "menaion-07",
+      "language": "cu",
+      "edition": "menaion-07-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 15479 блоков, 12169 красных прогонов, 0 изображений; 15340 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/07-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-07-cs"
+    },
+    {
+      "book": "menaion-08",
+      "language": "cu",
+      "edition": "menaion-08-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 12456 блоков, 10309 красных прогонов, 0 изображений; 12353 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/08-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-08-cs"
+    },
+    {
+      "book": "menaion-09",
+      "language": "cu",
+      "edition": "menaion-09-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 10423 блоков, 9453 красных прогонов, 28 изображений; 10355 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/09-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-09-cs"
+    },
+    {
+      "book": "menaion-10",
+      "language": "cu",
+      "edition": "menaion-10-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 9483 блоков, 8164 красных прогонов, 0 изображений; 9354 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/10-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-10-cs"
+    },
+    {
+      "book": "menaion-11",
+      "language": "cu",
+      "edition": "menaion-11-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 30 дневных разделов электронного источника: 11554 блоков, 9468 красных прогонов, 0 изображений; 11465 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/11-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-11-cs"
+    },
+    {
+      "book": "menaion-12",
+      "language": "cu",
+      "edition": "menaion-12-cs-azbyka",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "pending",
+        "partial",
+        "done",
+        "pending"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Опубликованы все 31 дневных разделов электронного источника: 12001 блоков, 10761 красных прогонов, 0 изображений; 11872 непустых абзацев связаны с БД. Самостоятельная месячная книга. Печатный прототип, сплошная выверка, полная жанровая/календарная и межъязыковая разметка не подтверждены."
+      },
+      "evidence": [
+        "raw/menaion",
+        "spec/library-monthly-menaia.md",
+        "reports/library/monthly-menaia-cs/12-build.json",
+        "reports/library/monthly-menaia-cs/verification.json",
+        "reports/deploy-monthly-menaia-cs-20261118/published.json"
+      ],
+      "updated_at": "2026-11-18",
+      "alias": "menaion-12-cs"
     }
   ],
   "references": [
