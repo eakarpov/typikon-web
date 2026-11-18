@@ -1217,19 +1217,19 @@
     {
       "book": "sluzhebnik",
       "language": "en",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
-        "pending",
-        "pending",
-        "pending",
+        "partial",
+        "partial",
+        "done",
         "pending"
       ],
       "quality": {
         "percent": null,
-        "label": "Royster: 55 HTML, все 29 целей оглавления на месте; в 50 файлах явная киноварь. Нужны книжный слой и отдельный разбор/связи этого источника."
+        "label": "Электронная копия Ponomar перевода 1973 года. 55 страниц: оглавление, 29 целей и 25 приложений; 3952 адресуемых фрагмента. Киноварь, внутренние ссылки и рисунок дискоса сохранены. Месяцеслов содержит сентябрь–апрель. Точный печатный экземпляр электронной копии не установлен."
       },
       "tags": [],
       "evidence": [
@@ -1237,9 +1237,17 @@
         "spec/library-source-readiness.md",
         "spec/library-octoechos-completion.md",
         "reports/library/next-wave/source-audit.json",
-        "reports/library/after-triodia-20261117/source-audit.json"
+        "reports/library/after-triodia-20261117/source-audit.json",
+        "https://www.ponomar.net/data/royster/index.html",
+        "https://openlibrary.org/books/OL37907203M/The_liturgy_of_the_presanctified_gifts",
+        "https://www.stmaximus.org/music",
+        "https://www.oca.org/news/headline-news/premiere-of-new-divine-liturgy-setting-in-memory-of-archbishop-dimitri-to-take-place-in-dallas-tx",
+        "https://www.oca.org/news/oca-news/saint-seraphim-orthodox-cathedral-commemorates-archbishop-dmitri-with-premiere-of-new-divine-liturgy-by-nicholas-reeves",
+        "spec/library-royster-service-book.md"
       ],
-      "updated_at": "2026-11-17"
+      "updated_at": "2026-11-18",
+      "edition": "The Priest’s Service Book · Dmitri (Royster), 1973",
+      "alias": "sluzhebnik-en"
     },
     {
       "book": "chasoslov",
