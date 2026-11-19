@@ -690,6 +690,10 @@
     {
       "id": "typikon-violakis",
       "label": "Типикон Виолакиса"
+    },
+    {
+      "id": "typikon-constantine",
+      "label": "Типикон Константина Протопсалта"
     }
   ],
   "cells": [
@@ -1872,6 +1876,37 @@
       ],
       "updated_at": "2026-11-19",
       "alias": "typikon-violakis-grc"
+    },
+    {
+      "book": "typikon-constantine",
+      "language": "cu",
+      "edition": "Перевод Неофита Рильского, Константинополь, 1853",
+      "status": "published",
+      "stages": [
+        "done",
+        "done",
+        "done",
+        "done",
+        "partial",
+        "done",
+        "partial"
+      ],
+      "quality": {
+        "percent": null,
+        "label": "Первое церковнославянское издание, перевод Неофита Рильского, Константинополь, 1853. По скану вычитаны все 360 страниц с печатным текстом. Собраны 43 разделов, включая месяцеслов, Пасхалию (PDF 310–311) и приложения. Сохранены 114 сносок и 23 строки списка опечаток. В читалке показаны 20 редакторских помет. 2125 адресуемых фрагментов. С Виолакисом сопоставлены начальные разделы, месяцеслов, подвижный круг и приложения."
+      },
+      "tags": [],
+      "evidence": [
+        "spec/library-neofit-typikon.md",
+        "scripts/build_library_neofit.py",
+        "raw/greek-typikon-violakis/neofit-1853-collation.md",
+        "raw/greek-typikon-violakis/neofit-1853-apparatus.json",
+        "raw/greek-typikon-violakis/neofit-1853-proofread/310.txt",
+        "raw/greek-typikon-violakis/neofit-1853-proofread/311.txt",
+        "raw/greek-typikon-violakis/neofit-1853-proofread/358.txt"
+      ],
+      "updated_at": "2026-11-19",
+      "alias": "typikon-constantine-cs"
     },
     {
       "book": "prayer-book",
