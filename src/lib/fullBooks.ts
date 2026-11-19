@@ -4,6 +4,7 @@ export const FULL_BOOK_ALIASES = new Set([
     "menaion-01-cs", "menaion-02-cs", "menaion-03-cs", "menaion-04-cs", "menaion-05-cs", "menaion-06-cs", "menaion-07-cs", "menaion-08-cs", "menaion-09-cs", "menaion-10-cs", "menaion-11-cs", "menaion-12-cs",
     "menaion-01-ro", "menaion-02-ro", "menaion-03-ro", "menaion-04-ro", "menaion-05-ro", "menaion-06-ro", "menaion-07-ro", "menaion-08-ro", "menaion-09-ro", "menaion-10-ro", "menaion-11-ro", "menaion-12-ro",
     "typikon-cs", "typikon-ro",
+    "typikon-violakis-grc",
     "psalter-cs", "psalter-cs-oldrite",
     "menaion-02-cs-oldrite", "menaion-03-cs-oldrite", "menaion-11-cs-oldrite", "menaion-12-cs-oldrite",
     "sluzhebnik-en",

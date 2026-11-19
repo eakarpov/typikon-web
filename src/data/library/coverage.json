@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-18",
+  "updated_at": "2026-11-19",
   "scope_note": "Рабочий расширяемый перечень языков православных общин, исторических переводов и направлений поиска. Наличие колонки не утверждает существования перевода каждой книги. Включены также языки древневосточных традиций для учёта источников; традиция и издание уточняются в ячейке. Изводы и графики учитываются внутри языка.",
   "stages": [
     {
@@ -1847,26 +1847,31 @@
     {
       "book": "typikon-violakis",
       "language": "grc",
-      "status": "in_progress",
+      "status": "published",
       "stages": [
         "done",
         "done",
         "done",
-        "pending",
-        "pending",
-        "pending",
-        "pending"
+        "done",
+        "partial",
+        "done",
+        "partial"
       ],
       "quality": {
         "percent": null,
-        "label": "Отдельная константинопольская редакция Георгия Виолакиса, 1888. Сохранены сканы и извлечённый текст; требуется выверка."
+        "label": "Типикон Виолакиса, афинская печать Мих. Саливероса без года на титуле. Архив датирует экземпляр 1921 годом. По скану вычитаны все 474 страниц с печатным текстом. Собраны 48 разделов, 129 сносок, 140 адресов оглавления и 426 строк Еортодромия. 76 спорных чтений обозначены в читалке. 3843 адресуемых фрагмента. С Неофитом сопоставлены начальные разделы, месяцеслов и подвижный круг. Формализация уставных правил остаётся отдельным этапом."
       },
       "tags": [],
       "evidence": [
         "raw/greek-typikon-violakis/README.md",
-        "spec/library-typikon-cs-ro.md"
+        "raw/greek-typikon-violakis/review.json",
+        "raw/greek-typikon-violakis/proofread/contents-18-20.json",
+        "raw/greek-typikon-violakis/proofread/069.txt",
+        "scripts/build_library_violakis.py",
+        "spec/library-violakis.md"
       ],
-      "updated_at": "2026-11-18"
+      "updated_at": "2026-11-19",
+      "alias": "typikon-violakis-grc"
     },
     {
       "book": "prayer-book",
