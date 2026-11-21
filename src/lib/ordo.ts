@@ -180,6 +180,9 @@ export interface OrdoOptions {
     /** Тетради действующих лиц: `role:<role>` — подача для него. */
     notebooks: OrdoNotebook[];
     languages: OrdoOption[];
+    rubricLanguages: OrdoOption[];
+    rubricLangDefault: string;
+    rubricLangByText: Record<string, string>;
     predstoyatel: OrdoOption[];
     prihods: { prihod: string; prestoly: { key: string; label: string; isMain: boolean }[] }[];
 }
@@ -209,6 +212,9 @@ export const ordoOptions = async (ustav?: string): Promise<OrdoOptions | null> =
         views: raw.views ?? {},
         notebooks: raw.notebooks ?? [],
         languages: raw.languages ?? [],
+        rubricLanguages: raw.rubric_languages ?? [],
+        rubricLangDefault: raw.rubric_lang_default ?? "ru",
+        rubricLangByText: raw.rubric_lang_by_text ?? {},
         predstoyatel: raw.predstoyatel ?? [],
         prihods: (raw.prihods ?? []).map((p: any) => ({
             prihod: p.prihod,

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ordoDay, ordoOptions, parseTransfer, type OrdoDay, type OrdoTransfer } from "@/lib/ordo";
-import { viewChoices } from "@/lib/ordoView";
+import { UKAZANIYA, viewChoices } from "@/lib/ordoView";
 import { MONTH_OF } from "@/utils/chantLabels";
 import { myFont } from "@/utils/font";
 import Calendar from "./Calendar";
@@ -91,19 +91,31 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
         ?? day.variants[0];
     const razdelno = razdelnoOf(searchParams, variant?.services.some(s => s.key === "vsenoshchnoe") ?? false);
 
+    const lang = first(searchParams.lang);
+    const requestedRubricLang = first(searchParams.rubric_lang);
+    const inferredRubricLang = options.rubricLangByText[lang ?? ""] ?? options.rubricLangDefault;
+    const rubricLang = options.rubricLanguages.find(l => l.key === requestedRubricLang)?.key
+        ?? options.rubricLanguages.find(l => l.key === inferredRubricLang)?.key
+        ?? options.rubricLanguages[0]?.key;
     const common: ServicesCommon = {
         ustav,
         variant: variant?.key,
         transfers,memories,serviceSign,prestoly,
-        lang: first(searchParams.lang),
+        lang,
+        rubricLang,
         parallel: first(searchParams.parallel),
         psalms: first(searchParams.psalms),
     };
     const choices = viewChoices(options);
+    const selectedUstav = options.ustavy.find(option => option.ustav === ustav) ?? options.ustavy[0];
+    const defaultView = selectedUstav?.tradition === "constantinopolitan" ? "full" : UKAZANIYA;
     const downloadDay = (() => {
         const q = new URLSearchParams({ date });
         if (variant) q.set("variant", variant.key);
         if (ustav) q.set("ustav", ustav);
+        if (common.lang) q.set("lang", common.lang);
+        if (common.rubricLang) q.set("rubric_lang", common.rubricLang);
+        if (common.parallel) q.set("parallel", common.parallel);
         for(const id of memories)q.append("memories",id);
         if(serviceSign)q.set("service_sign",serviceSign);
         for(const p of prestoly)q.append('prestoly',[p.memoryId,p.kind??'',p.label??''].join('|'));
@@ -124,7 +136,9 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                 <Suspense>
                     <Controls options={options} choices={choices}
                               ustav={ustav || options.ustavy[0]?.ustav || ""}
+                              defaultView={defaultView}
                               lang={common.lang || options.languages[0]?.key || ""}
+                              rubricLang={rubricLang}
                               hasVigil={variant?.services.some(s => s.key === "vsenoshchnoe") ?? false}
                               razdelno={razdelno} />
                 </Suspense>
@@ -163,7 +177,7 @@ const Posledovanie = async ({ searchParams }: { searchParams: SearchParams }) =>
                     <Suspense fallback={
                         <div className="font-serif text-slate-400 py-2">Последование собирается…</div>
                     }>
-                        <ServicesBlock day={day} common={common} razdelno={razdelno} />
+                        <ServicesBlock day={day} common={common} defaultView={defaultView} razdelno={razdelno} />
                     </Suspense>
                 </div>
                 </PackageMode>

@@ -96,16 +96,24 @@ test("скачивание: служба опциональна, дата стр
     if (day.ok) {
         assert.equal(day.value.service, null);
         assert.equal(day.value.razdelno, false);
+        assert.equal(day.value.rubricLang, null);
     }
 
     const razdelno = parseOrdoDownload(
-        url("/api/ordo/package?date=2026-09-26&service=liturgy&bdenie=0&ustav=pre-nikonian/old-rite"),
+        url("/api/ordo/package?date=2026-09-26&service=liturgy&bdenie=0&ustav=pre-nikonian/old-rite&lang=grc&rubric_lang=el&parallel=cu_gr,cu"),
     );
     assert.ok(razdelno.ok);
     if (razdelno.ok) {
         assert.equal(razdelno.value.service, "liturgy");
         assert.equal(razdelno.value.razdelno, true);
         assert.equal(razdelno.value.ustav, "pre-nikonian/old-rite");
+        assert.equal(razdelno.value.lang, "grc");
+        assert.equal(razdelno.value.rubricLang, "el");
+        assert.equal(razdelno.value.parallel, "cu_gr,cu");
+    }
+
+    for (const value of ["", "grc", "el&rubric_lang=ru"]) {
+        assert.equal(parseOrdoDownload(url(`/api/ordo/package?date=2026-09-26&rubric_lang=${value}`)).ok, false);
     }
 
     // служебный мусор в service не проходит

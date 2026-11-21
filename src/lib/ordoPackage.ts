@@ -20,6 +20,7 @@ export interface OrdoDayPackageQuery {
     ustav?: string;
     variant?: string;
     lang?: string;
+    rubricLang?: string;
     parallel?: string;
     psalms?: string;
     transfers?: OrdoTransfer[];
@@ -64,7 +65,7 @@ const request = async (query: OrdoDayPackageQuery): Promise<Asked<OrdoDayPackage
     url.searchParams.set("bodies", "internal");
     for (const [k, v] of Object.entries({
         ustav: query.ustav, variant: query.variant, lang: query.lang,
-        parallel: query.parallel, psalms: query.psalms, service_sign:query.serviceSign,
+        rubric_lang: query.rubricLang, parallel: query.parallel, psalms: query.psalms, service_sign:query.serviceSign,
     })) {
         if (v) url.searchParams.set(k, v);
     }

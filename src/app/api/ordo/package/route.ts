@@ -1,6 +1,6 @@
 import {fetchOrdo} from "@/lib/ordoTransport";
 import { NextResponse } from "next/server";
-import { parseOrdoDownload } from "@/lib/api/v2/ordoParams";
+import { parseOrdoDownload, type OrdoDownloadParams } from "@/lib/api/v2/ordoParams";
 
 // Скачивание последования файлом .ordo — посетителю, без ключа: публичный
 // /api/v2/ordo/package с ключом остаётся для внешних потребителей, а здесь
@@ -31,13 +31,16 @@ const fetchBytes = async (url: URL, timeoutMs = 25_000): Promise<Uint8Array> => 
 const fail = (status: number, error: string) =>
     NextResponse.json({ error }, { status });
 
-const packageUrl = (p: { date: string; service: string | null; ustav: string | null; variant: string | null }) => {
+const packageUrl = (p: OrdoDownloadParams) => {
     const url = new URL("/package", base());
     url.searchParams.set("date", p.date);
     if (p.service) url.searchParams.set("service", p.service);
     url.searchParams.set("bodies", "free");
     if (p.ustav) url.searchParams.set("ustav", p.ustav);
     if (p.variant) url.searchParams.set("variant", p.variant);
+    if (p.lang) url.searchParams.set("lang", p.lang);
+    if (p.rubricLang) url.searchParams.set("rubric_lang", p.rubricLang);
+    if (p.parallel) url.searchParams.set("parallel", p.parallel);
     return url;
 };
 

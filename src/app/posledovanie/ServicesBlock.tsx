@@ -31,14 +31,16 @@ export interface ServicesCommon {
     serviceSign?:string;
     prestoly?:import("@/lib/ordo").OrdoPrestol[];
     lang?: string;
+    rubricLang?: string;
     parallel?: string;
     psalms?: string;
 }
 
-const ServicesBlock = async ({ day, common, razdelno }: {
+const ServicesBlock = async ({ day, common, razdelno, defaultView }: {
     day: OrdoDay;
     common: ServicesCommon;
     razdelno: boolean;
+    defaultView: string;
 }) => {
     const [pkg, rules] = await Promise.all([
         ordoDayPackage({
@@ -46,6 +48,7 @@ const ServicesBlock = async ({ day, common, razdelno }: {
             ustav: common.ustav,
             variant: common.variant,
             lang: common.lang,
+            rubricLang: common.rubricLang,
             parallel: common.parallel,
             psalms: common.psalms,
             transfers: common.transfers,memories:common.memories,serviceSign:common.serviceSign,prestoly:common.prestoly,
@@ -89,7 +92,7 @@ const ServicesBlock = async ({ day, common, razdelno }: {
                                 return (
                                     <div key={s.key}>
                                         {data
-                                            ? <ServiceLoader data={data} rules={rules} />
+                                            ? <ServiceLoader data={data} rules={rules} defaultView={defaultView} />
                                             : <div className="font-serif text-slate-500 py-2">
                                                   <span className="text-slate-700">{s.label}</span> — не собралась: службы нет в пакете.
                                               </div>}
@@ -116,6 +119,9 @@ const DownloadLink = ({ date, service, common, razdelno }: {
     const q = new URLSearchParams({ date, service });
     if (common.variant) q.set("variant", common.variant);
     if (common.ustav) q.set("ustav", common.ustav);
+    if (common.lang) q.set("lang", common.lang);
+    if (common.rubricLang) q.set("rubric_lang", common.rubricLang);
+    if (common.parallel) q.set("parallel", common.parallel);
     for(const id of common.memories??[])q.append("memories",id);
     if(common.serviceSign)q.set("service_sign",common.serviceSign);
     for(const p of common.prestoly??[])q.append('prestoly',[p.memoryId,p.kind??'',p.label??''].join('|'));

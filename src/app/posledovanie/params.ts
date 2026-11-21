@@ -27,6 +27,6 @@ export const dateOf = (params: SearchParams) => {
 
 /** Что из выбора ПЕРЕЖИВАЕТ смену дня: устав, язык, подача. Вариант и
  *  переносы — свойства одного дня, и на другом они значили бы не то. */
-export const KEEP_ACROSS_DAYS = ["ustav", "lang", "view", "parallel", "psalms"];
+export const KEEP_ACROSS_DAYS = ["ustav", "lang", "rubric_lang", "view", "parallel", "psalms"];
 
 export const VIEW_PARAM = "view";

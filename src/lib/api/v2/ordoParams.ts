@@ -134,6 +134,9 @@ export interface OrdoDownloadParams {
     service: string | null;
     ustav: string | null;
     variant: string | null;
+    lang: string | null;
+    rubricLang: string | null;
+    parallel: string | null;
     /** «1» — вечерня и утреня раздельно: архив дня без всенощного. */
     razdelno: boolean;
 }
@@ -143,6 +146,11 @@ export const parseOrdoDownload = (url: URL): OrdoParams<OrdoDownloadParams> => {
     if (!date || !strictDate(date)) {
         return { ok: false, error: "Дата указывается в виде ГГГГ-ММ-ДД" };
     }
+    const rubricLanguages = url.searchParams.getAll("rubric_lang");
+    const rubricLang = rubricLanguages[0] ?? null;
+    if (rubricLanguages.length > 1 || (rubricLang !== null && rubricLang !== "ru" && rubricLang !== "el")) {
+        return { ok: false, error: "rubric_lang: ru | el" };
+    }
     return {
         ok: true,
         value: {
@@ -150,6 +158,9 @@ export const parseOrdoDownload = (url: URL): OrdoParams<OrdoDownloadParams> => {
             service: word(url.searchParams.get("service")),
             ustav: word(url.searchParams.get("ustav")),
             variant: word(url.searchParams.get("variant")),
+            lang: word(url.searchParams.get("lang")),
+            rubricLang,
+            parallel: word(url.searchParams.get("parallel")),
             razdelno: url.searchParams.get("bdenie") === "0",
         },
     };
