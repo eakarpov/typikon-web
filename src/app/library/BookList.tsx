@@ -1,88 +1,78 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BOOK_CATEGORIES, bookCategoryLabel, BOOK_SCRIPTS, bookPresentation, filterLibraryBooks, libraryBookHref, type LibraryBook } from "@/utils/libraryBooks";
+import {
+    BOOK_CATEGORIES, bookCategoryLabel, bookPresentation, libraryBookHref, libraryHref, paginateLibraryBooks,
+    type LibraryBook, type LibraryQuery,
+} from "@/utils/libraryBooks";
+import LibraryFilters from "./LibraryFilters";
 
-export default function BookList({ books }: { books: LibraryBook[] }) {
-    const router = useRouter();
-    const pathname = usePathname();
-    const params = useSearchParams();
-    const lang = params?.get("lang") || "";
-    const script = params?.get("script") || "";
-    const work = params?.get("work") || "";
-    const category = params?.get("category") || "";
-    const visible = filterLibraryBooks(books, { lang, script, work, category });
-    const languages = new Map(books.map(book => {
+const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeZone: "Europe/Moscow" });
+const pageLink = "rounded border border-stone-300 px-3 py-2 hover:underline";
+
+export default function BookList({ books, query }: { books: LibraryBook[]; query: LibraryQuery }) {
+    const { books: visible, total, page, pages, offset } = paginateLibraryBooks(books, query);
+    const languages = new Map<string, string>();
+    const scripts = new Map<string, string>();
+    const categories = new Map(Object.entries(BOOK_CATEGORIES));
+    const editionCounts = new Map<string, number>();
+    for (const book of books) {
         const info = bookPresentation(book.language);
-        return [info.lang, info.label];
-    }));
-    const scripts = new Set(books.map(book => bookPresentation(book.language).script));
-    const update = (key: string, value: string) => {
-        const next = new URLSearchParams(params?.toString());
-        if (value) next.set(key, value);
-        else next.delete(key);
-        router.replace(`${pathname || "/library"}${next.size ? `?${next}` : ""}`, { scroll: false });
-    };
+        languages.set(info.lang, info.label);
+        scripts.set(info.script, info.scriptLabel);
+        if (book.category && !categories.has(book.category)) {
+            categories.set(book.category, bookCategoryLabel(book.category));
+        }
+        if (book.workKey) {
+            editionCounts.set(book.workKey, (editionCounts.get(book.workKey) ?? 0) + 1);
+        }
+    }
+    categories.set("uncategorized", "Не указана");
+    const optionsByLabel = (options: Map<string, string>) => [...options].sort((a, b) => a[1].localeCompare(b[1], "ru"));
 
     return (
         <div className="mt-4 font-serif">
-            <div className="flex flex-wrap items-end gap-3 mb-3">
-                <label className="flex flex-col gap-1 text-sm">
-                    Язык
-                    <select className="border border-stone-300 rounded px-2 py-1 bg-white" value={lang} onChange={e => update("lang", e.target.value)}>
-                        <option value="">Все языки</option>
-                        {lang && !languages.has(lang) && <option value={lang}>{lang}</option>}
-                        {Array.from(languages).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
-                    </select>
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                    Начертание
-                    <select className="border border-stone-300 rounded px-2 py-1 bg-white" value={script} onChange={e => update("script", e.target.value)}>
-                        <option value="">Все начертания</option>
-                        {script && !scripts.has(script) && <option value={script}>{BOOK_SCRIPTS[script] || script}</option>}
-                        {Array.from(scripts).map(code => <option key={code} value={code}>{BOOK_SCRIPTS[code]}</option>)}
-                    </select>
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                    Тематика
-                    <select className="border border-stone-300 rounded px-2 py-1 bg-white" value={category} onChange={e => update("category", e.target.value)}>
-                        <option value="">Все тематики</option>
-                        {category && category !== "uncategorized" && !BOOK_CATEGORIES[category] && <option value={category}>{category}</option>}
-                        {Object.entries(BOOK_CATEGORIES).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
-                        <option value="uncategorized">Не указана</option>
-                    </select>
-                </label>
-                {(lang || script || work || category) && <Link className="text-sm text-red-900 py-1" href="/library" scroll={false}>Сбросить фильтры</Link>}
-            </div>
-            {work && <p className="text-sm text-stone-600 mb-2">Редакции произведения: {work}</p>}
-            <p role="status" className="text-sm text-stone-500 mb-3">Книг: {visible.length} из {books.length}</p>
-            {!visible.length && <p>По выбранным фильтрам книг нет. Попробуйте другое сочетание языка, начертания и тематики.</p>}
-            <ol className="space-y-4 list-decimal list-inside">
-                {visible.map(book => {
-                    const info = bookPresentation(book.language);
-                    const editions = book.workKey ? books.filter(other => other.workKey === book.workKey) : [];
-                    return (
-                        <li key={book.id}>
-                            <Link className="font-bold hover:text-red-900" href={libraryBookHref(book)}>
-                                {book.name}{book.author ? ` (${book.author})` : ""}
-                            </Link>
-                            <div className="flex flex-wrap gap-2 text-xs text-stone-600 mt-1">
-                                <span className="rounded bg-stone-100 px-1.5 py-0.5">{info.label}</span>
-                                <span className="rounded bg-stone-100 px-1.5 py-0.5">{info.scriptLabel}</span>
-                                <span className="rounded bg-stone-100 px-1.5 py-0.5">{bookCategoryLabel(book.category)}</span>
-                                {book.editionTitle && <span className="py-0.5">{book.editionTitle}</span>}
-                            </div>
-                            {book.description && <p className="text-stone-600">{book.description}</p>}
-                            {editions.length > 1 && (
-                                <Link className="text-sm text-red-900 hover:underline" href={`/library?work=${encodeURIComponent(book.workKey!)}`} scroll={false}>
-                                    Все редакции ({editions.length})
+            <LibraryFilters key={libraryHref({ ...query, page: 1 })} query={query} languages={optionsByLabel(languages)}
+                            scripts={optionsByLabel(scripts)} categories={[...categories]} />
+            {query.work && <p className="mb-2 text-sm text-stone-600">Редакции произведения: {query.work}</p>}
+            <p id="library-results" role="status" className="mb-3 scroll-mt-4 text-sm text-stone-600">
+                {total ? `Книги ${offset + 1}–${offset + visible.length} из ${total}` : "Книги не найдены"}
+            </p>
+            {visible.length > 0 && (
+                <ol start={offset + 1} className="list-inside list-decimal space-y-4">
+                    {visible.map(book => {
+                        const info = bookPresentation(book.language);
+                        const editions = book.workKey ? editionCounts.get(book.workKey) ?? 0 : 0;
+                        return (
+                            <li key={book.id}>
+                                <Link className="font-bold hover:text-red-900" href={libraryBookHref(book)}>
+                                    {book.name}{book.author ? ` (${book.author})` : ""}
                                 </Link>
-                            )}
-                        </li>
-                    );
-                })}
-            </ol>
+                                <div className="mt-1 flex flex-wrap gap-2 text-xs text-stone-600">
+                                    <span className="rounded bg-stone-100 px-1.5 py-0.5">{info.label}</span>
+                                    <span className="rounded bg-stone-100 px-1.5 py-0.5">{info.scriptLabel}</span>
+                                    <span className="rounded bg-stone-100 px-1.5 py-0.5">{bookCategoryLabel(book.category)}</span>
+                                    {book.editionTitle && <span className="py-0.5">{book.editionTitle}</span>}
+                                    {book.updatedAt && (
+                                        <span className="py-0.5">Обновлено <time dateTime={book.updatedAt}>{dateFormat.format(new Date(book.updatedAt))}</time></span>
+                                    )}
+                                </div>
+                                {book.description && <p className="text-stone-600">{book.description}</p>}
+                                {book.workKey && editions > 1 && (
+                                    <Link className="text-sm text-red-900 hover:underline" href={libraryHref({ work: book.workKey, sort: "name", page: 1 })} scroll={false}>
+                                        Все редакции ({editions})
+                                    </Link>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ol>
+            )}
+            {pages > 1 && (
+                <nav aria-label="Страницы библиотеки" className="my-5 flex flex-wrap items-center gap-3 text-sm">
+                    {page > 1 && <Link rel="prev" className={pageLink} href={`${libraryHref({ ...query, page: page - 1 })}#library-results`}>Назад</Link>}
+                    <span>Страница {page} из {pages}</span>
+                    {page < pages && <Link rel="next" className={pageLink} href={`${libraryHref({ ...query, page: page + 1 })}#library-results`}>Далее</Link>}
+                </nav>
+            )}
         </div>
     );
 }

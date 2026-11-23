@@ -1,11 +1,11 @@
 import BookList from "./BookList";
-import type { LibraryBook } from "@/utils/libraryBooks";
+import { isoDate } from "@/lib/seo/metadata";
+import type { LibraryBook, LibraryQuery } from "@/utils/libraryBooks";
 
-const Content = async ({ itemsPromise }: { itemsPromise: Promise<[any[], unknown?]> }) => {
+const Content = async ({ itemsPromise, query }: { itemsPromise: Promise<[any[], unknown?]>; query: LibraryQuery }) => {
     const [items, error] = await itemsPromise;
     if (error || !items) return <p>Ошибка при загрузке данных</p>;
 
-    // Передаём в браузер только поля карточки, без texts[] и заметок редактора.
     const books: LibraryBook[] = items.map(book => ({
         id: book._id.toString(),
         name: book.name,
@@ -17,8 +17,9 @@ const Content = async ({ itemsPromise }: { itemsPromise: Promise<[any[], unknown
         bibleCode: book.bibleCode,
         workKey: book.workKey,
         editionTitle: book.editionTitle,
+        updatedAt: isoDate(book.updatedAt),
     }));
-    return <BookList books={books} />;
+    return <BookList books={books} query={query} />;
 };
 
 export default Content;
