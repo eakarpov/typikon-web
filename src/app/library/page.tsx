@@ -6,10 +6,9 @@ import {Metadata} from "next";
 import {myFont} from "@/utils/font";
 import Link from "next/link";
 import {pageMetadata} from "@/lib/seo/metadata";
+import {readLibraryQuery} from "@/utils/libraryBooks";
 
-// Фильтры читают URL на клиенте. В статической сборке useSearchParams скрывает
-// весь список за Suspense до JavaScript. Динамический HTML сохраняет карточки
-// и ссылки для обходчика; сама выборка books по-прежнему кэшируется на час.
+// Нужная страница каталога рендерится из URL, а выборка книг кэшируется на час.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMetadata({
@@ -18,8 +17,9 @@ export const metadata: Metadata = pageMetadata({
     path: "/library",
 });
 
-const Library = async () => {
+const Library = async ({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) => {
     const itemsData = getItems();
+    const query = readLibraryQuery(searchParams);
     setMeta();
 
     return (
@@ -32,8 +32,8 @@ const Library = async () => {
                 <p className="font-serif">
                     Часть текстов ещё не отекстована — <Link href="/texting" className="text-amber-800">помогите проекту с отекстовкой</Link>.
                 </p>
-                <Suspense fallback={<div>Loading...</div>}>
-                    <Content itemsPromise={itemsData} />
+                <Suspense fallback={<p>Загрузка книг…</p>}>
+                    <Content itemsPromise={itemsData} query={query} />
                 </Suspense>
             </div>
         </div>

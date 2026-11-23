@@ -107,8 +107,6 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                 >
                     Чтения на день
                 </Link>
-                {/* Книги собрания — одной группой: их две, и обе про то, что читают
-                    и поют, а не про то, когда. */}
                 <NavGroup
                     title="Собрание"
                     items={[
@@ -117,6 +115,7 @@ const NavMenu = ({ showButton, showAdmin, isDevelopment }: {
                         // по канону и параллельное чтение изданий, которых у обычной
                         // книги собрания нет.
                         { href: "/bible", label: "Библия" },
+                        { href: "/mesyatseslov", label: "Месяцеслов" },
                         { href: "/pericopes", label: "Зачала" },
                         { href: "/chants", label: "Песнопения" },
                         // Каноны и акафисты — не то же, что «Песнопения», и стоят

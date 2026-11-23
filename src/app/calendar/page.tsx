@@ -1,5 +1,6 @@
 import {getItems} from "@/app/calendar/api";
 import {Suspense} from "react";
+import Link from "next/link";
 import Content from "@/app/calendar/Content";
 import {setMeta} from "@/lib/meta";
 import {Metadata} from "next";
@@ -27,6 +28,7 @@ const Calendar = () => {
                 <h1 className="font-serif">
                     Уставные чтения на календарный день по выбранному числу. В чтения входят Пролог и похвальные слова на памяти святым или неподвижным праздникам.
                 </h1>
+                <Link href="/mesyatseslov" className="font-bold underline underline-offset-2">Месяцеслов</Link>
                 <div className="border-1 rounded-sm">
                     <a href="/calendar/today" className="font-bold font-serif">Чтения на сегодня</a>
                 </div>

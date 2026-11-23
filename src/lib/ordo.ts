@@ -739,3 +739,12 @@ export const ordoMemorySearch = async (q: string): Promise<OrdoMemoryFound[] | n
         month: m.month ?? null, day: m.day ?? null, sign: m.sign ?? null,
     }));
 };
+
+/** Lightweight endpoints used by the year overview. Long ranges use the background slot. */
+export const menologyUstavy = () => request<import("./menology").CalendarUstav[]>("/ustavy");
+
+export const menologyRange = (ustav: string, from: string, to: string) =>
+    request<import("./menology").CalendarRange>("/calendar/range", { ustav, from, to }, undefined, 30_000, "background");
+
+export const menologyDay = (ustav: string, date: string) =>
+    request<{ calendar?: import("./menology").CalendarDetail }>("/day", { ustav, date, calendar: "1" });
