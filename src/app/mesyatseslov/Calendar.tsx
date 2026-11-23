@@ -13,6 +13,7 @@ import { signMark, signName } from "./signNames";
 import styles from "./menology.module.css";
 
 const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+const sundayColumn = weekdays.length - 1;
 const control = "rounded border border-current bg-transparent px-2 py-1";
 
 function SignMark({ sign }: { sign: string | null }) {
@@ -149,15 +150,16 @@ export default function Calendar({ view, today, churchStyle, ustavy, months, ini
                       className="py-1 underline underline-offset-2" prefetch={false}>Сегодня</Link>
             </form>
             <ul aria-label="Обозначения" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                <li>◆ Великий праздник / Пасха</li><li className={`${styles.fastMark} rounded px-1`}>Постный день</li>
-                <li><span className="border-b border-dotted">·</span> Разные правила поста</li>
+                <li><span className={styles.feastMark} aria-hidden="true">◆</span> Великий праздник / Пасха</li>
+                <li className={`${styles.fastMark} rounded px-1`}>Постный день</li>
+                <li className={`${styles.mixedFastMark} rounded px-1`}>Разные правила поста</li>
                 <li>⁇ Пост не определён</li>
-                <li>– Без знака</li><li>? Знак не определён</li>
+                <li><SignMark sign="bez-znaka" /> Без знака</li><li>? Знак не определён</li>
                 <li><SignMark sign="velikoe-bdenie" /> Великое бдение</li>
                 <li><SignMark sign="bdenie" /> Бдение</li>
                 <li><SignMark sign="polieley" /> Полиелей</li>
                 <li><SignMark sign="slavoslovie" /> Славословие</li><li><SignMark sign="shesterichnaya" /> Шестеричная</li>
-                <li>А Аллилуйная</li>
+                <li><SignMark sign="alliluinaya" /> Аллилуйная</li>
             </ul>
             <p id="menology-keys" className="sr-only">Клавиши со стрелками перемещают фокус между днями. Enter открывает карточку дня.</p>
             <nav aria-label="Месяцы года" className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
@@ -180,7 +182,8 @@ export default function Calendar({ view, today, churchStyle, ustavy, months, ini
                                     <div className="grid grid-cols-7 gap-0.5 text-center">
                                         {weekdays.map(weekday => <span key={weekday} className="text-xs">{weekday}</span>)}
                                         {Array.from({ length: month.leading }, (_, index) => <span key={index} aria-hidden="true" />)}
-                                        {month.days.map(({ date, day }) => {
+                                        {month.days.map(({ date, day }, index) => {
+                                            const isSunday = (month.leading + index) % weekdays.length === sundayColumn;
                                             const mark = byDate.get(date) ?? (date === card?.date ? card : undefined);
                                             const feast = mark?.feasts.filter(x => x.major).map(x => x.label);
                                             const label = [`${day}, ${month.label}`, ...(feast ?? []), mark && signName(mark.sign),
@@ -199,11 +202,11 @@ export default function Calendar({ view, today, churchStyle, ustavy, months, ini
                                                           if (date === view.date) scrollToCard();
                                                           else scrollAfterSelection.current = true;
                                                       }}>
-                                                    <span className={styles.dayNumber}>{day}</span>
+                                                    <span className={isSunday ? `${styles.dayNumber} ${styles.cinnabar}` : styles.dayNumber}>{day}</span>
                                                     <span className={styles.markLine} aria-hidden="true">
                                                         {mark && <SignMark sign={mark.sign} />}
-                                                        {mark?.fasting === "unknown" && <sup className={styles.feastMark}>⁇</sup>}
-                                                        {feast?.length ? <span className={styles.feastMark}> ◆</span> : null}
+                                                        {mark?.fasting === "unknown" && <sup className={styles.smallMark}>⁇</sup>}
+                                                        {feast?.length ? <span className={`${styles.smallMark} ${styles.feastMark}`}> ◆</span> : null}
                                                     </span>
                                                 </Link>
                                             );
