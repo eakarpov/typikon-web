@@ -32,4 +32,5 @@
 .cell[data-fasting="mixed"] { background: color-mix(in srgb, #7262a1 12%, var(--page-bg)); }
 .cell[data-fasting="mixed"] .markLine { border-bottom: 1px dotted currentColor; }
 .markLine { min-height: 1.1rem; font-size: 0.8rem; }
+.cinnabar, .cell:has(.cinnabar) .dayNumber { color: color-mix(in srgb, #bd3526 70%, var(--page-fg)); }
 .feastMark { color: var(--page-fg); font-size: 0.55rem; vertical-align: 0.16em; }

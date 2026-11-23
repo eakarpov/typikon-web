@@ -1,11 +1,21 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import {
-    DEFAULT_USTAV, displayedDate, menologyHref, monthGrids, parseCivilDate, selectView,
+    DEFAULT_USTAV, displayedDate, menologyHref, monthGrids, parseCivilDate, paschalCycleLabel, selectView,
 } from "./menology";
 
 const input = { ustav: DEFAULT_USTAV, mode: "civil", style: "gregorian" } as const;
 const today = "2026-11-23";
+
+test("пасхальный круг показывает седмицу и сохраняет отступ от Пасхи", () => {
+    assert.equal(paschalCycleLabel(-1), "До Пасхи 1 дн.");
+    assert.equal(paschalCycleLabel(0), "Пасха");
+    assert.equal(paschalCycleLabel(6), "Светлая седмица · 6-й день по Пасхе");
+    assert.equal(paschalCycleLabel(7), "2-я седмица по Пасхе · 7-й день по Пасхе");
+    assert.equal(paschalCycleLabel(49), "8-я седмица по Пасхе · 49-й день по Пасхе");
+    assert.equal(paschalCycleLabel(50), "1-я седмица по Пятидесятнице · 50-й день по Пасхе");
+    assert.equal(paschalCycleLabel(57), "2-я седмица по Пятидесятнице · 57-й день по Пасхе");
+});
 
 test("гражданский год начинается в январе и включает високосный день", () => {
     const view = selectView({ ...input, year: 2028 }, today, "julian");

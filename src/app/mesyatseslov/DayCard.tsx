@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CALENDAR_STYLES, displayedDate, type CalendarMark, type MenologyView, type DateStyle } from "@/lib/menology";
+import { Fragment } from "react";
+import { CALENDAR_STYLES, displayedDate, paschalCycleLabel, type CalendarMark, type MenologyView, type DateStyle } from "@/lib/menology";
 import type { CalendarCard } from "@/lib/menology";
 import { signName } from "./signNames";
 import styles from "./menology.module.css";
@@ -14,6 +15,12 @@ export const FASTING: Record<CalendarMark["fasting"], string> = {
     fast: "Постный день", free: "Поста нет", mixed: "Разные правила поста", unknown: "Сведений о посте нет",
 };
 
+function MemoryName({ memory }: { memory: CalendarCard["memories"][number] }) {
+    return memory.href
+        ? <Link className="underline underline-offset-2" href={memory.href}>{memory.label}</Link>
+        : memory.label;
+}
+
 export default function DayCard({ view, churchStyle, card, retry }: {
     view: MenologyView; churchStyle: DateStyle; card: CalendarCard | null; retry: () => void;
 }) {
@@ -22,6 +29,16 @@ export default function DayCard({ view, churchStyle, card, retry }: {
     const church = displayedDate(view.date, churchStyle);
     const service = new URLSearchParams({ date: view.date, ustav: view.ustav });
     if (card?.variant) service.set("variant", card.variant);
+    const unsignedDay = card?.sign === "bez-znaka";
+    const unsignedMemories = [];
+    const otherMemories = [];
+    for (const memory of card?.memories ?? []) {
+        if (unsignedDay && (memory.sign === "bez-znaka" || (memory.sign == null && memory.appointed))) {
+            unsignedMemories.push(memory);
+        } else {
+            otherMemories.push(memory);
+        }
+    }
 
     return (
         <article className={styles.card} aria-label="Карточка дня">
@@ -41,12 +58,19 @@ export default function DayCard({ view, churchStyle, card, retry }: {
                         </li>)}
                     </ul>}
                     <dl className="space-y-1 text-sm">
-                        <div><dt className="inline font-semibold">Знак дня </dt><dd className="inline">{signName(card.sign)}</dd></div>
+                        <div>
+                            <dt className={unsignedDay ? "sr-only" : "inline font-semibold"}>Знак дня </dt>
+                            <dd className="inline">
+                                {signName(card.sign)}{unsignedMemories.length > 0 && ": "}
+                                {unsignedMemories.map((memory, index) => (
+                                    <Fragment key={memory.id}>{index > 0 && ", "}<MemoryName memory={memory} /></Fragment>
+                                ))}
+                            </dd>
+                        </div>
                         {card.sign_note && <div><dt className="inline font-semibold">Основание </dt><dd className="inline">{card.sign_note}</dd></div>}
                         {card.triod && <div><dt className="inline font-semibold">Триодь </dt><dd className="inline">{card.triod}</dd></div>}
                         <div><dt className="inline font-semibold">Пасхальный круг </dt><dd className="inline">
-                            {card.pascha_offset === 0 ? "Пасха" : card.pascha_offset > 0
-                                ? `${card.pascha_offset}-й день по Пасхе` : `До Пасхи ${-card.pascha_offset} дн.`}
+                            {paschalCycleLabel(card.pascha_offset)}
                         </dd></div>
                         {card.post_week != null && <div><dt className="inline font-semibold">Седмица поста </dt><dd className="inline">{card.post_week}</dd></div>}
                         {card.tone != null && <div><dt className="inline font-semibold">Глас </dt><dd className="inline">{card.tone}</dd></div>}
@@ -72,16 +96,19 @@ export default function DayCard({ view, churchStyle, card, retry }: {
                             ))}
                         </ul>}
                     </div>
-                    <h3 className="font-semibold">Святые и памяти</h3>
+                    {(otherMemories.length > 0 || unsignedMemories.length === 0 || card.coverage_note) && (
+                        <h3 className="font-semibold">Святые и памяти</h3>
+                    )}
                     {card.coverage_note && <p className="mt-1 text-sm">{card.coverage_note}</p>}
-                    {card.memories.length > 0 ? <ul className="my-2 space-y-2 text-sm">
-                        {card.memories.map(memory => (
+                    {otherMemories.length > 0 && <ul className="my-2 space-y-2 text-sm">
+                        {otherMemories.map(memory => (
                             <li key={memory.id}>
-                                {memory.href ? <Link className="underline underline-offset-2" href={memory.href}>{memory.label}</Link> : memory.label}
+                                <MemoryName memory={memory} />
                                 <div>{signName(memory.sign)}{memory.appointed && " · В чине дня"}</div>
                             </li>
                         ))}
-                    </ul> : <p className="my-2 text-sm">Сведений о памятях дня нет.</p>}
+                    </ul>}
+                    {card.memories.length === 0 && <p className="my-2 text-sm">Сведений о памятях дня нет.</p>}
                 </>
             ) : (
                 <p className="my-4">Карточка дня недоступна. <button type="button" className="underline" onClick={retry}>Повторить</button></p>

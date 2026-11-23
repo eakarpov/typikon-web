@@ -9,11 +9,16 @@ import {
 } from "@/lib/menology";
 import type { CalendarCard, CalendarUstav } from "@/lib/menology";
 import DayCard, { FASTING } from "./DayCard";
-import { signGlyph, signName } from "./signNames";
+import { signMark, signName } from "./signNames";
 import styles from "./menology.module.css";
 
 const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const control = "rounded border border-current bg-transparent px-2 py-1";
+
+function SignMark({ sign }: { sign: string | null }) {
+    const { glyph, color } = signMark(sign);
+    return <span aria-hidden="true" className={color === "red" ? styles.cinnabar : undefined}>{glyph}</span>;
+}
 
 async function fetchMonth(ustav: string, month: MenologyMonth, signal?: AbortSignal): Promise<CalendarRange | null> {
     const params = new URLSearchParams({ ustav, from: month.from, to: month.to });
@@ -148,10 +153,10 @@ export default function Calendar({ view, today, churchStyle, ustavy, months, ini
                 <li><span className="border-b border-dotted">·</span> Разные правила поста</li>
                 <li>⁇ Пост не определён</li>
                 <li>– Без знака</li><li>? Знак не определён</li>
-                <li>{signGlyph("velikoe-bdenie")} Великое бдение</li>
-                <li>{signGlyph("bdenie")} Бдение</li>
-                <li>{signGlyph("polieley")} Полиелей</li>
-                <li>{signGlyph("slavoslovie")} Славословие</li><li>{signGlyph("shesterichnaya")} Шестеричная</li>
+                <li><SignMark sign="velikoe-bdenie" /> Великое бдение</li>
+                <li><SignMark sign="bdenie" /> Бдение</li>
+                <li><SignMark sign="polieley" /> Полиелей</li>
+                <li><SignMark sign="slavoslovie" /> Славословие</li><li><SignMark sign="shesterichnaya" /> Шестеричная</li>
                 <li>А Аллилуйная</li>
             </ul>
             <p id="menology-keys" className="sr-only">Клавиши со стрелками перемещают фокус между днями. Enter открывает карточку дня.</p>
@@ -194,9 +199,9 @@ export default function Calendar({ view, today, churchStyle, ustavy, months, ini
                                                           if (date === view.date) scrollToCard();
                                                           else scrollAfterSelection.current = true;
                                                       }}>
-                                                    {day}
+                                                    <span className={styles.dayNumber}>{day}</span>
                                                     <span className={styles.markLine} aria-hidden="true">
-                                                        {mark && signGlyph(mark.sign)}
+                                                        {mark && <SignMark sign={mark.sign} />}
                                                         {mark?.fasting === "unknown" && <sup className={styles.feastMark}>⁇</sup>}
                                                         {feast?.length ? <span className={styles.feastMark}> ◆</span> : null}
                                                     </span>

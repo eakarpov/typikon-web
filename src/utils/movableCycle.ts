@@ -20,6 +20,9 @@ export const typeForPenticostWeek = (week: number) => week === 1 ? "Penticostari
 export const easterDateUtc = (easter: { year: number; month: number; day: number }): Date =>
     new Date(Date.UTC(easter.year, easter.month - 1, easter.day));
 
+export const weekFromPascha = (offset: number) => Math.floor(offset / 7) + 1;
+export const weekFromPentecost = (offsetFromPascha: number) => Math.floor((offsetFromPascha - 50) / 7) + 1;
+
 export const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
     const diffTime = date.getTime() - easter.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -46,17 +49,17 @@ export const getWeekAndDay = (date: Date, easter: Date, prevEaster: Date) => {
             const week = Math.ceil(offset / 7);
             return { week, day: offset - 7 * (week - 1), type: "Triodion" };
         } else { // Previous Penticostarion
-            const week = Math.floor((diffDaysPrevious - 50) / 7) + 1;
+            const week = weekFromPentecost(diffDaysPrevious);
             const day = Math.floor((diffDaysPrevious - 50) % 7) + 1;
             return { week, day, type: typeForPenticostWeek(week), pentecostAnchorYear: prevEaster.getFullYear() };
         }
     }
     if (diffDays <= 49) {
         // count from Pascha, 0 - sunday, 6 - saturday
-        return { week: Math.floor(diffDays / 7) + 1, day: Math.floor(diffDays % 7), type: "Pascha" };
+        return { week: weekFromPascha(diffDays), day: Math.floor(diffDays % 7), type: "Pascha" };
     } else {
         // count from Penticostarion, 1 - monday, 7 - sunday
-        const week = Math.floor((diffDays - 50) / 7) + 1;
+        const week = weekFromPentecost(diffDays);
         const day = Math.floor((diffDays - 50) % 7) + 1;
         return { week, day, type: typeForPenticostWeek(week), pentecostAnchorYear: easter.getFullYear() };
     }

@@ -2,6 +2,7 @@ import {
     gregorianToJdn, jdnToGregorian, jdnToJulian, jdnToRevisedJulian, julianToJdn,
     revisedJulianToJdn, type Ymd,
 } from "@/utils/chronology";
+import { weekFromPascha, weekFromPentecost } from "@/utils/movableCycle";
 
 import type { OrdoUstav } from "./ordo";
 
@@ -69,6 +70,15 @@ export interface CalendarDetail extends CalendarMark {
 export interface CalendarRange {
     days: CalendarMark[];
     failed: string[];
+}
+
+export function paschalCycleLabel(offset: number): string {
+    if (offset < 0) return `До Пасхи ${-offset} дн.`;
+    if (offset === 0) return "Пасха";
+    const week = offset < 7 ? "Светлая седмица" :
+        offset <= 49 ? `${weekFromPascha(offset)}-я седмица по Пасхе` :
+            `${weekFromPentecost(offset)}-я седмица по Пятидесятнице`;
+    return `${week} · ${offset}-й день по Пасхе`;
 }
 
 const toJdn = { gregorian: gregorianToJdn, julian: julianToJdn, revised: revisedJulianToJdn };
